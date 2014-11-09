@@ -267,8 +267,16 @@ namespace reaver
                             }
                         }
 
-                        node->_done = true;
-                        node->_sem.notify();
+                        if (node)
+                        {
+                            node->_done = true;
+                            node->_sem.notify();
+                        }
+
+                        else
+                        {
+                            _sem.notify();
+                        }
                     }
 
                     std::atomic<bool> _end_flag{ false };
