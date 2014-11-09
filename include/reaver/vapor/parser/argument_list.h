@@ -36,7 +36,7 @@ namespace reaver
             };
 
             template<typename Context>
-            auto parse_argument_list(Context & ctx)
+            argument_list parse_argument_list(Context & ctx)
             {
                 argument_list ret;
 

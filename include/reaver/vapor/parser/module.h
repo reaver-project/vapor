@@ -43,7 +43,7 @@ namespace reaver
             };
 
             template<typename Context>
-            auto parse_module(Context & ctx)
+            module parse_module(Context & ctx)
             {
                 module ret;
 

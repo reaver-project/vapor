@@ -109,8 +109,12 @@ namespace reaver
     }
 }
 
-template<>
-struct std::iterator_traits<reaver::vapor::lexer::iterator>
+namespace std
 {
-    using value_type = reaver::vapor::lexer::token;
-};
+    template<>
+    struct iterator_traits<reaver::vapor::lexer::iterator>
+    {
+        using value_type = reaver::vapor::lexer::token;
+        using iterator_category = forward_iterator_tag;
+    };
+}

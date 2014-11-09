@@ -42,7 +42,7 @@ namespace reaver
             };
 
             template<typename Context>
-            auto parse_expression_list(Context & ctx)
+            expression_list parse_expression_list(Context & ctx)
             {
                 expression_list ret;
 

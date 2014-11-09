@@ -42,7 +42,7 @@ namespace reaver
             };
 
             template<typename Context>
-            auto parse_id_expression(Context & ctx)
+            id_expression parse_id_expression(Context & ctx)
             {
                 id_expression ret;
 

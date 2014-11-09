@@ -41,7 +41,7 @@ namespace reaver
             };
 
             template<typename Context>
-            auto parse_declaration(Context & ctx)
+            declaration parse_declaration(Context & ctx)
             {
                 declaration ret;
 

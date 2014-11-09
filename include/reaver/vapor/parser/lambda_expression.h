@@ -45,7 +45,7 @@ namespace reaver
             };
 
             template<typename Context>
-            auto parse_lambda_expression(Context & ctx)
+            lambda_expression parse_lambda_expression(Context & ctx)
             {
                 lambda_expression ret;
 

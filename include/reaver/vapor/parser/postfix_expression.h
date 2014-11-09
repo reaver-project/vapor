@@ -46,7 +46,7 @@ namespace reaver
             };
 
             template<typename Context>
-            auto parse_postfix_expression(Context & ctx)
+            postfix_expression parse_postfix_expression(Context & ctx)
             {
                 auto closing = [](lexer::token_type type)
                 {

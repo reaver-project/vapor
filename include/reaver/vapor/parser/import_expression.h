@@ -39,7 +39,7 @@ namespace reaver
             };
 
             template<typename Context>
-            auto parse_import_expression(Context & ctx)
+            import_expression parse_import_expression(Context & ctx)
             {
                 import_expression ret;
 

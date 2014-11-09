@@ -36,7 +36,7 @@ namespace reaver
             };
 
             template<typename Context>
-            auto parse_capture_list(Context & ctx)
+            capture_list parse_capture_list(Context & ctx)
             {
                 capture_list ret;
 
