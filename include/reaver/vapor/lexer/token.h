@@ -27,6 +27,7 @@
 #include <ostream>
 
 #include <reaver/exception.h>
+#include <reaver/relaxed_constexpr.h>
 
 #include "vapor/range.h"
 
@@ -81,7 +82,7 @@ namespace reaver
                 }
             };
 
-            constexpr token_type suffix(token_type t)
+            relaxed_constexpr token_type suffix(token_type t)
             {
                 switch (t)
                 {
