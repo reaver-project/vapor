@@ -25,7 +25,6 @@
 #include <memory>
 
 #include <reaver/semaphore.h>
-#include <reaver/error.h>
 
 #include "vapor/lexer/token.h"
 
@@ -47,7 +46,7 @@ namespace reaver
                     friend class lexer::iterator;
                     friend class _iterator_backend;
 
-                    _lexer_node(token tok, error_engine & engine) : _token{ std::move(tok) }, _engine(engine)
+                    _lexer_node(token tok, std::exception_ptr & ex) : _token{ std::move(tok) }, _ex(ex)
                     {
                     }
 
@@ -58,16 +57,16 @@ namespace reaver
                             return;
                         }
 
-                        if (!_engine)
+                        if (_ex)
                         {
-                            throw std::move(_engine);
+                            std::rethrow_exception(_ex);
                         }
 
                         _sem.wait();
 
-                        if (!_engine)
+                        if (_ex)
                         {
-                            throw std::move(_engine);
+                            std::rethrow_exception(_ex);
                         }
                     }
 
@@ -75,7 +74,7 @@ namespace reaver
                     std::shared_ptr<_lexer_node> _next;
                     token _token;
                     semaphore _sem;
-                    error_engine & _engine;
+                    std::exception_ptr & _ex;
                     std::atomic<bool> _done{ false };
                 };
             }

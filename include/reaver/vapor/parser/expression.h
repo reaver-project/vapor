@@ -49,7 +49,7 @@ namespace reaver
             struct expression
             {
                 class range range;
-                boost::variant<literal, postfix_expression, import_expression, lambda_expression> expression_value;
+                boost::variant<literal<lexer::token_type::string>, literal<lexer::token_type::integer>, postfix_expression, import_expression, lambda_expression> expression_value;
             };
 
             template<typename Context>
@@ -59,7 +59,12 @@ namespace reaver
 
                 if (peek(ctx, lexer::token_type::string))
                 {
-                    ret.expression_value = parse_literal(ctx);
+                    ret.expression_value = parse_literal<lexer::token_type::string>(ctx);
+                }
+
+                else if (peek(ctx, lexer::token_type::integer))
+                {
+                    ret.expression_value = parse_literal<lexer::token_type::integer>(ctx);
                 }
 
                 else if (peek(ctx, lexer::token_type::identifier))

@@ -23,6 +23,7 @@
 #pragma once
 
 #include <boost/variant.hpp>
+#include <boost/variant.hpp>
 
 #include "vapor/range.h"
 #include "vapor/parser/helpers.h"
@@ -33,25 +34,55 @@ namespace reaver
     {
         namespace parser { inline namespace _v1
         {
-            using literal = lexer::token;
+            template<lexer::token_type TokenType>
+            struct literal
+            {
+                class range range;
+                lexer::token value;
+                boost::optional<lexer::token> suffix;
+            };
 
-            template<typename Context>
+            using string_literal = literal<lexer::token_type::string>;
+            using integer_literal = literal<lexer::token_type::integer>;
+
+            template<lexer::token_type TokenType, typename Context>
             auto parse_literal(Context & ctx)
             {
-                literal ret;
+                literal<TokenType> ret;
 
-                if (peek(ctx, lexer::token_type::string))
+                if (peek(ctx, TokenType))
                 {
-                    ret = std::move(expect(ctx, lexer::token_type::string));
+                    ret.value = std::move(expect(ctx, TokenType));
+
+                    auto start = ret.value.range.start();
+                    auto end = ret.value.range.end();
+
+                    if (peek(ctx, lexer::suffix(TokenType)))
+                    {
+                        ret.suffix = std::move(expect(ctx, lexer::suffix(TokenType)));
+                        end = ret.suffix->range.end();
+                    }
+
+                    ret.range = { start, end };
                 }
 
                 return ret;
             }
 
-            void print(const literal & tok, std::ostream & os, std::size_t indent = 0)
+            template<lexer::token_type TokenType>
+            void print(const literal<TokenType> & lit, std::ostream & os, std::size_t indent = 0)
             {
                 auto in = std::string(indent, ' ');
+                os << in << '`' << lexer::token_types[+lit.value.type] << "` literal value: " << lit.value << '\n';
+                if (lit.suffix)
+                {
+                    os << in << "literal suffix: " << *lit.suffix << '\n';
+                }
+            }
 
+            void print(const lexer::token & tok, std::ostream & os, std::size_t indent = 0)
+            {
+                auto in = std::string(indent, ' ');
                 os << in << tok << '\n';
             }
         }}

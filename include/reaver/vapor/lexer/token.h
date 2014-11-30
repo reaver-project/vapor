@@ -26,6 +26,8 @@
 #include <unordered_map>
 #include <ostream>
 
+#include <reaver/exception.h>
+
 #include "vapor/range.h"
 
 namespace reaver
@@ -39,9 +41,13 @@ namespace reaver
                 none,
                 identifier,
                 string,
+                string_suffix,
+                integer,
+                integer_suffix,
                 module,
                 import,
                 auto_,
+                return_,
                 dot,
                 comma,
                 curly_bracket_open,
@@ -64,6 +70,24 @@ namespace reaver
             constexpr std::size_t operator+(token_type type)
             {
                 return static_cast<std::size_t>(type);
+            }
+
+            class invalid_suffix_requested : public exception
+            {
+            public:
+                invalid_suffix_requested() : exception{ logger::crash }
+                {
+                    *this << "invalid suffix requested in lexer";
+                }
+            };
+
+            constexpr token_type suffix(token_type t)
+            {
+                switch (t)
+                {
+                    case token_type::integer: return token_type::integer_suffix;
+                    default: throw invalid_suffix_requested{};
+                }
             }
 
             extern std::array<std::string, +token_type::count> token_types;

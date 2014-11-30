@@ -25,11 +25,11 @@
 
 std::string program = R"program(module hello_world
 {
-    import lib.console;
+    auto foo = []() => 1;
 
     auto entry = []()
     {
-        console.print("hello world!");
+        return foo();
     };
 })program";
 

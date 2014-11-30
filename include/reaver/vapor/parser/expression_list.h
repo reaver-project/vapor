@@ -59,6 +59,19 @@ namespace reaver
                 return ret;
             }
 
+            template<typename Context>
+            block parse_single_statement_block(Context & ctx)
+            {
+                block ret;
+
+                expect(ctx, lexer::token_type::block_value);
+                auto expr = parse_expression(ctx);
+                ret.range = expr.range;
+                ret.value_expression = expression_list{ ret.range, { std::move(expr) } };
+
+                return ret;
+            }
+
             void print(const expression_list & list, std::ostream & os, std::size_t indent = 0)
             {
                 auto in = std::string(indent, ' ');

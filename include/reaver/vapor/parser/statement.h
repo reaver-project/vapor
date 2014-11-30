@@ -32,6 +32,7 @@
 #include "vapor/lexer/token.h"
 #include "vapor/parser/declaration.h"
 #include "vapor/parser/expression_list.h"
+#include "vapor/parser/return_expression.h"
 #include "vapor/parser/helpers.h"
 
 namespace reaver
@@ -43,7 +44,7 @@ namespace reaver
             struct statement
             {
                 class range range;
-                boost::variant<declaration, expression_list> statement_value;
+                boost::variant<declaration, return_expression, expression_list> statement_value;
             };
 
             template<typename Context>
@@ -56,11 +57,16 @@ namespace reaver
                     ret.statement_value = parse_declaration(ctx);
                 }
 
+                else if (peek(ctx, lexer::token_type::return_))
+                {
+                    ret.statement_value = parse_return_expression(ctx);
+                }
+
                 else
                 {
                     ret.statement_value = parse_expression_list(ctx);
                 }
-
+                
                 auto end = expect(ctx, lexer::token_type::semicolon).range.end();
 
                 visit([&](const auto & value) -> unit { ret.range = { value.range.start(), end }; return {}; }, ret.statement_value);

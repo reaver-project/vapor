@@ -33,9 +33,12 @@ static auto token_types_init = []() -> reaver::unit
 {
     token_types[+token_type::identifier] = "identifier";
     token_types[+token_type::string] = "string";
+    token_types[+token_type::integer] = "integer";
+    token_types[+token_type::integer_suffix] = "integer-suffix";
     token_types[+token_type::module] = "module";
     token_types[+token_type::import] = "import";
     token_types[+token_type::auto_] = "auto";
+    token_types[+token_type::return_] = "return";
     token_types[+token_type::dot] = ".";
     token_types[+token_type::curly_bracket_open] = "{";
     token_types[+token_type::curly_bracket_close] = "}";
@@ -61,6 +64,7 @@ std::unordered_map<std::string, token_type> reaver::vapor::lexer::_v1::keywords 
     { "module", token_type::module },
     { "import", token_type::import },
     { "auto", token_type::auto_ },
+    { "return", token_type::return_ },
 };
 
 std::unordered_map<char, token_type> reaver::vapor::lexer::_v1::symbols1 = {

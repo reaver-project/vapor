@@ -63,7 +63,14 @@ namespace reaver
                 }
                 expect(ctx, lexer::token_type::round_bracket_close);
 
-                ret.body = parse_block(ctx);
+                if (peek(ctx, lexer::token_type::block_value))
+                {
+                    ret.body = parse_single_statement_block(ctx);
+                }
+                else
+                {
+                    ret.body = parse_block(ctx);
+                }
 
                 ret.range = { start, ret.body.range.end() };
 

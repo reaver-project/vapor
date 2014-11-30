@@ -112,14 +112,14 @@ namespace reaver
                         {
                             if (!node)
                             {
-                                _initial = std::make_shared<_lexer_node>(token{ type, std::move(string), range(begin, end) }, _engine);
+                                _initial = std::make_shared<_lexer_node>(token{ type, std::move(string), range(begin, end) }, _ex);
                                 _sem.notify();
                                 node = _initial;
                             }
 
                             else
                             {
-                                node->_next = std::make_shared<_lexer_node>(token{ type, std::move(string), range(begin, end) }, _engine);
+                                node->_next = std::make_shared<_lexer_node>(token{ type, std::move(string), range(begin, end) }, _ex);
                                 node->_sem.notify();
                                 node = node->_next;
                             }
@@ -146,9 +146,14 @@ namespace reaver
                             return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
                         };
 
+                        auto is_decimal = [&](char c)
+                        {
+                            return c >= '0' && c <= '9';
+                        };
+
                         auto is_identifier_char = [&](char c)
                         {
-                            return is_identifier_start(c) || (c >= '0' && c <= '9');
+                            return is_identifier_start(c) || is_decimal(c);
                         };
 
                         while (!_end_flag && begin != end)
@@ -188,7 +193,7 @@ namespace reaver
                                         continue;
                                     }
 
-                                    _engine.push(unterminated_comment{ { p, pos } });
+                                    _ex = std::make_exception_ptr(unterminated_comment{ { p, pos } });
                                     notify();
                                     return;
                                 }
@@ -237,7 +242,7 @@ namespace reaver
 
                                 if (!next || second == '\n')
                                 {
-                                    _engine.push(unterminated_string{ { p, p + variable_length.size() } });
+                                    _ex = std::make_exception_ptr(unterminated_string{ { p, p + variable_length.size() } });
                                     notify();
                                     return;
                                 }
@@ -265,6 +270,30 @@ namespace reaver
                                 generate_token(token_type::identifier, p, p + variable_length.size(), variable_length);
                                 continue;
                             }
+
+                            if (is_decimal(*next))
+                            {
+                                do
+                                {
+                                    variable_length.push_back(*next);
+                                } while (peek() && is_decimal(*peek()) && (next = get()));
+
+                                generate_token(token_type::integer, p, p + variable_length.size(), variable_length);
+
+                                if (next && is_identifier_start(*next))
+                                {
+                                    variable_length.clear();
+
+                                    do
+                                    {
+                                        variable_length.push_back(*next);
+                                    } while (peek() && is_identifier_char(*peek()) && (next = get()));
+
+                                    generate_token(token_type::integer_suffix, p, p + variable_length.size(), variable_length);
+                                }
+
+                                continue;
+                            }
                         }
 
                         if (node)
@@ -284,7 +313,7 @@ namespace reaver
                     std::shared_ptr<_lexer_node> _initial = nullptr;
                     semaphore _sem;
                     std::thread _thread;
-                    error_engine _engine;
+                    std::exception_ptr _ex = nullptr;
                 };
             }
         }}
