@@ -22,9 +22,12 @@
 
 #pragma once
 
+#include <reaver/visit.h>
+
 #include "vapor/range.h"
 #include "vapor/parser/helpers.h"
 #include "vapor/parser/id_expression.h"
+#include "vapor/parser/literal.h"
 
 namespace reaver
 {
@@ -35,7 +38,7 @@ namespace reaver
             struct import_expression
             {
                 class range range;
-                id_expression module_name;
+                boost::variant<id_expression, string_literal> module_name;
             };
 
             template<typename Context>
@@ -44,8 +47,15 @@ namespace reaver
                 import_expression ret;
 
                 auto start = expect(ctx, lexer::token_type::import).range.start();
-                ret.module_name = parse_id_expression(ctx);
-                ret.range = { start, ret.module_name.range.end() };
+                if (peek(ctx, lexer::token_type::string))
+                {
+                    ret.module_name = parse_literal<lexer::token_type::string>(ctx);
+                }
+                else
+                {
+                    ret.module_name = parse_id_expression(ctx);
+                }
+                visit([&](const auto & elem) { ret.range = { start, elem.range.end() }; return unit{}; }, ret.module_name);
 
                 return ret;
             }
@@ -56,7 +66,7 @@ namespace reaver
 
                 os << in << "`import-expression` at " << expr.range << '\n';
                 os << in << "{\n";
-                print(expr.module_name, os, indent + 4);
+                visit([&](const auto & elem) { print(elem, os, indent + 4); return unit{}; }, expr.module_name);
                 os << in << "}\n";
             }
         }}

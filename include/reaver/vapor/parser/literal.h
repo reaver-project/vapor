@@ -23,7 +23,7 @@
 #pragma once
 
 #include <boost/variant.hpp>
-#include <boost/variant.hpp>
+#include <boost/optional.hpp>
 
 #include "vapor/range.h"
 #include "vapor/parser/helpers.h"
