@@ -33,7 +33,7 @@ namespace reaver
 {
     namespace vapor
     {
-        namespace parser
+        namespace parser { inline namespace _v1
         {
             struct module
             {
@@ -85,6 +85,6 @@ namespace reaver
                 }
                 os << in << "}\n";
             }
-        }
+        }}
     }
 }
