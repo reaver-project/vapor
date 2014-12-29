@@ -22,6 +22,7 @@
 
 #include "vapor/lexer.h"
 #include "vapor/parser.h"
+#include "vapor/analyzer.h"
 
 std::string program = R"program(module hello_world
 {
@@ -50,6 +51,10 @@ int main() try
     reaver::logger::dlog() << "AST:";
     reaver::vapor::parser::ast ast{ iterator };
     reaver::logger::dlog() << ast;
+
+    reaver::logger::dlog() << "Analyzed AST:";
+    reaver::vapor::analyzer::ast analyzed_ast{ ast };
+//    reaver::logger::dlog() << analyzed_ast;
 }
 
 catch (reaver::exception & e)
