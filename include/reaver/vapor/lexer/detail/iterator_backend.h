@@ -43,7 +43,6 @@ namespace reaver
         {
             namespace _detail
             {
-
                 class _iterator_backend
                 {
                 public:
@@ -113,8 +112,8 @@ namespace reaver
                             if (!node)
                             {
                                 _initial = std::make_shared<_lexer_node>(token{ type, std::move(string), range(begin, end) }, _ex);
-                                _sem.notify();
                                 node = _initial;
+                                _sem.notify();
                             }
 
                             else
