@@ -125,7 +125,7 @@ namespace reaver
                 }
             };
 
-            relaxed_constexpr token_type suffix(token_type t)
+            inline relaxed_constexpr token_type suffix(token_type t)
             {
                 switch (t)
                 {
