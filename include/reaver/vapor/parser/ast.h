@@ -43,7 +43,7 @@ namespace reaver
             public:
                 ast(lexer::iterator begin, lexer::iterator end = {})
                 {
-                    auto ctx = context{ begin, end };
+                    auto ctx = context{ begin, end, {} };
 
                     while (ctx.begin != ctx.end)
                     {

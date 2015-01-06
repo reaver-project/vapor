@@ -25,6 +25,7 @@
 #include <array>
 #include <unordered_map>
 #include <ostream>
+#include <type_traits>
 
 #include <reaver/exception.h>
 #include <reaver/relaxed_constexpr.h>
@@ -170,4 +171,20 @@ namespace reaver
             };
         }}
     }
+}
+
+namespace std
+{
+    template<>
+    struct hash<::reaver::vapor::lexer::token_type>
+    {
+        using argument_type = ::reaver::vapor::lexer::token_type;
+        using underlying_type = std::underlying_type<argument_type>::type;
+        using result_type = std::hash<underlying_type>::result_type;
+        result_type operator()(const argument_type & arg) const
+        {
+            std::hash<underlying_type> hasher;
+            return hasher(static_cast<underlying_type>(arg));
+        }
+    };
 }
