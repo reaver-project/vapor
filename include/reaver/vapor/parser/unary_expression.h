@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2015 Michał "Griwes" Dominiak
+ * Copyright © 2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,7 +23,8 @@
 #pragma once
 
 #include "vapor/range.h"
-#include "vapor/parser/helpers.h"
+#include "vapor/lexer/token.h"
+#include "vapor/parser/expression.h"
 
 namespace reaver
 {
@@ -31,12 +32,23 @@ namespace reaver
     {
         namespace parser { inline namespace _v1
         {
-            struct capture_list
+            struct unary_expression
             {
                 range_type range;
+                lexer::token op;
+                expression operand;
             };
 
-            capture_list parse_capture_list(context & ctx);
+            const std::vector<lexer::token_type> & unary_operators();
+
+            inline bool is_unary_operator(lexer::token_type t)
+            {
+                return std::find(unary_operators().begin(), unary_operators().end(), t) != unary_operators().end();
+            }
+
+            unary_expression parse_unary_expression(context & ctx);
+
+            void print(const unary_expression & expr, std::ostream & os, std::size_t indent = 0);
         }}
     }
 }

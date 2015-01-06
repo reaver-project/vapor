@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -30,11 +30,8 @@
 #include <reaver/visit.h>
 
 #include "vapor/range.h"
-#include "vapor/parser/id_expression.h"
-#include "vapor/parser/expression_list.h"
 #include "vapor/parser/helpers.h"
 #include "vapor/parser/import_expression.h"
-#include "vapor/parser/lambda_expression.h"
 #include "vapor/parser/postfix_expression.h"
 #include "vapor/parser/literal.h"
 
@@ -44,63 +41,30 @@ namespace reaver
     {
         namespace parser { inline namespace _v1
         {
-            struct expression_list;
+            struct lambda_expression;
+            struct unary_expression;
+            struct binary_expression;
+
+            void print(const unary_expression & expr, std::ostream & os, std::size_t indent);
+            void print(const binary_expression & expr, std::ostream & os, std::size_t indent);
 
             struct expression
             {
-                class range range;
-                boost::variant<literal<lexer::token_type::string>, literal<lexer::token_type::integer>, postfix_expression, import_expression, lambda_expression> expression_value;
+                range_type range;
+                boost::variant<
+                    literal<lexer::token_type::string>,
+                    literal<lexer::token_type::integer>,
+                    postfix_expression,
+                    import_expression,
+                    boost::recursive_wrapper<lambda_expression>,
+                    boost::recursive_wrapper<unary_expression>,
+                    boost::recursive_wrapper<binary_expression>
+                > expression_value;
             };
 
-            template<typename Context>
-            expression parse_expression(Context & ctx)
-            {
-                expression ret;
+            expression parse_expression(context & ctx);
 
-                if (peek(ctx, lexer::token_type::string))
-                {
-                    ret.expression_value = parse_literal<lexer::token_type::string>(ctx);
-                }
-
-                else if (peek(ctx, lexer::token_type::integer))
-                {
-                    ret.expression_value = parse_literal<lexer::token_type::integer>(ctx);
-                }
-
-                else if (peek(ctx, lexer::token_type::identifier))
-                {
-                    ret.expression_value = parse_postfix_expression(ctx);
-                }
-
-                else if (peek(ctx, lexer::token_type::import))
-                {
-                    ret.expression_value = parse_import_expression(ctx);
-                }
-
-                else if (peek(ctx, lexer::token_type::square_bracket_open))
-                {
-                    ret.expression_value = parse_lambda_expression(ctx);
-                }
-
-                else
-                {
-                    throw expectation_failure{ "expression", ctx.begin->string, ctx.begin->range };
-                }
-
-                visit([&](const auto & value) -> unit { ret.range = value.range; return {}; }, ret.expression_value);
-
-                return ret;
-            }
-
-            void print(const expression & expr, std::ostream & os, std::size_t indent = 0)
-            {
-                auto in = std::string(indent, ' ');
-
-                os << in << "`expression` at " << expr.range << '\n';
-                os << in << "{\n";
-                visit([&](const auto & value) -> unit { print(value, os, indent + 4); return {}; }, expr.expression_value);
-                os << in << "}\n";
-            }
+            void print(const expression & expr, std::ostream & os, std::size_t indent = 0);
         }}
     }
 }

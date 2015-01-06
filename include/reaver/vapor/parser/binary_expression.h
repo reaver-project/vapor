@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2015 Michał "Griwes" Dominiak
+ * Copyright © 2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,12 +22,10 @@
 
 #pragma once
 
-#include <vector>
-#include <string>
-
 #include "vapor/range.h"
 #include "vapor/lexer/token.h"
-#include "vapor/parser/helpers.h"
+#include "vapor/parser/expression.h"
+#include "vapor/parser/unary_expression.h"
 
 namespace reaver
 {
@@ -35,15 +33,37 @@ namespace reaver
     {
         namespace parser { inline namespace _v1
         {
-            struct id_expression
+            struct binary_expression
             {
                 range_type range;
-                std::vector<lexer::token> id_expression_value;
+                lexer::token op;
+                expression lhs;
+                expression rhs;
             };
 
-            id_expression parse_id_expression(context & ctx);
+            const std::vector<lexer::token_type> & binary_operators();
 
-            void print(const id_expression & ide, std::ostream & os, std::size_t indent = 0);
+            inline bool is_binary_operator(lexer::token_type t)
+            {
+                return std::find(binary_operators().begin(), binary_operators().end(), t) != binary_operators().end();
+            }
+
+            const std::unordered_map<lexer::token_type, std::size_t> & binary_operator_precedences();
+
+            inline std::size_t precedence(operator_context ctx)
+            {
+                if (ctx.type == operator_type::unary)
+                {
+                    return 0;
+                }
+
+                return binary_operator_precedences().at(ctx.op);
+            }
+
+            binary_expression parse_binary_expression(context & ctx, expression lhs);
+
+            void print(const binary_expression & expr, std::ostream & os, std::size_t indent = 0);
         }}
     }
 }
+

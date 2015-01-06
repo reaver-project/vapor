@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -41,10 +41,9 @@ namespace reaver
             class ast
             {
             public:
-                template<typename Iterator, typename std::enable_if<std::is_same<typename std::iterator_traits<Iterator>::value_type, lexer::token>::value, int>::type = 0>
-                ast(Iterator begin, Iterator end = {})
+                ast(lexer::iterator begin, lexer::iterator end = {})
                 {
-                    auto ctx = make_context(begin, end);
+                    auto ctx = context{ begin, end };
 
                     while (ctx.begin != ctx.end)
                     {

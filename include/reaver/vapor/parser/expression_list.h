@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -37,54 +37,13 @@ namespace reaver
         {
             struct expression_list
             {
-                class range range;
+                range_type range;
                 std::vector<expression> expressions;
             };
 
-            template<typename Context>
-            expression_list parse_expression_list(Context & ctx)
-            {
-                expression_list ret;
+            expression_list parse_expression_list(context & ctx);
 
-                ret.expressions.push_back(parse_expression(ctx));
-
-                if (peek(ctx, lexer::token_type::comma))
-                {
-                    expect(ctx, lexer::token_type::comma);
-                    ret.expressions.push_back(parse_expression(ctx));
-                }
-
-                ret.range = { ret.expressions.front().range.start(), ret.expressions.back().range.end() };
-
-                return ret;
-            }
-
-            template<typename Context>
-            block parse_single_statement_block(Context & ctx)
-            {
-                block ret;
-
-                expect(ctx, lexer::token_type::block_value);
-                auto expr = parse_expression(ctx);
-                ret.range = expr.range;
-                ret.value_expression = expression_list{ ret.range, { std::move(expr) } };
-
-                return ret;
-            }
-
-            void print(const expression_list & list, std::ostream & os, std::size_t indent = 0)
-            {
-                auto in = std::string(indent, ' ');
-
-                os << in << "`expression-list` at " << list.range << '\n';
-
-                for (auto && expression : list.expressions)
-                {
-                    os << in << "{\n";
-                    print(expression, os, indent + 4);
-                    os << in << "}\n";
-                }
-            }
+            void print(const expression_list & list, std::ostream & os, std::size_t indent = 0);
         }}
     }
 }

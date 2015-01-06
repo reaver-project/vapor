@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -25,11 +25,14 @@
 #include <type_traits>
 
 #include <boost/variant.hpp>
+#include <boost/optional.hpp>
 
 #include <reaver/exception.h>
 #include <reaver/unit.h>
 
+#include "vapor/range.h"
 #include "vapor/lexer/token.h"
+#include "vapor/lexer/iterator.h"
 
 namespace reaver
 {
@@ -40,12 +43,12 @@ namespace reaver
             class expectation_failure : public exception
             {
             public:
-                expectation_failure(lexer::token_type expected, const std::string & actual, range & r) : exception{ logger::fatal }
+                expectation_failure(lexer::token_type expected, const std::string & actual, range_type & r) : exception{ logger::fatal }
                 {
                     *this << r << ": expected `" << lexer::token_types[+expected] << "`, got `" << actual << "`";
                 }
 
-                expectation_failure(const std::string & str, const std::string & actual, range & r) : exception{ logger::fatal }
+                expectation_failure(const std::string & str, const std::string & actual, range_type & r) : exception{ logger::fatal }
                 {
                     *this <<  r << ": expected " << str << ", got `" << actual << "`";
                 }
@@ -56,20 +59,25 @@ namespace reaver
                 }
             };
 
-            template<typename Iterator>
-            struct context
+            enum class operator_type
             {
-                Iterator begin, end;
+                unary,
+                binary
             };
 
-            template<typename Iterator>
-            auto make_context(Iterator begin, Iterator end)
+            struct operator_context
             {
-                return context<Iterator>{ begin, end };
-            }
+                lexer::token_type op;
+                operator_type type;
+            };
 
-            template<typename Context>
-            auto expect(Context & ctx, lexer::token_type expected)
+            struct context
+            {
+                lexer::iterator begin, end;
+                std::vector<operator_context> operator_stack = {};
+            };
+
+            inline lexer::token expect(context & ctx, lexer::token_type expected)
             {
                 if (ctx.begin->type != expected)
                 {
@@ -84,8 +92,17 @@ namespace reaver
                 return std::move(*ctx.begin++);
             }
 
-            template<typename Context>
-            auto peek(Context & ctx, lexer::token_type expected) -> boost::optional<lexer::token &>
+            inline boost::optional<lexer::token &> peek(context & ctx)
+            {
+                if (ctx.begin != ctx.end)
+                {
+                    return { *ctx.begin };
+                }
+
+                return {};
+            }
+
+            inline boost::optional<lexer::token &> peek(context & ctx, lexer::token_type expected)
             {
                 if (ctx.begin != ctx.end && ctx.begin->type == expected)
                 {

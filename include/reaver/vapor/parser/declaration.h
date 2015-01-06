@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -35,36 +35,14 @@ namespace reaver
         {
             struct declaration
             {
-                class range range;
+                range_type range;
                 lexer::token identifier;
                 expression_list rhs;
             };
 
-            template<typename Context>
-            declaration parse_declaration(Context & ctx)
-            {
-                declaration ret;
+            declaration parse_declaration(context & ctx);
 
-                auto start = expect(ctx, lexer::token_type::auto_).range.start();
-                ret.identifier = std::move(expect(ctx, lexer::token_type::identifier));
-                expect(ctx, lexer::token_type::assign);
-                ret.rhs = parse_expression_list(ctx);
-                ret.range = { start, ret.rhs.range.end() };
-
-                return ret;
-            }
-
-            void print(const declaration & decl, std::ostream & os, std::size_t indent = 0)
-            {
-                auto in = std::string(indent, ' ');
-
-                os << in << "`declaration` at " << decl.range << '\n';
-
-                os << in << "{\n";
-                print(decl.identifier, os, indent + 4);
-                print(decl.rhs, os, indent + 4);
-                os << in << "}\n";
-            }
+            void print(const declaration & decl, std::ostream & os, std::size_t indent = 0);
         }}
     }
 }

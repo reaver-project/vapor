@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -37,7 +37,7 @@ namespace reaver
             template<lexer::token_type TokenType>
             struct literal
             {
-                class range range;
+                range_type range;
                 lexer::token value;
                 boost::optional<lexer::token> suffix;
             };
@@ -45,8 +45,8 @@ namespace reaver
             using string_literal = literal<lexer::token_type::string>;
             using integer_literal = literal<lexer::token_type::integer>;
 
-            template<lexer::token_type TokenType, typename Context>
-            auto parse_literal(Context & ctx)
+            template<lexer::token_type TokenType>
+            auto parse_literal(context & ctx)
             {
                 literal<TokenType> ret;
 
@@ -80,7 +80,7 @@ namespace reaver
                 }
             }
 
-            void print(const lexer::token & tok, std::ostream & os, std::size_t indent = 0)
+            inline void print(const lexer::token & tok, std::ostream & os, std::size_t indent = 0)
             {
                 auto in = std::string(indent, ' ');
                 os << in << tok << '\n';

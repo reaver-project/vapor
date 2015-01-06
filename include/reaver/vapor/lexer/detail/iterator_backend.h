@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -111,14 +111,14 @@ namespace reaver
                         {
                             if (!node)
                             {
-                                _initial = std::make_shared<_lexer_node>(token{ type, std::move(string), range(begin, end) }, _ex);
+                                _initial = std::make_shared<_lexer_node>(token{ type, std::move(string), range_type(begin, end) }, _ex);
                                 node = _initial;
                                 _sem.notify();
                             }
 
                             else
                             {
-                                node->_next = std::make_shared<_lexer_node>(token{ type, std::move(string), range(begin, end) }, _ex);
+                                node->_next = std::make_shared<_lexer_node>(token{ type, std::move(string), range_type(begin, end) }, _ex);
                                 node->_sem.notify();
                                 node = node->_next;
                             }
@@ -202,25 +202,25 @@ namespace reaver
                                 auto second = peek();
                                 auto third = peek(1);
 
-                                if (second && third && symbols3.find(*next) != symbols3.end() && symbols3[*next].find(*second) != symbols3[*next].end()
-                                    && symbols3[*next][*second].find(*third) != symbols3[*next][*second].end())
+                                if (second && third && symbols3.find(*next) != symbols3.end() && symbols3.at(*next).find(*second) != symbols3.at(*next).end()
+                                    && symbols3.at(*next).at(*second).find(*third) != symbols3.at(*next).at(*second).end())
                                 {
                                     auto p = pos;
-                                    generate_token(symbols3[*next][*second][*third], p, p + 3, { *next, *get(), *get() });
+                                    generate_token(symbols3.at(*next).at(*second).at(*third), p, p + 3, { *next, *get(), *get() });
                                     continue;
                                 }
 
-                                else if (second && symbols2.find(*next) != symbols2.end() && symbols2[*next].find(*second) != symbols2[*next].end())
+                                else if (second && symbols2.find(*next) != symbols2.end() && symbols2.at(*next).find(*second) != symbols2.at(*next).end())
                                 {
                                     auto p = pos;
-                                    generate_token(symbols2[*next][*second], p, p + 2, { *next, *get() })   ;
+                                    generate_token(symbols2.at(*next).at(*second), p, p + 2, { *next, *get() })   ;
                                     continue;
                                 }
 
                                 else if (symbols1.find(*next) != symbols1.end())
                                 {
                                     auto p = pos;
-                                    generate_token(symbols1[*next], p, p + 1, { *next });
+                                    generate_token(symbols1.at(*next), p, p + 1, { *next });
                                     continue;
                                 }
                             }
@@ -262,7 +262,7 @@ namespace reaver
 
                                 if (keywords.find(variable_length) != keywords.end())
                                 {
-                                    generate_token(keywords[variable_length], p, p + variable_length.size(), variable_length);
+                                    generate_token(keywords.at(variable_length), p, p + variable_length.size(), variable_length);
                                     continue;
                                 }
 
@@ -293,6 +293,10 @@ namespace reaver
 
                                 continue;
                             }
+
+                            _ex = std::make_exception_ptr(exception(logger::fatal) << "stray character in file: " << *next);
+                            notify();
+                            return;
                         }
 
                         if (node)

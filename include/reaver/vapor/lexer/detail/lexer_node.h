@@ -52,7 +52,7 @@ namespace reaver
 
                     void wait_next()
                     {
-                        if (_done)
+                        if (_done || _next)
                         {
                             return;
                         }

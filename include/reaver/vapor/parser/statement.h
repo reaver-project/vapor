@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -28,12 +28,12 @@
 
 #include <reaver/visit.h>
 
-#include "vapor/range.h"
-#include "vapor/lexer/token.h"
-#include "vapor/parser/declaration.h"
-#include "vapor/parser/expression_list.h"
-#include "vapor/parser/return_expression.h"
 #include "vapor/parser/helpers.h"
+#include "vapor/parser/expression_list.h"
+#include "vapor/parser/declaration.h"
+#include "vapor/parser/return_expression.h"
+#include "vapor/parser/unary_expression.h"
+#include "vapor/parser/binary_expression.h"
 
 namespace reaver
 {
@@ -43,46 +43,13 @@ namespace reaver
         {
             struct statement
             {
-                class range range;
+                range_type range;
                 boost::variant<declaration, return_expression, expression_list> statement_value;
             };
 
-            template<typename Context>
-            statement parse_statement(Context & ctx)
-            {
-                statement ret;
+            statement parse_statement(context & ctx);
 
-                if (peek(ctx, lexer::token_type::auto_))
-                {
-                    ret.statement_value = parse_declaration(ctx);
-                }
-
-                else if (peek(ctx, lexer::token_type::return_))
-                {
-                    ret.statement_value = parse_return_expression(ctx);
-                }
-
-                else
-                {
-                    ret.statement_value = parse_expression_list(ctx);
-                }
-
-                auto end = expect(ctx, lexer::token_type::semicolon).range.end();
-
-                visit([&](const auto & value) -> unit { ret.range = { value.range.start(), end }; return {}; }, ret.statement_value);
-
-                return ret;
-            }
-
-            void print(const statement & stmt, std::ostream & os, std::size_t indent = 0)
-            {
-                auto in = std::string(indent, ' ');
-
-                os << in << "`statement` at " << stmt.range << '\n';
-                os << in << "{\n";
-                visit([&](const auto & value) -> unit { print(value, os, indent + 4); return {}; }, stmt.statement_value);
-                os << in << "}\n";
-            }
+            void print(const statement & stmt, std::ostream & os, std::size_t indent = 0);
         }}
     }
 }

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -60,12 +60,54 @@ namespace reaver
                 angle_bracket_open,
                 angle_bracket_close,
                 semicolon,
-                right_shift,
-                left_shift,
                 map,
+                bind,
+                indirection,
                 assign,
                 block_value,
-                count                                       // always the last
+
+                logical_not,
+                bitwise_not,
+                bitwise_not_assignment,
+
+                plus,
+                minus,
+                star,
+                slash,
+                modulo,
+                bitwise_and,
+                bitwise_or,
+                bitwise_xor,
+                logical_and,
+                logical_or,
+                right_shift,
+                left_shift,
+
+                plus_assignment,
+                minus_assignment,
+                star_assignment,
+                slash_assignment,
+                modulo_assignment,
+                bitwise_and_assignment,
+                bitwise_or_assignment,
+                bitwise_xor_assignment,
+                logical_and_assignment,
+                logical_or_assignment,
+                right_shift_assignment,
+                left_shift_assignment,
+
+                equals,
+                not_equals,
+                less_equal,
+                greater_equal,
+
+                increment,
+                decrement,
+
+                count,                                      // always the last, except for duplicates
+
+                less = angle_bracket_open,
+                greater = angle_bracket_close
             };
 
             constexpr std::size_t operator+(token_type type)
@@ -93,10 +135,10 @@ namespace reaver
 
             extern std::array<std::string, +token_type::count> token_types;
 
-            extern std::unordered_map<std::string, token_type> keywords;
-            extern std::unordered_map<char, token_type> symbols1;
-            extern std::unordered_map<char, std::unordered_map<char, token_type>> symbols2;
-            extern std::unordered_map<char, std::unordered_map<char, std::unordered_map<char, token_type>>> symbols3;
+            extern const std::unordered_map<std::string, token_type> keywords;
+            extern const std::unordered_map<char, token_type> symbols1;
+            extern const std::unordered_map<char, std::unordered_map<char, token_type>> symbols2;
+            extern const std::unordered_map<char, std::unordered_map<char, std::unordered_map<char, token_type>>> symbols3;
 
             class iterator;
 
@@ -108,21 +150,21 @@ namespace reaver
                 token & operator=(const token &) = default;
                 token & operator=(token &&) = default;
 
-                token(token_type t, std::string s, class range r) : type{ t }, string{ std::move(s) }, range{ std::move(r) }
+                token(token_type t, std::string s, range_type r) : type{ t }, string{ std::move(s) }, range{ std::move(r) }
                 {
                 }
 
                 token_type type;
                 std::string string;
-                class range range;
+                range_type range;
             };
 
-            bool operator==(const token & lhs, const token & rhs)
+            inline bool operator==(const token & lhs, const token & rhs)
             {
                 return lhs.type == rhs.type && lhs.string == rhs.string && lhs.range == rhs.range;
             }
 
-            std::ostream & operator<<(std::ostream & os, const token & tok)
+            inline std::ostream & operator<<(std::ostream & os, const token & tok)
             {
                 return os << "token type: `" << token_types[+tok.type] << "` token value: `" << tok.string << "` token range: " << tok.range;
             };

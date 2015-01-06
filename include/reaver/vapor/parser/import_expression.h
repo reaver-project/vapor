@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -37,38 +37,13 @@ namespace reaver
         {
             struct import_expression
             {
-                class range range;
+                range_type range;
                 boost::variant<id_expression, string_literal> module_name;
             };
 
-            template<typename Context>
-            import_expression parse_import_expression(Context & ctx)
-            {
-                import_expression ret;
+            import_expression parse_import_expression(context & ctx);
 
-                auto start = expect(ctx, lexer::token_type::import).range.start();
-                if (peek(ctx, lexer::token_type::string))
-                {
-                    ret.module_name = parse_literal<lexer::token_type::string>(ctx);
-                }
-                else
-                {
-                    ret.module_name = parse_id_expression(ctx);
-                }
-                visit([&](const auto & elem) { ret.range = { start, elem.range.end() }; return unit{}; }, ret.module_name);
-
-                return ret;
-            }
-
-            void print(const import_expression & expr, std::ostream & os, std::size_t indent = 0)
-            {
-                auto in = std::string(indent, ' ');
-
-                os << in << "`import-expression` at " << expr.range << '\n';
-                os << in << "{\n";
-                visit([&](const auto & elem) { print(elem, os, indent + 4); return unit{}; }, expr.module_name);
-                os << in << "}\n";
-            }
+            void print(const import_expression & expr, std::ostream & os, std::size_t indent = 0);
         }}
     }
 }

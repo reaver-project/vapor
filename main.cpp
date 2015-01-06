@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -26,7 +26,7 @@
 
 std::string program = R"program(module hello_world
 {
-    auto foo = []() => 1;
+    auto foo = []() => -1 * 2 + 3;
 
     auto entry = []()
     {
@@ -53,7 +53,7 @@ int main() try
     reaver::logger::dlog() << ast;
 
     reaver::logger::dlog() << "Analyzed AST:";
-    reaver::vapor::analyzer::ast analyzed_ast{ ast };
+//    reaver::vapor::analyzer::ast analyzed_ast{ ast };
 //    reaver::logger::dlog() << analyzed_ast;
 }
 

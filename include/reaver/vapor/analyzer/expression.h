@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -26,6 +26,7 @@
 
 #include "vapor/parser/expression_list.h"
 #include "vapor/parser/expression.h"
+#include "vapor/parser/lambda_expression.h"
 #include "vapor/analyzer/scope.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/literal.h"
@@ -42,6 +43,14 @@ namespace reaver
             {
             };
 
+            class unary_expression
+            {
+            };
+
+            class binary_expression
+            {
+            };
+
             struct expression_recursive_wrapper;
 
             using expression = shptr_variant<
@@ -49,7 +58,9 @@ namespace reaver
                 literal,
                 import_expression,
                 postfix_expression,
-                lambda
+                lambda,
+                unary_expression,
+                binary_expression
             >;
 
             struct expression_recursive_wrapper
@@ -88,6 +99,18 @@ namespace reaver
                     {
                         assert(0);
                         return std::shared_ptr<lambda>();
+                    },
+
+                    id<parser::unary_expression>(), [](auto && unary_expr) -> expression
+                    {
+                        assert(0);
+                        return std::shared_ptr<unary_expression>();
+                    },
+
+                    id<parser::binary_expression>(), [](auto && binary_expr) -> expression
+                    {
+                        assert(0);
+                        return std::shared_ptr<binary_expression>();
                     }
                 ), expr.expression_value);
             }

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -37,13 +37,12 @@ namespace reaver
         {
             struct module
             {
-                class range range;
+                range_type range;
                 id_expression name;
                 std::vector<statement> statements;
             };
 
-            template<typename Context>
-            module parse_module(Context & ctx)
+            module parse_module(context & ctx)
             {
                 module ret;
 

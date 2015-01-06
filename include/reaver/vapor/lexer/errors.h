@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -35,7 +35,7 @@ namespace reaver
             class unterminated_comment : public reaver::exception
             {
             public:
-                unterminated_comment(range r) : exception{ logger::error }
+                unterminated_comment(range_type r) : exception{ logger::error }
                 {
                     *this << "unterminated comment at " << r;
                 }
@@ -44,7 +44,7 @@ namespace reaver
             class unterminated_string : public reaver::exception
             {
             public:
-                unterminated_string(range r) : exception{ logger::error }
+                unterminated_string(range_type r) : exception{ logger::error }
                 {
                     *this << "unterminated string at " << r;
                 }

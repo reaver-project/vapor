@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2015 Michał "Griwes" Dominiak
+ * Copyright © 2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,35 +20,28 @@
  *
  **/
 
-#pragma once
+#include "vapor/parser/return_expression.h"
+#include "vapor/parser/expression_list.h"
+#include "vapor/parser/lambda_expression.h"
 
-#include <boost/optional.hpp>
-
-#include "vapor/range.h"
-#include "vapor/parser/helpers.h"
-#include "vapor/parser/block.h"
-#include "vapor/parser/argument_list.h"
-#include "vapor/parser/capture_list.h"
-
-namespace reaver
+reaver::vapor::parser::_v1::return_expression reaver::vapor::parser::_v1::parse_return_expression(reaver::vapor::parser::_v1::context & ctx)
 {
-    namespace vapor
-    {
-        namespace parser { inline namespace _v1
-        {
-            struct block;
+    return_expression ret;
 
-            struct lambda_expression
-            {
-                range_type range;
-                boost::optional<capture_list> captures;
-                boost::optional<argument_list> arguments;
-                boost::recursive_wrapper<block> body;
-            };
+    auto start = expect(ctx, lexer::token_type::return_).range.start();
+    ret.return_value = parse_expression(ctx);
 
-            lambda_expression parse_lambda_expression(context & ctx);
+    ret.range = { start, ret.return_value.range.end() };
 
-            void print(const lambda_expression & expr, std::ostream & os, std::size_t indent = 0);
-        }}
-    }
+    return ret;
+}
+
+void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::return_expression & ret, std::ostream & os, std::size_t indent)
+{
+    auto in = std::string(indent, ' ');
+
+    os << in << "`return-expression` at " << ret.range << '\n';
+    os << in << "{\n";
+    print(ret.return_value, os, indent + 4);
+    os << in << "}\n";
 }

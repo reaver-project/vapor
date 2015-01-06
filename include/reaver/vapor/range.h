@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -30,18 +30,18 @@ namespace reaver
 {
     namespace vapor { inline namespace _v1
     {
-        class range
+        class range_type
         {
         public:
-            range() = default;
-            range(const range &) = default;
-            range(range &&) = default;
-            range & operator=(const range &) = default;
-            range & operator=(range &&) = default;
+            range_type() = default;
+            range_type(const range_type &) = default;
+            range_type(range_type &&) = default;
+            range_type & operator=(const range_type &) = default;
+            range_type & operator=(range_type &&) = default;
 
-            range(position s, position e) : _start{ std::move(s) }, _end{ std::move(e) }
+            range_type(position s, position e) : _start{ std::move(s) }, _end{ std::move(e) }
             {
-            // throw: assert(s.offset <= e.offset);
+                // throw: assert(s.offset <= e.offset);
             }
 
             const position & start() const
@@ -59,12 +59,12 @@ namespace reaver
             position _end;
         };
 
-        bool operator==(const range & lhs, const range & rhs)
+        inline bool operator==(const range_type & lhs, const range_type & rhs)
         {
             return lhs.start() == rhs.start() && lhs.end() == rhs.end();
         }
 
-        std::ostream & operator<<(std::ostream & os, const range & r)
+        inline std::ostream & operator<<(std::ostream & os, const range_type & r)
         {
             if (r.end() - r.start() > 1)
             {

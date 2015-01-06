@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014-2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,6 +23,7 @@
 #pragma once
 
 #include "vapor/range.h"
+#include "vapor/parser/helpers.h"
 
 namespace reaver
 {
@@ -32,18 +33,10 @@ namespace reaver
         {
             struct argument_list
             {
-                class range range;
+                range_type range;
             };
 
-            template<typename Context>
-            argument_list parse_argument_list(Context & ctx)
-            {
-                argument_list ret;
-
-                assert(0);
-
-                return ret;
-            }
+            argument_list parse_argument_list(context & ctx);
         }}
     }
 }
