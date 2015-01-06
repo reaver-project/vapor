@@ -74,7 +74,7 @@ namespace reaver
             struct context
             {
                 lexer::iterator begin, end;
-                std::vector<operator_context> operator_stack = {};
+                std::vector<operator_context> operator_stack;
             };
 
             inline lexer::token expect(context & ctx, lexer::token_type expected)
