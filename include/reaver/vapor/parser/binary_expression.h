@@ -54,11 +54,38 @@ namespace reaver
             {
                 if (ctx.type == operator_type::unary)
                 {
-                    return 0;
+                    return 5;
                 }
 
                 return binary_operator_precedences().at(ctx.op);
             }
+
+            enum class assoc
+            {
+                right,
+                left
+            };
+
+            inline assoc associativity(lexer::token_type type)
+            {
+                static std::vector<lexer::token_type> right_assoc = {
+                    lexer::token_type::assign,
+                    lexer::token_type::plus_assignment,
+                    lexer::token_type::minus_assignment,
+                    lexer::token_type::star_assignment,
+                    lexer::token_type::slash_assignment,
+                    lexer::token_type::left_shift_assignment,
+                    lexer::token_type::right_shift_assignment,
+                    lexer::token_type::bitwise_and_assignment,
+                    lexer::token_type::bitwise_not_assignment,
+                    lexer::token_type::bitwise_or_assignment,
+                    lexer::token_type::bitwise_xor_assignment,
+                    lexer::token_type::logical_and_assignment,
+                    lexer::token_type::logical_or_assignment
+                };
+
+                return std::find(right_assoc.begin(), right_assoc.end(), type) != right_assoc.end() ? assoc::right : assoc::left;
+            };
 
             binary_expression parse_binary_expression(context & ctx, expression lhs);
 
@@ -66,4 +93,3 @@ namespace reaver
         }}
     }
 }
-

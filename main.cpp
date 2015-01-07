@@ -26,7 +26,7 @@
 
 std::string program = R"program(module hello_world
 {
-    auto foo = []() => -1 * 2 + 3;
+    auto foo = []() => 1;
 
     auto entry = []()
     {

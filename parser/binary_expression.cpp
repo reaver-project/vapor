@@ -40,6 +40,7 @@ const std::vector<reaver::vapor::lexer::_v1::token_type> & reaver::vapor::parser
         lexer::token_type::left_shift,
         lexer::token_type::right_shift,
 
+        lexer::token_type::assign,
         lexer::token_type::plus_assignment,
         lexer::token_type::minus_assignment,
         lexer::token_type::star_assignment,
@@ -74,8 +75,7 @@ const std::unordered_map<reaver::vapor::lexer::_v1::token_type, std::size_t> & r
     {
         std::unordered_map<lexer::token_type, std::size_t> precedences;
 
-        precedences[lexer::token_type::dot] = 5;
-        precedences[lexer::token_type::indirection] = 5;
+        precedences[lexer::token_type::indirection] = 0;
 
         precedences[lexer::token_type::star] = 10;
         precedences[lexer::token_type::slash] = 10;
@@ -100,6 +100,24 @@ const std::unordered_map<reaver::vapor::lexer::_v1::token_type, std::size_t> & r
         precedences[lexer::token_type::bitwise_or] = 45;
         precedences[lexer::token_type::logical_and] = 50;
         precedences[lexer::token_type::logical_or] = 55;
+
+        for (auto t : {
+            lexer::token_type::assign,
+            lexer::token_type::plus_assignment,
+            lexer::token_type::minus_assignment,
+            lexer::token_type::star_assignment,
+            lexer::token_type::slash_assignment,
+            lexer::token_type::left_shift_assignment,
+            lexer::token_type::right_shift_assignment,
+            lexer::token_type::bitwise_and_assignment,
+            lexer::token_type::bitwise_not_assignment,
+            lexer::token_type::bitwise_or_assignment,
+            lexer::token_type::bitwise_xor_assignment,
+            lexer::token_type::logical_and_assignment,
+            lexer::token_type::logical_or_assignment })
+        {
+            precedences[t] = 60;
+        }
 
         return precedences;
     }();
