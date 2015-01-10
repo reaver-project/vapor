@@ -34,12 +34,15 @@ reaver::vapor::parser::_v1::lambda_expression reaver::vapor::parser::_v1::parse_
     }
     expect(ctx, lexer::token_type::square_bracket_close);
 
-    expect(ctx, lexer::token_type::round_bracket_open);
-    if (!peek(ctx, lexer::token_type::round_bracket_close))
+    if (peek(ctx, lexer::token_type::round_bracket_open))
     {
-        ret.arguments = parse_argument_list(ctx);
+        expect(ctx, lexer::token_type::round_bracket_open);
+        if (!peek(ctx, lexer::token_type::round_bracket_close))
+        {
+            ret.arguments = parse_argument_list(ctx);
+        }
+        expect(ctx, lexer::token_type::round_bracket_close);
     }
-    expect(ctx, lexer::token_type::round_bracket_close);
 
     if (peek(ctx, lexer::token_type::block_value))
     {
