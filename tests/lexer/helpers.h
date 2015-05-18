@@ -32,7 +32,7 @@ namespace reaver
     {
         namespace lexer { inline namespace _v1
         {
-            auto test(std::string program, std::vector<token> expected)
+            auto test(std::u32string program, std::vector<token> expected)
             {
                 return [program = std::move(program), expected = std::move(expected)]()
                 {

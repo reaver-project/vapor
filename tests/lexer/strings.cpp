@@ -33,23 +33,23 @@ using namespace reaver::vapor::lexer;
 MAYFLY_BEGIN_SUITE("lexer");
 MAYFLY_BEGIN_SUITE("strings");
 
-MAYFLY_ADD_TESTCASE("simple string", test(R"("foo" "bar")",
+MAYFLY_ADD_TESTCASE("simple string", test(UR"("foo" "bar")",
     {
-        { token_type::string, "\"foo\"", { 0, 5 } },
-        { token_type::string, "\"bar\"", { 6, 11 } }
+        { token_type::string, U"\"foo\"", { 0, 5 } },
+        { token_type::string, U"\"bar\"", { 6, 11 } }
     }
 ));
 
-MAYFLY_ADD_TESTCASE("escaped string", test(R"("foo\"bar")",
+MAYFLY_ADD_TESTCASE("escaped string", test(UR"("foo\"bar")",
     {
-        { token_type::string, "\"foo\\\"bar\"", { 0, 10 } },
+        { token_type::string, U"\"foo\\\"bar\"", { 0, 10 } },
     }
 ));
 
-MAYFLY_ADD_TESTCASE("line broken string", test(R"("foo\
+MAYFLY_ADD_TESTCASE("line broken string", test(UR"("foo\
 bar")",
     {
-        { token_type::string, "\"foo\\\nbar\"", { 0, 10 } },
+        { token_type::string, U"\"foo\\\nbar\"", { 0, 10 } },
     }
 ));
 
