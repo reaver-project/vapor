@@ -73,14 +73,14 @@ namespace reaver
                         pos.line = 1;
                         pos.file = std::move(filename);
 
-                        auto get = [&]() -> boost::optional<char>
+                        auto get = [&]() -> boost::optional<char32_t>
                         {
                             if (begin == end)
                             {
                                 return {};
                             }
 
-                            if (*begin == '\n')
+                            if (*begin == U'\n')
                             {
                                 pos.column = 0;
                                 ++pos.line;
@@ -94,7 +94,7 @@ namespace reaver
                             return *begin++;
                         };
 
-                        auto peek = [&](std::size_t x = 0) -> boost::optional<char>
+                        auto peek = [&](std::size_t x = 0) -> boost::optional<char32_t>
                         {
                             for (std::size_t i = 0; i < x; ++i)
                             {
@@ -107,7 +107,7 @@ namespace reaver
                             return *(begin + x);
                         };
 
-                        auto generate_token = [&](token_type type, position begin, position end, std::string string)
+                        auto generate_token = [&](token_type type, position begin, position end, std::u32string string)
                         {
                             if (!node)
                             {
@@ -135,22 +135,22 @@ namespace reaver
                             node->_sem.notify();
                         };
 
-                        auto is_white_space = [](char c)
+                        auto is_white_space = [](char32_t c)
                         {
-                            return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+                            return c == U' ' || c == U'\t' || c == U'\n' || c == U'\r';
                         };
 
-                        auto is_identifier_start = [](char c)
+                        auto is_identifier_start = [](char32_t c)
                         {
-                            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+                            return (c >= U'a' && c <= U'z') || (c >= U'A' && c <= U'Z') || c == U'_';
                         };
 
-                        auto is_decimal = [&](char c)
+                        auto is_decimal = [&](char32_t c)
                         {
-                            return c >= '0' && c <= '9';
+                            return c >= U'0' && c <= U'9';
                         };
 
-                        auto is_identifier_char = [&](char c)
+                        auto is_identifier_char = [&](char32_t c)
                         {
                             return is_identifier_start(c) || is_decimal(c);
                         };
@@ -165,28 +165,28 @@ namespace reaver
                             }
 
                             auto p = pos;
-                            if (next == '/')
+                            if (next == U'/')
                             {
                                 auto second = peek();
 
-                                if (second == '/')
+                                if (second == U'/')
                                 {
-                                    while ((next = get()) && *next != '\n')
+                                    while ((next = get()) && *next != U'\n')
                                     {
                                     }
 
                                     continue;
                                 }
 
-                                if (second == '*')
+                                if (second == U'*')
                                 {
                                     get();
 
-                                    while ((next = get()) && (second = peek()) && next != '*' && second != '/')
+                                    while ((next = get()) && (second = peek()) && next != U'*' && second != U'/')
                                     {
                                     }
 
-                                    if (next && second && next == '*' && second == '/')
+                                    if (next && second && next == U'*' && second == U'/')
                                     {
                                         get();
                                         continue;
@@ -225,13 +225,13 @@ namespace reaver
                                 }
                             }
 
-                            std::string variable_length;
+                            std::u32string variable_length;
 
-                            if (next == '"')
+                            if (next == U'"')
                             {
                                 auto second = peek();
 
-                                while (next && second && (second != '"' || next == '\\') && (second != '\n' || next == '\\'))
+                                while (next && second && (second != U'"' || next == U'\\') && (second != U'\n' || next == U'\\'))
                                 {
                                     variable_length.push_back(*next);
 
@@ -239,7 +239,7 @@ namespace reaver
                                     second = peek();
                                 }
 
-                                if (!next || second == '\n')
+                                if (!next || second == U'\n')
                                 {
                                     _ex = std::make_exception_ptr(unterminated_string{ { p, p + variable_length.size() } });
                                     notify();
@@ -294,7 +294,7 @@ namespace reaver
                                 continue;
                             }
 
-                            _ex = std::make_exception_ptr(exception(logger::fatal) << "stray character in file: " << *next);
+                            _ex = std::make_exception_ptr(exception(logger::fatal) << "stray character in file: " << utf8({ *next }));
                             notify();
                             return;
                         }

@@ -37,7 +37,7 @@ namespace reaver
             class declaration
             {
             public:
-                declaration(std::string name, expression init, const std::shared_ptr<scope> & lex_scope, const parser::declaration & parse)
+                declaration(std::u32string name, expression init, const std::shared_ptr<scope> & lex_scope, const parser::declaration & parse)
                     : _name{ std::move(name) }, _initializer_expression{ std::move(init) }, _parse{ parse }
                 {
                     assert(0);
@@ -64,14 +64,14 @@ namespace reaver
                 }
 
             private:
-                std::string _name;
+                std::u32string _name;
                 std::shared_ptr<symbol> _declared_symbol;
                 expression _initializer_expression;
 
                 const parser::declaration & _parse;
             };
 
-            std::shared_ptr<declaration> make_declaration(std::string name, expression init, const std::shared_ptr<scope> & lexical_scope, const parser::declaration & parse)
+            std::shared_ptr<declaration> make_declaration(std::u32string name, expression init, const std::shared_ptr<scope> & lexical_scope, const parser::declaration & parse)
             {
                 return std::make_shared<declaration>(std::move(name), std::move(init), std::move(lexical_scope), parse);
             }

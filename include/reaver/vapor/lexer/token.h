@@ -31,6 +31,7 @@
 #include <reaver/relaxed_constexpr.h>
 
 #include "vapor/range.h"
+#include "vapor/utf8.h"
 
 namespace reaver
 {
@@ -136,10 +137,10 @@ namespace reaver
 
             extern std::array<std::string, +token_type::count> token_types;
 
-            extern const std::unordered_map<std::string, token_type> keywords;
-            extern const std::unordered_map<char, token_type> symbols1;
-            extern const std::unordered_map<char, std::unordered_map<char, token_type>> symbols2;
-            extern const std::unordered_map<char, std::unordered_map<char, std::unordered_map<char, token_type>>> symbols3;
+            extern const std::unordered_map<std::u32string, token_type> keywords;
+            extern const std::unordered_map<char32_t, token_type> symbols1;
+            extern const std::unordered_map<char32_t, std::unordered_map<char32_t, token_type>> symbols2;
+            extern const std::unordered_map<char32_t, std::unordered_map<char32_t, std::unordered_map<char32_t, token_type>>> symbols3;
 
             class iterator;
 
@@ -151,12 +152,12 @@ namespace reaver
                 token & operator=(const token &) = default;
                 token & operator=(token &&) = default;
 
-                token(token_type t, std::string s, range_type r) : type{ t }, string{ std::move(s) }, range{ std::move(r) }
+                token(token_type t, std::u32string s, range_type r) : type{ t }, string{ std::move(s) }, range{ std::move(r) }
                 {
                 }
 
                 token_type type;
-                std::string string;
+                std::u32string string;
                 range_type range;
             };
 
@@ -167,7 +168,7 @@ namespace reaver
 
             inline std::ostream & operator<<(std::ostream & os, const token & tok)
             {
-                return os << "token type: `" << token_types[+tok.type] << "` token value: `" << tok.string << "` token range: " << tok.range;
+                return os << "token type: `" << token_types[+tok.type] << "` token value: `" << utf8(tok.string) << "` token range: " << tok.range;
             };
         }}
     }

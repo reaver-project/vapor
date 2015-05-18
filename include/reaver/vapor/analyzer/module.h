@@ -61,7 +61,7 @@ namespace reaver
                                 auto & symb = _symbols[decl->name()];
                                 if (symb)
                                 {
-                                    error("redefinition of `" + decl->name() + "`", decl->parse());
+                                    error("redefinition of `" + utf8(decl->name()) + "`", decl->parse());
                                 }
                                 else
                                 {
@@ -86,9 +86,9 @@ namespace reaver
                     }
                 }
 
-                std::string name() const
+                std::u32string name() const
                 {
-                    std::vector<std::string> tmp;
+                    std::vector<std::u32string> tmp;
                     tmp.reserve(_parse.name.id_expression_value.size());
                     std::transform(_parse.name.id_expression_value.begin(), _parse.name.id_expression_value.end(), std::back_inserter(tmp), [](auto && elem) -> decltype(auto) { return elem.string; });
                     return boost::join(tmp, ".");
@@ -96,7 +96,7 @@ namespace reaver
 
             private:
                 const parser::module & _parse;
-                std::unordered_map<std::string, std::shared_ptr<symbol>> _symbols;
+                std::unordered_map<std::u32string, std::shared_ptr<symbol>> _symbols;
             };
         }}
     }

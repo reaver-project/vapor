@@ -30,6 +30,7 @@
 #include <reaver/exception.h>
 #include <reaver/unit.h>
 
+#include "vapor/utf8.h"
 #include "vapor/range.h"
 #include "vapor/lexer/token.h"
 #include "vapor/lexer/iterator.h"
@@ -43,14 +44,14 @@ namespace reaver
             class expectation_failure : public exception
             {
             public:
-                expectation_failure(lexer::token_type expected, const std::string & actual, range_type & r) : exception{ logger::fatal }
+                expectation_failure(lexer::token_type expected, const std::u32string & actual, range_type & r) : exception{ logger::fatal }
                 {
-                    *this << r << ": expected `" << lexer::token_types[+expected] << "`, got `" << actual << "`";
+                    *this << r << ": expected `" << lexer::token_types[+expected] << "`, got `" << utf8(actual) << "`";
                 }
 
-                expectation_failure(const std::string & str, const std::string & actual, range_type & r) : exception{ logger::fatal }
+                expectation_failure(const std::string & str, const std::u32string & actual, range_type & r) : exception{ logger::fatal }
                 {
-                    *this <<  r << ": expected " << str << ", got `" << actual << "`";
+                    *this <<  r << ": expected " << str << ", got `" << utf8(actual) << "`";
                 }
 
                 expectation_failure(lexer::token_type expected) : exception{ logger::fatal }

@@ -38,7 +38,7 @@ namespace reaver
             public:
                 iterator() = default;
 
-                template<typename Iter, typename std::enable_if<std::is_same<typename std::iterator_traits<Iter>::value_type, char>::value, int>::type = 0>
+                template<typename Iter, typename std::enable_if<std::is_same<typename std::iterator_traits<Iter>::value_type, char32_t>::value, int>::type = 0>
                 iterator(Iter begin, Iter end) : _backend{ std::make_shared<_detail::_iterator_backend>(begin, end, _node) }
                 {
                 }

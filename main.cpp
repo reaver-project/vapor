@@ -20,11 +20,12 @@
  *
  **/
 
+#include "vapor/utf8.h"
 #include "vapor/lexer.h"
 #include "vapor/parser.h"
 #include "vapor/analyzer.h"
 
-std::string program = R"program(module hello_world
+std::u32string program = UR"program(module hello_world
 {
     auto foo = []() => 1;
 
@@ -37,7 +38,7 @@ std::string program = R"program(module hello_world
 int main() try
 {
     reaver::logger::dlog() << "Input:";
-    reaver::logger::dlog() << program;
+    reaver::logger::dlog() << reaver::vapor::utf8(program);
     reaver::logger::dlog();
 
     reaver::logger::dlog() << "Tokens:";
