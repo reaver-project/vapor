@@ -1,0 +1,7 @@
+site_name: Vapor Language Documentation
+pages:
+    - [index.md, Index]
+    - [intro/index.md, Introduction]
+    - [lex/index.md, Lexing structure]
+    - [modules/index.md, Modules]
+    - [functions/index.md, Functions]
