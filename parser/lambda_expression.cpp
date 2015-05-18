@@ -27,12 +27,16 @@ reaver::vapor::parser::_v1::lambda_expression reaver::vapor::parser::_v1::parse_
 {
     lambda_expression ret;
 
-    auto start = expect(ctx, lexer::token_type::square_bracket_open).range.start();
-    if (!peek(ctx, lexer::token_type::square_bracket_close))
+    auto start = expect(ctx, lexer::token_type::lambda).range.start();
+    if (peek(ctx, lexer::token_type::square_bracket_open))
     {
-        ret.captures = parse_capture_list(ctx);
+        expect(ctx, lexer::token_type::square_bracket_close);
+        if (!peek(ctx, lexer::token_type::square_bracket_close))
+        {
+            ret.captures = parse_capture_list(ctx);
+        }
+        expect(ctx, lexer::token_type::square_bracket_close);
     }
-    expect(ctx, lexer::token_type::square_bracket_close);
 
     if (peek(ctx, lexer::token_type::round_bracket_open))
     {

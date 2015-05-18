@@ -54,7 +54,7 @@ reaver::vapor::parser::_v1::postfix_expression reaver::vapor::parser::_v1::parse
     else
     {
         ret.base_expression = parse_id_expression(ctx);
-        auto & range = boost::get<id_expression &>(ret.base_expression).range;
+        auto & range = boost::get<id_expression>(ret.base_expression).range;
         start = range.start();
         end = range.end();
     }

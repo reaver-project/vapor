@@ -62,7 +62,7 @@ namespace reaver
                 > expression_value;
             };
 
-            expression parse_expression(context & ctx);
+            expression parse_expression(context & ctx, bool special_assignment = false);
 
             void print(const expression & expr, std::ostream & os, std::size_t indent = 0);
         }}

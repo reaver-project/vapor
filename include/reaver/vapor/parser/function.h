@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2015 Michał "Griwes" Dominiak
+ * Copyright © 2015 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,19 +22,12 @@
 
 #pragma once
 
-#include <string>
+#include <boost/optional.hpp>
 
-#include <boost/variant.hpp>
-
-#include <reaver/visit.h>
-
+#include "vapor/range.h"
 #include "vapor/parser/helpers.h"
-#include "vapor/parser/expression_list.h"
-#include "vapor/parser/declaration.h"
-#include "vapor/parser/return_expression.h"
-#include "vapor/parser/unary_expression.h"
-#include "vapor/parser/binary_expression.h"
-#include "vapor/parser/function.h"
+#include "vapor/parser/argument_list.h"
+#include "vapor/parser/expression.h"
 
 namespace reaver
 {
@@ -42,15 +35,21 @@ namespace reaver
     {
         namespace parser { inline namespace _v1
         {
-            struct statement
+            struct block;
+
+            struct function
             {
                 range_type range;
-                boost::variant<declaration, return_expression, expression_list, function> statement_value;
+                lexer::token name;
+                boost::optional<argument_list> arguments;
+                boost::optional<expression> return_type;
+                boost::recursive_wrapper<block> body;
             };
 
-            statement parse_statement(context & ctx);
+            function parse_function(context & ctx);
 
-            void print(const statement & stmt, std::ostream & os, std::size_t indent = 0);
+            void print(const function & f, std::ostream & os, std::size_t indent = 0);
         }}
     }
 }
+

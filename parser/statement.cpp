@@ -27,24 +27,33 @@ reaver::vapor::parser::_v1::statement reaver::vapor::parser::_v1::parse_statemen
 {
     statement ret;
 
-    if (peek(ctx, lexer::token_type::auto_))
+    if (peek(ctx, lexer::token_type::function))
     {
-        ret.statement_value = parse_declaration(ctx);
-    }
-
-    else if (peek(ctx, lexer::token_type::return_))
-    {
-        ret.statement_value = parse_return_expression(ctx);
+        auto func = parse_function(ctx);
+        ret.range = func.range;
+        ret.statement_value = std::move(func);
     }
 
     else
     {
-        ret.statement_value = parse_expression_list(ctx);
+        if (peek(ctx, lexer::token_type::let))
+        {
+            ret.statement_value = parse_declaration(ctx);
+        }
+
+        else if (peek(ctx, lexer::token_type::return_))
+        {
+            ret.statement_value = parse_return_expression(ctx);
+        }
+
+        else
+        {
+            ret.statement_value = parse_expression_list(ctx);
+        }
+
+        auto end = expect(ctx, lexer::token_type::semicolon).range.end();
+        visit([&](const auto & value) -> unit { ret.range = { value.range.start(), end }; return {}; }, ret.statement_value);
     }
-
-    auto end = expect(ctx, lexer::token_type::semicolon).range.end();
-
-    visit([&](const auto & value) -> unit { ret.range = { value.range.start(), end }; return {}; }, ret.statement_value);
 
     return ret;
 }

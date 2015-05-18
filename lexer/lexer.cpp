@@ -38,7 +38,9 @@ static auto token_types_init = []() -> reaver::unit
     token_types[+token_type::module] = "module";
     token_types[+token_type::import] = "import";
     token_types[+token_type::auto_] = "auto";
+    token_types[+token_type::let] = "let";
     token_types[+token_type::return_] = "return";
+    token_types[+token_type::function] = "function";
     token_types[+token_type::dot] = ".";
     token_types[+token_type::curly_bracket_open] = "{";
     token_types[+token_type::curly_bracket_close] = "}";
@@ -48,6 +50,7 @@ static auto token_types_init = []() -> reaver::unit
     token_types[+token_type::round_bracket_close] = ")";
     token_types[+token_type::angle_bracket_open] = "<";
     token_types[+token_type::angle_bracket_close] = ">";
+    token_types[+token_type::colon] = ":";
     token_types[+token_type::semicolon] = ";";
     token_types[+token_type::map] = "->>";
     token_types[+token_type::assign] = "=";
@@ -91,6 +94,8 @@ static auto token_types_init = []() -> reaver::unit
     token_types[+token_type::increment] = "++";
     token_types[+token_type::decrement] = "--";
 
+    token_types[+token_type::lambda] = u8"λ";
+
     token_types[+token_type::none] = "<EMPTY TOKEN>";
 
     return {};
@@ -100,7 +105,9 @@ const std::unordered_map<std::u32string, token_type> reaver::vapor::lexer::_v1::
     { U"module", token_type::module },
     { U"import", token_type::import },
     { U"auto", token_type::auto_ },
+    { U"let", token_type::let },
     { U"return", token_type::return_ },
+    { U"function", token_type::function },
 };
 
 const std::unordered_map<char32_t, token_type> reaver::vapor::lexer::_v1::symbols1 = {
@@ -114,6 +121,7 @@ const std::unordered_map<char32_t, token_type> reaver::vapor::lexer::_v1::symbol
     { ')', token_type::round_bracket_close },
     { '<', token_type::angle_bracket_open },
     { '>', token_type::angle_bracket_close },
+    { ':', token_type::colon },
     { ';', token_type::semicolon },
     { '=', token_type::assign },
 
@@ -127,7 +135,8 @@ const std::unordered_map<char32_t, token_type> reaver::vapor::lexer::_v1::symbol
     { '%', token_type::modulo },
     { '&', token_type::bitwise_and },
     { '|', token_type::bitwise_or },
-    { '^', token_type::bitwise_xor }
+    { '^', token_type::bitwise_xor },
+    { U'λ', token_type::lambda },
 };
 
 const std::unordered_map<char32_t, std::unordered_map<char32_t, token_type>> reaver::vapor::lexer::_v1::symbols2 = {

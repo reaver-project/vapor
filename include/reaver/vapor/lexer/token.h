@@ -50,7 +50,9 @@ namespace reaver
                 module,
                 import,
                 auto_,
+                let,
                 return_,
+                function,
                 dot,
                 comma,
                 curly_bracket_open,
@@ -61,6 +63,7 @@ namespace reaver
                 round_bracket_close,
                 angle_bracket_open,
                 angle_bracket_close,
+                colon,
                 semicolon,
                 map,
                 bind,
@@ -105,6 +108,8 @@ namespace reaver
 
                 increment,
                 decrement,
+
+                lambda,
 
                 count,                                      // always the last, except for duplicates
 

@@ -37,7 +37,8 @@ namespace reaver
             {
                 range_type range;
                 lexer::token identifier;
-                expression_list rhs;
+                boost::optional<expression> type_expression;
+                expression rhs;
             };
 
             declaration parse_declaration(context & ctx);

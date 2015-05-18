@@ -23,7 +23,7 @@
 #include "vapor/parser/expression.h"
 #include "vapor/parser/lambda_expression.h"
 
-reaver::vapor::parser::_v1::expression reaver::vapor::parser::_v1::parse_expression(reaver::vapor::parser::_v1::context & ctx)
+reaver::vapor::parser::_v1::expression reaver::vapor::parser::_v1::parse_expression(reaver::vapor::parser::_v1::context & ctx, bool special_assignment)
 {
     expression ret;
     auto type = peek(ctx)->type;
@@ -48,7 +48,7 @@ reaver::vapor::parser::_v1::expression reaver::vapor::parser::_v1::parse_express
         ret.expression_value = parse_import_expression(ctx);
     }
 
-    else if (peek(ctx, lexer::token_type::square_bracket_open))
+    else if (peek(ctx, lexer::token_type::lambda))
     {
         ret.expression_value = parse_lambda_expression(ctx);
     }
@@ -64,7 +64,7 @@ reaver::vapor::parser::_v1::expression reaver::vapor::parser::_v1::parse_express
     }
 
     type = peek(ctx)->type;
-    if (is_binary_operator(type))
+    if (is_binary_operator(type) && !(special_assignment && type == lexer::token_type::assign))
     {
         auto p1 = precedence({ type, operator_type::binary });
         auto p2 = ctx.operator_stack.size() ? precedence(ctx.operator_stack.back()) : boost::optional<std::size_t>{};

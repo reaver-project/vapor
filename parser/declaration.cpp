@@ -27,10 +27,18 @@ reaver::vapor::parser::_v1::declaration reaver::vapor::parser::_v1::parse_declar
 {
     declaration ret;
 
-    auto start = expect(ctx, lexer::token_type::auto_).range.start();
+    auto start = expect(ctx, lexer::token_type::let).range.start();
     ret.identifier = std::move(expect(ctx, lexer::token_type::identifier));
+
+    if (peek(ctx) && peek(ctx)->type == lexer::token_type::colon)
+    {
+        expect(ctx, lexer::token_type::colon);
+
+        ret.type_expression = parse_expression(ctx, true);
+    }
+
     expect(ctx, lexer::token_type::assign);
-    ret.rhs = parse_expression_list(ctx);
+    ret.rhs = parse_expression(ctx, true);
     ret.range = { start, ret.rhs.range.end() };
 
     return ret;
