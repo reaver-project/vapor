@@ -28,7 +28,7 @@ reaver::vapor::parser::_v1::declaration reaver::vapor::parser::_v1::parse_declar
     declaration ret;
 
     auto start = expect(ctx, lexer::token_type::let).range.start();
-    ret.identifier = std::move(expect(ctx, lexer::token_type::identifier));
+    ret.identifier = expect(ctx, lexer::token_type::identifier);
 
     if (peek(ctx) && peek(ctx)->type == lexer::token_type::colon)
     {

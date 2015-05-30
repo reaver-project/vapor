@@ -131,7 +131,7 @@ reaver::vapor::parser::_v1::binary_expression reaver::vapor::parser::_v1::parse_
     binary_expression ret;
 
     ret.lhs = std::move(lhs);
-    ret.op = std::move(expect(ctx, peek(ctx)->type));
+    ret.op = expect(ctx, peek(ctx)->type);
     ctx.operator_stack.push_back({ ret.op.type, operator_type::binary });
     ret.rhs = parse_expression(ctx);
     ctx.operator_stack.pop_back();

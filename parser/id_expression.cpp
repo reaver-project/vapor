@@ -31,7 +31,7 @@ reaver::vapor::parser::_v1::id_expression reaver::vapor::parser::_v1::parse_id_e
     while (peek(ctx, lexer::token_type::dot))
     {
         expect(ctx, lexer::token_type::dot);
-        ret.id_expression_value.push_back(std::move(expect(ctx, lexer::token_type::identifier)));
+        ret.id_expression_value.push_back(expect(ctx, lexer::token_type::identifier));
     }
 
     ret.range = { ret.id_expression_value.front().range.start(), ret.id_expression_value.back().range.end() };

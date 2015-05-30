@@ -46,7 +46,7 @@ reaver::vapor::parser::_v1::unary_expression reaver::vapor::parser::_v1::parse_u
     auto t = peek(ctx)->type;
     if (is_unary_operator(t))
     {
-        ret.op = std::move(expect(ctx, t));
+        ret.op = expect(ctx, t);
         ctx.operator_stack.push_back({ ret.op.type, operator_type::unary });
         ret.operand = parse_expression(ctx);
         ctx.operator_stack.pop_back();

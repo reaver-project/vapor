@@ -30,7 +30,7 @@ reaver::vapor::parser::_v1::function reaver::vapor::parser::_v1::parse_function(
 
     auto start = expect(ctx, lexer::token_type::function).range.start();
 
-    ret.name = std::move(expect(ctx, lexer::token_type::identifier));
+    ret.name = expect(ctx, lexer::token_type::identifier);
     expect(ctx, lexer::token_type::round_bracket_open);
     if (peek(ctx) && peek(ctx)->type != lexer::token_type::round_bracket_close)
     {
