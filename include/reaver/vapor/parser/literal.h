@@ -52,14 +52,14 @@ namespace reaver
 
                 if (peek(ctx, TokenType))
                 {
-                    ret.value = std::move(expect(ctx, TokenType));
+                    ret.value = expect(ctx, TokenType);
 
                     auto start = ret.value.range.start();
                     auto end = ret.value.range.end();
 
                     if (peek(ctx, lexer::suffix(TokenType)))
                     {
-                        ret.suffix = std::move(expect(ctx, lexer::suffix(TokenType)));
+                        ret.suffix = expect(ctx, lexer::suffix(TokenType));
                         end = ret.suffix->range.end();
                     }
 
