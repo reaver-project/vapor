@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015 Michał "Griwes" Dominiak
+ * Copyright © 2015-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -87,7 +87,7 @@ void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::block &
         if (bl.value_expression)
         {
             os << in << "{\n";
-            print(bl.value_expression->get(), os, indent + 8);
+            print(**bl.value_expression, os, indent + 8);
             os << in << "}\n";
         }
     }

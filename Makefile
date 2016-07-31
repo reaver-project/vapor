@@ -1,9 +1,9 @@
 CXX = g++
 LD = g++
-CXXFLAGS += -Os -Wall -std=c++1y -MP -MD -fPIC -Wno-unused-parameter -g
+CXXFLAGS += -Os -Wall -std=c++1z -MP -MD -fPIC -Wno-unused-parameter -g
 SOFLAGS += -shared
 LDFLAGS +=
-LIBRARIES += -lreaver -pthread -lboost_system -lboost_filesystem -ldl
+LIBRARIES += -pthread -lboost_system -lboost_filesystem -ldl
 
 SOURCES := $(shell find . -name "*.cpp" ! -wholename "./tests/*" ! -name "main.cpp" ! -wholename "./main/*")
 MAINSRC := $(shell find ./main/ -name "*.cpp") main.cpp

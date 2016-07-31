@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <boost/variant.hpp>
+#include <reaver/variant.h>
 
 #include <reaver/error.h>
 #include <reaver/id.h>
@@ -52,10 +52,7 @@ namespace reaver
             }
 
             template<typename... Ts>
-            using shptr_variant = boost::variant<std::shared_ptr<Ts>...>;
-
-            template<typename T>
-            using shptr_id = id<std::shared_ptr<T>>;
+            using shptr_variant = variant<std::shared_ptr<Ts>...>;
         }}
     }
 }

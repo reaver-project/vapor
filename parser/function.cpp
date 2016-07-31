@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015 Michał "Griwes" Dominiak
+ * Copyright © 2015-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -45,7 +45,7 @@ reaver::vapor::parser::_v1::function reaver::vapor::parser::_v1::parse_function(
 
     ret.body = parse_block(ctx);
 
-    ret.range = { start, ret.body.get().range.end() };
+    ret.range = { start, ret.body->range.end() };
 
     return ret;
 }
@@ -59,7 +59,7 @@ void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::functio
     os << in << "`function` at " << f.range << '\n';
     os << in << "{\n";
     os << std::string(indent + 4, ' ') << f.name << '\n';
-    print(f.body.get(), os, indent + 4);
+    print(*f.body, os, indent + 4);
     os << in << "}\n";
 }
 

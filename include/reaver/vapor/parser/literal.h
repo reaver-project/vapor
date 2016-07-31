@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2015 Michał "Griwes" Dominiak
+ * Copyright © 2014-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,8 +22,7 @@
 
 #pragma once
 
-#include <boost/variant.hpp>
-#include <boost/optional.hpp>
+#include <reaver/optional.h>
 
 #include "vapor/range.h"
 #include "vapor/parser/helpers.h"
@@ -39,7 +38,7 @@ namespace reaver
             {
                 range_type range;
                 lexer::token value;
-                boost::optional<lexer::token> suffix;
+                optional<lexer::token> suffix;
             };
 
             using string_literal = literal<lexer::token_type::string>;
@@ -88,3 +87,4 @@ namespace reaver
         }}
     }
 }
+

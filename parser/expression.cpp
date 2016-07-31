@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015 Michał "Griwes" Dominiak
+ * Copyright © 2015-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -67,7 +67,7 @@ reaver::vapor::parser::_v1::expression reaver::vapor::parser::_v1::parse_express
     if (is_binary_operator(type) && !(special_assignment && type == lexer::token_type::assign))
     {
         auto p1 = precedence({ type, operator_type::binary });
-        auto p2 = ctx.operator_stack.size() ? precedence(ctx.operator_stack.back()) : boost::optional<std::size_t>{};
+        auto p2 = ctx.operator_stack.size() ? make_optional(precedence(ctx.operator_stack.back())) : none;
         while (ctx.operator_stack.empty() || p1 < p2 || (p1 == p2 && associativity(type) == assoc::right))
         {
             visit([&](const auto & value) -> unit { ret.range = value.range; return {}; }, ret.expression_value);
@@ -101,3 +101,4 @@ void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::express
     visit([&](const auto & value) -> unit { print(value, os, indent + 4); return {}; }, expr.expression_value);
     os << in << "}\n";
 }
+

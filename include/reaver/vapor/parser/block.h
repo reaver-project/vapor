@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2015 Michał "Griwes" Dominiak
+ * Copyright © 2014-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -38,8 +38,8 @@ namespace reaver
             struct block
             {
                 range_type range;
-                std::vector<boost::variant<boost::recursive_wrapper<block>, boost::recursive_wrapper<statement>>> block_value;
-                boost::optional<boost::recursive_wrapper<expression_list>> value_expression;
+                std::vector<variant<recursive_wrapper<block>, recursive_wrapper<statement>>> block_value;
+                optional<recursive_wrapper<expression_list>> value_expression;
             };
 
             block parse_block(context & ctx);
@@ -50,3 +50,4 @@ namespace reaver
         }}
     }
 }
+

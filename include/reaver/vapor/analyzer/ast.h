@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -52,7 +52,7 @@ namespace reaver
                         default_error_engine().push(e);
                     }
 
-                    if (default_error_engine().size())
+                    if (!default_error_engine())
                     {
                         default_error_engine().print(logger::default_logger());
                     }

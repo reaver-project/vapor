@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2015 Michał "Griwes" Dominiak
+ * Copyright © 2014-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -70,49 +70,49 @@ namespace reaver
 
             expression preanalyze_expression(const parser::expression & expr, const std::shared_ptr<scope> & lex_scope)
             {
-                return visit(make_visitor(
-                    id<parser::string_literal>(), [](auto && string) -> expression
+                return get<0>(fmap(expr.expression_value, make_overload_set(
+                    [](const parser::string_literal & string) -> expression
                     {
                         assert(0);
                         return std::shared_ptr<literal>();
                     },
 
-                    id<parser::integer_literal>(), [](auto && integer) -> expression
+                    [](const parser::integer_literal & integer) -> expression
                     {
                         assert(0);
                         return std::shared_ptr<literal>();
                     },
 
-                    id<parser::postfix_expression>(), [](auto && postfix) -> expression
+                    [](const parser::postfix_expression & postfix) -> expression
                     {
                         assert(0);
                         return std::shared_ptr<postfix_expression>();
                     },
 
-                    id<parser::import_expression>(), [](auto && import) -> expression
+                    [](const parser::import_expression & import) -> expression
                     {
                         assert(0);
                         return std::shared_ptr<import_expression>();
                     },
 
-                    id<parser::lambda_expression>(), [](auto && lambda_expr) -> expression
+                    [](const parser::lambda_expression & lambda_expr) -> expression
                     {
                         assert(0);
                         return std::shared_ptr<lambda>();
                     },
 
-                    id<parser::unary_expression>(), [](auto && unary_expr) -> expression
+                    [](const parser::unary_expression & unary_expr) -> expression
                     {
                         assert(0);
                         return std::shared_ptr<unary_expression>();
                     },
 
-                    id<parser::binary_expression>(), [](auto && binary_expr) -> expression
+                    [](const parser::binary_expression & binary_expr) -> expression
                     {
                         assert(0);
                         return std::shared_ptr<binary_expression>();
                     }
-                ), expr.expression_value);
+                )));
             }
 
             expression preanalyze_expression(const parser::expression_list & expr, const std::shared_ptr<scope> & lex_scope)

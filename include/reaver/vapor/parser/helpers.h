@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2015 Michał "Griwes" Dominiak
+ * Copyright © 2014-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,9 +23,6 @@
 #pragma once
 
 #include <type_traits>
-
-#include <boost/variant.hpp>
-#include <boost/optional.hpp>
 
 #include <reaver/exception.h>
 #include <reaver/unit.h>
@@ -93,7 +90,7 @@ namespace reaver
                 return std::move(*ctx.begin++);
             }
 
-            inline boost::optional<lexer::token &> peek(context & ctx)
+            inline optional<lexer::token &> peek(context & ctx)
             {
                 if (ctx.begin != ctx.end)
                 {
@@ -103,7 +100,7 @@ namespace reaver
                 return {};
             }
 
-            inline boost::optional<lexer::token &> peek(context & ctx, lexer::token_type expected)
+            inline optional<lexer::token &> peek(context & ctx, lexer::token_type expected)
             {
                 if (ctx.begin != ctx.end && ctx.begin->type == expected)
                 {

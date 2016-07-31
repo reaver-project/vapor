@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -55,8 +55,8 @@ namespace reaver
                 {
                     for (auto && statement : _parse.statements)
                     {
-                        visit(make_visitor(
-                            shptr_id<declaration>(), [&](const std::shared_ptr<declaration> & decl)
+                        fmap(statement.statement_value, make_overload_set(
+                            [&](const std::shared_ptr<declaration> & decl)
                             {
                                 auto & symb = _symbols[decl->name()];
                                 if (symb)
@@ -71,18 +71,18 @@ namespace reaver
                                 return unit{};
                             },
 
-                            shptr_id<import>(), [&](const std::shared_ptr<import> & im)
+                            [&](const std::shared_ptr<import> & im)
                             {
                                 assert(0);
                                 return unit{};
                             },
 
-                            shptr_id<expression>(), [&](auto &&...)
+                            [&](auto &&...)
                             {
                                 throw exception{ logger::crash } << "got invalid statement in module; fix the parser";
                                 return unit{};
                             }
-                        ), preanalyze_statement(statement, shared_from_this()));
+                        ));
                     }
                 }
 

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015 Michał "Griwes" Dominiak
+ * Copyright © 2015-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -57,7 +57,7 @@ reaver::vapor::parser::_v1::lambda_expression reaver::vapor::parser::_v1::parse_
         ret.body = parse_block(ctx);
     }
 
-    ret.range = { start, ret.body.get().range.end() };
+    ret.range = { start, ret.body->range.end() };
 
     return ret;
 }
@@ -71,6 +71,7 @@ void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::lambda_
     assert(!expr.captures && !expr.arguments);
 
     os << in << "{\n";
-    print(expr.body.get(), os, indent + 4);
+    print(*expr.body, os, indent + 4);
     os << in << "}\n";
 }
+

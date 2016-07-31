@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2015 Michał "Griwes" Dominiak
+ * Copyright © 2014-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -53,9 +53,9 @@ int main() try
     reaver::vapor::parser::ast ast{ iterator };
     reaver::logger::dlog() << ast;
 
-    reaver::logger::dlog() << "Analyzed AST:";
-//    reaver::vapor::analyzer::ast analyzed_ast{ ast };
-//    reaver::logger::dlog() << analyzed_ast;
+    //reaver::logger::dlog() << "Analyzed AST:";
+    //reaver::vapor::analyzer::ast analyzed_ast{ ast };
+    //reaver::logger::dlog() << analyzed_ast;
 }
 
 catch (reaver::exception & e)

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,8 +22,6 @@
 
 #pragma once
 
-#include <boost/variant.hpp>
-
 #include "vapor/parser/statement.h"
 #include "vapor/analyzer/declaration.h"
 #include "vapor/analyzer/import.h"
@@ -40,26 +38,26 @@ namespace reaver
 
             statement preanalyze_statement(const parser::statement & parse, const std::shared_ptr<scope> & lex_scope)
             {
-                return visit(make_visitor(
-                    id<parser::declaration>(), [&](auto && decl) -> statement
+                return get<0>(fmap(parse.statement_value, make_overload_set(
+                    [&](const parser::declaration & decl) -> statement
                     {
                         return make_declaration(decl.identifier.string, preanalyze_expression(decl.rhs, lex_scope), lex_scope, decl);
                     },
 
-                    id<parser::return_expression>(), [](auto && ret_expr) -> statement
+                    [](const parser::return_expression & ret_expr) -> statement
                     {
                         assert(0);
                         return std::shared_ptr<import>();
                     },
 
-                    id<parser::expression_list>(), [](auto && expr_list) -> statement
+                    [](const parser::expression_list & expr_list) -> statement
                     {
                         assert(0);
                         return std::shared_ptr<expression>();
                     },
 
-                    default_id(), [](auto &&) -> statement { assert(0); }
-                ), parse.statement_value);
+                    [](auto &&) -> statement { assert(0); }
+                )));
             }
         }}
     }

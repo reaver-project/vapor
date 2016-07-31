@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2015 Michał "Griwes" Dominiak
+ * Copyright © 2014-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -37,7 +37,7 @@ namespace reaver
             {
                 range_type range;
                 lexer::token identifier;
-                boost::optional<expression> type_expression;
+                optional<expression> type_expression;
                 expression rhs;
             };
 

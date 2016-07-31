@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2015 Michał "Griwes" Dominiak
+ * Copyright © 2014-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,9 +24,7 @@
 
 #include <string>
 
-#include <boost/variant.hpp>
-
-#include <reaver/visit.h>
+#include <reaver/variant.h>
 
 #include "vapor/parser/helpers.h"
 #include "vapor/parser/expression_list.h"
@@ -45,7 +43,12 @@ namespace reaver
             struct statement
             {
                 range_type range;
-                boost::variant<declaration, return_expression, expression_list, function> statement_value;
+                variant<
+                    declaration,
+                    return_expression,
+                    expression_list,
+                    function
+                > statement_value = expression_list();
             };
 
             statement parse_statement(context & ctx);
@@ -54,3 +57,4 @@ namespace reaver
         }}
     }
 }
+

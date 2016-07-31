@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2015 Michał "Griwes" Dominiak
+ * Copyright © 2014-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <boost/optional.hpp>
+#include <reaver/optional.h>
 
 #include "vapor/range.h"
 #include "vapor/parser/helpers.h"
@@ -41,9 +41,9 @@ namespace reaver
             struct lambda_expression
             {
                 range_type range;
-                boost::optional<capture_list> captures;
-                boost::optional<argument_list> arguments;
-                boost::recursive_wrapper<block> body;
+                optional<capture_list> captures;
+                optional<argument_list> arguments;
+                recursive_wrapper<block> body;
             };
 
             lambda_expression parse_lambda_expression(context & ctx);
@@ -52,3 +52,4 @@ namespace reaver
         }}
     }
 }
+
