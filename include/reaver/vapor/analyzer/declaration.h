@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,9 +24,9 @@
 
 #include <memory>
 
-#include "vapor/parser/declaration.h"
-#include "vapor/analyzer/symbol.h"
-#include "vapor/analyzer/expression.h"
+#include "../parser/declaration.h"
+#include "symbol.h"
+#include "expression.h"
 
 namespace reaver
 {
@@ -78,3 +78,4 @@ namespace reaver
         }}
     }
 }
+

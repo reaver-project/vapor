@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2015 Michał "Griwes" Dominiak
+ * Copyright © 2014-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,10 +27,10 @@
 
 #include <reaver/error.h>
 
-#include "vapor/lexer/token.h"
-#include "vapor/parser/module.h"
-#include "vapor/parser/statement.h"
-#include "vapor/parser/helpers.h"
+#include "../lexer/token.h"
+#include "module.h"
+#include "statement.h"
+#include "helpers.h"
 
 namespace reaver
 {
@@ -71,6 +71,12 @@ namespace reaver
                     return _modules.end();
                 }
 
+                template<typename F>
+                friend auto fmap(const ast & ast, F && f)
+                {
+                    return fmap(ast._modules, std::forward<F>(f));
+                }
+
             private:
                 std::vector<module> _modules;
             };
@@ -89,3 +95,4 @@ namespace reaver
         }}
     }
 }
+

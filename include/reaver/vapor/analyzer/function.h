@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016 Michał "Griwes" Dominiak
+ * Copyright © 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,24 +22,13 @@
 
 #pragma once
 
-#include "../range.h"
-#include "expression.h"
-
 namespace reaver
 {
     namespace vapor
     {
-        namespace parser { inline namespace _v1
+        namespace analyzer { inline namespace _v1
         {
-            struct return_expression
-            {
-                range_type range;
-                expression return_value;
-            };
-
-            return_expression parse_return_expression(context & ctx);
-
-            void print(const return_expression & ret, std::ostream & os, std::size_t indent = 0);
+            class function;
         }}
     }
 }

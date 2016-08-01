@@ -22,9 +22,9 @@
 
 #pragma once
 
-#include "vapor/range.h"
-#include "vapor/parser/helpers.h"
-#include "vapor/parser/statement.h"
+#include "../range.h"
+#include "helpers.h"
+#include "statement.h"
 
 namespace reaver
 {

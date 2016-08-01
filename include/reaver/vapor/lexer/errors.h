@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2015 Michał "Griwes" Dominiak
+ * Copyright © 2014-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,7 +24,7 @@
 
 #include <reaver/exception.h>
 
-#include "vapor/range.h"
+#include "../range.h"
 
 namespace reaver
 {
@@ -52,3 +52,4 @@ namespace reaver
         }}
     }
 }
+

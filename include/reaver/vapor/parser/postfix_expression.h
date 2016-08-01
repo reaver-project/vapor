@@ -24,9 +24,9 @@
 
 #include <reaver/optional.h>
 
-#include "vapor/range.h"
-#include "vapor/parser/helpers.h"
-#include "vapor/parser/id_expression.h"
+#include "../range.h"
+#include "helpers.h"
+#include "id_expression.h"
 
 namespace reaver
 {

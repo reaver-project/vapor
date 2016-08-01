@@ -28,15 +28,16 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "vapor/range.h"
-#include "vapor/parser/module.h"
-#include "vapor/parser/id_expression.h"
-#include "vapor/analyzer/declaration.h"
-#include "vapor/analyzer/scope.h"
-#include "vapor/analyzer/import.h"
-#include "vapor/analyzer/symbol.h"
-#include "vapor/analyzer/helpers.h"
-#include "vapor/analyzer/statement.h"
+#include "../range.h"
+#include "../parser/module.h"
+#include "../parser/id_expression.h"
+#include "declaration.h"
+#include "scope.h"
+#include "import.h"
+#include "symbol.h"
+#include "helpers.h"
+#include "statement.h"
+#include "function.h"
 
 namespace reaver
 {
@@ -53,12 +54,17 @@ namespace reaver
 
                 void analyze()
                 {
-                    for (auto && statement : _parse.statements)
-                    {
-                        fmap(statement.statement_value, make_overload_set(
+                    fmap(
+                        fmap(
+                            _parse.statements,
+                            [&](const auto & statement){
+                                return preanalyze_statement(statement, enable_shared_from_this<module>::shared_from_this());
+                            }
+                        ),
+                        make_overload_set(
                             [&](const std::shared_ptr<declaration> & decl)
                             {
-                                auto & symb = _symbols[decl->name()];
+                                auto & symb = get_ref(decl->name());
                                 if (symb)
                                 {
                                     error("redefinition of `" + utf8(decl->name()) + "`", decl->parse());
@@ -77,26 +83,28 @@ namespace reaver
                                 return unit{};
                             },
 
+                            [&](const std::shared_ptr<function> & fun)
+                            {
+                                assert(0);
+                                return unit{};
+                            },
+
                             [&](auto &&...)
                             {
                                 throw exception{ logger::crash } << "got invalid statement in module; fix the parser";
                                 return unit{};
                             }
-                        ));
-                    }
+                        )
+                    );
                 }
 
                 std::u32string name() const
                 {
-                    std::vector<std::u32string> tmp;
-                    tmp.reserve(_parse.name.id_expression_value.size());
-                    std::transform(_parse.name.id_expression_value.begin(), _parse.name.id_expression_value.end(), std::back_inserter(tmp), [](auto && elem) -> decltype(auto) { return elem.string; });
-                    return boost::join(tmp, ".");
+                    return boost::join(fmap(_parse.name.id_expression_value, [](auto && elem) -> decltype(auto) { return elem.string; }), ".");
                 }
 
             private:
                 const parser::module & _parse;
-                std::unordered_map<std::u32string, std::shared_ptr<symbol>> _symbols;
             };
         }}
     }

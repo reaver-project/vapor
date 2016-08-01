@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,8 +24,8 @@
 
 #include <memory>
 
-#include "vapor/analyzer/scope.h"
-#include "vapor/analyzer/variable.h"
+#include "scope.h"
+#include "variable.h"
 
 namespace reaver
 {
@@ -56,3 +56,4 @@ namespace reaver
         }}
     }
 }
+

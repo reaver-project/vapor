@@ -22,11 +22,11 @@
 
 #pragma once
 
-#include "vapor/parser/statement.h"
-#include "vapor/analyzer/declaration.h"
-#include "vapor/analyzer/import.h"
-#include "vapor/analyzer/expression.h"
-#include "vapor/analyzer/helpers.h"
+#include "../parser/statement.h"
+#include "declaration.h"
+#include "import.h"
+#include "expression.h"
+#include "helpers.h"
 
 namespace reaver
 {

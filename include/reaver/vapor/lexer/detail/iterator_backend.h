@@ -30,10 +30,10 @@
 
 #include <reaver/semaphore.h>
 
-#include "vapor/position.h"
-#include "vapor/lexer/token.h"
-#include "vapor/lexer/detail/lexer_node.h"
-#include "vapor/lexer/errors.h"
+#include "../../position.h"
+#include "../token.h"
+#include "lexer_node.h"
+#include "../errors.h"
 
 namespace reaver
 {

@@ -27,11 +27,11 @@
 
 #include <reaver/variant.h>
 
-#include "vapor/range.h"
-#include "vapor/parser/helpers.h"
-#include "vapor/parser/import_expression.h"
-#include "vapor/parser/postfix_expression.h"
-#include "vapor/parser/literal.h"
+#include "../range.h"
+#include "helpers.h"
+#include "import_expression.h"
+#include "postfix_expression.h"
+#include "literal.h"
 
 namespace reaver
 {

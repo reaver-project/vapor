@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,6 +23,10 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
+#include <string>
+
+#include <reaver/optional.h>
 
 namespace reaver
 {
@@ -30,12 +34,31 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            class scope
+            class symbol;
+
+            class scope : public std::enable_shared_from_this<scope>
             {
+            public:
+                auto get(const std::u32string & name) const
+                {
+                    return _symbols.at(name);
+                }
+
+                auto try_get(const std::u32string & name) const
+                {
+                    auto it = _symbols.find(name);
+                    return it != _symbols.end() ? make_optional(it->second) : none;
+                }
+
+                auto & get_ref(const std::u32string & name)
+                {
+                    return _symbols[name];
+                }
+
             private:
+                std::unordered_map<std::u32string, std::shared_ptr<symbol>> _symbols;
             };
         }}
     }
 }
-
 

@@ -26,13 +26,13 @@
 
 #include <reaver/variant.h>
 
-#include "vapor/parser/helpers.h"
-#include "vapor/parser/expression_list.h"
-#include "vapor/parser/declaration.h"
-#include "vapor/parser/return_expression.h"
-#include "vapor/parser/unary_expression.h"
-#include "vapor/parser/binary_expression.h"
-#include "vapor/parser/function.h"
+#include "helpers.h"
+#include "expression_list.h"
+#include "declaration.h"
+#include "return_expression.h"
+#include "unary_expression.h"
+#include "binary_expression.h"
+#include "function.h"
 
 namespace reaver
 {

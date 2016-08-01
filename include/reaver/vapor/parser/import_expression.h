@@ -24,10 +24,10 @@
 
 #include <reaver/variant.h>
 
-#include "vapor/range.h"
-#include "vapor/parser/helpers.h"
-#include "vapor/parser/id_expression.h"
-#include "vapor/parser/literal.h"
+#include "../range.h"
+#include "helpers.h"
+#include "id_expression.h"
+#include "literal.h"
 
 namespace reaver
 {

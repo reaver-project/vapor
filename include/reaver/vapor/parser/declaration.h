@@ -24,8 +24,8 @@
 
 #include <string>
 
-#include "vapor/range.h"
-#include "vapor/parser/expression_list.h"
+#include "../range.h"
+#include "expression_list.h"
 
 namespace reaver
 {
@@ -47,3 +47,4 @@ namespace reaver
         }}
     }
 }
+

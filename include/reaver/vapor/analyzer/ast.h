@@ -22,9 +22,9 @@
 
 #pragma once
 
-#include "vapor/parser/ast.h"
-#include "vapor/analyzer/module.h"
-#include "vapor/analyzer/helpers.h"
+#include "../parser/ast.h"
+#include "module.h"
+#include "helpers.h"
 
 namespace reaver
 {
@@ -35,11 +35,11 @@ namespace reaver
             class ast
             {
             public:
-                ast(const parser::ast & original_ast)
+                ast(parser::ast original_ast) : _original_ast{ std::move(original_ast) }
                 {
                     try
                     {
-                        std::transform(original_ast.begin(), original_ast.end(), std::back_inserter(_modules), [](auto && m)
+                        _modules = fmap(_original_ast, [](auto && m)
                         {
                             auto ret = std::make_shared<module>(m);
                             ret->analyze();
@@ -79,6 +79,7 @@ namespace reaver
                 }
 
             private:
+                parser::ast _original_ast;
                 std::vector<std::shared_ptr<module>> _modules;
             };
         }}

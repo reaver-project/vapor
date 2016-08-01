@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -25,7 +25,7 @@
 #include <memory>
 #include <type_traits>
 
-#include "vapor/lexer/detail/iterator_backend.h"
+#include "detail/iterator_backend.h"
 
 namespace reaver
 {
@@ -118,3 +118,4 @@ namespace std
         using iterator_category = forward_iterator_tag;
     };
 }
+

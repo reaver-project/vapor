@@ -27,10 +27,10 @@
 #include <reaver/exception.h>
 #include <reaver/unit.h>
 
-#include "vapor/utf8.h"
-#include "vapor/range.h"
-#include "vapor/lexer/token.h"
-#include "vapor/lexer/iterator.h"
+#include "../utf8.h"
+#include "../range.h"
+#include "../lexer/token.h"
+#include "../lexer/iterator.h"
 
 namespace reaver
 {

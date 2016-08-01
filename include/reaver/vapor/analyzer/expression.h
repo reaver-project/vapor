@@ -24,14 +24,14 @@
 
 #include <memory>
 
-#include "vapor/parser/expression_list.h"
-#include "vapor/parser/expression.h"
-#include "vapor/parser/lambda_expression.h"
-#include "vapor/analyzer/scope.h"
-#include "vapor/analyzer/helpers.h"
-#include "vapor/analyzer/literal.h"
-#include "vapor/analyzer/import.h"
-#include "vapor/analyzer/lambda.h"
+#include "../parser/expression_list.h"
+#include "../parser/expression.h"
+#include "../parser/lambda_expression.h"
+#include "scope.h"
+#include "helpers.h"
+#include "literal.h"
+#include "import.h"
+#include "lambda.h"
 
 namespace reaver
 {
