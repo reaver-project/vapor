@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "../parser/binary_expression.h"
+#include "../parser/unary_expression.h"
 #include "expression.h"
 
 namespace reaver
@@ -31,25 +31,21 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            class binary_expression : public expression
+            class unary_expression : public expression
             {
             public:
-                binary_expression(const parser::binary_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _op{ _parse.op },
-                    _lhs{ preanalyze_expression(_parse.lhs, lex_scope) },
-                    _rhs{ preanalyze_expression(_parse.rhs, lex_scope) }
+                unary_expression(const parser::unary_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }
                 {
                 }
 
+
             private:
-                const parser::binary_expression & _parse;
-                lexer::token _op;
-                std::shared_ptr<expression> _lhs;
-                std::shared_ptr<expression> _rhs;
+                const parser::unary_expression & _parse;
             };
 
-            std::shared_ptr<binary_expression> preanalyze_binary_expression(const parser::binary_expression & parse, std::shared_ptr<scope> lex_scope)
+            std::shared_ptr<unary_expression> preanalyze_unary_expression(const parser::unary_expression & parse, std::shared_ptr<scope> lex_scope)
             {
-                return std::make_shared<binary_expression>(parse, std::move(lex_scope));
+                return std::make_shared<unary_expression>(parse, std::move(lex_scope));
             }
         }}
     }

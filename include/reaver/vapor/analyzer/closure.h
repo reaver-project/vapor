@@ -33,7 +33,7 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            class closure
+            class closure : public expression
             {
             public:
                 closure(const parser::lambda_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _scope{ std::make_shared<scope>(std::move(lex_scope)) }

@@ -24,13 +24,12 @@
 
 #include <memory>
 
-#include "../parser/expression_list.h"
 #include "../parser/expression.h"
+#include "../parser/expression_list.h"
 #include "../parser/lambda_expression.h"
 #include "scope.h"
 #include "helpers.h"
-#include "literal.h"
-#include "import.h"
+#include "variable.h"
 
 namespace reaver
 {
@@ -38,31 +37,44 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            class postfix_expression;
-            class unary_expression;
-            class binary_expression;
-            class closure;
-            struct expression_list;
-
-            using expression = shptr_variant<
-                expression_list,
-                literal,
-                import_expression,
-                postfix_expression,
-                closure,
-                unary_expression,
-                binary_expression
-            >;
-
-            struct expression_list
+            class expression : public std::enable_shared_from_this<expression>
             {
-                range_type range;
-                std::vector<expression> value;
+            public:
+                expression() = default;
+                virtual ~expression() = default;
+
+                expression(std::shared_ptr<variable> var) : _variable{ std::move(var) }
+                {
+                }
+
+                std::shared_ptr<variable> get_variable() const
+                {
+                    return _variable;
+                }
+
+                std::shared_ptr<type> get_type()
+                {
+                    if (!_variable)
+                    {
+                        _variable = make_delayed_variable(shared_from_this());
+                    }
+
+                    return _variable->get_type();
+                }
+
+            private:
+                std::shared_ptr<variable> _variable;
             };
 
-            expression preanalyze_expression(const parser::expression & expr, const std::shared_ptr<scope> & lex_scope);
+            struct expression_list : public expression
+            {
+                range_type range;
+                std::vector<std::shared_ptr<expression>> value;
+            };
 
-            expression preanalyze_expression(const parser::expression_list & expr, const std::shared_ptr<scope> & lex_scope)
+            std::shared_ptr<expression> preanalyze_expression(const parser::expression & expr, const std::shared_ptr<scope> & lex_scope);
+
+            std::shared_ptr<expression> preanalyze_expression(const parser::expression_list & expr, const std::shared_ptr<scope> & lex_scope)
             {
                 if (expr.expressions.size() > 1)
                 {
@@ -77,9 +89,6 @@ namespace reaver
                 });
                 return ret;
             }
-
-            class type;
-            std::shared_ptr<type> type_of(expression & expr);
         }}
     }
 }

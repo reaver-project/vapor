@@ -24,56 +24,52 @@
 #include "vapor/analyzer/closure.h"
 #include "vapor/analyzer/binary_expression.h"
 #include "vapor/analyzer/integer.h"
+#include "vapor/analyzer/postfix_expression.h"
+#include "vapor/analyzer/unary_expression.h"
 
-reaver::vapor::analyzer::_v1::expression reaver::vapor::analyzer::_v1::preanalyze_expression(const reaver::vapor::parser::_v1::expression & expr, const std::shared_ptr<reaver::vapor::analyzer::_v1::scope> & lex_scope)
+std::shared_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyzer::_v1::preanalyze_expression(const reaver::vapor::parser::_v1::expression & expr, const std::shared_ptr<reaver::vapor::analyzer::_v1::scope> & lex_scope)
 {
     return get<0>(fmap(expr.expression_value, make_overload_set(
-        [](const parser::string_literal & string) -> expression
+        [](const parser::string_literal & string) -> std::shared_ptr<expression>
         {
             assert(0);
-            return std::shared_ptr<literal>();
+            return std::make_shared<expression>(std::shared_ptr<literal>());
         },
 
-        [](const parser::integer_literal & integer) -> expression
+        [](const parser::integer_literal & integer) -> std::shared_ptr<expression>
         {
-            return std::make_shared<integer_constant>(integer);
+            return std::make_shared<expression>(std::make_shared<integer_constant>(integer));
         },
 
-        [](const parser::postfix_expression & postfix) -> expression
+        [](const parser::postfix_expression & postfix) -> std::shared_ptr<expression>
         {
             assert(0);
             return std::shared_ptr<postfix_expression>();
         },
 
-        [](const parser::import_expression & import) -> expression
+        [](const parser::import_expression & import) -> std::shared_ptr<expression>
         {
             assert(0);
             return std::shared_ptr<import_expression>();
         },
 
-        [&](const parser::lambda_expression & lambda_expr) -> expression
+        [&](const parser::lambda_expression & lambda_expr) -> std::shared_ptr<expression>
         {
             auto lambda = preanalyze_closure(lambda_expr, lex_scope);
             return lambda;
         },
 
-        [](const parser::unary_expression & unary_expr) -> expression
+        [](const parser::unary_expression & unary_expr) -> std::shared_ptr<expression>
         {
             assert(0);
             return std::shared_ptr<unary_expression>();
         },
 
-        [&](const parser::binary_expression & binary_expr) -> expression
+        [&](const parser::binary_expression & binary_expr) -> std::shared_ptr<expression>
         {
             auto binexpr = preanalyze_binary_expression(binary_expr, lex_scope);
             return binexpr;
         }
     )));
-}
-
-std::shared_ptr<reaver::vapor::analyzer::_v1::type> reaver::vapor::analyzer::_v1::type_of(reaver::vapor::analyzer::_v1::expression & expr)
-{
-    asssert(0);
-    return nullptr;
 }
 

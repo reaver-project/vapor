@@ -63,7 +63,7 @@ namespace reaver
                     std::shared_ptr<block>,
                     statement
                 >> _statements;
-                optional<expression> _value_expr;
+                optional<std::shared_ptr<expression>> _value_expr;
             };
 
             std::shared_ptr<block> preanalyze_block(const parser::block & parse, std::shared_ptr<scope> lex_scope)

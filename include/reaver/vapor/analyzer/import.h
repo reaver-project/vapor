@@ -24,13 +24,15 @@
 
 #include <memory>
 
+#include "expression.h"
+
 namespace reaver
 {
     namespace vapor
     {
         namespace analyzer { inline namespace _v1
         {
-            class import_expression
+            class import_expression : public expression
             {
             };
 

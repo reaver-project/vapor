@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016, 2016 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,6 +27,7 @@
 #include "../parser/declaration.h"
 #include "symbol.h"
 #include "expression.h"
+#include "variable.h"
 
 namespace reaver
 {
@@ -37,11 +38,12 @@ namespace reaver
             class declaration
             {
             public:
-                declaration(std::u32string name, expression init, const std::shared_ptr<scope> & lex_scope, const parser::declaration & parse)
-                    : _name{ std::move(name) }, _initializer_expression{ std::move(init) }, _parse{ parse }
+                declaration(const parser::declaration & parse, std::shared_ptr<scope> old_scope, std::shared_ptr<scope> new_scope)
+                    : _parse{ parse }, _name{ parse.identifier.string }
                 {
-                    _declared_symbol = make_symbol(_name, type_of(_initializer_expression));
-                    lex_scope->get_ref(name) = _declared_symbol;
+                    _init_expr = preanalyze_expression(_parse.rhs, old_scope);
+                    _declared_symbol = make_symbol(_name, _init_expr->get_type());
+                    new_scope->get_ref(_name) = _declared_symbol;
                 }
 
                 const auto & name() const
@@ -61,20 +63,21 @@ namespace reaver
 
                 auto initializer_expression() const
                 {
-                    return _initializer_expression;
+                    return _init_expr;
                 }
 
             private:
+                const parser::declaration & _parse;
                 std::u32string _name;
                 std::shared_ptr<symbol> _declared_symbol;
-                expression _initializer_expression;
-
-                const parser::declaration & _parse;
+                std::shared_ptr<expression> _init_expr;
             };
 
-            std::shared_ptr<declaration> make_declaration(std::u32string name, expression init, const std::shared_ptr<scope> & lexical_scope, const parser::declaration & parse)
+            std::shared_ptr<declaration> preanalyze_declaration(const parser::declaration & parse, std::shared_ptr<scope> & lex_scope)
             {
-                return std::make_shared<declaration>(std::move(name), std::move(init), std::move(lexical_scope), parse);
+                auto old_scope = lex_scope;
+                lex_scope = std::make_shared<scope>(old_scope);
+                return std::make_shared<declaration>(parse, old_scope, lex_scope);
             }
         }}
     }

@@ -50,52 +50,16 @@ namespace reaver
             public:
                 module(const parser::module & parse) : _parse{ parse }, _scope{ std::make_shared<scope>() }
                 {
+                    _statements = fmap(
+                        _parse.statements,
+                        [&](const auto & statement){
+                            return preanalyze_statement(statement, _scope);
+                        }
+                    );
                 }
 
                 void analyze()
                 {
-                    fmap(
-                        fmap(
-                            _parse.statements,
-                            [&](const auto & statement){
-                                return preanalyze_statement(statement, _scope);
-                            }
-                        ),
-                        make_overload_set(
-                            [&](const std::shared_ptr<declaration> & decl)
-                            {
-                                auto & symb = _scope->get_ref(decl->name());
-                                if (symb)
-                                {
-                                    error("redefinition of `" + utf8(decl->name()) + "`", decl->parse());
-                                }
-                                else
-                                {
-                                    symb = decl->declared_symbol();
-                                }
-
-                                return unit{};
-                            },
-
-                            [&](const std::shared_ptr<import> & im)
-                            {
-                                assert(0);
-                                return unit{};
-                            },
-
-                            [&](const std::shared_ptr<function> & fun)
-                            {
-                                assert(0);
-                                return unit{};
-                            },
-
-                            [&](auto &&...)
-                            {
-                                throw exception{ logger::crash } << "got invalid statement in module; fix the parser";
-                                return unit{};
-                            }
-                        )
-                    );
                 }
 
                 std::u32string name() const
@@ -106,6 +70,7 @@ namespace reaver
             private:
                 const parser::module & _parse;
                 std::shared_ptr<scope> _scope;
+                std::vector<statement> _statements;
             };
         }}
     }

@@ -26,8 +26,6 @@
 
 #include <reaver/variant.h>
 
-#include "expression.h"
-
 namespace reaver
 {
     namespace vapor
@@ -48,10 +46,12 @@ namespace reaver
                 }
             };
 
+            class expression;
+
             class unresolved_type : public type
             {
             public:
-                unresolved_type(expression & expr) : _state{ expr }
+                unresolved_type(std::shared_ptr<expression> expr) : _state{ expr }
                 {
                 }
 
@@ -67,7 +67,7 @@ namespace reaver
                             return ready;
                         },
 
-                        [&](expression & expr) {
+                        [&](std::shared_ptr<expression> expr) {
                             assert(0);
                             return std::shared_ptr<type>();
                         }
@@ -77,7 +77,7 @@ namespace reaver
             private:
                 variant<
                     std::shared_ptr<type>,
-                    expression &
+                    std::shared_ptr<expression>
                 > _state;
             };
 

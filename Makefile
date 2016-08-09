@@ -1,6 +1,6 @@
 CXX = g++
 LD = g++
-CXXFLAGS += -Os -Wall -std=c++1z -MP -MD -fPIC -Wno-unused-parameter -g
+CXXFLAGS += -Os -Wall -std=c++1z -MP -MD -fPIC -Wno-unused-parameter -g -Wno-unused-private-field
 SOFLAGS += -shared
 LDFLAGS +=
 LIBRARIES += -pthread -lboost_system -lboost_filesystem -ldl

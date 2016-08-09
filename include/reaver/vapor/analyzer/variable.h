@@ -24,6 +24,8 @@
 
 #include <memory>
 
+#include "type.h"
+
 namespace reaver
 {
     namespace vapor
@@ -37,6 +39,27 @@ namespace reaver
             public:
                 virtual std::shared_ptr<type> get_type() const = 0;
             };
+
+            class delayed_variable : public variable
+            {
+            public:
+                delayed_variable(std::shared_ptr<expression> expr) : _type{ std::make_shared<unresolved_type>(std::move(expr)) }
+                {
+                }
+
+                virtual std::shared_ptr<type> get_type() const override
+                {
+                    return _type;
+                }
+
+            private:
+                std::shared_ptr<type> _type;
+            };
+
+            inline auto make_delayed_variable(std::shared_ptr<expression> expr)
+            {
+                return std::make_shared<delayed_variable>(expr);
+            }
         }}
     }
 }

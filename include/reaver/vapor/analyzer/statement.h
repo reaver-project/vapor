@@ -42,9 +42,7 @@ namespace reaver
                 return get<0>(fmap(parse.statement_value, make_overload_set(
                     [&](const parser::declaration & decl) -> statement
                     {
-                        auto post_decl_scope = std::make_shared<scope>(lex_scope);
-                        auto ret = make_declaration(decl.identifier.string, preanalyze_expression(decl.rhs, lex_scope), post_decl_scope, decl);
-                        lex_scope = std::move(post_decl_scope);
+                        auto ret = preanalyze_declaration(decl, lex_scope);
                         return ret;
                     },
 
@@ -55,6 +53,12 @@ namespace reaver
                     },
 
                     [](const parser::expression_list & expr_list) -> statement
+                    {
+                        assert(0);
+                        return std::shared_ptr<expression>();
+                    },
+
+                    [](const parser::function & func) -> statement
                     {
                         assert(0);
                         return std::shared_ptr<expression>();
