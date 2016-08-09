@@ -22,15 +22,18 @@
 
 #pragma once
 
+#include "variable.h"
+
 namespace reaver
 {
     namespace vapor
     {
         namespace analyzer { inline namespace _v1
         {
-            class literal
+            class literal : public variable
             {
             };
         }}
     }
 }
+

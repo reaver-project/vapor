@@ -22,10 +22,8 @@
 
 #pragma once
 
-#include "../parser/lambda_expression.h"
-#include "scope.h"
-#include "statement.h"
-#include "block.h"
+#include "../parser/binary_expression.h"
+#include "expression.h"
 
 namespace reaver
 {
@@ -33,28 +31,26 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            class closure
+            class binary_expression
             {
             public:
-                closure(const parser::lambda_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _scope{ std::make_shared<scope>(std::move(lex_scope)) }
+                binary_expression(const parser::binary_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _op{ _parse.op },
+                    _lhs{ preanalyze_expression(_parse.lhs, lex_scope) },
+                    _rhs{ preanalyze_expression(_parse.rhs, lex_scope) }
                 {
-                    _body = preanalyze_block(*parse.body, _scope);
                 }
 
-                auto & parse() const
-                {
-                    return _parse;
-                }
 
             private:
-                const parser::lambda_expression & _parse;
-                std::shared_ptr<scope> _scope;
-                std::shared_ptr<block> _body;
+                const parser::binary_expression & _parse;
+                lexer::token _op;
+                expression _lhs;
+                expression _rhs;
             };
 
-            std::shared_ptr<closure> preanalyze_closure(const parser::lambda_expression & parse, std::shared_ptr<scope> lex_scope)
+            std::shared_ptr<binary_expression> preanalyze_binary_expression(const parser::binary_expression & parse, std::shared_ptr<scope> lex_scope)
             {
-                return std::make_shared<closure>(parse, std::move(lex_scope));
+                return std::make_shared<binary_expression>(parse, std::move(lex_scope));
             }
         }}
     }

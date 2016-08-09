@@ -25,6 +25,7 @@
 #include "../range.h"
 #include "helpers.h"
 #include "statement.h"
+#include "expression_list.h"
 
 namespace reaver
 {
@@ -33,13 +34,12 @@ namespace reaver
         namespace parser { inline namespace _v1
         {
             struct statement;
-            struct expression_list;
 
             struct block
             {
                 range_type range;
                 std::vector<variant<recursive_wrapper<block>, recursive_wrapper<statement>>> block_value;
-                optional<recursive_wrapper<expression_list>> value_expression;
+                optional<expression_list> value_expression;
             };
 
             block parse_block(context & ctx);

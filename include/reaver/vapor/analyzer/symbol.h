@@ -24,8 +24,7 @@
 
 #include <memory>
 
-#include "scope.h"
-#include "variable.h"
+#include "type.h"
 
 namespace reaver
 {
@@ -33,25 +32,22 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            class declaration;
-
             class symbol
             {
             public:
-                symbol(std::string name, std::shared_ptr<scope> lex_scope, std::shared_ptr<variable> referenced_variable, std::shared_ptr<declaration> decl)
-                    : _name{ std::move(name) }, _lexical_scope{ std::move(lex_scope) }, _variable{ referenced_variable }, _declaration{ std::move(decl) }
+                symbol(std::u32string name, std::shared_ptr<type> type)
+                    : _name{ std::move(name) }, _type{ type }
                 {
                 }
+
             private:
-                std::string _name;
-                std::shared_ptr<scope> _lexical_scope;
-                std::shared_ptr<variable> _variable;
-                std::shared_ptr<declaration> _declaration;
+                std::u32string _name;
+                std::shared_ptr<type> _type;
             };
 
-            auto make_symbol(std::string name, std::shared_ptr<scope> lex_scope, std::shared_ptr<variable> referenced_variable, std::shared_ptr<declaration> decl)
+            auto make_symbol(std::u32string name, std::shared_ptr<type> type)
             {
-                return std::make_shared<symbol>(std::move(name), std::move(lex_scope), std::move(referenced_variable), std::move(decl));
+                return std::make_shared<symbol>(std::move(name), std::move(type));
             }
         }}
     }

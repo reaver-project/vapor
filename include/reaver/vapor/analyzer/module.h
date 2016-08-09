@@ -45,10 +45,10 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            class module : public scope, public std::enable_shared_from_this<module>
+            class module
             {
             public:
-                module(const parser::module & parse) : _parse{ parse }
+                module(const parser::module & parse) : _parse{ parse }, _scope{ std::make_shared<scope>() }
                 {
                 }
 
@@ -58,13 +58,13 @@ namespace reaver
                         fmap(
                             _parse.statements,
                             [&](const auto & statement){
-                                return preanalyze_statement(statement, enable_shared_from_this<module>::shared_from_this());
+                                return preanalyze_statement(statement, _scope);
                             }
                         ),
                         make_overload_set(
                             [&](const std::shared_ptr<declaration> & decl)
                             {
-                                auto & symb = get_ref(decl->name());
+                                auto & symb = _scope->get_ref(decl->name());
                                 if (symb)
                                 {
                                     error("redefinition of `" + utf8(decl->name()) + "`", decl->parse());
@@ -105,7 +105,9 @@ namespace reaver
 
             private:
                 const parser::module & _parse;
+                std::shared_ptr<scope> _scope;
             };
         }}
     }
 }
+

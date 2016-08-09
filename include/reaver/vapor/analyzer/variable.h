@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -30,9 +30,12 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
+            class type;
+
             class variable
             {
-            private:
+            public:
+                virtual std::shared_ptr<type> get_type() const = 0;
             };
         }}
     }

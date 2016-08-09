@@ -86,8 +86,9 @@ void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::block &
 
         if (bl.value_expression)
         {
+            os << in << "value_expression:\n";
             os << in << "{\n";
-            print(**bl.value_expression, os, indent + 8);
+            print(*bl.value_expression, os, indent + 8);
             os << in << "}\n";
         }
     }

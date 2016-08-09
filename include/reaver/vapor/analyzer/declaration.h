@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016, 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -40,7 +40,8 @@ namespace reaver
                 declaration(std::u32string name, expression init, const std::shared_ptr<scope> & lex_scope, const parser::declaration & parse)
                     : _name{ std::move(name) }, _initializer_expression{ std::move(init) }, _parse{ parse }
                 {
-                    assert(0);
+                    _declared_symbol = make_symbol(_name, type_of(_initializer_expression));
+                    lex_scope->get_ref(name) = _declared_symbol;
                 }
 
                 const auto & name() const

@@ -39,6 +39,12 @@ namespace reaver
             class scope : public std::enable_shared_from_this<scope>
             {
             public:
+                scope() = default;
+
+                scope(std::shared_ptr<scope> parent_scope) : _parent{ std::move(parent_scope) }
+                {
+                }
+
                 auto get(const std::u32string & name) const
                 {
                     return _symbols.at(name);
@@ -56,6 +62,7 @@ namespace reaver
                 }
 
             private:
+                std::shared_ptr<scope> _parent;
                 std::unordered_map<std::u32string, std::shared_ptr<symbol>> _symbols;
             };
         }}

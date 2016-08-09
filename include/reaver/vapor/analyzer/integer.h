@@ -22,10 +22,11 @@
 
 #pragma once
 
-#include "../parser/lambda_expression.h"
-#include "scope.h"
-#include "statement.h"
-#include "block.h"
+#include <boost/multiprecision/integer.hpp>
+
+#include "type.h"
+#include "literal.h"
+#include "../parser/literal.h"
 
 namespace reaver
 {
@@ -33,28 +34,31 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            class closure
+            class integer_type : public type
+            {
+            private:
+            };
+
+            class integer_constant : public literal
             {
             public:
-                closure(const parser::lambda_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _scope{ std::make_shared<scope>(std::move(lex_scope)) }
+                integer_constant(const parser::integer_literal & parse) : _value{ utf8(parse.value.string) }
                 {
-                    _body = preanalyze_block(*parse.body, _scope);
                 }
 
-                auto & parse() const
+                virtual std::shared_ptr<type> get_type() const override
                 {
-                    return _parse;
+                    return builtin_types().integer;
                 }
 
             private:
-                const parser::lambda_expression & _parse;
-                std::shared_ptr<scope> _scope;
-                std::shared_ptr<block> _body;
+                boost::multiprecision::cpp_int _value;
             };
 
-            std::shared_ptr<closure> preanalyze_closure(const parser::lambda_expression & parse, std::shared_ptr<scope> lex_scope)
+            inline std::shared_ptr<type> make_integer_type()
             {
-                return std::make_shared<closure>(parse, std::move(lex_scope));
+                static auto int_t = std::make_shared<integer_type>();
+                return int_t;
             }
         }}
     }

@@ -34,14 +34,18 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
+            class declaration;
             using statement = shptr_variant<declaration, import, expression>;
 
-            statement preanalyze_statement(const parser::statement & parse, const std::shared_ptr<scope> & lex_scope)
+            statement preanalyze_statement(const parser::statement & parse, std::shared_ptr<scope> & lex_scope)
             {
                 return get<0>(fmap(parse.statement_value, make_overload_set(
                     [&](const parser::declaration & decl) -> statement
                     {
-                        return make_declaration(decl.identifier.string, preanalyze_expression(decl.rhs, lex_scope), lex_scope, decl);
+                        auto post_decl_scope = std::make_shared<scope>(lex_scope);
+                        auto ret = make_declaration(decl.identifier.string, preanalyze_expression(decl.rhs, lex_scope), post_decl_scope, decl);
+                        lex_scope = std::move(post_decl_scope);
+                        return ret;
                     },
 
                     [](const parser::return_expression & ret_expr) -> statement

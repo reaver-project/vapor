@@ -68,7 +68,7 @@ reaver::vapor::parser::_v1::expression reaver::vapor::parser::_v1::parse_express
     {
         auto p1 = precedence({ type, operator_type::binary });
         auto p2 = ctx.operator_stack.size() ? make_optional(precedence(ctx.operator_stack.back())) : none;
-        while (ctx.operator_stack.empty() || p1 < p2 || (p1 == p2 && associativity(type) == assoc::right))
+        while (ctx.operator_stack.empty() || p1 < *p2 || (p1 == *p2 && associativity(type) == assoc::right))
         {
             visit([&](const auto & value) -> unit { ret.range = value.range; return {}; }, ret.expression_value);
             ret.expression_value = parse_binary_expression(ctx, std::move(ret));
