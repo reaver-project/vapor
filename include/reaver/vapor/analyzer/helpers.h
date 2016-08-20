@@ -33,7 +33,7 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            error_engine & default_error_engine()
+            inline error_engine & default_error_engine()
             {
                 static error_engine engine;
                 return engine;
@@ -56,3 +56,4 @@ namespace reaver
         }}
     }
 }
+

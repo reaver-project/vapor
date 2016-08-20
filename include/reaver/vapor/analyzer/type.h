@@ -26,60 +26,50 @@
 
 #include <reaver/variant.h>
 
+#include "../lexer/token.h"
+#include "scope.h"
+
 namespace reaver
 {
     namespace vapor
     {
         namespace analyzer { inline namespace _v1
         {
+            class function;
+
             class type : public std::enable_shared_from_this<type>
             {
             public:
-                virtual bool is_resolved() const
+                virtual ~type() = default;
+
+                virtual std::shared_ptr<function> get_overload(lexer::token_type, std::shared_ptr<type>) const
                 {
-                    return true;
+                    return nullptr;
                 }
 
-                virtual std::shared_ptr<type> try_resolve()
+                virtual std::string explain() const
                 {
-                    return shared_from_this();
+                    return "type";
                 }
             };
 
-            class expression;
-
-            class unresolved_type : public type
+            inline std::shared_ptr<function> resolve_overload(const std::shared_ptr<type> & lhs, const std::shared_ptr<type> & rhs, lexer::token_type op, std::shared_ptr<scope> in_scope)
             {
-            public:
-                unresolved_type(std::shared_ptr<expression> expr) : _state{ expr }
+                auto overload = lhs->get_overload(op, rhs);
+                if (overload)
                 {
+                    return overload;
                 }
 
-                virtual bool is_resolved() const override
+                /*overload = in_scope->get_ref(op)->get_overload(lhs, rhs);
+                if (overload)
                 {
-                    return _state.index() == 0;
-                }
+                    return overload;
+                }*/
 
-                virtual std::shared_ptr<type> try_resolve() override
-                {
-                    return get<0>(fmap(_state, make_overload_set(
-                        [&](std::shared_ptr<type> ready) {
-                            return ready;
-                        },
-
-                        [&](std::shared_ptr<expression> expr) {
-                            assert(0);
-                            return std::shared_ptr<type>();
-                        }
-                    )));
-                }
-
-            private:
-                variant<
-                    std::shared_ptr<type>,
-                    std::shared_ptr<expression>
-                > _state;
-            };
+                logger::dlog() << lhs << " " << lexer::token_types[+op] << " " << rhs << " = ?";
+                assert(0);
+            }
 
             std::shared_ptr<type> make_integer_type();
 

@@ -47,6 +47,11 @@ namespace reaver
                 }
 
             private:
+                virtual future<> _analyze() override
+                {
+                    return _body->analyze();
+                }
+
                 const parser::lambda_expression & _parse;
                 std::shared_ptr<scope> _scope;
                 std::shared_ptr<block> _body;

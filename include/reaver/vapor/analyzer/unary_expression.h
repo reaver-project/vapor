@@ -38,8 +38,12 @@ namespace reaver
                 {
                 }
 
-
             private:
+                virtual future<> _analyze() override
+                {
+                    assert(0);
+                }
+
                 const parser::unary_expression & _parse;
             };
 

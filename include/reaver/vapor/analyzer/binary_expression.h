@@ -24,6 +24,7 @@
 
 #include "../parser/binary_expression.h"
 #include "expression.h"
+#include "function.h"
 
 namespace reaver
 {
@@ -34,17 +35,32 @@ namespace reaver
             class binary_expression : public expression
             {
             public:
-                binary_expression(const parser::binary_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _op{ _parse.op },
+                binary_expression(const parser::binary_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _scope{ lex_scope }, _op{ _parse.op },
                     _lhs{ preanalyze_expression(_parse.lhs, lex_scope) },
                     _rhs{ preanalyze_expression(_parse.rhs, lex_scope) }
                 {
                 }
 
             private:
+                virtual future<> _analyze() override
+                {
+                    return when_all(
+                        _lhs->analyze(),
+                        _rhs->analyze()
+                    ).then([&](auto &&) {
+                        auto _overload = resolve_overload(_lhs->get_type(), _rhs->get_type(), _op.type, _scope);
+                        assert(_overload);
+
+                        _set_variable(make_expression_variable(shared_from_this(), _overload->return_type()));
+                    });
+                }
+
                 const parser::binary_expression & _parse;
+                std::shared_ptr<scope> _scope;
                 lexer::token _op;
                 std::shared_ptr<expression> _lhs;
                 std::shared_ptr<expression> _rhs;
+                std::shared_ptr<function> _overload;
             };
 
             std::shared_ptr<binary_expression> preanalyze_binary_expression(const parser::binary_expression & parse, std::shared_ptr<scope> lex_scope)

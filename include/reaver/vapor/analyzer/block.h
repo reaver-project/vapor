@@ -25,6 +25,7 @@
 #include "../parser/block.h"
 #include "scope.h"
 #include "statement.h"
+#include "expression.h"
 
 namespace reaver
 {
@@ -35,20 +36,22 @@ namespace reaver
             class block;
             std::shared_ptr<block> preanalyze_block(const parser::block &, std::shared_ptr<scope>);
 
-            class block
+            class block : public statement
             {
             public:
                 block(const parser::block & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _scope{ std::make_shared<scope>(std::move(lex_scope)) }
                 {
                     _statements = fmap(_parse.block_value, [&](auto && row) {
-                        return fmap(row, make_overload_set(
-                            [&](const parser::block & block) {
+                        return get<0>(fmap(row, make_overload_set(
+                            [&](const parser::block & block) -> std::shared_ptr<statement>
+                            {
                                 return preanalyze_block(block, _scope);
                             },
-                            [&](const parser::statement & statement) {
+                            [&](const parser::statement & statement)
+                            {
                                 return preanalyze_statement(statement, _scope);
                             }
-                        ));
+                        )));
                     });
 
                     _value_expr = fmap(_parse.value_expression, [&](auto && val_expr) {
@@ -57,12 +60,18 @@ namespace reaver
                 }
 
             private:
+                virtual future<> _analyze() override
+                {
+                    return when_all(
+                        fmap(_statements, [&](auto && stmt) { return stmt->analyze(); })
+                    ).then([&]{
+                        fmap(_value_expr, [&](auto && expr) { return expr->analyze(); });
+                    });
+                }
+
                 const parser::block & _parse;
                 std::shared_ptr<scope> _scope;
-                std::vector<variant<
-                    std::shared_ptr<block>,
-                    statement
-                >> _statements;
+                std::vector<std::shared_ptr<statement>> _statements;
                 optional<std::shared_ptr<expression>> _value_expr;
             };
 

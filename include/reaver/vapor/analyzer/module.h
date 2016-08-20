@@ -60,6 +60,16 @@ namespace reaver
 
                 void analyze()
                 {
+                    _analysis_futures = fmap(_statements, [&](auto && stmt) {
+                        return stmt->analyze();
+                    });
+
+                    auto all = when_all(_analysis_futures);
+
+                    while (!all.try_get())
+                    {
+                        std::this_thread::sleep_for(std::chrono::nanoseconds(10000));
+                    }
                 }
 
                 std::u32string name() const
@@ -70,7 +80,8 @@ namespace reaver
             private:
                 const parser::module & _parse;
                 std::shared_ptr<scope> _scope;
-                std::vector<statement> _statements;
+                std::vector<std::shared_ptr<statement>> _statements;
+                std::vector<future<>> _analysis_futures;
             };
         }}
     }

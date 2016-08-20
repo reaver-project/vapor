@@ -53,7 +53,7 @@ int main() try
     reaver::vapor::parser::ast ast{ iterator };
     reaver::logger::dlog() << ast;
 
-    //reaver::logger::dlog() << "Analyzed AST:";
+    reaver::logger::dlog() << "Analyzed AST:";
     reaver::vapor::analyzer::ast analyzed_ast{ std::move(ast) };
     //reaver::logger::dlog() << analyzed_ast;
 }

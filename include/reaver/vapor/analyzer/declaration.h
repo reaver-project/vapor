@@ -28,6 +28,7 @@
 #include "symbol.h"
 #include "expression.h"
 #include "variable.h"
+#include "statement.h"
 
 namespace reaver
 {
@@ -35,14 +36,14 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            class declaration
+            class declaration : public statement
             {
             public:
                 declaration(const parser::declaration & parse, std::shared_ptr<scope> old_scope, std::shared_ptr<scope> new_scope)
                     : _parse{ parse }, _name{ parse.identifier.string }
                 {
                     _init_expr = preanalyze_expression(_parse.rhs, old_scope);
-                    _declared_symbol = make_symbol(_name, _init_expr->get_type());
+                    _declared_symbol = make_symbol(_name, _init_expr->get_variable());
                     new_scope->get_ref(_name) = _declared_symbol;
                 }
 
@@ -67,6 +68,11 @@ namespace reaver
                 }
 
             private:
+                virtual future<> _analyze() override
+                {
+                    return _init_expr->analyze();
+                }
+
                 const parser::declaration & _parse;
                 std::u32string _name;
                 std::shared_ptr<symbol> _declared_symbol;

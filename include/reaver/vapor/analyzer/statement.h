@@ -22,11 +22,11 @@
 
 #pragma once
 
+#include <reaver/future.h>
+
 #include "../parser/statement.h"
-#include "declaration.h"
-#include "import.h"
-#include "expression.h"
 #include "helpers.h"
+#include "scope.h"
 
 namespace reaver
 {
@@ -34,39 +34,36 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            class declaration;
-            using statement = shptr_variant<declaration, import, expression>;
-
-            statement preanalyze_statement(const parser::statement & parse, std::shared_ptr<scope> & lex_scope)
+            class statement
             {
-                return get<0>(fmap(parse.statement_value, make_overload_set(
-                    [&](const parser::declaration & decl) -> statement
-                    {
-                        auto ret = preanalyze_declaration(decl, lex_scope);
-                        return ret;
-                    },
+            public:
+                statement() = default;
+                virtual ~statement() = default;
 
-                    [](const parser::return_expression & ret_expr) -> statement
+                future<> analyze()
+                {
+                    if (!_is_future_assigned)
                     {
-                        assert(0);
-                        return std::shared_ptr<import>();
-                    },
+                        std::lock_guard<std::mutex> lock{ _future_lock };
+                        if (!_is_future_assigned)
+                        {
+                            _analysis_future = _analyze();
+                        }
+                    }
 
-                    [](const parser::expression_list & expr_list) -> statement
-                    {
-                        assert(0);
-                        return std::shared_ptr<expression>();
-                    },
+                    return *_analysis_future;
+                }
 
-                    [](const parser::function & func) -> statement
-                    {
-                        assert(0);
-                        return std::shared_ptr<expression>();
-                    },
+            private:
+                virtual future<> _analyze() = 0;
 
-                    [](auto &&) -> statement { assert(0); }
-                )));
-            }
+                std::mutex _future_lock;
+                std::atomic<bool> _is_future_assigned{ false };
+                optional<future<>> _analysis_future;
+            };
+
+            std::shared_ptr<statement> preanalyze_statement(const parser::statement & parse, std::shared_ptr<scope> & lex_scope);
         }}
     }
 }
+

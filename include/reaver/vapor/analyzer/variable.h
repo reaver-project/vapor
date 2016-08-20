@@ -33,17 +33,20 @@ namespace reaver
         namespace analyzer { inline namespace _v1
         {
             class type;
+            class expression;
 
             class variable
             {
             public:
+                virtual ~variable() = default;
+
                 virtual std::shared_ptr<type> get_type() const = 0;
             };
 
-            class delayed_variable : public variable
+            class expression_variable : public variable
             {
             public:
-                delayed_variable(std::shared_ptr<expression> expr) : _type{ std::make_shared<unresolved_type>(std::move(expr)) }
+                expression_variable(std::shared_ptr<expression> expr, std::shared_ptr<type> type) : _expression{ expr }, _type{ type }
                 {
                 }
 
@@ -53,12 +56,13 @@ namespace reaver
                 }
 
             private:
+                std::shared_ptr<expression> _expression;
                 std::shared_ptr<type> _type;
             };
 
-            inline auto make_delayed_variable(std::shared_ptr<expression> expr)
+            inline std::shared_ptr<variable> make_expression_variable(std::shared_ptr<expression> expr, std::shared_ptr<type> type)
             {
-                return std::make_shared<delayed_variable>(expr);
+                return std::make_shared<expression_variable>(expr, type);
             }
         }}
     }

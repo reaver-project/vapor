@@ -30,6 +30,7 @@
 #include "scope.h"
 #include "helpers.h"
 #include "variable.h"
+#include "statement.h"
 
 namespace reaver
 {
@@ -37,7 +38,7 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            class expression : public std::enable_shared_from_this<expression>
+            class expression : public statement, public std::enable_shared_from_this<expression>
             {
             public:
                 expression() = default;
@@ -46,6 +47,11 @@ namespace reaver
                 expression(std::shared_ptr<variable> var) : _variable{ std::move(var) }
                 {
                 }
+
+                /*virtual void analyze() override
+                {
+                    throw std::runtime_error{ typeid(this).name() };
+                }*/
 
                 std::shared_ptr<variable> get_variable() const
                 {
@@ -56,25 +62,41 @@ namespace reaver
                 {
                     if (!_variable)
                     {
-                        _variable = make_delayed_variable(shared_from_this());
+                        assert(!"someone tried to get type before analyzing... or forgot to set variable from analyze");
                     }
 
                     return _variable->get_type();
+                }
+
+            protected:
+                void _set_variable(std::shared_ptr<variable> var)
+                {
+                    assert(var);
+                    assert(!_variable);
+                    _variable = var;
                 }
 
             private:
                 std::shared_ptr<variable> _variable;
             };
 
-            struct expression_list : public expression
+            class expression_list : public expression
             {
+            private:
+                virtual future<> _analyze() override
+                {
+                    return when_all(fmap(value, [&](auto && expr) { return expr->analyze(); }))
+                        .then([&]{ _set_variable(value.back()->get_variable()); });
+                }
+
+            public:
                 range_type range;
                 std::vector<std::shared_ptr<expression>> value;
             };
 
             std::shared_ptr<expression> preanalyze_expression(const parser::expression & expr, const std::shared_ptr<scope> & lex_scope);
 
-            std::shared_ptr<expression> preanalyze_expression(const parser::expression_list & expr, const std::shared_ptr<scope> & lex_scope)
+            inline std::shared_ptr<expression> preanalyze_expression(const parser::expression_list & expr, const std::shared_ptr<scope> & lex_scope)
             {
                 if (expr.expressions.size() > 1)
                 {

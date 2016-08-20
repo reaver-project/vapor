@@ -22,11 +22,14 @@
 
 #pragma once
 
+#include <memory>
+
 #include <boost/multiprecision/integer.hpp>
 
-#include "type.h"
 #include "literal.h"
 #include "../parser/literal.h"
+#include "expression.h"
+#include "function.h"
 
 namespace reaver
 {
@@ -36,7 +39,40 @@ namespace reaver
         {
             class integer_type : public type
             {
+            public:
+                virtual std::shared_ptr<function> get_overload(lexer::token_type token, std::shared_ptr<type> rhs) const override
+                {
+                    switch (token)
+                    {
+                        case lexer::token_type::plus:
+                            assert(_addition());
+                            return _addition();
+
+                        case lexer::token_type::star:
+                            return _multiplication();
+
+                        default:
+                            assert(!"unimplemented int op");
+                    }
+                }
+
+                virtual std::string explain() const override
+                {
+                    return "integer";
+                }
+
             private:
+                static std::shared_ptr<function> _addition()
+                {
+                    static std::shared_ptr<function> addition = make_function(builtin_types().integer, { builtin_types().integer }, []{ assert(!"implement integer addition"); });
+                    return addition;
+                }
+
+                static std::shared_ptr<function> _multiplication()
+                {
+                    static std::shared_ptr<function> multiplication = make_function(builtin_types().integer, { builtin_types().integer }, []{ assert(!"implement integer multiplication"); });
+                    return multiplication;
+                }
             };
 
             class integer_constant : public literal
@@ -53,6 +89,20 @@ namespace reaver
 
             private:
                 boost::multiprecision::cpp_int _value;
+            };
+
+            class integer_literal : public expression
+            {
+            public:
+                integer_literal(const parser::integer_literal & parse) : expression{ std::make_shared<integer_constant>(parse) }
+                {
+                }
+
+            private:
+                virtual future<> _analyze() override
+                {
+                    return make_ready_future();
+                }
             };
 
             inline std::shared_ptr<type> make_integer_type()

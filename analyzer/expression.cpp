@@ -26,6 +26,7 @@
 #include "vapor/analyzer/integer.h"
 #include "vapor/analyzer/postfix_expression.h"
 #include "vapor/analyzer/unary_expression.h"
+#include "vapor/analyzer/import.h"
 
 std::shared_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyzer::_v1::preanalyze_expression(const reaver::vapor::parser::_v1::expression & expr, const std::shared_ptr<reaver::vapor::analyzer::_v1::scope> & lex_scope)
 {
@@ -33,12 +34,12 @@ std::shared_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyze
         [](const parser::string_literal & string) -> std::shared_ptr<expression>
         {
             assert(0);
-            return std::make_shared<expression>(std::shared_ptr<literal>());
+            return nullptr;
         },
 
         [](const parser::integer_literal & integer) -> std::shared_ptr<expression>
         {
-            return std::make_shared<expression>(std::make_shared<integer_constant>(integer));
+            return std::make_shared<integer_literal>(integer);
         },
 
         [](const parser::postfix_expression & postfix) -> std::shared_ptr<expression>

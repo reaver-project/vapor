@@ -24,7 +24,7 @@
 
 #include <memory>
 
-#include "type.h"
+#include "variable.h"
 
 namespace reaver
 {
@@ -35,19 +35,19 @@ namespace reaver
             class symbol
             {
             public:
-                symbol(std::u32string name, std::shared_ptr<type> type)
-                    : _name{ std::move(name) }, _type{ type }
+                symbol(std::u32string name, std::shared_ptr<variable> variable)
+                    : _name{ std::move(name) }, _variable{ variable }
                 {
                 }
 
             private:
                 std::u32string _name;
-                std::shared_ptr<type> _type;
+                std::shared_ptr<variable> _variable;
             };
 
-            auto make_symbol(std::u32string name, std::shared_ptr<type> type)
+            auto make_symbol(std::u32string name, std::shared_ptr<variable> variable)
             {
-                return std::make_shared<symbol>(std::move(name), std::move(type));
+                return std::make_shared<symbol>(std::move(name), std::move(variable));
             }
         }}
     }

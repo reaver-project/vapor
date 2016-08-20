@@ -22,13 +22,46 @@
 
 #pragma once
 
+#include <memory>
+#include <vector>
+
+#include <reaver/function.h>
+
+#include "../parser/function.h"
+
 namespace reaver
 {
     namespace vapor
     {
         namespace analyzer { inline namespace _v1
         {
-            class function;
+            class type;
+
+            class function
+            {
+            public:
+                function(std::shared_ptr<type> ret, std::vector<std::shared_ptr<type>> args, reaver::function<void ()> generator)
+                    : _return_type{ std::move(ret) }, _argument_types{ std::move(args) }, _generator{ std::move(generator) }
+                {
+                }
+
+                std::shared_ptr<type> return_type()
+                {
+                    return _return_type;
+                }
+
+            private:
+                optional<const parser::function &> parse;
+
+                std::shared_ptr<type> _return_type;
+                std::vector<std::shared_ptr<type>> _argument_types;
+                optional<reaver::function<void ()>> _generator;
+            };
+
+            std::shared_ptr<function> make_function(std::shared_ptr<type> return_type, std::vector<std::shared_ptr<type>> arguments, reaver::function<void ()> generator)
+            {
+                return std::make_shared<function>(std::move(return_type), std::move(arguments), std::move(generator));
+            }
         }}
     }
 }
