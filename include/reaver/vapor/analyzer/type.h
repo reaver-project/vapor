@@ -47,7 +47,13 @@ namespace reaver
                     return nullptr;
                 }
 
-                virtual std::string explain() const
+                virtual std::string explain() const = 0;
+            };
+
+            class type_type : public type
+            {
+            public:
+                virtual std::string explain() const override
                 {
                     return "type";
                 }
@@ -83,10 +89,14 @@ namespace reaver
                     member_t integer;
                 };
 
-                static builtin_types_t builtins;
+                static auto builtins = []{
+                    builtin_types_t builtins;
 
-                builtins.type = std::make_shared<type>();
-                builtins.integer = make_integer_type();
+                    builtins.type = std::make_shared<type_type>();
+                    builtins.integer = make_integer_type();
+
+                    return builtins;
+                }();
 
                 return builtins;
             }
