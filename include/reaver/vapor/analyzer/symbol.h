@@ -40,12 +40,18 @@ namespace reaver
                 {
                 }
 
+                void set_variable(std::shared_ptr<variable> var)
+                {
+                    assert(!_variable);
+                    _variable = std::move(var);
+                }
+
             private:
                 std::u32string _name;
                 std::shared_ptr<variable> _variable;
             };
 
-            auto make_symbol(std::u32string name, std::shared_ptr<variable> variable)
+            auto make_symbol(std::u32string name, std::shared_ptr<variable> variable = nullptr)
             {
                 return std::make_shared<symbol>(std::move(name), std::move(variable));
             }

@@ -55,8 +55,24 @@ namespace reaver
                     });
 
                     _value_expr = fmap(_parse.value_expression, [&](auto && val_expr) {
-                        return preanalyze_expression(val_expr, _scope);
+                        auto expr = preanalyze_expression(val_expr, _scope);
+                        _statements.push_back(expr);
+                        return expr;
                     });
+                }
+
+                std::shared_ptr<type> return_or_value_type() const
+                {
+                    if (_statements.size() == 0)
+                    {
+                        assert(!"need tuples (at least the empty ones)");
+                    }
+
+                    assert(_statements.size() == 1 && _statements.back() == _value_expr);
+                    // TODO: ^ implement finding return statements inside the block
+                    // and then type deduction for it
+
+                    return (*_value_expr)->get_type();
                 }
 
             private:
@@ -64,9 +80,7 @@ namespace reaver
                 {
                     return when_all(
                         fmap(_statements, [&](auto && stmt) { return stmt->analyze(); })
-                    ).then([&]{
-                        fmap(_value_expr, [&](auto && expr) { return expr->analyze(); });
-                    });
+                    );
                 }
 
                 const parser::block & _parse;

@@ -43,7 +43,7 @@ namespace reaver
                     : _parse{ parse }, _name{ parse.identifier.string }
                 {
                     _init_expr = preanalyze_expression(_parse.rhs, old_scope);
-                    _declared_symbol = make_symbol(_name, _init_expr->get_variable());
+                    _declared_symbol = make_symbol(_name);
                     new_scope->get_ref(_name) = _declared_symbol;
                 }
 
@@ -70,7 +70,9 @@ namespace reaver
             private:
                 virtual future<> _analyze() override
                 {
-                    return _init_expr->analyze();
+                    return _init_expr->analyze().then([&]{
+                        _declared_symbol->set_variable(_init_expr->get_variable());
+                    });
                 }
 
                 const parser::declaration & _parse;

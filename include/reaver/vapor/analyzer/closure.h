@@ -22,10 +22,13 @@
 
 #pragma once
 
+#include <memory>
+
 #include "../parser/lambda_expression.h"
 #include "scope.h"
 #include "statement.h"
 #include "block.h"
+#include "function.h"
 
 namespace reaver
 {
@@ -33,6 +36,23 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
+            class closure_type : public type
+            {
+            public:
+                closure_type(std::shared_ptr<expression> closure, std::shared_ptr<function> fn) : _closure{ std::move(closure) }, _function{ std::move(fn) }
+                {
+                }
+
+                virtual std::string explain() const override
+                {
+                    return "closure (TODO: location)";
+                }
+
+            private:
+                std::shared_ptr<expression> _closure;
+                std::shared_ptr<function> _function;
+            };
+
             class closure : public expression
             {
             public:
@@ -49,7 +69,16 @@ namespace reaver
             private:
                 virtual future<> _analyze() override
                 {
-                    return _body->analyze();
+                    return _body->analyze().then([&]
+                    {
+                        auto function = make_function(
+                            _body->return_or_value_type(),
+                            {},
+                            [self = shared_from_this()]{ assert(!"implement closure op()"); }
+                        );
+                        auto type = std::make_shared<closure_type>(shared_from_this(), std::move(function));
+                        _set_variable(make_expression_variable(shared_from_this(), std::move(type)));
+                    });
                 }
 
                 const parser::lambda_expression & _parse;

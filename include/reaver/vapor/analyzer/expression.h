@@ -48,13 +48,13 @@ namespace reaver
                 {
                 }
 
-                /*virtual void analyze() override
-                {
-                    throw std::runtime_error{ typeid(this).name() };
-                }*/
-
                 std::shared_ptr<variable> get_variable() const
                 {
+                    if (!_variable)
+                    {
+                        assert(!"someone tried to get variable before analyzing... or forgot to set variable from analyze");
+                    }
+
                     return _variable;
                 }
 
