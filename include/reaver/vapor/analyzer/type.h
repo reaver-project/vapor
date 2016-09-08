@@ -40,6 +40,15 @@ namespace reaver
             class type : public std::enable_shared_from_this<type>
             {
             public:
+                type() : _lex_scope{ std::make_shared<scope>() }
+                {
+                }
+
+                type(std::shared_ptr<scope> outer_scope) : _lex_scope{ outer_scope->clone_for_decl() }
+                {
+                    assert(0);
+                }
+
                 virtual ~type() = default;
 
                 virtual std::shared_ptr<function> get_overload(lexer::token_type, std::shared_ptr<type>) const
@@ -47,7 +56,20 @@ namespace reaver
                     return nullptr;
                 }
 
+                virtual std::shared_ptr<function> get_overload(lexer::token_type, std::vector<std::shared_ptr<type>>) const
+                {
+                    return nullptr;
+                }
+
                 virtual std::string explain() const = 0;
+
+                virtual std::shared_ptr<scope> get_scope() const
+                {
+                    return _lex_scope;
+                }
+
+            private:
+                std::shared_ptr<scope> _lex_scope;
             };
 
             class type_type : public type
@@ -59,6 +81,9 @@ namespace reaver
                 }
             };
 
+            // these here are currently kinda silly
+            // will get less silly and properly separated once typeclasses are a thing
+
             inline std::shared_ptr<function> resolve_overload(const std::shared_ptr<type> & lhs, const std::shared_ptr<type> & rhs, lexer::token_type op, std::shared_ptr<scope> in_scope)
             {
                 auto overload = lhs->get_overload(op, rhs);
@@ -67,13 +92,18 @@ namespace reaver
                     return overload;
                 }
 
-                /*overload = in_scope->get_ref(op)->get_overload(lhs, rhs);
+                logger::dlog() << lhs << " " << lexer::token_types[+op] << " " << rhs << " = ?";
+                assert(0);
+            }
+
+            inline std::shared_ptr<function> resolve_overload(const std::shared_ptr<type> & base_expr, lexer::token_type bracket_type, std::vector<std::shared_ptr<type>> arguments, std::shared_ptr<scope> in_scope)
+            {
+                auto overload = base_expr->get_overload(bracket_type, arguments);
                 if (overload)
                 {
                     return overload;
-                }*/
+                }
 
-                logger::dlog() << lhs << " " << lexer::token_types[+op] << " " << rhs << " = ?";
                 assert(0);
             }
 

@@ -44,7 +44,15 @@ namespace reaver
                 {
                     _init_expr = preanalyze_expression(_parse.rhs, old_scope);
                     _declared_symbol = make_symbol(_name);
-                    new_scope->get_ref(_name) = _declared_symbol;
+                    if (!new_scope->init(_name, _declared_symbol))
+                    {
+                        assert(0);
+                    }
+
+                    if (old_scope != new_scope)
+                    {
+                        new_scope->close();
+                    }
                 }
 
                 const auto & name() const
@@ -84,7 +92,7 @@ namespace reaver
             std::shared_ptr<declaration> preanalyze_declaration(const parser::declaration & parse, std::shared_ptr<scope> & lex_scope)
             {
                 auto old_scope = lex_scope;
-                lex_scope = std::make_shared<scope>(old_scope);
+                lex_scope = old_scope->clone_for_decl();
                 return std::make_shared<declaration>(parse, old_scope, lex_scope);
             }
         }}

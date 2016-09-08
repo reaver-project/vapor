@@ -22,8 +22,11 @@
 
 #pragma once
 
+#include <reaver/prelude/functor.h>
+
 #include "../parser/postfix_expression.h"
 #include "expression.h"
+#include "id_expression.h"
 
 namespace reaver
 {
@@ -34,20 +37,50 @@ namespace reaver
             class postfix_expression : public expression
             {
             public:
-                postfix_expression(const parser::postfix_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }
+                postfix_expression(const parser::postfix_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _scope{ lex_scope }, _brace{ parse.bracket_type }
                 {
+                    fmap(_parse.base_expression, make_overload_set(
+                        [&](const parser::expression_list & expr_list){
+                            _base_expr = preanalyze_expression(expr_list, lex_scope);
+                            return unit{};
+                        },
+                        [&](const parser::id_expression & id_expr){
+                            _base_expr = preanalyze_id_expression(id_expr, lex_scope);
+                            return unit{};
+                        }
+                    ));
+
+                    _arguments = fmap(_parse.arguments, [&](auto && expr){ return preanalyze_expression(expr, lex_scope); });
                 }
 
             private:
                 virtual future<> _analyze() override
                 {
-                    assert(0);
+                    return when_all(fmap(_arguments, [&](auto && expr) {
+                        return expr->analyze();
+                    })).then([&]{
+                        return _base_expr->analyze();
+                    }).then([&]{
+                        if (!_parse.bracket_type)
+                        {
+                            _set_variable(_base_expr->get_variable());
+                            return;
+                        }
+
+                        auto overload = resolve_overload(_base_expr->get_type(), *_parse.bracket_type, fmap(_arguments, [](auto && arg){ return arg->get_type(); }), _scope);
+                        assert(overload);
+                        assert(0);
+                    });
                 }
 
                 const parser::postfix_expression & _parse;
+                std::shared_ptr<scope> _scope;
+                std::shared_ptr<expression> _base_expr;
+                optional<lexer::token_type> _brace;
+                std::vector<std::shared_ptr<expression>> _arguments;
             };
 
-            std::shared_ptr<postfix_expression> preanalyze_postfix_expression(const parser::postfix_expression & parse, std::shared_ptr<scope> lex_scope)
+            inline std::shared_ptr<postfix_expression> preanalyze_postfix_expression(const parser::postfix_expression & parse, std::shared_ptr<scope> lex_scope)
             {
                 return std::make_shared<postfix_expression>(parse, std::move(lex_scope));
             }

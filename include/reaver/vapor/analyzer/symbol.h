@@ -23,6 +23,7 @@
 #pragma once
 
 #include <memory>
+#include <shared_mutex>
 
 #include "variable.h"
 
@@ -34,24 +35,73 @@ namespace reaver
         {
             class symbol
             {
+                using _ulock = std::unique_lock<std::shared_mutex>;
+                using _shlock = std::shared_lock<std::shared_mutex>;
+
             public:
                 symbol(std::u32string name, std::shared_ptr<variable> variable)
-                    : _name{ std::move(name) }, _variable{ variable }
+                    : _name{ std::move(name) }, _variable{ std::move(variable) }
                 {
                 }
 
                 void set_variable(std::shared_ptr<variable> var)
                 {
+                    _ulock lock{ _lock };
+
                     assert(!_variable);
                     _variable = std::move(var);
+                    if (_promise)
+                    {
+                        _promise->set(_variable);
+                    }
+                }
+
+                std::shared_ptr<variable> get_variable() const
+                {
+                    _shlock lock{ _lock };
+
+                    assert(_variable);
+                    return _variable;
+                }
+
+                std::shared_ptr<type> get_type() const
+                {
+                    _shlock lock{ _lock };
+
+                    assert(_variable);
+                    return _variable->get_type();
+                }
+
+                auto get_variable_future()
+                {
+                    _ulock lock{ _lock };
+
+                    if (_variable)
+                    {
+                        if (!_future)
+                        {
+                            _future = make_ready_future(_variable);
+                        }
+                        return *_future;
+                    }
+
+                    auto pair = make_promise<std::shared_ptr<variable>>();
+                    _promise = std::move(pair.promise);
+                    _future = std::move(pair.future);
+                    return *_future;
                 }
 
             private:
+                mutable std::shared_mutex _lock;
+
                 std::u32string _name;
+
                 std::shared_ptr<variable> _variable;
+                optional<future<std::shared_ptr<variable>>> _future;
+                optional<manual_promise<std::shared_ptr<variable>>> _promise;
             };
 
-            auto make_symbol(std::u32string name, std::shared_ptr<variable> variable = nullptr)
+            inline auto make_symbol(std::u32string name, std::shared_ptr<variable> variable = nullptr)
             {
                 return std::make_shared<symbol>(std::move(name), std::move(variable));
             }

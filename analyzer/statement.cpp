@@ -24,6 +24,8 @@
 #include "vapor/analyzer/declaration.h"
 #include "vapor/analyzer/expression.h"
 #include "vapor/analyzer/import.h"
+#include "vapor/analyzer/overload_set.h"
+#include "vapor/analyzer/return.h"
 
 std::shared_ptr<reaver::vapor::analyzer::_v1::statement> reaver::vapor::analyzer::_v1::preanalyze_statement(const reaver::vapor::parser::statement & parse, std::shared_ptr<reaver::vapor::analyzer::_v1::scope> & lex_scope)
 {
@@ -34,10 +36,10 @@ std::shared_ptr<reaver::vapor::analyzer::_v1::statement> reaver::vapor::analyzer
             return ret;
         },
 
-        [](const parser::return_expression & ret_expr) -> std::shared_ptr<statement>
+        [&](const parser::return_expression & ret_expr) -> std::shared_ptr<statement>
         {
-            assert(0);
-            return std::shared_ptr<expression>();
+            auto ret = preanalyze_return(ret_expr, lex_scope);
+            return ret;
         },
 
         [](const parser::expression_list & expr_list) -> std::shared_ptr<statement>
@@ -46,10 +48,10 @@ std::shared_ptr<reaver::vapor::analyzer::_v1::statement> reaver::vapor::analyzer
             return std::shared_ptr<expression>();
         },
 
-        [](const parser::function & func) -> std::shared_ptr<statement>
+        [&](const parser::function & func) -> std::shared_ptr<statement>
         {
-            assert(0);
-            return std::shared_ptr<expression>();
+            auto ret = preanalyze_function(func, lex_scope);
+            return ret;
         },
 
         [](auto &&) -> std::shared_ptr<statement> { assert(0); }

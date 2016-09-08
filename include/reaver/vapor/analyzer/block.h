@@ -39,7 +39,7 @@ namespace reaver
             class block : public statement
             {
             public:
-                block(const parser::block & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _scope{ std::make_shared<scope>(std::move(lex_scope)) }
+                block(const parser::block & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _scope{ lex_scope->clone_local() }
                 {
                     _statements = fmap(_parse.block_value, [&](auto && row) {
                         return get<0>(fmap(row, make_overload_set(
@@ -53,6 +53,8 @@ namespace reaver
                             }
                         )));
                     });
+
+                    _scope->close();
 
                     _value_expr = fmap(_parse.value_expression, [&](auto && val_expr) {
                         auto expr = preanalyze_expression(val_expr, _scope);
@@ -89,7 +91,7 @@ namespace reaver
                 optional<std::shared_ptr<expression>> _value_expr;
             };
 
-            std::shared_ptr<block> preanalyze_block(const parser::block & parse, std::shared_ptr<scope> lex_scope)
+            inline std::shared_ptr<block> preanalyze_block(const parser::block & parse, std::shared_ptr<scope> lex_scope)
             {
                 return std::make_shared<block>(parse, std::move(lex_scope));
             }

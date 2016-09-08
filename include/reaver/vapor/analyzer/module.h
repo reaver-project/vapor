@@ -56,6 +56,8 @@ namespace reaver
                             return preanalyze_statement(statement, _scope);
                         }
                     );
+
+                    _scope->close();
                 }
 
                 void analyze()

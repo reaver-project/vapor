@@ -54,6 +54,11 @@ namespace reaver
                     return *_analysis_future;
                 }
 
+                virtual bool is_return() const
+                {
+                    return false;
+                }
+
             private:
                 virtual future<> _analyze() = 0;
 

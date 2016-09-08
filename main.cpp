@@ -28,12 +28,17 @@
 std::u32string program = UR"program(module hello_world
 {
     let foo = λ => 1 * 2 + 3 * 4;
-})program";
 
-/*    function entry()
+    function bar()
     {
-        return foo();
-    }*/
+        return 5 + 6 * 7 + 8;
+    }
+
+    function entry()
+    {
+        return foo() + bar();
+    }
+})program";
 
 int main() try
 {

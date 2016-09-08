@@ -42,10 +42,10 @@ std::shared_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyze
             return std::make_shared<integer_literal>(integer);
         },
 
-        [](const parser::postfix_expression & postfix) -> std::shared_ptr<expression>
+        [&](const parser::postfix_expression & postfix) -> std::shared_ptr<expression>
         {
-            assert(0);
-            return std::shared_ptr<postfix_expression>();
+            auto pexpr = preanalyze_postfix_expression(postfix, lex_scope);
+            return pexpr;
         },
 
         [](const parser::import_expression & import) -> std::shared_ptr<expression>

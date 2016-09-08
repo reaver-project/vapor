@@ -22,12 +22,9 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
-
-#include <reaver/function.h>
-
-#include "../parser/function.h"
+#include "../parser/return_expression.h"
+#include "statement.h"
+#include "expression.h"
 
 namespace reaver
 {
@@ -35,32 +32,32 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            class type;
-
-            class function
+            class return_statement : public statement
             {
             public:
-                function(std::shared_ptr<type> ret, std::vector<std::shared_ptr<type>> args, reaver::function<void ()> generator)
-                    : _return_type{ std::move(ret) }, _argument_types{ std::move(args) }, _generator{ std::move(generator) }
+                return_statement(const parser::return_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }
                 {
+                    _value_expr = preanalyze_expression(parse.return_value, lex_scope);
                 }
 
-                std::shared_ptr<type> return_type()
+                virtual bool is_return() const override
                 {
-                    return _return_type;
+                    return true;
                 }
 
             private:
-                optional<const parser::function &> parse;
+                virtual future<> _analyze() override
+                {
+                    return _value_expr->analyze();
+                }
 
-                std::shared_ptr<type> _return_type;
-                std::vector<std::shared_ptr<type>> _argument_types;
-                optional<reaver::function<void ()>> _generator;
+                const parser::return_expression & _parse;
+                std::shared_ptr<expression> _value_expr;
             };
 
-            inline std::shared_ptr<function> make_function(std::shared_ptr<type> return_type, std::vector<std::shared_ptr<type>> arguments, reaver::function<void ()> generator)
+            std::shared_ptr<return_statement> preanalyze_return(const parser::return_expression & parse, std::shared_ptr<scope> lex_scope)
             {
-                return std::make_shared<function>(std::move(return_type), std::move(arguments), std::move(generator));
+                return std::make_shared<return_statement>(parse, lex_scope);
             }
         }}
     }

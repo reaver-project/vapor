@@ -56,8 +56,9 @@ namespace reaver
             class closure : public expression
             {
             public:
-                closure(const parser::lambda_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _scope{ std::make_shared<scope>(std::move(lex_scope)) }
+                closure(const parser::lambda_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _scope{ lex_scope->clone_local() }
                 {
+                    _scope->close();
                     _body = preanalyze_block(*parse.body, _scope);
                 }
 
