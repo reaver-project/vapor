@@ -83,7 +83,7 @@ namespace reaver
                     os << in << "closure at " << _parse.range << '\n';
                     assert(!_parse.captures);
                     assert(!_parse.arguments);
-                    os << in << "return type: " << _body->return_or_value_type()->explain() << '\n';
+                    os << in << "return type: " << _body->return_type()->explain() << '\n';
                     os << in << "{\n";
                     _body->print(os, indent + 4);
                     os << in << "}\n";
@@ -96,7 +96,7 @@ namespace reaver
                     {
                         auto function = make_function(
                             "closure",
-                            _body->return_or_value_type(),
+                            _body->return_type(),
                             {},
                             [self = shared_from_this()]{ assert(!"implement closure op()"); },
                             _parse.range

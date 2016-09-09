@@ -133,7 +133,7 @@ namespace reaver
                     return _body->analyze().then([&]{
                         _function = make_function(
                             "overloadable function",
-                            _body->return_or_value_type(),
+                            _body->return_type(),
                             {},
                             [](){ assert(!"implement functions at all"); },
                             _parse.range

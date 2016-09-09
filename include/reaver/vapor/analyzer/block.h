@@ -42,39 +42,22 @@ namespace reaver
             class block : public statement
             {
             public:
-                block(const parser::block & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _scope{ lex_scope->clone_local() }
-                {
-                    _statements = fmap(_parse.block_value, [&](auto && row) {
-                        return get<0>(fmap(row, make_overload_set(
-                            [&](const parser::block & block) -> std::shared_ptr<statement>
-                            {
-                                return preanalyze_block(block, _scope);
-                            },
-                            [&](const parser::statement & statement)
-                            {
-                                return preanalyze_statement(statement, _scope);
-                            }
-                        )));
-                    });
+                block(const parser::block & parse, std::shared_ptr<scope> lex_scope);
 
-                    _scope->close();
-
-                    _value_expr = fmap(_parse.value_expression, [&](auto && val_expr) {
-                        auto expr = preanalyze_expression(val_expr, _scope);
-                        return expr;
-                    });
-                }
-
-                // this is very broken and will need fixing later
-                // i.e. will need handling the case of trying to early return before value-expression kicks in
-                std::shared_ptr<type> return_or_value_type() const
+                std::shared_ptr<type> value_type() const
                 {
                     if (_value_expr)
                     {
                         return (*_value_expr)->get_type();
                     }
 
+                    return nullptr;
+                }
+
+                std::shared_ptr<type> return_type() const
+                {
                     auto return_types = fmap(get_returns(), [](auto && stmt){ return stmt->get_returned_type(); });
+                    return_types.push_back(value_type());
                     assert(return_types.size() == 1);
                     return return_types.front();
                 }
@@ -84,42 +67,10 @@ namespace reaver
                     return mbind(_statements, [](auto && stmt){ return stmt->get_returns(); });
                 }
 
-                virtual void print(std::ostream & os, std::size_t indent) const override
-                {
-                    auto in = std::string(indent, ' ');
-                    os << in << "block at " << _parse.range << '\n';
-                    os << in << "statements:\n";
-                    fmap(_statements, [&](auto && stmt) {
-                        os << in << "{\n";
-                        stmt->print(os, indent + 4);
-                        os << in << "}\n";
-
-                        return unit{};
-                    });
-                    fmap(_value_expr, [&](auto && expr) {
-                        os << in << "value expression:\n";
-                        os << in << "{\n";
-                        expr->print(os, indent + 4);
-                        os << in << "}\n";
-
-                        return unit{};
-                    });
-                }
+                virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
-                virtual future<> _analyze() override
-                {
-                    auto fut = when_all(
-                        fmap(_statements, [&](auto && stmt) { return stmt->analyze(); })
-                    );
-
-                    fmap(_value_expr, [&](auto && expr) {
-                        fut = fut.then([expr]{ return expr->analyze(); });
-                        return unit{};
-                    });
-
-                    return fut;
-                }
+                virtual future<> _analyze() override;
 
                 const parser::block & _parse;
                 std::shared_ptr<scope> _scope;
