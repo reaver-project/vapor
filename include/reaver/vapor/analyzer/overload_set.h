@@ -39,39 +39,14 @@ namespace reaver
             class overload_set_type : public type
             {
             public:
-                void add_function(std::shared_ptr<function> fn)
-                {
-                    if (std::find_if(_functions.begin(), _functions.end(), [&](auto && f) {
-                            return f->arguments() == fn->arguments();
-                        }) != _functions.end())
-                    {
-                        assert(0);
-                    }
-
-                    _functions.push_back(std::move(fn));
-                }
+                void add_function(std::shared_ptr<function> fn);
 
                 virtual std::string explain() const override
                 {
                     return "overload set (TODO: add location and member info)";
                 }
 
-                virtual std::shared_ptr<function> get_overload(lexer::token_type bracket, std::vector<std::shared_ptr<type>> args) const override
-                {
-                    if (bracket == lexer::token_type::round_bracket_open)
-                    {
-                        auto it = std::find_if(_functions.begin(), _functions.end(), [&](auto && f) {
-                            return f->arguments() == args;
-                        });
-
-                        if (it != _functions.end())
-                        {
-                            return *it;
-                        }
-                    }
-
-                    return nullptr;
-                }
+                virtual std::shared_ptr<function> get_overload(lexer::token_type bracket, std::vector<std::shared_ptr<type>> args) const override;
 
             private:
                 std::vector<std::shared_ptr<function>> _functions;
@@ -116,35 +91,10 @@ namespace reaver
                     return _function;
                 }
 
-                virtual void print(std::ostream & os, std::size_t indent) const override
-                {
-                    auto in = std::string(indent, ' ');
-                    os << in << "function declaration of `" << utf8(_parse.name.string) << "` at " << _parse.range << '\n';
-                    assert(!_parse.arguments);
-                    os << in << "return type: " << _function->return_type()->explain() << '\n';
-                    os << in << "{\n";
-                    _body->print(os, indent + 4);
-                    os << in << "}\n";
-                }
+                virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
-                virtual future<> _analyze() override
-                {
-                    return _body->analyze().then([&]{
-                        _function = make_function(
-                            "overloadable function",
-                            _body->return_type(),
-                            {},
-                            [](){ assert(!"implement functions at all"); },
-                            _parse.range
-                        );
-
-                        auto set = _scope->get(_parse.name.string);
-                        auto overloads = std::dynamic_pointer_cast<overload_set>(set->get_variable());
-                        assert(overloads);
-                        overloads->add_function(shared_from_this());
-                    });
-                }
+                virtual future<> _analyze() override;
 
                 const parser::function & _parse;
 
