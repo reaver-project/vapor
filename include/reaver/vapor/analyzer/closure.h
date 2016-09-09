@@ -77,41 +77,17 @@ namespace reaver
                     return _parse;
                 }
 
-                virtual void print(std::ostream & os, std::size_t indent) const override
-                {
-                    auto in = std::string(indent, ' ');
-                    os << in << "closure at " << _parse.range << '\n';
-                    assert(!_parse.captures);
-                    assert(!_parse.arguments);
-                    os << in << "return type: " << _body->return_type()->explain() << '\n';
-                    os << in << "{\n";
-                    _body->print(os, indent + 4);
-                    os << in << "}\n";
-                }
+                virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
-                virtual future<> _analyze() override
-                {
-                    return _body->analyze().then([&]
-                    {
-                        auto function = make_function(
-                            "closure",
-                            _body->return_type(),
-                            {},
-                            [self = shared_from_this()]{ assert(!"implement closure op()"); },
-                            _parse.range
-                        );
-                        auto type = std::make_shared<closure_type>(shared_from_this(), std::move(function));
-                        _set_variable(make_expression_variable(shared_from_this(), std::move(type)));
-                    });
-                }
+                virtual future<> _analyze() override;
 
                 const parser::lambda_expression & _parse;
                 std::shared_ptr<scope> _scope;
                 std::shared_ptr<block> _body;
             };
 
-            std::shared_ptr<closure> preanalyze_closure(const parser::lambda_expression & parse, std::shared_ptr<scope> lex_scope)
+            inline std::shared_ptr<closure> preanalyze_closure(const parser::lambda_expression & parse, std::shared_ptr<scope> lex_scope)
             {
                 return std::make_shared<closure>(parse, std::move(lex_scope));
             }
