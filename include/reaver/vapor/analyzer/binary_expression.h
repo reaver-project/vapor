@@ -41,38 +41,10 @@ namespace reaver
                 {
                 }
 
-                virtual void print(std::ostream & os, std::size_t indent) const override
-                {
-                    auto in = std::string(indent, ' ');
-                    os << in << "binary expression at " << _parse.range << '\n';
-                    os << in << "type: " << get_variable()->get_type()->explain() << '\n';
-                    os << in << "selected overload: " << _overload->explain() << '\n';
-                    os << in << "lhs:\n";
-                    os << in << "{\n";
-                    _lhs->print(os, indent + 4);
-                    os << in << "}\n";
-
-                    os << in << "operator: " << lexer::token_types[+_op.type] << '\n';
-
-                    os << in << "rhs:\n";
-                    os << in << "{\n";
-                    _rhs->print(os, indent + 4);
-                    os << in << "}\n";
-                }
+                virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
-                virtual future<> _analyze() override
-                {
-                    return when_all(
-                        _lhs->analyze(),
-                        _rhs->analyze()
-                    ).then([&](auto &&) {
-                        _overload = resolve_overload(_lhs->get_type(), _rhs->get_type(), _op.type, _scope);
-                        assert(_overload);
-
-                        _set_variable(make_expression_variable(shared_from_this(), _overload->return_type()));
-                    });
-                }
+                virtual future<> _analyze() override;
 
                 const parser::binary_expression & _parse;
                 std::shared_ptr<scope> _scope;
@@ -82,7 +54,7 @@ namespace reaver
                 std::shared_ptr<function> _overload;
             };
 
-            std::shared_ptr<binary_expression> preanalyze_binary_expression(const parser::binary_expression & parse, std::shared_ptr<scope> lex_scope)
+            inline std::shared_ptr<binary_expression> preanalyze_binary_expression(const parser::binary_expression & parse, std::shared_ptr<scope> lex_scope)
             {
                 return std::make_shared<binary_expression>(parse, std::move(lex_scope));
             }
