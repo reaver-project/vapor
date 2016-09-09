@@ -79,11 +79,12 @@ reaver::vapor::parser::_v1::expression reaver::vapor::parser::_v1::parse_express
             }
 
             type = peek(ctx)->type;
-
             if (!is_binary_operator(type))
             {
                 break;
             }
+
+            p1 = precedence({ type, operator_type::binary });
         }
     }
 
