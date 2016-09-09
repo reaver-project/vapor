@@ -37,66 +37,12 @@ namespace reaver
             class postfix_expression : public expression
             {
             public:
-                postfix_expression(const parser::postfix_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _scope{ lex_scope }, _brace{ parse.bracket_type }
-                {
-                    fmap(_parse.base_expression, make_overload_set(
-                        [&](const parser::expression_list & expr_list){
-                            _base_expr = preanalyze_expression(expr_list, lex_scope);
-                            return unit{};
-                        },
-                        [&](const parser::id_expression & id_expr){
-                            _base_expr = preanalyze_id_expression(id_expr, lex_scope);
-                            return unit{};
-                        }
-                    ));
+                postfix_expression(const parser::postfix_expression & parse, std::shared_ptr<scope> lex_scope);
 
-                    _arguments = fmap(_parse.arguments, [&](auto && expr){ return preanalyze_expression(expr, lex_scope); });
-                }
-
-                virtual void print(std::ostream & os, std::size_t indent) const override
-                {
-                    auto in = std::string(indent, ' ');
-                    os << in << "postfix expression at " << _parse.range << '\n';
-                    os << in << "type: " << get_variable()->get_type()->explain() << '\n';
-                    os << in << "selected overload: " << _overload->explain() << '\n';
-                    os << in << "base expression:\n";
-                    os << in << "{\n";
-                    _base_expr->print(os, indent + 4);
-                    os << in << "}\n";
-
-                    os << in << "bracket type: " << lexer::token_types[+_brace] << '\n';
-
-                    os << in << "arguments:\n";
-                    fmap(_arguments, [&](auto && arg) {
-                        os << in << "{\n";
-                        arg->print(os, indent + 4);
-                        os << in << "}\n";
-
-                        return unit{};
-                    });
-                }
+                virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
-                virtual future<> _analyze() override
-                {
-                    return when_all(fmap(_arguments, [&](auto && expr) {
-                        return expr->analyze();
-                    })).then([&]{
-                        return _base_expr->analyze();
-                    }).then([&]{
-                        if (!_parse.bracket_type)
-                        {
-                            _set_variable(_base_expr->get_variable());
-                            return;
-                        }
-
-                        auto overload = resolve_overload(_base_expr->get_type(), *_parse.bracket_type, fmap(_arguments, [](auto && arg){ return arg->get_type(); }), _scope);
-                        assert(overload);
-                        _overload = std::move(overload);
-
-                        _set_variable(make_expression_variable(shared_from_this(), _overload->return_type()));
-                    });
-                }
+                virtual future<> _analyze() override;
 
                 const parser::postfix_expression & _parse;
                 std::shared_ptr<scope> _scope;
