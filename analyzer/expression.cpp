@@ -74,3 +74,40 @@ std::shared_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyze
     )));
 }
 
+reaver::future<> reaver::vapor::analyzer::_v1::expression_list::_analyze()
+{
+    return when_all(fmap(value, [&](auto && expr) { return expr->analyze(); }))
+        .then([&]{ _set_variable(value.back()->get_variable()); });
+}
+
+void reaver::vapor::analyzer::_v1::expression_list::print(std::ostream & os, std::size_t indent) const
+{
+    auto in = std::string(indent, ' ');
+    os << in << "expression list at " << range << '\n';
+    os << in << "type: " << value.back()->get_type()->explain() << '\n';
+    fmap(value, [&](auto && expr) {
+        os << in << "{\n";
+        expr->print(os, indent + 4);
+        os << in << "}\n";
+
+        return unit{};
+    });
+}
+
+std::shared_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyzer::_v1::preanalyze_expression(const reaver::vapor::parser::expression_list & expr, const std::shared_ptr<reaver::vapor::analyzer::_v1::scope> & lex_scope)
+{
+    if (expr.expressions.size() == 1)
+    {
+        return preanalyze_expression(expr.expressions.front(), lex_scope);
+    }
+
+    auto ret = std::make_shared<expression_list>();
+    ret->value.reserve(expr.expressions.size());
+    std::transform(expr.expressions.begin(), expr.expressions.end(), std::back_inserter(ret->value), [&](auto && expr)
+    {
+        return preanalyze_expression(expr, lex_scope);
+    });
+    ret->range = expr.range;
+    return ret;
+}
+

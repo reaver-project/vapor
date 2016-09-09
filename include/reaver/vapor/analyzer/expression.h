@@ -83,49 +83,17 @@ namespace reaver
             class expression_list : public expression
             {
             private:
-                virtual future<> _analyze() override
-                {
-                    return when_all(fmap(value, [&](auto && expr) { return expr->analyze(); }))
-                        .then([&]{ _set_variable(value.back()->get_variable()); });
-                }
+                virtual future<> _analyze() override;
 
             public:
-                virtual void print(std::ostream & os, std::size_t indent) const override
-                {
-                    auto in = std::string(indent, ' ');
-                    os << in << "expression list at " << range << '\n';
-                    os << in << "type: " << value.back()->get_type()->explain() << '\n';
-                    fmap(value, [&](auto && expr) {
-                        os << in << "{\n";
-                        expr->print(os, indent + 4);
-                        os << in << "}\n";
-
-                        return unit{};
-                    });
-                }
+                virtual void print(std::ostream & os, std::size_t indent) const override;
 
                 range_type range;
                 std::vector<std::shared_ptr<expression>> value;
             };
 
             std::shared_ptr<expression> preanalyze_expression(const parser::expression & expr, const std::shared_ptr<scope> & lex_scope);
-
-            inline std::shared_ptr<expression> preanalyze_expression(const parser::expression_list & expr, const std::shared_ptr<scope> & lex_scope)
-            {
-                if (expr.expressions.size() == 1)
-                {
-                    return preanalyze_expression(expr.expressions.front(), lex_scope);
-                }
-
-                auto ret = std::make_shared<expression_list>();
-                ret->value.reserve(expr.expressions.size());
-                std::transform(expr.expressions.begin(), expr.expressions.end(), std::back_inserter(ret->value), [&](auto && expr)
-                {
-                    return preanalyze_expression(expr, lex_scope);
-                });
-                ret->range = expr.range;
-                return ret;
-            }
+            std::shared_ptr<expression> preanalyze_expression(const parser::expression_list & expr, const std::shared_ptr<scope> & lex_scope);
         }}
     }
 }
