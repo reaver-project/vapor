@@ -79,6 +79,19 @@ namespace reaver
                     return boost::join(fmap(_parse.name.id_expression_value, [](auto && elem) -> decltype(auto) { return elem.string; }), ".");
                 }
 
+                void print(std::ostream & os, std::size_t indent = 0) const
+                {
+                    auto in = std::string(indent, ' ');
+                    os << in << "module `" << utf8(name()) << "` at " << _parse.range << '\n';
+                    fmap(_statements, [&](auto && stmt) {
+                        os << in << "{\n";
+                        stmt->print(os, indent + 4);
+                        os << in << "}\n";
+
+                        return unit{};
+                    });
+                }
+
             private:
                 const parser::module & _parse;
                 std::shared_ptr<scope> _scope;

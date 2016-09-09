@@ -38,6 +38,11 @@ namespace reaver
                 {
                 }
 
+                virtual void print(std::ostream &, std::size_t) const override
+                {
+                    assert(0);
+                }
+
             private:
                 virtual future<> _analyze() override
                 {

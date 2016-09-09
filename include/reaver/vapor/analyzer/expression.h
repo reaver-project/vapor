@@ -90,6 +90,20 @@ namespace reaver
                 }
 
             public:
+                virtual void print(std::ostream & os, std::size_t indent) const override
+                {
+                    auto in = std::string(indent, ' ');
+                    os << in << "expression list at " << range << '\n';
+                    os << in << "type: " << value.back()->get_type()->explain() << '\n';
+                    fmap(value, [&](auto && expr) {
+                        os << in << "{\n";
+                        expr->print(os, indent + 4);
+                        os << in << "}\n";
+
+                        return unit{};
+                    });
+                }
+
                 range_type range;
                 std::vector<std::shared_ptr<expression>> value;
             };
@@ -98,9 +112,9 @@ namespace reaver
 
             inline std::shared_ptr<expression> preanalyze_expression(const parser::expression_list & expr, const std::shared_ptr<scope> & lex_scope)
             {
-                if (expr.expressions.size() > 1)
+                if (expr.expressions.size() == 1)
                 {
-                    return preanalyze_expression(expr, lex_scope);
+                    return preanalyze_expression(expr.expressions.front(), lex_scope);
                 }
 
                 auto ret = std::make_shared<expression_list>();
@@ -109,6 +123,7 @@ namespace reaver
                 {
                     return preanalyze_expression(expr, lex_scope);
                 });
+                ret->range = expr.range;
                 return ret;
             }
         }}

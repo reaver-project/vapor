@@ -75,6 +75,17 @@ namespace reaver
                     return _init_expr;
                 }
 
+                virtual void print(std::ostream & os, std::size_t indent) const override
+                {
+                    auto in = std::string(indent, ' ');
+                    os << in << "declaration of `" << utf8(_name) << "` at " << _parse.range << '\n';
+                    os << in << "type of symbol: " << _declared_symbol->get_type()->explain() << '\n';
+                    os << in << "initializer expression:\n";
+                    os << in << "{\n";
+                    _init_expr->print(os, indent + 4);
+                    os << in << "}\n";
+                }
+
             private:
                 virtual future<> _analyze() override
                 {

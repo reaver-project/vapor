@@ -82,6 +82,18 @@ namespace reaver
                 parser::ast _original_ast;
                 std::vector<std::shared_ptr<module>> _modules;
             };
+
+            std::ostream & operator<<(std::ostream & os, const ast & tree)
+            {
+                for (auto && module : tree)
+                {
+                    os << "{\n";
+                    module->print(os, 4);
+                    os << "}\n";
+                }
+
+                return os;
+            }
         }}
     }
 }

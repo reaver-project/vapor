@@ -61,19 +61,15 @@ namespace reaver
 
                     _value_expr = fmap(_parse.value_expression, [&](auto && val_expr) {
                         auto expr = preanalyze_expression(val_expr, _scope);
-                        _statements.push_back(expr);
                         return expr;
                     });
                 }
 
+                // this is very broken and will need fixing later
+                // i.e. will need handling the case of trying to early return before value-expression kicks in
                 std::shared_ptr<type> return_or_value_type() const
                 {
-                    if (_statements.size() == 0)
-                    {
-                        assert(!"need tuples (at least the empty ones)");
-                    }
-
-                    if (_statements.size() == 1 && _statements.back() == _value_expr)
+                    if (_value_expr)
                     {
                         return (*_value_expr)->get_type();
                     }
@@ -88,12 +84,41 @@ namespace reaver
                     return mbind(_statements, [](auto && stmt){ return stmt->get_returns(); });
                 }
 
+                virtual void print(std::ostream & os, std::size_t indent) const override
+                {
+                    auto in = std::string(indent, ' ');
+                    os << in << "block at " << _parse.range << '\n';
+                    os << in << "statements:\n";
+                    fmap(_statements, [&](auto && stmt) {
+                        os << in << "{\n";
+                        stmt->print(os, indent + 4);
+                        os << in << "}\n";
+
+                        return unit{};
+                    });
+                    fmap(_value_expr, [&](auto && expr) {
+                        os << in << "value expression:\n";
+                        os << in << "{\n";
+                        expr->print(os, indent + 4);
+                        os << in << "}\n";
+
+                        return unit{};
+                    });
+                }
+
             private:
                 virtual future<> _analyze() override
                 {
-                    return when_all(
+                    auto fut = when_all(
                         fmap(_statements, [&](auto && stmt) { return stmt->analyze(); })
                     );
+
+                    fmap(_value_expr, [&](auto && expr) {
+                        fut = fut.then([expr]{ return expr->analyze(); });
+                        return unit{};
+                    });
+
+                    return fut;
                 }
 
                 const parser::block & _parse;

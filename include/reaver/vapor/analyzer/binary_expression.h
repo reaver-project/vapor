@@ -41,6 +41,24 @@ namespace reaver
                 {
                 }
 
+                virtual void print(std::ostream & os, std::size_t indent) const override
+                {
+                    auto in = std::string(indent, ' ');
+                    os << in << "binary expression at " << _parse.range << '\n';
+                    os << in << "type: " << get_variable()->get_type()->explain() << '\n';
+                    os << in << "lhs:\n";
+                    os << in << "{\n";
+                    _lhs->print(os, indent + 4);
+                    os << in << "}\n";
+
+                    os << in << "operator: " << lexer::token_types[+_op.type] << '\n';
+
+                    os << in << "rhs:\n";
+                    os << in << "{\n";
+                    _rhs->print(os, indent + 4);
+                    os << in << "}\n";
+                }
+
             private:
                 virtual future<> _analyze() override
                 {

@@ -50,6 +50,16 @@ namespace reaver
                     return _value_expr->get_type();
                 }
 
+                virtual void print(std::ostream & os, std::size_t indent) const override
+                {
+                    auto in = std::string(indent, ' ');
+                    os << in << "return statement at " << _parse.range << '\n';
+                    os << in << "return value expression:\n";
+                    os << in << "{\n";
+                    _value_expr->print(os, indent + 4);
+                    os << in << "}\n";
+                }
+
             private:
                 virtual future<> _analyze() override
                 {

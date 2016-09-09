@@ -77,6 +77,18 @@ namespace reaver
                     return _parse;
                 }
 
+                virtual void print(std::ostream & os, std::size_t indent) const override
+                {
+                    auto in = std::string(indent, ' ');
+                    os << in << "closure at " << _parse.range << '\n';
+                    assert(!_parse.captures);
+                    assert(!_parse.arguments);
+                    os << in << "return type: " << _body->return_or_value_type()->explain() << '\n';
+                    os << in << "{\n";
+                    _body->print(os, indent + 4);
+                    os << in << "}\n";
+                }
+
             private:
                 virtual future<> _analyze() override
                 {

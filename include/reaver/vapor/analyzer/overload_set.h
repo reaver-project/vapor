@@ -53,7 +53,7 @@ namespace reaver
 
                 virtual std::string explain() const override
                 {
-                    assert(0);
+                    return "overload set (TODO: add location and member info)";
                 }
 
                 virtual std::shared_ptr<function> get_overload(lexer::token_type bracket, std::vector<std::shared_ptr<type>> args) const override
@@ -114,6 +114,17 @@ namespace reaver
                 std::shared_ptr<function> get_function() const
                 {
                     return _function;
+                }
+
+                virtual void print(std::ostream & os, std::size_t indent) const override
+                {
+                    auto in = std::string(indent, ' ');
+                    os << in << "function declaration of `" << utf8(_parse.name.string) << "` at " << _parse.range << '\n';
+                    assert(!_parse.arguments);
+                    os << in << "return type: " << _function->return_type()->explain() << '\n';
+                    os << in << "{\n";
+                    _body->print(os, indent + 4);
+                    os << in << "}\n";
                 }
 
             private:

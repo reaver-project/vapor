@@ -53,6 +53,28 @@ namespace reaver
                     _arguments = fmap(_parse.arguments, [&](auto && expr){ return preanalyze_expression(expr, lex_scope); });
                 }
 
+                virtual void print(std::ostream & os, std::size_t indent) const override
+                {
+                    auto in = std::string(indent, ' ');
+                    os << in << "postfix expression at " << _parse.range << '\n';
+                    os << in << "type: " << get_variable()->get_type()->explain() << '\n';
+                    os << in << "base expression:\n";
+                    os << in << "{\n";
+                    _base_expr->print(os, indent + 4);
+                    os << in << "}\n";
+
+                    os << in << "bracket type: " << lexer::token_types[+_brace] << '\n';
+
+                    os << in << "arguments:\n";
+                    fmap(_arguments, [&](auto && arg) {
+                        os << in << "{\n";
+                        arg->print(os, indent + 4);
+                        os << in << "}\n";
+
+                        return unit{};
+                    });
+                }
+
             private:
                 virtual future<> _analyze() override
                 {

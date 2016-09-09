@@ -60,7 +60,9 @@ int main() try
 
     reaver::logger::dlog() << "Analyzed AST:";
     reaver::vapor::analyzer::ast analyzed_ast{ std::move(ast) };
-    //reaver::logger::dlog() << analyzed_ast;
+    reaver::logger::dlog() << analyzed_ast;
+
+    reaver::logger::default_logger().sync();
 }
 
 catch (reaver::exception & e)

@@ -24,6 +24,8 @@
 
 #include <numeric>
 
+#include <boost/algorithm/string.hpp>
+
 #include "../parser/id_expression.h"
 #include "expression.h"
 #include "symbol.h"
@@ -39,6 +41,18 @@ namespace reaver
             public:
                 id_expression(const parser::id_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _lex_scope{ lex_scope }
                 {
+                }
+
+                std::u32string name() const
+                {
+                    return boost::join(fmap(_parse.id_expression_value, [](auto && elem) -> decltype(auto) { return elem.string; }), ".");
+                }
+
+                virtual void print(std::ostream & os, std::size_t indent) const override
+                {
+                    auto in = std::string(indent, ' ');
+                    os << in << "id expression `" << utf8(name()) << "` at " << _parse.range << '\n';
+                    os << in << "referenced variable type: " << get_variable()->get_type()->explain() << '\n';
                 }
 
             private:

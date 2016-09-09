@@ -87,6 +87,11 @@ namespace reaver
                     return builtin_types().integer;
                 }
 
+                auto get_value() const
+                {
+                    return _value;
+                }
+
             private:
                 boost::multiprecision::cpp_int _value;
             };
@@ -94,8 +99,15 @@ namespace reaver
             class integer_literal : public expression
             {
             public:
-                integer_literal(const parser::integer_literal & parse) : expression{ std::make_shared<integer_constant>(parse) }
+                integer_literal(const parser::integer_literal & parse) : _parse{ parse }, _value{ std::make_shared<integer_constant>(parse) }
                 {
+                    _set_variable(_value);
+                }
+
+                virtual void print(std::ostream & os, std::size_t indent) const override
+                {
+                    auto in = std::string(indent, ' ');
+                    os << in << "integer literal with value of " << _value->get_value() << " at " << _parse.range << '\n';
                 }
 
             private:
@@ -103,6 +115,9 @@ namespace reaver
                 {
                     return make_ready_future();
                 }
+
+                const parser::integer_literal & _parse;
+                std::shared_ptr<integer_constant> _value;
             };
 
             inline std::shared_ptr<type> make_integer_type()

@@ -61,6 +61,8 @@ namespace reaver
                     return {};
                 }
 
+                virtual void print(std::ostream &, std::size_t indent) const = 0;
+
             private:
                 virtual future<> _analyze() = 0;
 
