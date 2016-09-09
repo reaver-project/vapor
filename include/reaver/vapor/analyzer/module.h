@@ -48,49 +48,16 @@ namespace reaver
             class module
             {
             public:
-                module(const parser::module & parse) : _parse{ parse }, _scope{ std::make_shared<scope>() }
-                {
-                    _statements = fmap(
-                        _parse.statements,
-                        [&](const auto & statement){
-                            return preanalyze_statement(statement, _scope);
-                        }
-                    );
+                module(const parser::module & parse);
 
-                    _scope->close();
-                }
-
-                void analyze()
-                {
-                    _analysis_futures = fmap(_statements, [&](auto && stmt) {
-                        return stmt->analyze();
-                    });
-
-                    auto all = when_all(_analysis_futures);
-
-                    while (!all.try_get())
-                    {
-                        std::this_thread::sleep_for(std::chrono::nanoseconds(10000));
-                    }
-                }
+                void analyze();
 
                 std::u32string name() const
                 {
                     return boost::join(fmap(_parse.name.id_expression_value, [](auto && elem) -> decltype(auto) { return elem.string; }), ".");
                 }
 
-                void print(std::ostream & os, std::size_t indent = 0) const
-                {
-                    auto in = std::string(indent, ' ');
-                    os << in << "module `" << utf8(name()) << "` at " << _parse.range << '\n';
-                    fmap(_statements, [&](auto && stmt) {
-                        os << in << "{\n";
-                        stmt->print(os, indent + 4);
-                        os << in << "}\n";
-
-                        return unit{};
-                    });
-                }
+                void print(std::ostream & os, std::size_t indent = 0) const;
 
             private:
                 const parser::module & _parse;

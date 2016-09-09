@@ -100,7 +100,7 @@ namespace reaver
                 std::shared_ptr<expression> _init_expr;
             };
 
-            std::shared_ptr<declaration> preanalyze_declaration(const parser::declaration & parse, std::shared_ptr<scope> & lex_scope)
+            inline std::shared_ptr<declaration> preanalyze_declaration(const parser::declaration & parse, std::shared_ptr<scope> & lex_scope)
             {
                 auto old_scope = lex_scope;
                 lex_scope = old_scope->clone_for_decl();

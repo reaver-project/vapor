@@ -57,7 +57,15 @@ namespace reaver
                 std::shared_ptr<type> return_type() const
                 {
                     auto return_types = fmap(get_returns(), [](auto && stmt){ return stmt->get_returned_type(); });
-                    return_types.push_back(value_type());
+
+                    auto val = value_type();
+                    if (val)
+                    {
+                        return_types.push_back(val);
+                    }
+
+                    std::sort(return_types.begin(), return_types.end());
+                    return_types.erase(std::unique(return_types.begin(), return_types.end()), return_types.end());
                     assert(return_types.size() == 1);
                     return return_types.front();
                 }
