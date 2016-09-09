@@ -34,6 +34,8 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
+            class return_statement;
+
             class statement
             {
             public:
@@ -54,9 +56,9 @@ namespace reaver
                     return *_analysis_future;
                 }
 
-                virtual bool is_return() const
+                virtual std::vector<std::shared_ptr<const return_statement>> get_returns() const
                 {
-                    return false;
+                    return {};
                 }
 
             private:

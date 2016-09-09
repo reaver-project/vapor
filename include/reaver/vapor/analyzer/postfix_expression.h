@@ -69,7 +69,9 @@ namespace reaver
 
                         auto overload = resolve_overload(_base_expr->get_type(), *_parse.bracket_type, fmap(_arguments, [](auto && arg){ return arg->get_type(); }), _scope);
                         assert(overload);
-                        assert(0);
+                        _overload_to_call = std::move(overload);
+
+                        _set_variable(make_expression_variable(shared_from_this(), _overload_to_call->return_type()));
                     });
                 }
 
@@ -78,6 +80,7 @@ namespace reaver
                 std::shared_ptr<expression> _base_expr;
                 optional<lexer::token_type> _brace;
                 std::vector<std::shared_ptr<expression>> _arguments;
+                std::shared_ptr<function> _overload_to_call;
             };
 
             inline std::shared_ptr<postfix_expression> preanalyze_postfix_expression(const parser::postfix_expression & parse, std::shared_ptr<scope> lex_scope)

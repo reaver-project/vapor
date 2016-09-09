@@ -41,12 +41,36 @@ namespace reaver
             public:
                 void add_function(std::shared_ptr<function> fn)
                 {
+                    if (std::find_if(_functions.begin(), _functions.end(), [&](auto && f) {
+                            return f->arguments() == fn->arguments();
+                        }) != _functions.end())
+                    {
+                        assert(0);
+                    }
+
                     _functions.push_back(std::move(fn));
                 }
 
                 virtual std::string explain() const override
                 {
                     assert(0);
+                }
+
+                virtual std::shared_ptr<function> get_overload(lexer::token_type bracket, std::vector<std::shared_ptr<type>> args) const override
+                {
+                    if (bracket == lexer::token_type::round_bracket_open)
+                    {
+                        auto it = std::find_if(_functions.begin(), _functions.end(), [&](auto && f) {
+                            return f->arguments() == args;
+                        });
+
+                        if (it != _functions.end())
+                        {
+                            return *it;
+                        }
+                    }
+
+                    return nullptr;
                 }
 
             private:

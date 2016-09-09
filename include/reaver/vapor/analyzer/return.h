@@ -32,7 +32,7 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            class return_statement : public statement
+            class return_statement : public statement, public std::enable_shared_from_this<return_statement>
             {
             public:
                 return_statement(const parser::return_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }
@@ -40,9 +40,14 @@ namespace reaver
                     _value_expr = preanalyze_expression(parse.return_value, lex_scope);
                 }
 
-                virtual bool is_return() const override
+                virtual std::vector<std::shared_ptr<const return_statement>> get_returns() const override
                 {
-                    return true;
+                    return { shared_from_this() };
+                }
+
+                std::shared_ptr<type> get_returned_type() const
+                {
+                    return _value_expr->get_type();
                 }
 
             private:
@@ -55,7 +60,7 @@ namespace reaver
                 std::shared_ptr<expression> _value_expr;
             };
 
-            std::shared_ptr<return_statement> preanalyze_return(const parser::return_expression & parse, std::shared_ptr<scope> lex_scope)
+            inline std::shared_ptr<return_statement> preanalyze_return(const parser::return_expression & parse, std::shared_ptr<scope> lex_scope)
             {
                 return std::make_shared<return_statement>(parse, lex_scope);
             }

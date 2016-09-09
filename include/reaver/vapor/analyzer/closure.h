@@ -48,6 +48,16 @@ namespace reaver
                     return "closure (TODO: location)";
                 }
 
+                virtual std::shared_ptr<function> get_overload(lexer::token_type bracket, std::vector<std::shared_ptr<type>> args) const override
+                {
+                    if (_function->arguments() == args)
+                    {
+                        return _function;
+                    }
+
+                    return nullptr;
+                }
+
             private:
                 std::shared_ptr<expression> _closure;
                 std::shared_ptr<function> _function;

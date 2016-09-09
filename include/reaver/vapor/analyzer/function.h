@@ -45,9 +45,14 @@ namespace reaver
                 {
                 }
 
-                std::shared_ptr<type> return_type()
+                std::shared_ptr<type> return_type() const
                 {
                     return _return_type;
+                }
+
+                std::vector<std::shared_ptr<type>> arguments() const
+                {
+                    return _argument_types;
                 }
 
             private:

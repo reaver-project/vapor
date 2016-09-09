@@ -22,10 +22,13 @@
 
 #pragma once
 
+#include <reaver/prelude/monad.h>
+
 #include "../parser/block.h"
 #include "scope.h"
 #include "statement.h"
 #include "expression.h"
+#include "return.h"
 
 namespace reaver
 {
@@ -70,11 +73,19 @@ namespace reaver
                         assert(!"need tuples (at least the empty ones)");
                     }
 
-                    assert(_statements.size() == 1 && _statements.back() == _value_expr);
-                    // TODO: ^ implement finding return statements inside the block
-                    // and then type deduction for it
+                    if (_statements.size() == 1 && _statements.back() == _value_expr)
+                    {
+                        return (*_value_expr)->get_type();
+                    }
 
-                    return (*_value_expr)->get_type();
+                    auto return_types = fmap(get_returns(), [](auto && stmt){ return stmt->get_returned_type(); });
+                    assert(return_types.size() == 1);
+                    return return_types.front();
+                }
+
+                virtual std::vector<std::shared_ptr<const return_statement>> get_returns() const override
+                {
+                    return mbind(_statements, [](auto && stmt){ return stmt->get_returns(); });
                 }
 
             private:
