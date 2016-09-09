@@ -131,7 +131,13 @@ namespace reaver
                 virtual future<> _analyze() override
                 {
                     return _body->analyze().then([&]{
-                        _function = make_function(_body->return_or_value_type(), {}, [](){ assert(!"implement functions at all"); });
+                        _function = make_function(
+                            "overloadable function",
+                            _body->return_or_value_type(),
+                            {},
+                            [](){ assert(!"implement functions at all"); },
+                            _parse.range
+                        );
 
                         auto set = _scope->get(_parse.name.string);
                         auto overloads = std::dynamic_pointer_cast<overload_set>(set->get_variable());

@@ -95,9 +95,11 @@ namespace reaver
                     return _body->analyze().then([&]
                     {
                         auto function = make_function(
+                            "closure",
                             _body->return_or_value_type(),
                             {},
-                            [self = shared_from_this()]{ assert(!"implement closure op()"); }
+                            [self = shared_from_this()]{ assert(!"implement closure op()"); },
+                            _parse.range
                         );
                         auto type = std::make_shared<closure_type>(shared_from_this(), std::move(function));
                         _set_variable(make_expression_variable(shared_from_this(), std::move(type)));

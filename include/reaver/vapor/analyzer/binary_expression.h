@@ -46,6 +46,7 @@ namespace reaver
                     auto in = std::string(indent, ' ');
                     os << in << "binary expression at " << _parse.range << '\n';
                     os << in << "type: " << get_variable()->get_type()->explain() << '\n';
+                    os << in << "selected overload: " << _overload->explain() << '\n';
                     os << in << "lhs:\n";
                     os << in << "{\n";
                     _lhs->print(os, indent + 4);
@@ -66,7 +67,7 @@ namespace reaver
                         _lhs->analyze(),
                         _rhs->analyze()
                     ).then([&](auto &&) {
-                        auto _overload = resolve_overload(_lhs->get_type(), _rhs->get_type(), _op.type, _scope);
+                        _overload = resolve_overload(_lhs->get_type(), _rhs->get_type(), _op.type, _scope);
                         assert(_overload);
 
                         _set_variable(make_expression_variable(shared_from_this(), _overload->return_type()));

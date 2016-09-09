@@ -64,13 +64,23 @@ namespace reaver
             private:
                 static std::shared_ptr<function> _addition()
                 {
-                    static std::shared_ptr<function> addition = make_function(builtin_types().integer, { builtin_types().integer }, []{ assert(!"implement integer addition"); });
+                    static std::shared_ptr<function> addition = make_function(
+                        "<builtin integer addition>",
+                        builtin_types().integer,
+                        { builtin_types().integer, builtin_types().integer },
+                        []{ assert(!"implement integer addition");
+                    });
                     return addition;
                 }
 
                 static std::shared_ptr<function> _multiplication()
                 {
-                    static std::shared_ptr<function> multiplication = make_function(builtin_types().integer, { builtin_types().integer }, []{ assert(!"implement integer multiplication"); });
+                    static std::shared_ptr<function> multiplication = make_function(
+                        "<builtin integer multiplication>",
+                        builtin_types().integer,
+                        { builtin_types().integer, builtin_types().integer },
+                        []{ assert(!"implement integer multiplication"); }
+                    );
                     return multiplication;
                 }
             };

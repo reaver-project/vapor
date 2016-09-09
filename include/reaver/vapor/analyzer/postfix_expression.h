@@ -58,6 +58,7 @@ namespace reaver
                     auto in = std::string(indent, ' ');
                     os << in << "postfix expression at " << _parse.range << '\n';
                     os << in << "type: " << get_variable()->get_type()->explain() << '\n';
+                    os << in << "selected overload: " << _overload->explain() << '\n';
                     os << in << "base expression:\n";
                     os << in << "{\n";
                     _base_expr->print(os, indent + 4);
@@ -91,9 +92,9 @@ namespace reaver
 
                         auto overload = resolve_overload(_base_expr->get_type(), *_parse.bracket_type, fmap(_arguments, [](auto && arg){ return arg->get_type(); }), _scope);
                         assert(overload);
-                        _overload_to_call = std::move(overload);
+                        _overload = std::move(overload);
 
-                        _set_variable(make_expression_variable(shared_from_this(), _overload_to_call->return_type()));
+                        _set_variable(make_expression_variable(shared_from_this(), _overload->return_type()));
                     });
                 }
 
@@ -102,7 +103,7 @@ namespace reaver
                 std::shared_ptr<expression> _base_expr;
                 optional<lexer::token_type> _brace;
                 std::vector<std::shared_ptr<expression>> _arguments;
-                std::shared_ptr<function> _overload_to_call;
+                std::shared_ptr<function> _overload;
             };
 
             inline std::shared_ptr<postfix_expression> preanalyze_postfix_expression(const parser::postfix_expression & parse, std::shared_ptr<scope> lex_scope)
