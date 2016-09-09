@@ -48,29 +48,10 @@ namespace reaver
                     return boost::join(fmap(_parse.id_expression_value, [](auto && elem) -> decltype(auto) { return elem.string; }), ".");
                 }
 
-                virtual void print(std::ostream & os, std::size_t indent) const override
-                {
-                    auto in = std::string(indent, ' ');
-                    os << in << "id expression `" << utf8(name()) << "` at " << _parse.range << '\n';
-                    os << in << "referenced variable type: " << get_variable()->get_type()->explain() << '\n';
-                }
+                virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
-                virtual future<> _analyze() override
-                {
-                    return std::accumulate(_parse.id_expression_value.begin() + 1, _parse.id_expression_value.end(), _lex_scope->resolve(_parse.id_expression_value.front().string),
-                        [&](auto fut, auto && ident) {
-                            return fut.then([&ident](auto && symbol) {
-                                return symbol->get_variable_future();
-                            }).then([&ident](auto && var) {
-                                return var->get_type()->get_scope()->get_future(ident.string);
-                            });
-                        }).then([](auto && symbol) {
-                            return symbol->get_variable_future();
-                        }).then([this](auto && variable) {
-                            _set_variable(variable);
-                        });
-                }
+                virtual future<> _analyze() override;
 
                 const parser::id_expression & _parse;
                 std::shared_ptr<scope> _lex_scope;
