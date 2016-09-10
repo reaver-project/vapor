@@ -4,3 +4,5 @@
 vprc
 *.so
 *.o
+.color_coded
+.ycm*
