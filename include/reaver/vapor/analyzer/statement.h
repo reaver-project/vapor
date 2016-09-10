@@ -24,17 +24,19 @@
 
 #include <reaver/future.h>
 
-#include "../parser/statement.h"
-#include "helpers.h"
-#include "scope.h"
-
 namespace reaver
 {
     namespace vapor
     {
+        namespace parser { inline namespace _v1
+        {
+            struct statement;
+        }}
+
         namespace analyzer { inline namespace _v1
         {
             class return_statement;
+            class scope;
 
             class statement
             {

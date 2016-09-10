@@ -24,20 +24,25 @@
 
 #include <reaver/prelude/monad.h>
 
-#include "../parser/block.h"
-#include "scope.h"
 #include "statement.h"
 #include "expression.h"
-#include "return.h"
 
 namespace reaver
 {
     namespace vapor
     {
+        namespace parser { inline namespace _v1
+        {
+            struct block;
+        }}
+
         namespace analyzer { inline namespace _v1
         {
             class block;
             std::shared_ptr<block> preanalyze_block(const parser::block &, std::shared_ptr<scope>);
+
+            class return_statement;
+            class scope;
 
             class block : public statement
             {
@@ -54,21 +59,7 @@ namespace reaver
                     return nullptr;
                 }
 
-                std::shared_ptr<type> return_type() const
-                {
-                    auto return_types = fmap(get_returns(), [](auto && stmt){ return stmt->get_returned_type(); });
-
-                    auto val = value_type();
-                    if (val)
-                    {
-                        return_types.push_back(val);
-                    }
-
-                    std::sort(return_types.begin(), return_types.end());
-                    return_types.erase(std::unique(return_types.begin(), return_types.end()), return_types.end());
-                    assert(return_types.size() == 1);
-                    return return_types.front();
-                }
+                std::shared_ptr<type> return_type() const;
 
                 virtual std::vector<std::shared_ptr<const return_statement>> get_returns() const override
                 {

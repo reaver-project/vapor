@@ -24,7 +24,6 @@
 
 #include <memory>
 
-#include "scope.h"
 #include "variable.h"
 #include "statement.h"
 
@@ -40,6 +39,8 @@ namespace reaver
 
         namespace analyzer { inline namespace _v1
         {
+            class scope;
+
             class expression : public statement, public std::enable_shared_from_this<expression>
             {
             public:

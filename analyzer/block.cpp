@@ -22,6 +22,7 @@
 
 #include "vapor/parser.h"
 #include "vapor/analyzer/block.h"
+#include "vapor/analyzer/return.h"
 
 reaver::vapor::analyzer::_v1::block::block(const reaver::vapor::parser::block & parse, std::shared_ptr<reaver::vapor::analyzer::_v1::scope> lex_scope) : _parse{ parse }, _scope{ lex_scope->clone_local() }
 {
@@ -44,6 +45,22 @@ reaver::vapor::analyzer::_v1::block::block(const reaver::vapor::parser::block & 
         auto expr = preanalyze_expression(val_expr, _scope);
         return expr;
     });
+}
+
+std::shared_ptr<reaver::vapor::analyzer::_v1::type> reaver::vapor::analyzer::_v1::block::return_type() const
+{
+    auto return_types = fmap(get_returns(), [](auto && stmt){ return stmt->get_returned_type(); });
+
+    auto val = value_type();
+    if (val)
+    {
+        return_types.push_back(val);
+    }
+
+    std::sort(return_types.begin(), return_types.end());
+    return_types.erase(std::unique(return_types.begin(), return_types.end()), return_types.end());
+    assert(return_types.size() == 1);
+    return return_types.front();
 }
 
 void reaver::vapor::analyzer::_v1::block::print(std::ostream & os, std::size_t indent) const

@@ -25,7 +25,6 @@
 #include <memory>
 
 #include "variable.h"
-#include "function.h"
 #include "statement.h"
 #include "block.h"
 #include "symbol.h"
@@ -36,6 +35,8 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
+            class function;
+
             class overload_set_type : public type
             {
             public:

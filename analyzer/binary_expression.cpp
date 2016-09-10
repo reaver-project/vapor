@@ -22,6 +22,7 @@
 
 #include "vapor/parser.h"
 #include "vapor/analyzer/binary_expression.h"
+#include "vapor/analyzer/function.h"
 
 void reaver::vapor::analyzer::_v1::binary_expression::print(std::ostream & os, std::size_t indent) const
 {

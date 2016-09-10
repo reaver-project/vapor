@@ -24,7 +24,6 @@
 
 #include "../parser/binary_expression.h"
 #include "expression.h"
-#include "function.h"
 
 namespace reaver
 {
@@ -32,6 +31,8 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
+            class function;
+
             class binary_expression : public expression
             {
             public:
