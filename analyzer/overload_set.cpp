@@ -20,6 +20,7 @@
  *
  **/
 
+#include "vapor/parser.h"
 #include "vapor/analyzer/overload_set.h"
 
 void reaver::vapor::analyzer::_v1::overload_set_type::add_function(std::shared_ptr<reaver::vapor::analyzer::_v1::function> fn)

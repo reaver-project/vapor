@@ -20,6 +20,7 @@
  *
  **/
 
+#include "vapor/parser.h"
 #include "vapor/analyzer/block.h"
 
 reaver::vapor::analyzer::_v1::block::block(const reaver::vapor::parser::block & parse, std::shared_ptr<reaver::vapor::analyzer::_v1::scope> lex_scope) : _parse{ parse }, _scope{ lex_scope->clone_local() }

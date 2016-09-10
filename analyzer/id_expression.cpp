@@ -20,6 +20,7 @@
  *
  **/
 
+#include "vapor/parser.h"
 #include "vapor/analyzer/id_expression.h"
 
 void reaver::vapor::analyzer::_v1::id_expression::print(std::ostream & os, std::size_t indent) const

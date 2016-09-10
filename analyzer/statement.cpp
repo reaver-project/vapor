@@ -20,6 +20,7 @@
  *
  **/
 
+#include "vapor/parser.h"
 #include "vapor/analyzer/statement.h"
 #include "vapor/analyzer/declaration.h"
 #include "vapor/analyzer/expression.h"

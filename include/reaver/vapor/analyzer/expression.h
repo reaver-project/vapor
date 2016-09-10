@@ -24,11 +24,7 @@
 
 #include <memory>
 
-#include "../parser/expression.h"
-#include "../parser/expression_list.h"
-#include "../parser/lambda_expression.h"
 #include "scope.h"
-#include "helpers.h"
 #include "variable.h"
 #include "statement.h"
 
@@ -36,6 +32,12 @@ namespace reaver
 {
     namespace vapor
     {
+        namespace parser { inline namespace _v1
+        {
+            struct expression;
+            struct expression_list;
+        }}
+
         namespace analyzer { inline namespace _v1
         {
             class expression : public statement, public std::enable_shared_from_this<expression>

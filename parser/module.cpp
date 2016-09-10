@@ -21,37 +21,47 @@
  **/
 
 #include "vapor/parser.h"
-#include "vapor/analyzer/binary_expression.h"
 
-void reaver::vapor::analyzer::_v1::binary_expression::print(std::ostream & os, std::size_t indent) const
+reaver::vapor::parser::_v1::module reaver::vapor::parser::_v1::parse_module(reaver::vapor::parser::_v1::context & ctx)
 {
-    auto in = std::string(indent, ' ');
-    os << in << "binary expression at " << _parse.range << '\n';
-    os << in << "type: " << get_variable()->get_type()->explain() << '\n';
-    os << in << "selected overload: " << _overload->explain() << '\n';
-    os << in << "lhs:\n";
-    os << in << "{\n";
-    _lhs->print(os, indent + 4);
-    os << in << "}\n";
+    module ret;
 
-    os << in << "operator: " << lexer::token_types[+_op.type] << '\n';
+    auto start = expect(ctx, lexer::token_type::module).range.start();
+    ret.name = parse_id_expression(ctx);
 
-    os << in << "rhs:\n";
-    os << in << "{\n";
-    _rhs->print(os, indent + 4);
-    os << in << "}\n";
+    expect(ctx, lexer::token_type::curly_bracket_open);
+
+    while (!peek(ctx, lexer::token_type::curly_bracket_close))
+    {
+        ret.statements.push_back(parse_statement(ctx));
+    }
+
+    auto end = expect(ctx, lexer::token_type::curly_bracket_close).range.end();
+
+    ret.range = { start, end };
+
+    return ret;
 }
 
-reaver::future<> reaver::vapor::analyzer::_v1::binary_expression::_analyze()
+void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::module & mod, std::ostream & os, std::size_t indent)
 {
-    return when_all(
-            _lhs->analyze(),
-            _rhs->analyze()
-        ).then([&](auto &&) {
-            _overload = resolve_overload(_lhs->get_type(), _rhs->get_type(), _op.type, _scope);
-            assert(_overload);
+    auto in = std::string(indent, ' ');
 
-            _set_variable(make_expression_variable(shared_from_this(), _overload->return_type()));
-        });
+    os << in << "`module` at " << mod.range << '\n';
+    os << in << "{\n";
+    print(mod.name, os, indent + 4);
+    os << in << "}\n";
+
+    os << in << "{\n";
+    {
+        auto in = std::string(indent + 4, ' ');
+        for (auto && statement : mod.statements)
+        {
+            os << in << "{\n";
+            print(statement, os, indent + 8);
+            os << in << "}\n";
+        }
+    }
+    os << in << "}\n";
 }
 

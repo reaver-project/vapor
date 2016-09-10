@@ -81,7 +81,7 @@ namespace reaver
                 std::vector<module> _modules;
             };
 
-            std::ostream & operator<<(std::ostream & os, const ast & ast)
+            inline std::ostream & operator<<(std::ostream & os, const ast & ast)
             {
                 for (auto && module : ast)
                 {

@@ -20,6 +20,7 @@
  *
  **/
 
+#include "vapor/parser.h"
 #include "vapor/analyzer/module.h"
 
 reaver::vapor::analyzer::_v1::module::module(const reaver::vapor::parser::module & parse) : _parse{ parse }, _scope{ std::make_shared<reaver::vapor::analyzer::_v1::scope>() }

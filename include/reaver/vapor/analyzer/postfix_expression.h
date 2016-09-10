@@ -22,18 +22,22 @@
 
 #pragma once
 
-#include <reaver/prelude/functor.h>
-
-#include "../parser/postfix_expression.h"
 #include "expression.h"
-#include "id_expression.h"
 
 namespace reaver
 {
     namespace vapor
     {
+        namespace parser { inline namespace _v1
+        {
+            struct postfix_expression;
+        }}
+
         namespace analyzer { inline namespace _v1
         {
+            class scope;
+            class function;
+
             class postfix_expression : public expression
             {
             public:

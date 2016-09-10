@@ -42,48 +42,8 @@ namespace reaver
                 std::vector<statement> statements;
             };
 
-            module parse_module(context & ctx)
-            {
-                module ret;
-
-                auto start = expect(ctx, lexer::token_type::module).range.start();
-                ret.name = parse_id_expression(ctx);
-
-                expect(ctx, lexer::token_type::curly_bracket_open);
-
-                while (!peek(ctx, lexer::token_type::curly_bracket_close))
-                {
-                    ret.statements.push_back(parse_statement(ctx));
-                }
-
-                auto end = expect(ctx, lexer::token_type::curly_bracket_close).range.end();
-
-                ret.range = { start, end };
-
-                return ret;
-            }
-
-            void print(const module & mod, std::ostream & os, std::size_t indent = 0)
-            {
-                auto in = std::string(indent, ' ');
-
-                os << in << "`module` at " << mod.range << '\n';
-                os << in << "{\n";
-                print(mod.name, os, indent + 4);
-                os << in << "}\n";
-
-                os << in << "{\n";
-                {
-                    auto in = std::string(indent + 4, ' ');
-                    for (auto && statement : mod.statements)
-                    {
-                        os << in << "{\n";
-                        print(statement, os, indent + 8);
-                        os << in << "}\n";
-                    }
-                }
-                os << in << "}\n";
-            }
+            module parse_module(context & ctx);
+            void print(const module & mod, std::ostream & os, std::size_t indent = 0);
         }}
     }
 }

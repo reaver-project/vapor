@@ -20,8 +20,10 @@
  *
  **/
 
+#include "vapor/parser.h"
 #include "vapor/analyzer/postfix_expression.h"
 #include "vapor/analyzer/function.h"
+#include "vapor/analyzer/id_expression.h"
 
 reaver::vapor::analyzer::_v1::postfix_expression::postfix_expression(const reaver::vapor::parser::postfix_expression & parse, std::shared_ptr<reaver::vapor::analyzer::_v1::scope> lex_scope) : _parse{ parse }, _scope{ lex_scope }, _brace{ parse.bracket_type }
 {
