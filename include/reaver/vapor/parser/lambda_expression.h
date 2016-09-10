@@ -26,9 +26,9 @@
 
 #include "../range.h"
 #include "helpers.h"
-#include "block.h"
 #include "argument_list.h"
 #include "capture_list.h"
+#include "block.h"
 
 namespace reaver
 {
@@ -36,14 +36,12 @@ namespace reaver
     {
         namespace parser { inline namespace _v1
         {
-            struct block;
-
             struct lambda_expression
             {
                 range_type range;
                 optional<capture_list> captures;
                 optional<argument_list> arguments;
-                recursive_wrapper<block> body;
+                block body;
             };
 
             lambda_expression parse_lambda_expression(context & ctx);

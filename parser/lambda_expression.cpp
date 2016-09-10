@@ -57,7 +57,7 @@ reaver::vapor::parser::_v1::lambda_expression reaver::vapor::parser::_v1::parse_
         ret.body = parse_block(ctx);
     }
 
-    ret.range = { start, ret.body->range.end() };
+    ret.range = { start, ret.body.range.end() };
 
     return ret;
 }
@@ -71,7 +71,7 @@ void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::lambda_
     assert(!expr.captures && !expr.arguments);
 
     os << in << "{\n";
-    print(*expr.body, os, indent + 4);
+    print(expr.body, os, indent + 4);
     os << in << "}\n";
 }
 

@@ -42,7 +42,17 @@ namespace reaver
             struct lambda_expression;
             struct unary_expression;
             struct binary_expression;
+        }}
+    }
 
+    extern template struct recursive_wrapper<vapor::parser::_v1::lambda_expression>;
+    extern template struct recursive_wrapper<vapor::parser::_v1::unary_expression>;
+    extern template struct recursive_wrapper<vapor::parser::_v1::binary_expression>;
+
+    namespace vapor
+    {
+        namespace parser { inline namespace _v1
+        {
             void print(const unary_expression & expr, std::ostream & os, std::size_t indent);
             void print(const binary_expression & expr, std::ostream & os, std::size_t indent);
 

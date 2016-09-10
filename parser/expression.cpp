@@ -22,6 +22,15 @@
 
 #include "vapor/parser/expression.h"
 #include "vapor/parser/lambda_expression.h"
+#include "vapor/parser/unary_expression.h"
+#include "vapor/parser/binary_expression.h"
+
+namespace reaver
+{
+    template struct recursive_wrapper<vapor::parser::_v1::lambda_expression>;
+    template struct recursive_wrapper<vapor::parser::_v1::unary_expression>;
+    template struct recursive_wrapper<vapor::parser::_v1::binary_expression>;
+}
 
 reaver::vapor::parser::_v1::expression reaver::vapor::parser::_v1::parse_expression(reaver::vapor::parser::_v1::context & ctx, bool special_assignment)
 {
