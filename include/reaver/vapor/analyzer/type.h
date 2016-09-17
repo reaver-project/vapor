@@ -113,7 +113,7 @@ namespace reaver
             {
                 struct builtin_types_t
                 {
-                    using member_t = std::shared_ptr<type>;
+                    using member_t = std::shared_ptr<class type>;
 
                     member_t type;
                     member_t integer;
