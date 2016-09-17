@@ -42,7 +42,7 @@ reaver::future<> reaver::vapor::analyzer::_v1::id_expression::_analyze()
         }).then([](auto && symbol) {
             return symbol->get_variable_future();
         }).then([this](auto && variable) {
-            _set_variable(variable);
+            this->_set_variable(variable);
         });
 }
 

@@ -52,7 +52,7 @@ reaver::future<> reaver::vapor::analyzer::_v1::binary_expression::_analyze()
             _overload = resolve_overload(_lhs->get_type(), _rhs->get_type(), _op.type, _scope);
             assert(_overload);
 
-            _set_variable(make_expression_variable(shared_from_this(), _overload->return_type()));
+            this->_set_variable(make_expression_variable(this->shared_from_this(), _overload->return_type()));
         });
 }
 
