@@ -25,12 +25,13 @@
 #include "../parser/ast.h"
 #include "module.h"
 #include "helpers.h"
+#include "../codegen/ir/module.h"
 
 namespace reaver
 {
     namespace vapor
     {
-        namespace analyzer { inline namespace v1
+        namespace analyzer { inline namespace _v1
         {
             class ast
             {
@@ -58,6 +59,9 @@ namespace reaver
                     }
                 }
 
+                ast(const ast &) = delete;
+                ast(ast &&) = delete;
+
                 auto begin()
                 {
                     return _modules.begin();
@@ -78,14 +82,21 @@ namespace reaver
                     return _modules.end();
                 }
 
+                std::vector<codegen::ir::module> codegen_ir() const
+                {
+                    return fmap(_modules, [](auto && mod) {
+                        return mod->codegen_ir();
+                    });
+                }
+
             private:
                 parser::ast _original_ast;
                 std::vector<std::shared_ptr<module>> _modules;
             };
 
-            std::ostream & operator<<(std::ostream & os, const ast & tree)
+            std::ostream & operator<<(std::ostream & os, std::reference_wrapper<ast> tree)
             {
-                for (auto && module : tree)
+                for (auto && module : tree.get())
                 {
                     os << "{\n";
                     module->print(os, 4);

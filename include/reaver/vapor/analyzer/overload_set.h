@@ -69,6 +69,8 @@ namespace reaver
                     return _type;
                 }
 
+                virtual variable_ir codegen_ir() const override;
+
             private:
                 std::vector<std::shared_ptr<function_declaration>> _overloads;
                 std::shared_ptr<overload_set_type> _type;

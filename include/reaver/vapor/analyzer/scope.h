@@ -160,6 +160,12 @@ namespace reaver
                 future<std::shared_ptr<symbol>> get_future(const std::u32string & name);
                 future<std::shared_ptr<symbol>> resolve(const std::u32string & name);
 
+                const auto & declared_symbols() const
+                {
+                    assert(_is_closed);
+                    return _symbols;
+                }
+
             private:
                 mutable std::shared_mutex _lock;
 

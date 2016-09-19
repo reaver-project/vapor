@@ -26,6 +26,7 @@
 
 #include "statement.h"
 #include "expression.h"
+#include "../codegen/ir/variable.h"
 
 namespace reaver
 {
@@ -67,6 +68,8 @@ namespace reaver
                 }
 
                 virtual void print(std::ostream & os, std::size_t indent) const override;
+                std::vector<codegen::ir::instruction> codegen_ir() const;
+                codegen::ir::value codegen_return() const;
 
             private:
                 virtual future<> _analyze() override;

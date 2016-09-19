@@ -38,6 +38,7 @@
 #include "helpers.h"
 #include "statement.h"
 #include "function.h"
+#include "../codegen/ir/module.h"
 
 namespace reaver
 {
@@ -58,6 +59,7 @@ namespace reaver
                 }
 
                 void print(std::ostream & os, std::size_t indent = 0) const;
+                codegen::ir::module codegen_ir() const;
 
             private:
                 const parser::module & _parse;

@@ -25,6 +25,8 @@
 #include <memory>
 
 #include "type.h"
+#include "../codegen/ir/variable.h"
+#include "../codegen/ir/function.h"
 
 namespace reaver
 {
@@ -35,12 +37,15 @@ namespace reaver
             class type;
             class expression;
 
+            using variable_ir = std::vector<variant<codegen::ir::value, codegen::ir::function>>;
+
             class variable
             {
             public:
                 virtual ~variable() = default;
 
                 virtual std::shared_ptr<type> get_type() const = 0;
+                virtual variable_ir codegen_ir() const = 0;
             };
 
             class expression_variable : public variable
@@ -54,6 +59,8 @@ namespace reaver
                 {
                     return _type;
                 }
+
+                virtual variable_ir codegen_ir() const override;
 
             private:
                 std::shared_ptr<expression> _expression;

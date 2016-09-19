@@ -30,6 +30,7 @@
 #include "../parser/literal.h"
 #include "expression.h"
 #include "function.h"
+#include "../codegen/ir/integer.h"
 
 namespace reaver
 {
@@ -45,7 +46,6 @@ namespace reaver
                     switch (token)
                     {
                         case lexer::token_type::plus:
-                            assert(_addition());
                             return _addition();
 
                         case lexer::token_type::star:
@@ -62,25 +62,54 @@ namespace reaver
                 }
 
             private:
-                static std::shared_ptr<function> _addition()
+                template<typename Instruction>
+                static auto _generate_function()
                 {
-                    static std::shared_ptr<function> addition = make_function(
+                    return make_function(
                         "<builtin integer addition>",
                         builtin_types().integer,
                         { builtin_types().integer, builtin_types().integer },
-                        []{ assert(!"implement integer addition");
-                    });
+                        [] {
+                            auto lhs = codegen::ir::make_variable(
+                                U"__lhs",
+                                builtin_types().integer->codegen_type()
+                            );
+                            auto rhs = codegen::ir::make_variable(
+                                U"__rhs",
+                                builtin_types().integer->codegen_type()
+                            );
+
+                            auto retval = codegen::ir::make_variable(
+                                U"__ret",
+                                builtin_types().integer->codegen_type()
+                            );
+
+                            return codegen::ir::function{
+                                U"__builtin_integer_operator_plus",
+                                { lhs, rhs },
+                                retval,
+                                {
+                                    codegen::ir::instruction{
+                                        none, none,
+                                        { boost::typeindex::type_id<Instruction>() },
+                                        { lhs, rhs, retval }
+                                    }
+                                }
+                            };
+                        }
+                    );
+                }
+
+                // throw all this shit into a .cpp file
+                static std::shared_ptr<function> _addition()
+                {
+                    static auto addition = _generate_function<codegen::ir::integer_addition_instruction>();
                     return addition;
                 }
 
                 static std::shared_ptr<function> _multiplication()
                 {
-                    static std::shared_ptr<function> multiplication = make_function(
-                        "<builtin integer multiplication>",
-                        builtin_types().integer,
-                        { builtin_types().integer, builtin_types().integer },
-                        []{ assert(!"implement integer multiplication"); }
-                    );
+                    static auto multiplication = _generate_function<codegen::ir::integer_multiplication_instruction>();
                     return multiplication;
                 }
             };
@@ -101,6 +130,8 @@ namespace reaver
                 {
                     return _value;
                 }
+
+                virtual variable_ir codegen_ir() const override;
 
             private:
                 boost::multiprecision::cpp_int _value;

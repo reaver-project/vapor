@@ -23,6 +23,8 @@
 #include "vapor/parser.h"
 #include "vapor/analyzer/overload_set.h"
 #include "vapor/analyzer/function.h"
+#include "vapor/codegen/ir/function.h"
+#include "vapor/codegen/ir/type.h"
 
 void reaver::vapor::analyzer::_v1::overload_set_type::add_function(std::shared_ptr<reaver::vapor::analyzer::_v1::function> fn)
 {
@@ -53,6 +55,13 @@ std::shared_ptr<reaver::vapor::analyzer::_v1::function> reaver::vapor::analyzer:
     return nullptr;
 }
 
+reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::overload_set::codegen_ir() const
+{
+    return fmap(_overloads, [](auto && overload_decl) {
+        return variable_ir::value_type{ overload_decl->get_function()->codegen_ir() };
+    });
+}
+
 void reaver::vapor::analyzer::_v1::function_declaration::print(std::ostream & os, std::size_t indent) const
 {
     auto in = std::string(indent, ' ');
@@ -71,7 +80,14 @@ reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
             "overloadable function",
             _body->return_type(),
             {},
-            [](){ assert(!"implement functions at all"); },
+            [body = _body, &name = _parse.name.string]() {
+                return codegen::ir::function{
+                    name,
+                    {},
+                    body->codegen_return(),
+                    body->codegen_ir()
+                };
+            },
             _parse.range
         );
 

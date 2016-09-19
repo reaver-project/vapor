@@ -20,6 +20,9 @@
  *
  **/
 
+#include <reaver/traits.h>
+#include <reaver/prelude/monad.h>
+
 #include "vapor/parser.h"
 #include "vapor/analyzer/module.h"
 
@@ -60,5 +63,23 @@ void reaver::vapor::analyzer::_v1::module::print(std::ostream & os, std::size_t 
 
         return unit{};
     });
+}
+
+namespace
+{
+    template<typename Map>
+    auto as_vector(Map && map)
+    {
+        return std::vector<typename std::remove_cv_t<std::remove_reference_t<Map>>::value_type>{ map.begin(), map.end() };
+    }
+}
+
+reaver::vapor::codegen::_v1::ir::module reaver::vapor::analyzer::_v1::module::codegen_ir() const
+{
+    codegen::ir::module mod;
+    mod.symbols = mbind(as_vector(_scope->declared_symbols()), [](auto && symbol) {
+        return symbol.second->codegen_ir();
+    });
+    return mod;
 }
 

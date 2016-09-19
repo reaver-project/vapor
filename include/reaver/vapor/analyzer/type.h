@@ -33,6 +33,14 @@ namespace reaver
 {
     namespace vapor
     {
+        namespace codegen { inline namespace _v1
+        {
+            namespace ir
+            {
+                struct variable_type;
+            }
+        }}
+
         namespace analyzer { inline namespace _v1
         {
             class function;
@@ -67,6 +75,8 @@ namespace reaver
                 {
                     return _lex_scope;
                 }
+
+                virtual std::shared_ptr<codegen::ir::variable_type> codegen_type() const;
 
             private:
                 std::shared_ptr<scope> _lex_scope;

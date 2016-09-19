@@ -24,6 +24,7 @@
 #include "vapor/lexer.h"
 #include "vapor/parser.h"
 #include "vapor/analyzer.h"
+#include "vapor/codegen.h"
 
 std::u32string program = UR"program(module hello_world
 {
@@ -60,7 +61,15 @@ int main() try
 
     reaver::logger::dlog() << "Analyzed AST:";
     reaver::vapor::analyzer::ast analyzed_ast{ std::move(ast) };
-    reaver::logger::dlog() << analyzed_ast;
+    reaver::logger::dlog() << std::ref(analyzed_ast);
+
+    reaver::logger::dlog() << "Codegen IR:";
+    auto ir = analyzed_ast.codegen_ir();
+//    reaver::logger:;dlog() << ir;
+
+//    reaver::logger::dlog() << "Generated code:";
+//    reaver::vapor::codegen::result generated_code{ std::move(ir), reaver::vapor::codegen::cxx() };
+//    reaver::logger::dlog() << generated_code;
 
     reaver::logger::default_logger().sync();
 }

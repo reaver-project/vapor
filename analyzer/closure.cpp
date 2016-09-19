@@ -42,7 +42,14 @@ reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
             "closure",
             _body->return_type(),
             {},
-            [self = shared_from_this()]{ assert(!"implement closure op()"); },
+            [body = _body]() {
+                return codegen::ir::function{
+                    U"__closure",
+                    {},
+                    body->codegen_return(),
+                    body->codegen_ir()
+                };
+            },
             _parse.range
         );
         auto type = std::make_shared<closure_type>(shared_from_this(), std::move(function));
