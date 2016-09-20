@@ -34,7 +34,7 @@ void reaver::vapor::analyzer::_v1::return_statement::print(std::ostream & os, st
     os << in << "}\n";
 }
 
-reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::return_statement::codegen_ir() const
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::return_statement::_codegen_ir() const
 {
     auto ret = _value_expr->codegen_ir();
     ret.push_back({

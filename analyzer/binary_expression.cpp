@@ -58,7 +58,7 @@ reaver::future<> reaver::vapor::analyzer::_v1::binary_expression::_analyze()
         });
 }
 
-reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::binary_expression::codegen_ir() const
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::binary_expression::_codegen_ir() const
 {
     auto lhs_instructions = _lhs->codegen_ir();
     auto rhs_instructions = _rhs->codegen_ir();

@@ -23,7 +23,7 @@
 #include "vapor/analyzer/integer.h"
 #include "vapor/codegen/ir/variable.h"
 
-reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::integer_constant::codegen_ir() const
+reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::integer_constant::_codegen_ir() const
 {
     return {
         codegen::ir::value{ codegen::ir::integer_value{ _value } }

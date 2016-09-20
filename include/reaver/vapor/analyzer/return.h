@@ -56,13 +56,14 @@ namespace reaver
                 }
 
                 virtual void print(std::ostream & os, std::size_t indent) const override;
-                virtual statement_ir codegen_ir() const override;
 
             private:
                 virtual future<> _analyze() override
                 {
                     return _value_expr->analyze();
                 }
+
+                virtual statement_ir _codegen_ir() const override;
 
                 const parser::return_expression & _parse;
                 std::shared_ptr<expression> _value_expr;

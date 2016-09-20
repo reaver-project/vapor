@@ -55,7 +55,7 @@ reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
     });
 }
 
-reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::closure::codegen_ir() const
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::closure::_codegen_ir() const
 {
     return {
         codegen::ir::instruction{

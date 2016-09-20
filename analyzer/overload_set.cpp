@@ -55,7 +55,7 @@ std::shared_ptr<reaver::vapor::analyzer::_v1::function> reaver::vapor::analyzer:
     return nullptr;
 }
 
-reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::overload_set::codegen_ir() const
+reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::overload_set::_codegen_ir() const
 {
     return {
         codegen::ir::make_variable(_type->codegen_type())
@@ -73,7 +73,7 @@ void reaver::vapor::analyzer::_v1::function_declaration::print(std::ostream & os
     os << in << "}\n";
 }
 
-reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::function_declaration::codegen_ir() const
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::function_declaration::_codegen_ir() const
 {
     return {};
 }

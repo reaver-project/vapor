@@ -45,7 +45,21 @@ namespace reaver
                 virtual ~variable() = default;
 
                 virtual std::shared_ptr<type> get_type() const = 0;
-                virtual variable_ir codegen_ir() const = 0;
+
+                variable_ir codegen_ir() const
+                {
+                    if (!_ir)
+                    {
+                        _ir = _codegen_ir();
+                    }
+
+                    return *_ir;
+                }
+
+            private:
+                virtual variable_ir _codegen_ir() const = 0;
+
+                mutable optional<variable_ir> _ir;
             };
 
             class expression_variable : public variable
@@ -60,9 +74,9 @@ namespace reaver
                     return _type;
                 }
 
-                virtual variable_ir codegen_ir() const override;
-
             private:
+                virtual variable_ir _codegen_ir() const override;
+
                 std::shared_ptr<expression> _expression;
                 std::shared_ptr<type> _type;
             };

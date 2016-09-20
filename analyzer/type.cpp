@@ -22,7 +22,7 @@
 
 #include "vapor/analyzer/type.h"
 
-std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::type::codegen_type() const
+std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::type_type::_codegen_type() const
 {
     assert(0);
 }

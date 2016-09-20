@@ -23,7 +23,7 @@
 #include "vapor/analyzer/variable.h"
 #include "vapor/analyzer/expression.h"
 
-reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::expression_variable::codegen_ir() const
+reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::expression_variable::_codegen_ir() const
 {
     return {
         _expression->codegen_ir().back().result

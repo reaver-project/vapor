@@ -69,14 +69,25 @@ namespace reaver
                 }
 
                 virtual void print(std::ostream &, std::size_t indent) const = 0;
-                virtual statement_ir codegen_ir() const = 0;
+
+                statement_ir codegen_ir() const
+                {
+                    if (!_ir)
+                    {
+                        _ir = _codegen_ir();
+                    }
+
+                    return *_ir;
+                }
 
             private:
                 virtual future<> _analyze() = 0;
+                virtual statement_ir _codegen_ir() const = 0;
 
                 std::mutex _future_lock;
                 std::atomic<bool> _is_future_assigned{ false };
                 optional<future<>> _analysis_future;
+                mutable optional<statement_ir> _ir;
             };
 
             std::shared_ptr<statement> preanalyze_statement(const parser::statement & parse, std::shared_ptr<scope> & lex_scope);

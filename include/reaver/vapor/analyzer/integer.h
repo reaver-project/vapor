@@ -62,6 +62,8 @@ namespace reaver
                 }
 
             private:
+                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type() const override;
+
                 // throw all this shit into a .cpp file
                 template<typename Instruction>
                 static auto _generate_function()
@@ -129,9 +131,9 @@ namespace reaver
                     return _value;
                 }
 
-                virtual variable_ir codegen_ir() const override;
-
             private:
+                virtual variable_ir _codegen_ir() const override;
+
                 boost::multiprecision::cpp_int _value;
             };
 
@@ -149,15 +151,15 @@ namespace reaver
                     os << in << "integer literal with value of " << _value->get_value() << " at " << _parse.range << '\n';
                 }
 
-                virtual statement_ir codegen_ir() const override
-                {
-                    return {};
-                }
-
             private:
                 virtual future<> _analyze() override
                 {
                     return make_ready_future();
+                }
+
+                virtual statement_ir _codegen_ir() const override
+                {
+                    return {};
                 }
 
                 const parser::integer_literal & _parse;

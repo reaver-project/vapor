@@ -23,6 +23,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 namespace reaver
 {
@@ -32,8 +33,20 @@ namespace reaver
         {
             namespace ir
             {
+                struct variable_type;
+
+                struct member
+                {
+                    std::u32string name;
+                    std::shared_ptr<variable_type> type;
+                    std::size_t offset;
+                };
+
                 struct variable_type
                 {
+                    std::u32string name;
+                    std::size_t size;
+                    std::vector<member> members;
                 };
 
                 inline const auto & builtin_types()

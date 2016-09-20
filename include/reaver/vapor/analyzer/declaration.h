@@ -86,7 +86,15 @@ namespace reaver
                     os << in << "}\n";
                 }
 
-                virtual statement_ir codegen_ir() const override
+            private:
+                virtual future<> _analyze() override
+                {
+                    return _init_expr->analyze().then([&]{
+                        _declared_symbol->set_variable(_init_expr->get_variable());
+                    });
+                }
+
+                virtual statement_ir _codegen_ir() const override
                 {
                     auto declared_var = codegen::ir::make_variable(_declared_symbol->get_type()->codegen_type(), _name);
 
@@ -99,14 +107,6 @@ namespace reaver
                         declared_var
                     });
                     return instructions;
-                }
-
-            private:
-                virtual future<> _analyze() override
-                {
-                    return _init_expr->analyze().then([&]{
-                        _declared_symbol->set_variable(_init_expr->get_variable());
-                    });
                 }
 
                 const parser::declaration & _parse;

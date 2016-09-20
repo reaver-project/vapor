@@ -85,7 +85,7 @@ reaver::future<> reaver::vapor::analyzer::_v1::postfix_expression::_analyze()
         });
 }
 
-reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::postfix_expression::codegen_ir() const
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::postfix_expression::_codegen_ir() const
 {
     auto base_expr_instructions = _base_expr->codegen_ir();
     auto arguments_instructions = fmap(_arguments, [](auto && arg){ return arg->codegen_ir(); });

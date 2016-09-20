@@ -59,6 +59,8 @@ namespace reaver
                 }
 
             private:
+                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type() const override;
+
                 std::shared_ptr<expression> _closure;
                 std::shared_ptr<function> _function;
             };
@@ -78,10 +80,10 @@ namespace reaver
                 }
 
                 virtual void print(std::ostream & os, std::size_t indent) const override;
-                virtual statement_ir codegen_ir() const override;
 
             private:
                 virtual future<> _analyze() override;
+                virtual statement_ir _codegen_ir() const override;
 
                 const parser::lambda_expression & _parse;
                 std::shared_ptr<scope> _scope;

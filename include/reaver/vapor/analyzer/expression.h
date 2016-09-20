@@ -90,15 +90,15 @@ namespace reaver
             private:
                 virtual future<> _analyze() override;
 
-            public:
-                virtual void print(std::ostream & os, std::size_t indent) const override;
-
-                virtual statement_ir codegen_ir() const override
+                virtual statement_ir _codegen_ir() const override
                 {
                     return mbind(value, [](auto && expr) {
                         return expr->codegen_ir();
                     });
                 }
+
+            public:
+                virtual void print(std::ostream & os, std::size_t indent) const override;
 
                 range_type range;
                 std::vector<std::shared_ptr<expression>> value;

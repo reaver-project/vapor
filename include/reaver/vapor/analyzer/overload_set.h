@@ -51,6 +51,8 @@ namespace reaver
                 virtual std::shared_ptr<function> get_overload(lexer::token_type bracket, std::vector<std::shared_ptr<type>> args) const override;
 
             private:
+                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type() const override;
+
                 std::vector<std::shared_ptr<function>> _functions;
             };
 
@@ -70,9 +72,9 @@ namespace reaver
                     return _type;
                 }
 
-                virtual variable_ir codegen_ir() const override;
-
             private:
+                virtual variable_ir _codegen_ir() const override;
+
                 std::vector<std::shared_ptr<function_declaration>> _overloads;
                 std::shared_ptr<overload_set_type> _type;
             };
@@ -96,10 +98,10 @@ namespace reaver
                 }
 
                 virtual void print(std::ostream & os, std::size_t indent) const override;
-                virtual statement_ir codegen_ir() const override;
 
             private:
                 virtual future<> _analyze() override;
+                virtual statement_ir _codegen_ir() const override;
 
                 const parser::function & _parse;
 

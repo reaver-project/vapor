@@ -43,13 +43,13 @@ namespace reaver
                     assert(0);
                 }
 
-                virtual statement_ir codegen_ir() const override
+            private:
+                virtual future<> _analyze() override
                 {
                     assert(0);
                 }
 
-            private:
-                virtual future<> _analyze() override
+                virtual statement_ir _codegen_ir() const override
                 {
                     assert(0);
                 }
