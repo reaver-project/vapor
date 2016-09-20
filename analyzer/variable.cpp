@@ -20,39 +20,13 @@
  *
  **/
 
-#pragma once
+#include "vapor/analyzer/variable.h"
+#include "vapor/analyzer/expression.h"
 
-#include <reaver/variant.h>
-#include <reaver/optional.h>
-
-#include "type.h"
-#include "integer.h"
-
-namespace reaver
+reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::expression_variable::codegen_ir() const
 {
-    namespace vapor
-    {
-        namespace codegen { inline namespace _v1
-        {
-            namespace ir
-            {
-                struct variable
-                {
-                    std::shared_ptr<variable_type> type;
-                    optional<std::u32string> name;
-                };
-
-                inline std::shared_ptr<variable> make_variable(std::shared_ptr<variable_type> type, optional<std::u32string> name = none)
-                {
-                    return std::make_shared<variable>(variable{ std::move(type), std::move(name) });
-                }
-
-                using value = variant<
-                    std::shared_ptr<variable>,
-                    integer_value
-                >;
-            }
-        }}
-    }
+    return {
+        _expression->codegen_ir().back().result
+    };
 }
 

@@ -86,6 +86,21 @@ namespace reaver
                     os << in << "}\n";
                 }
 
+                virtual statement_ir codegen_ir() const override
+                {
+                    auto declared_var = codegen::ir::make_variable(_declared_symbol->get_type()->codegen_type(), _name);
+
+                    auto instructions = _init_expr->codegen_ir();
+                    instructions.insert(instructions.begin(), codegen::ir::instruction{
+                        none,
+                        { declared_var },
+                        { boost::typeindex::type_id<codegen::ir::declaration_instruction>() },
+                        {},
+                        declared_var
+                    });
+                    return instructions;
+                }
+
             private:
                 virtual future<> _analyze() override
                 {

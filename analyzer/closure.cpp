@@ -42,18 +42,28 @@ reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
             "closure",
             _body->return_type(),
             {},
-            [body = _body]() {
-                return codegen::ir::function{
-                    U"__closure",
-                    {},
-                    body->codegen_return(),
-                    body->codegen_ir()
-                };
+            codegen::ir::function{
+                U"__closure",
+                {},
+                _body->codegen_return(),
+                _body->codegen_ir()
             },
             _parse.range
         );
         auto type = std::make_shared<closure_type>(shared_from_this(), std::move(function));
         _set_variable(make_expression_variable(shared_from_this(), std::move(type)));
     });
+}
+
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::closure::codegen_ir() const
+{
+    return {
+        codegen::ir::instruction{
+            none, none,
+            { boost::typeindex::type_id<codegen::ir::materialization_instruction>() },
+            {},
+            { codegen::ir::make_variable(get_variable()->get_type()->codegen_type()) }
+        }
+    };
 }
 

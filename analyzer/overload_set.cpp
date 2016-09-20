@@ -57,9 +57,9 @@ std::shared_ptr<reaver::vapor::analyzer::_v1::function> reaver::vapor::analyzer:
 
 reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::overload_set::codegen_ir() const
 {
-    return fmap(_overloads, [](auto && overload_decl) {
-        return variable_ir::value_type{ overload_decl->get_function()->codegen_ir() };
-    });
+    return {
+        codegen::ir::make_variable(_type->codegen_type())
+    };
 }
 
 void reaver::vapor::analyzer::_v1::function_declaration::print(std::ostream & os, std::size_t indent) const
@@ -73,6 +73,11 @@ void reaver::vapor::analyzer::_v1::function_declaration::print(std::ostream & os
     os << in << "}\n";
 }
 
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::function_declaration::codegen_ir() const
+{
+    return {};
+}
+
 reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
 {
     return _body->analyze().then([&]{
@@ -80,13 +85,11 @@ reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
             "overloadable function",
             _body->return_type(),
             {},
-            [body = _body, &name = _parse.name.string]() {
-                return codegen::ir::function{
-                    name,
-                    {},
-                    body->codegen_return(),
-                    body->codegen_ir()
-                };
+            codegen::ir::function{
+                _parse.name.string,
+                {},
+                _body->codegen_return(),
+                _body->codegen_ir()
             },
             _parse.range
         );

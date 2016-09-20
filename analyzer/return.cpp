@@ -20,39 +20,30 @@
  *
  **/
 
-#pragma once
+#include "vapor/parser/expression_list.h"
+#include "vapor/parser/lambda_expression.h"
+#include "vapor/analyzer/return.h"
 
-#include <reaver/variant.h>
-#include <reaver/optional.h>
-
-#include "type.h"
-#include "integer.h"
-
-namespace reaver
+void reaver::vapor::analyzer::_v1::return_statement::print(std::ostream & os, std::size_t indent) const
 {
-    namespace vapor
-    {
-        namespace codegen { inline namespace _v1
-        {
-            namespace ir
-            {
-                struct variable
-                {
-                    std::shared_ptr<variable_type> type;
-                    optional<std::u32string> name;
-                };
+    auto in = std::string(indent, ' ');
+    os << in << "return statement at " << _parse.range << '\n';
+    os << in << "return value expression:\n";
+    os << in << "{\n";
+    _value_expr->print(os, indent + 4);
+    os << in << "}\n";
+}
 
-                inline std::shared_ptr<variable> make_variable(std::shared_ptr<variable_type> type, optional<std::u32string> name = none)
-                {
-                    return std::make_shared<variable>(variable{ std::move(type), std::move(name) });
-                }
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::return_statement::codegen_ir() const
+{
+    auto ret = _value_expr->codegen_ir();
+    ret.push_back({
+        none, none,
+        { boost::typeindex::type_id<codegen::ir::return_instruction>() },
+        { ret.back().result },
+        ret.back().result
+    });
 
-                using value = variant<
-                    std::shared_ptr<variable>,
-                    integer_value
-                >;
-            }
-        }}
-    }
+    return ret;
 }
 

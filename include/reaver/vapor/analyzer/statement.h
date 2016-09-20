@@ -24,6 +24,9 @@
 
 #include <reaver/future.h>
 
+#include "../codegen/ir/variable.h"
+#include "../codegen/ir/instruction.h"
+
 namespace reaver
 {
     namespace vapor
@@ -37,6 +40,8 @@ namespace reaver
         {
             class return_statement;
             class scope;
+
+            using statement_ir = std::vector<codegen::ir::instruction>;
 
             class statement
             {
@@ -64,6 +69,7 @@ namespace reaver
                 }
 
                 virtual void print(std::ostream &, std::size_t indent) const = 0;
+                virtual statement_ir codegen_ir() const = 0;
 
             private:
                 virtual future<> _analyze() = 0;

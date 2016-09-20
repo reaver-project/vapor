@@ -44,6 +44,7 @@ namespace reaver
                 postfix_expression(const parser::postfix_expression & parse, std::shared_ptr<scope> lex_scope);
 
                 virtual void print(std::ostream & os, std::size_t indent) const override;
+                virtual statement_ir codegen_ir() const override;
 
             private:
                 virtual future<> _analyze() override;

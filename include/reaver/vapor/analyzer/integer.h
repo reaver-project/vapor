@@ -62,6 +62,7 @@ namespace reaver
                 }
 
             private:
+                // throw all this shit into a .cpp file
                 template<typename Instruction>
                 static auto _generate_function()
                 {
@@ -71,16 +72,13 @@ namespace reaver
                         { builtin_types().integer, builtin_types().integer },
                         [] {
                             auto lhs = codegen::ir::make_variable(
-                                U"__lhs",
                                 builtin_types().integer->codegen_type()
                             );
                             auto rhs = codegen::ir::make_variable(
-                                U"__rhs",
                                 builtin_types().integer->codegen_type()
                             );
 
                             auto retval = codegen::ir::make_variable(
-                                U"__ret",
                                 builtin_types().integer->codegen_type()
                             );
 
@@ -92,15 +90,15 @@ namespace reaver
                                     codegen::ir::instruction{
                                         none, none,
                                         { boost::typeindex::type_id<Instruction>() },
-                                        { lhs, rhs, retval }
+                                        { lhs, rhs },
+                                        retval
                                     }
                                 }
                             };
-                        }
+                        }()
                     );
                 }
 
-                // throw all this shit into a .cpp file
                 static std::shared_ptr<function> _addition()
                 {
                     static auto addition = _generate_function<codegen::ir::integer_addition_instruction>();
@@ -149,6 +147,11 @@ namespace reaver
                 {
                     auto in = std::string(indent, ' ');
                     os << in << "integer literal with value of " << _value->get_value() << " at " << _parse.range << '\n';
+                }
+
+                virtual statement_ir codegen_ir() const override
+                {
+                    return {};
                 }
 
             private:

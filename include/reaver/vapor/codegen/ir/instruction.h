@@ -38,24 +38,36 @@ namespace reaver
         {
             namespace ir
             {
-                struct instruction_type
+                class instruction_type
                 {
-                    const boost::typeindex::type_index type;
+                    boost::typeindex::type_index _type;
+
+                public:
+                    instruction_type(boost::typeindex::type_index ti) : _type{ std::move(ti) }
+                    {
+                    }
 
                     bool operator==(const instruction_type & other) const
                     {
-                        return type == other.type;
+                        return _type == other._type;
                     }
                 };
 
                 struct instruction
                 {
                     optional<std::u32string> label;
-                    optional<variable> declared_variable;
+                    optional<std::shared_ptr<variable>> declared_variable;
 
                     instruction_type instruction;
                     std::vector<value> operands;
+                    value result;
                 };
+
+                struct declaration_instruction {};
+                struct function_call_instruction {};
+                struct materialization_instruction {};
+                struct pass_variable_instruction {};
+                struct return_instruction {};
             };
         }}
     }

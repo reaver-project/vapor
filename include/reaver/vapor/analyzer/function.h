@@ -35,14 +35,6 @@ namespace reaver
 {
     namespace vapor
     {
-        namespace codegen { inline namespace _v1
-        {
-            namespace ir
-            {
-                struct function;
-            }
-        }}
-
         namespace analyzer { inline namespace _v1
         {
             class type;
@@ -50,9 +42,9 @@ namespace reaver
             class function
             {
             public:
-                function(std::string explanation, std::shared_ptr<type> ret, std::vector<std::shared_ptr<type>> args, reaver::function<codegen::ir::function ()> generator, optional<range_type> range = none)
+                function(std::string explanation, std::shared_ptr<type> ret, std::vector<std::shared_ptr<type>> args, codegen::ir::function codegen, optional<range_type> range = none)
                     : _explanation{ std::move(explanation) }, _range{ std::move(range) },
-                    _return_type{ std::move(ret) }, _argument_types{ std::move(args) }, _generator{ std::move(generator) }
+                    _return_type{ std::move(ret) }, _argument_types{ std::move(args) }, _codegen{ std::move(codegen) }
                 {
                 }
 
@@ -81,8 +73,7 @@ namespace reaver
 
                 codegen::ir::function codegen_ir() const
                 {
-                    assert(_generator);
-                    return (*_generator)();
+                    return _codegen;
                 }
 
             private:
@@ -91,12 +82,12 @@ namespace reaver
 
                 std::shared_ptr<type> _return_type;
                 std::vector<std::shared_ptr<type>> _argument_types;
-                optional<reaver::function<codegen::ir::function ()>> _generator;
+                codegen::ir::function _codegen;
             };
 
-            inline std::shared_ptr<function> make_function(std::string expl, std::shared_ptr<type> return_type, std::vector<std::shared_ptr<type>> arguments, reaver::function<codegen::ir::function ()> generator, optional<range_type> range = none)
+            inline std::shared_ptr<function> make_function(std::string expl, std::shared_ptr<type> return_type, std::vector<std::shared_ptr<type>> arguments, codegen::ir::function codegen, optional<range_type> range = none)
             {
-                return std::make_shared<function>(std::move(expl), std::move(return_type), std::move(arguments), std::move(generator), std::move(range));
+                return std::make_shared<function>(std::move(expl), std::move(return_type), std::move(arguments), std::move(codegen), std::move(range));
             }
         }}
     }

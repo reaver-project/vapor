@@ -20,6 +20,8 @@
  *
  **/
 
+#include <boost/type_index.hpp>
+
 #include "vapor/parser.h"
 #include "vapor/analyzer/binary_expression.h"
 #include "vapor/analyzer/function.h"
@@ -54,5 +56,31 @@ reaver::future<> reaver::vapor::analyzer::_v1::binary_expression::_analyze()
 
             this->_set_variable(make_expression_variable(this->shared_from_this(), _overload->return_type()));
         });
+}
+
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::binary_expression::codegen_ir() const
+{
+    auto lhs_instructions = _lhs->codegen_ir();
+    auto rhs_instructions = _rhs->codegen_ir();
+
+    auto lhs_variable = lhs_instructions.back().result;
+    auto rhs_variable = rhs_instructions.back().result;
+
+    auto bin_expr_instruction = codegen::ir::instruction{
+        none, none,
+        { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
+        { lhs_variable, rhs_variable },
+        codegen::ir::make_variable(_overload->return_type()->codegen_type())
+    };
+
+    // TODO: oops, there should be a different order of evaluation for right-associative and left-associative
+    // (...probably)
+    statement_ir ret;
+    ret.reserve(lhs_instructions.size() + rhs_instructions.size() + 1);
+    std::move(lhs_instructions.begin(), lhs_instructions.end(), std::back_inserter(ret));
+    std::move(rhs_instructions.begin(), rhs_instructions.end(), std::back_inserter(ret));
+    ret.push_back(std::move(bin_expr_instruction));
+
+    return ret;
 }
 

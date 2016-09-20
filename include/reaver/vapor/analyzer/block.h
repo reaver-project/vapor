@@ -68,7 +68,8 @@ namespace reaver
                 }
 
                 virtual void print(std::ostream & os, std::size_t indent) const override;
-                std::vector<codegen::ir::instruction> codegen_ir() const;
+                virtual statement_ir codegen_ir() const override;
+
                 codegen::ir::value codegen_return() const;
 
             private:

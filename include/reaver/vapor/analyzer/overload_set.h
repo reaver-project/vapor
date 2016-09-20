@@ -24,6 +24,7 @@
 
 #include <memory>
 
+#include "../parser/function.h"
 #include "variable.h"
 #include "statement.h"
 #include "block.h"
@@ -95,6 +96,7 @@ namespace reaver
                 }
 
                 virtual void print(std::ostream & os, std::size_t indent) const override;
+                virtual statement_ir codegen_ir() const override;
 
             private:
                 virtual future<> _analyze() override;

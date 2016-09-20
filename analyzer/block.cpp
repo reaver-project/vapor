@@ -99,3 +99,15 @@ reaver::future<> reaver::vapor::analyzer::_v1::block::_analyze()
     return fut;
 }
 
+std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyzer::_v1::block::codegen_ir() const
+{
+    return mbind(_statements, [](auto && stmt) {
+        return stmt->codegen_ir();
+    });
+}
+
+reaver::vapor::codegen::_v1::ir::value reaver::vapor::analyzer::_v1::block::codegen_return() const
+{
+    return codegen::ir::make_variable(return_type()->codegen_type());
+}
+
