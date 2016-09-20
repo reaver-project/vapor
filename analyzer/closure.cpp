@@ -22,6 +22,11 @@
 
 #include "vapor/analyzer/closure.h"
 
+std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::closure_type::_codegen_type() const
+{
+    return codegen::ir::make_type(U"__closure_add_some_uid_here", 0, {});
+}
+
 void reaver::vapor::analyzer::_v1::closure::print(std::ostream & os, std::size_t indent) const
 {
     auto in = std::string(indent, ' ');

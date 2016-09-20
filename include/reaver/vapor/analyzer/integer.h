@@ -157,10 +157,7 @@ namespace reaver
                     return make_ready_future();
                 }
 
-                virtual statement_ir _codegen_ir() const override
-                {
-                    return {};
-                }
+                virtual statement_ir _codegen_ir() const override;
 
                 const parser::integer_literal & _parse;
                 std::shared_ptr<integer_constant> _value;

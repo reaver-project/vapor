@@ -49,6 +49,11 @@ namespace reaver
                     std::vector<member> members;
                 };
 
+                inline auto make_type(std::u32string name, std::size_t size, std::vector<member> members)
+                {
+                    return std::make_shared<variable_type>(variable_type{ std::move(name), size, std::move(members) });
+                }
+
                 inline const auto & builtin_types()
                 {
                     struct builtin_types_t

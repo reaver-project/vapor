@@ -23,10 +23,25 @@
 #include "vapor/analyzer/integer.h"
 #include "vapor/codegen/ir/variable.h"
 
+std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::integer_type::_codegen_type() const
+{
+    return codegen::ir::builtin_types().integer;
+}
+
 reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::integer_constant::_codegen_ir() const
 {
     return {
         codegen::ir::value{ codegen::ir::integer_value{ _value } }
     };
+}
+
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::integer_literal::_codegen_ir() const
+{
+    return { codegen::ir::instruction{
+        none, none,
+        { boost::typeindex::type_id<codegen::ir::pass_variable_instruction>() },
+        {},
+        codegen::ir::value{ codegen::ir::integer_value{ _value->get_value() } }
+    } };
 }
 

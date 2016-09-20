@@ -55,6 +55,11 @@ std::shared_ptr<reaver::vapor::analyzer::_v1::function> reaver::vapor::analyzer:
     return nullptr;
 }
 
+std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::overload_set_type::_codegen_type() const
+{
+    return codegen::ir::make_type(U"__overload_set_add_some_uid_here", 0, {});
+}
+
 reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::overload_set::_codegen_ir() const
 {
     return {
