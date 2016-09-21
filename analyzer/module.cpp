@@ -78,7 +78,18 @@ reaver::vapor::codegen::_v1::ir::module reaver::vapor::analyzer::_v1::module::co
 {
     codegen::ir::module mod;
     mod.symbols = mbind(as_vector(_scope->declared_symbols()), [](auto && symbol) {
-        return symbol.second->codegen_ir();
+        auto ir = symbol.second->codegen_ir();
+        fmap(ir.back(), make_overload_set(
+            [&](std::shared_ptr<codegen::ir::variable> symb) {
+                symb->name = symbol.second->get_name();
+                return unit{};
+            },
+            [&](auto && symb) {
+                symb.name = symbol.second->get_name();
+                return unit{};
+            }
+        ));
+        return ir;
     });
     return mod;
 }

@@ -66,13 +66,13 @@ namespace reaver
 
                 // throw all this shit into a .cpp file
                 template<typename Instruction>
-                static auto _generate_function()
+                static auto _generate_function(const char32_t * name)
                 {
                     return make_function(
                         "<builtin integer addition>",
                         builtin_types().integer,
                         { builtin_types().integer, builtin_types().integer },
-                        [] {
+                        [&] {
                             auto lhs = codegen::ir::make_variable(
                                 builtin_types().integer->codegen_type()
                             );
@@ -85,7 +85,7 @@ namespace reaver
                             );
 
                             return codegen::ir::function{
-                                U"__builtin_integer_operator_plus",
+                                name,
                                 { lhs, rhs },
                                 retval,
                                 {
@@ -103,13 +103,13 @@ namespace reaver
 
                 static std::shared_ptr<function> _addition()
                 {
-                    static auto addition = _generate_function<codegen::ir::integer_addition_instruction>();
+                    static auto addition = _generate_function<codegen::ir::integer_addition_instruction>(U"__builtin_integer_operator_plus");
                     return addition;
                 }
 
                 static std::shared_ptr<function> _multiplication()
                 {
-                    static auto multiplication = _generate_function<codegen::ir::integer_multiplication_instruction>();
+                    static auto multiplication = _generate_function<codegen::ir::integer_multiplication_instruction>(U"__builtin_integer_operator_star");
                     return multiplication;
                 }
             };

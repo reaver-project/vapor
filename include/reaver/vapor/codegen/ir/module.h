@@ -23,6 +23,7 @@
 #pragma once
 
 #include <vector>
+#include <ostream>
 
 #include "function.h"
 #include "variable.h"
@@ -39,6 +40,30 @@ namespace reaver
                 {
                     std::vector<variant<std::shared_ptr<variable>, function>> symbols;
                 };
+
+                inline std::ostream & operator<<(std::ostream & os, const module & mod)
+                {
+                    fmap(mod.symbols, [&](auto && symb) {
+                        fmap(symb, make_overload_set(
+                            [&](const std::shared_ptr<variable> & var) {
+                                os << *var << "\n\n";
+                                return unit{};
+                            },
+                            [&](const function & func) {
+                                os << func << "\n";
+                                return unit{};
+                            }
+                        ));
+                        return unit{};
+                    });
+                    return os;
+                }
+
+                inline std::ostream & operator<<(std::ostream & os, const std::vector<module> & modules)
+                {
+                    fmap(modules, [&](auto && mod){ os << mod; return unit{}; });
+                    return os;
+                }
             }
         }}
     }

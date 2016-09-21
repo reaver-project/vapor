@@ -57,6 +57,11 @@ namespace reaver
                     {
                         return _type == boost::typeindex::type_id<T>();
                     }
+
+                    std::string explain() const
+                    {
+                        return _type.pretty_name();
+                    }
                 };
 
                 struct instruction
@@ -69,10 +74,31 @@ namespace reaver
                     value result;
                 };
 
+                inline std::ostream & operator<<(std::ostream & os, const instruction & inst)
+                {
+                    fmap(inst.label, [&](auto && lbl) {
+                        os << "label: `" << utf8(lbl) << "`\n";
+                        return unit{};
+                    });
+                    fmap(inst.declared_variable, [&](auto && var) {
+                        os << "variable declaration: " << *var << "\n";
+                        return unit{};
+                    });
+
+                    os << inst.result << " = " << inst.instruction.explain() << " ";
+                    if (!inst.operands.empty())
+                    {
+                        std::copy(inst.operands.begin(), inst.operands.end() - 1, std::ostream_iterator<value>(os, ", "));
+                        os << inst.operands.back();
+                    }
+
+                    return os;
+                }
+
                 struct declaration_instruction {};
                 struct function_call_instruction {};
                 struct materialization_instruction {};
-                struct pass_variable_instruction {};
+                struct pass_value_instruction {};
                 struct return_instruction {};
                 struct phi_instruction {};
             };

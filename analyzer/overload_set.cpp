@@ -62,9 +62,14 @@ std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::a
 
 reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::overload_set::_codegen_ir() const
 {
-    return {
-        codegen::ir::make_variable(_type->codegen_type())
-    };
+    auto functions = fmap(_overloads, [](auto && fn_decl) {
+        return fn_decl->get_function()->codegen_ir();
+    });
+
+    variable_ir ir;
+    std::move(functions.begin(), functions.end(), std::back_inserter(ir));
+    ir.emplace_back(codegen::ir::make_variable(_type->codegen_type()));
+    return ir;
 }
 
 void reaver::vapor::analyzer::_v1::function_declaration::print(std::ostream & os, std::size_t indent) const

@@ -39,7 +39,7 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::integer
 {
     return { codegen::ir::instruction{
         none, none,
-        { boost::typeindex::type_id<codegen::ir::pass_variable_instruction>() },
+        { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
         {},
         codegen::ir::value{ codegen::ir::integer_value{ _value->get_value() } }
     } };

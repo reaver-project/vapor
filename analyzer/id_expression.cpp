@@ -50,7 +50,7 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::id_expr
 {
     return { codegen::ir::instruction{
         none, none,
-        { boost::typeindex::type_id<codegen::ir::pass_variable_instruction>() },
+        { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
         {},
         { codegen::ir::make_variable(get_variable()->get_type()->codegen_type(), name()) }
     } };

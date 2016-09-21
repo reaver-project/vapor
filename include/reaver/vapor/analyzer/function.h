@@ -76,6 +76,11 @@ namespace reaver
                     return _codegen;
                 }
 
+                codegen::ir::value call_operand_ir() const
+                {
+                    return { codegen::ir::label{ _codegen.name } };
+                }
+
             private:
                 std::string _explanation;
                 optional<range_type> _range;

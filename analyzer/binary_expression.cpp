@@ -69,7 +69,7 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::binary_
     auto bin_expr_instruction = codegen::ir::instruction{
         none, none,
         { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
-        { lhs_variable, rhs_variable },
+        { _overload->call_operand_ir(), lhs_variable, rhs_variable },
         codegen::ir::make_variable(_overload->return_type()->codegen_type())
     };
 

@@ -63,6 +63,7 @@ namespace reaver
 
                     static builtin_types_t types;
                     types.integer = std::make_shared<variable_type>();
+                    types.integer->name = U"int";
 
                     return types;
                 }

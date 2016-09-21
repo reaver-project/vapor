@@ -65,7 +65,7 @@ int main() try
 
     reaver::logger::dlog() << "Codegen IR:";
     auto ir = analyzed_ast.codegen_ir();
-//    reaver::logger:;dlog() << ir;
+    reaver::logger::dlog() << std::ref(ir);
 
 //    reaver::logger::dlog() << "Generated code:";
 //    reaver::vapor::codegen::result generated_code{ std::move(ir), reaver::vapor::codegen::cxx() };

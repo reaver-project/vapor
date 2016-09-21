@@ -72,6 +72,11 @@ namespace reaver
                     return _variable->get_type();
                 }
 
+                std::u32string get_name() const
+                {
+                    return _name;
+                }
+
                 auto get_variable_future()
                 {
                     _ulock lock{ _lock };
