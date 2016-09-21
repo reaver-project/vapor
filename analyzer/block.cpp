@@ -106,6 +106,12 @@ std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyze
     });
     fmap(_value_expr, [&](auto && expr) {
         auto instructions = expr->codegen_ir(ctx);
+        instructions.emplace_back(codegen::ir::instruction{
+            none, none,
+            { boost::typeindex::type_id<codegen::ir::return_instruction>() },
+            {},
+            instructions.back().result
+        });
         std::move(instructions.begin(), instructions.end(), std::back_inserter(statements));
         return unit{};
     });
@@ -136,12 +142,15 @@ std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyze
             return unit{};
         });
 
-        statements.emplace_back(codegen::ir::instruction{
-            optional<std::u32string>{ U"__return_phi" }, none,
-            { boost::typeindex::type_id<codegen::ir::phi_instruction>() },
-            std::move(labeled_return_values),
-            codegen::ir::make_variable(return_type()->codegen_type())
-        });
+        if (labeled_return_values.size() == 1)
+        {
+            statements.emplace_back(codegen::ir::instruction{
+                optional<std::u32string>{ U"__return_phi" }, none,
+                { boost::typeindex::type_id<codegen::ir::phi_instruction>() },
+                std::move(labeled_return_values),
+                codegen::ir::make_variable(return_type()->codegen_type())
+            });
+        }
     }
 
     return statements;
