@@ -20,36 +20,23 @@
  *
  **/
 
-#pragma once
+#include "vapor/codegen/ir/module.h"
 
-#include <vector>
-#include <ostream>
-
-#include "function.h"
-#include "variable.h"
-
-namespace reaver
+std::ostream & reaver::vapor::codegen::_v1::ir::operator<<(std::ostream & os, const reaver::vapor::codegen::_v1::ir::module & mod)
 {
-    namespace vapor
-    {
-        namespace codegen { inline namespace _v1
-        {
-            namespace ir
-            {
-                struct module
-                {
-                    std::vector<variant<std::shared_ptr<variable>, function>> symbols;
-                };
-
-                std::ostream & operator<<(std::ostream & os, const module & mod);
-
-                inline std::ostream & operator<<(std::ostream & os, const std::vector<module> & modules)
-                {
-                    fmap(modules, [&](auto && mod){ os << mod; return unit{}; });
-                    return os;
-                }
+    fmap(mod.symbols, [&](auto && symb) {
+        fmap(symb, make_overload_set(
+            [&](const std::shared_ptr<variable> & var) {
+                os << *var << "\n\n";
+                return unit{};
+            },
+            [&](const function & func) {
+                os << func << "\n";
+                return unit{};
             }
-        }}
-    }
+        ));
+        return unit{};
+    });
+    return os;
 }
 

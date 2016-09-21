@@ -44,27 +44,7 @@ namespace reaver
                     std::vector<instruction> instructions;
                 };
 
-                inline std::ostream & operator<<(std::ostream & os, const function & fn)
-                {
-                    os << "function `" << utf8(fn.name) << "`\n";
-                    os << "{\n";
-
-                    os << "arguments:\n";
-                    fmap(fn.arguments, [&](auto && val) {
-                        os << val << "\n";
-                        return unit{};
-                    });
-
-                    os << "return value: " << fn.return_value << '\n';
-
-                    os << "instructions:\n";
-                    fmap(fn.instructions, [&](auto && inst) {
-                        os << inst << '\n';
-                        return unit{};
-                    });
-                    os << "}\n";
-                    return os;
-                }
+                std::ostream & operator<<(std::ostream & os, const function & fn);
             }
         }}
     }

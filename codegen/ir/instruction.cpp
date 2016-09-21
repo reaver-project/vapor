@@ -20,36 +20,26 @@
  *
  **/
 
-#pragma once
+#include "vapor/codegen/ir/instruction.h"
 
-#include <vector>
-#include <ostream>
-
-#include "function.h"
-#include "variable.h"
-
-namespace reaver
+std::ostream & reaver::vapor::codegen::_v1::ir::operator<<(std::ostream & os, const reaver::vapor::codegen::_v1::ir::instruction & inst)
 {
-    namespace vapor
+    fmap(inst.label, [&](auto && lbl) {
+        os << "label: `" << utf8(lbl) << "`\n";
+        return unit{};
+    });
+    fmap(inst.declared_variable, [&](auto && var) {
+        os << "variable declaration: " << *var << "\n";
+        return unit{};
+    });
+
+    os << inst.result << " = " << inst.instruction.explain() << " ";
+    if (!inst.operands.empty())
     {
-        namespace codegen { inline namespace _v1
-        {
-            namespace ir
-            {
-                struct module
-                {
-                    std::vector<variant<std::shared_ptr<variable>, function>> symbols;
-                };
-
-                std::ostream & operator<<(std::ostream & os, const module & mod);
-
-                inline std::ostream & operator<<(std::ostream & os, const std::vector<module> & modules)
-                {
-                    fmap(modules, [&](auto && mod){ os << mod; return unit{}; });
-                    return os;
-                }
-            }
-        }}
+        std::copy(inst.operands.begin(), inst.operands.end() - 1, std::ostream_iterator<value>(os, ", "));
+        os << inst.operands.back();
     }
+
+    return os;
 }
 

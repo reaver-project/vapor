@@ -53,19 +53,7 @@ namespace reaver
                     return std::make_shared<variable>(variable{ std::move(type), std::move(name) });
                 }
 
-                inline std::ostream & operator<<(std::ostream & os, const variable & var)
-                {
-                    if (var.name)
-                    {
-                        os << "variable `" << utf8(*var.name) << "` of type `" << utf8(var.type->name) << "`";
-                    }
-                    else
-                    {
-                        os << "unnamed variable of type `" << utf8(var.type->name) << "`";
-                    }
-
-                    return os;
-                }
+                std::ostream & operator<<(std::ostream & os, const variable & var);
 
                 using value = variant<
                     std::shared_ptr<variable>,
@@ -73,24 +61,7 @@ namespace reaver
                     label
                 >;
 
-                inline std::ostream & operator<<(std::ostream & os, const value & val)
-                {
-                    return get<0>(fmap(val, make_overload_set(
-                        [&](std::shared_ptr<variable> var) -> auto & {
-                            return os << *var;
-                        },
-                        [&](const integer_value & int_) -> auto & {
-                            return os << int_.value;
-                        },
-                        [&](const label & lbl) -> auto & {
-                            return os << "label `" << utf8(lbl.name) << "`";
-                        },
-                        [&](auto &&) -> auto & {
-                            assert(0);
-                            return os;
-                        }
-                    )));
-                }
+                std::ostream & operator<<(std::ostream & os, const value & val);
             }
         }}
     }
