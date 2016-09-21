@@ -49,7 +49,7 @@ namespace reaver
                     assert(0);
                 }
 
-                virtual statement_ir _codegen_ir() const override
+                virtual statement_ir _codegen_ir(ir_generation_context &) const override
                 {
                     assert(0);
                 }

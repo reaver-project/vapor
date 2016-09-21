@@ -26,6 +26,7 @@
 
 #include "../codegen/ir/variable.h"
 #include "../codegen/ir/instruction.h"
+#include "ir_context.h"
 
 namespace reaver
 {
@@ -70,11 +71,11 @@ namespace reaver
 
                 virtual void print(std::ostream &, std::size_t indent) const = 0;
 
-                statement_ir codegen_ir() const
+                statement_ir codegen_ir(ir_generation_context & ctx) const
                 {
                     if (!_ir)
                     {
-                        _ir = _codegen_ir();
+                        _ir = _codegen_ir(ctx);
                     }
 
                     return *_ir;
@@ -82,7 +83,7 @@ namespace reaver
 
             private:
                 virtual future<> _analyze() = 0;
-                virtual statement_ir _codegen_ir() const = 0;
+                virtual statement_ir _codegen_ir(ir_generation_context &) const = 0;
 
                 std::mutex _future_lock;
                 std::atomic<bool> _is_future_assigned{ false };

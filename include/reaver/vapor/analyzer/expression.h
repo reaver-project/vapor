@@ -90,10 +90,10 @@ namespace reaver
             private:
                 virtual future<> _analyze() override;
 
-                virtual statement_ir _codegen_ir() const override
+                virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
                 {
-                    return mbind(value, [](auto && expr) {
-                        return expr->codegen_ir();
+                    return mbind(value, [&](auto && expr) {
+                        return expr->codegen_ir(ctx);
                     });
                 }
 

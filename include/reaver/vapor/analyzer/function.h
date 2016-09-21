@@ -30,6 +30,7 @@
 
 #include "../range.h"
 #include "../codegen/ir/function.h"
+#include "ir_context.h"
 
 namespace reaver
 {
@@ -39,10 +40,12 @@ namespace reaver
         {
             class type;
 
-            class function
+            using function_codegen = reaver::function<codegen::ir::function (ir_generation_context &)>;
+
+            class function : public std::enable_shared_from_this<function>
             {
             public:
-                function(std::string explanation, std::shared_ptr<type> ret, std::vector<std::shared_ptr<type>> args, codegen::ir::function codegen, optional<range_type> range = none)
+                function(std::string explanation, std::shared_ptr<type> ret, std::vector<std::shared_ptr<type>> args, function_codegen codegen, optional<range_type> range = none)
                     : _explanation{ std::move(explanation) }, _range{ std::move(range) },
                     _return_type{ std::move(ret) }, _argument_types{ std::move(args) }, _codegen{ std::move(codegen) }
                 {
@@ -71,14 +74,29 @@ namespace reaver
                     return ret;
                 }
 
-                codegen::ir::function codegen_ir() const
+                codegen::ir::function codegen_ir(ir_generation_context & ctx) const
                 {
-                    return _codegen;
+                    auto state = ctx.top_level_generation;
+                    ctx.top_level_generation = false;
+
+                    if (!_ir)
+                    {
+                        _ir = _codegen(ctx);
+                    }
+
+                    if (state)
+                    {
+                        ctx.add_generated_function(shared_from_this());
+                    }
+
+                    ctx.top_level_generation = state;
+
+                    return *_ir;
                 }
 
-                codegen::ir::value call_operand_ir() const
+                codegen::ir::value call_operand_ir(ir_generation_context & ctx) const
                 {
-                    return { codegen::ir::label{ _codegen.name } };
+                    return { codegen::ir::label{ codegen_ir(ctx).name } };
                 }
 
             private:
@@ -87,10 +105,11 @@ namespace reaver
 
                 std::shared_ptr<type> _return_type;
                 std::vector<std::shared_ptr<type>> _argument_types;
-                codegen::ir::function _codegen;
+                function_codegen _codegen;
+                mutable optional<codegen::ir::function> _ir;
             };
 
-            inline std::shared_ptr<function> make_function(std::string expl, std::shared_ptr<type> return_type, std::vector<std::shared_ptr<type>> arguments, codegen::ir::function codegen, optional<range_type> range = none)
+            inline std::shared_ptr<function> make_function(std::string expl, std::shared_ptr<type> return_type, std::vector<std::shared_ptr<type>> arguments, function_codegen codegen, optional<range_type> range = none)
             {
                 return std::make_shared<function>(std::move(expl), std::move(return_type), std::move(arguments), std::move(codegen), std::move(range));
             }

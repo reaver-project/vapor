@@ -73,7 +73,7 @@ namespace reaver
                 }
 
             private:
-                virtual variable_ir _codegen_ir() const override;
+                virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
                 std::vector<std::shared_ptr<function_declaration>> _overloads;
                 std::shared_ptr<overload_set_type> _type;
@@ -101,7 +101,7 @@ namespace reaver
 
             private:
                 virtual future<> _analyze() override;
-                virtual statement_ir _codegen_ir() const override;
+                virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::function & _parse;
 

@@ -52,7 +52,7 @@ namespace reaver
 
             private:
                 virtual future<> _analyze() override;
-                virtual statement_ir _codegen_ir() const override;
+                virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::id_expression & _parse;
                 std::shared_ptr<scope> _lex_scope;

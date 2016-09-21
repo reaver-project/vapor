@@ -99,13 +99,13 @@ reaver::future<> reaver::vapor::analyzer::_v1::block::_analyze()
     return fut;
 }
 
-std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyzer::_v1::block::_codegen_ir() const
+std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyzer::_v1::block::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
-    auto statements = mbind(_statements, [](auto && stmt) {
-        return stmt->codegen_ir();
+    auto statements = mbind(_statements, [&](auto && stmt) {
+        return stmt->codegen_ir(ctx);
     });
     fmap(_value_expr, [&](auto && expr) {
-        auto instructions = expr->codegen_ir();
+        auto instructions = expr->codegen_ir(ctx);
         std::move(instructions.begin(), instructions.end(), std::back_inserter(statements));
         return unit{};
     });
@@ -147,9 +147,9 @@ std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyze
     return statements;
 }
 
-reaver::vapor::codegen::_v1::ir::value reaver::vapor::analyzer::_v1::block::codegen_return() const
+reaver::vapor::codegen::_v1::ir::value reaver::vapor::analyzer::_v1::block::codegen_return(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
     assert(_is_top_level);
-    return codegen_ir().back().result;
+    return codegen_ir(ctx).back().result;
 }
 

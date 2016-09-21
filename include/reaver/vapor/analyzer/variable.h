@@ -27,6 +27,7 @@
 #include "type.h"
 #include "../codegen/ir/variable.h"
 #include "../codegen/ir/function.h"
+#include "ir_context.h"
 
 namespace reaver
 {
@@ -46,18 +47,18 @@ namespace reaver
 
                 virtual std::shared_ptr<type> get_type() const = 0;
 
-                variable_ir codegen_ir() const
+                variable_ir codegen_ir(ir_generation_context & ctx) const
                 {
                     if (!_ir)
                     {
-                        _ir = _codegen_ir();
+                        _ir = _codegen_ir(ctx);
                     }
 
                     return *_ir;
                 }
 
             private:
-                virtual variable_ir _codegen_ir() const = 0;
+                virtual variable_ir _codegen_ir(ir_generation_context &) const = 0;
 
                 mutable optional<variable_ir> _ir;
             };
@@ -75,7 +76,7 @@ namespace reaver
                 }
 
             private:
-                virtual variable_ir _codegen_ir() const override;
+                virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
                 std::shared_ptr<expression> _expression;
                 std::shared_ptr<type> _type;

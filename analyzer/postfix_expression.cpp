@@ -85,14 +85,14 @@ reaver::future<> reaver::vapor::analyzer::_v1::postfix_expression::_analyze()
         });
 }
 
-reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::postfix_expression::_codegen_ir() const
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::postfix_expression::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
-    auto base_expr_instructions = _base_expr->codegen_ir();
-    auto arguments_instructions = fmap(_arguments, [](auto && arg){ return arg->codegen_ir(); });
+    auto base_expr_instructions = _base_expr->codegen_ir(ctx);
+    auto arguments_instructions = fmap(_arguments, [&](auto && arg){ return arg->codegen_ir(ctx); });
 
     auto base_expr_variable = base_expr_instructions.back().result;
     auto arguments_values = fmap(arguments_instructions, [](auto && insts){ return insts.back().result; });
-    arguments_values.insert(arguments_values.begin(), _overload->call_operand_ir());
+    arguments_values.insert(arguments_values.begin(), _overload->call_operand_ir(ctx));
 
     auto postfix_expr_instruction = codegen::ir::instruction{
         none, none,
@@ -100,6 +100,8 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::postfix
         std::move(arguments_values),
         { codegen::ir::make_variable(_overload->return_type()->codegen_type()) }
     };
+
+    ctx.add_function_to_generate(_overload);
 
     statement_ir ret;
     ret.reserve(base_expr_instructions.size() + std::accumulate(

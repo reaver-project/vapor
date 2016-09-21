@@ -76,9 +76,11 @@ namespace
 
 reaver::vapor::codegen::_v1::ir::module reaver::vapor::analyzer::_v1::module::codegen_ir() const
 {
+    auto ctx = ir_generation_context{};
+
     codegen::ir::module mod;
-    mod.symbols = mbind(as_vector(_scope->declared_symbols()), [](auto && symbol) {
-        auto ir = symbol.second->codegen_ir();
+    mod.symbols = mbind(as_vector(_scope->declared_symbols()), [&](auto && symbol) {
+        auto ir = symbol.second->codegen_ir(ctx);
         fmap(ir.back(), make_overload_set(
             [&](std::shared_ptr<codegen::ir::variable> symb) {
                 symb->name = symbol.second->get_name();
@@ -91,6 +93,12 @@ reaver::vapor::codegen::_v1::ir::module reaver::vapor::analyzer::_v1::module::co
         ));
         return ir;
     });
+
+    while (auto fn = ctx.function_to_generate())
+    {
+        mod.symbols.push_back(fn->codegen_ir(ctx));
+    }
+
     return mod;
 }
 

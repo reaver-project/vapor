@@ -34,9 +34,9 @@ void reaver::vapor::analyzer::_v1::return_statement::print(std::ostream & os, st
     os << in << "}\n";
 }
 
-reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::return_statement::_codegen_ir() const
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::return_statement::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
-    auto ret = _value_expr->codegen_ir();
+    auto ret = _value_expr->codegen_ir(ctx);
     ret.push_back({
         none, none,
         { boost::typeindex::type_id<codegen::ir::return_instruction>() },

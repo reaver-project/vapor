@@ -60,10 +60,10 @@ std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::a
     return codegen::ir::make_type(U"__overload_set_add_some_uid_here", 0, {});
 }
 
-reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::overload_set::_codegen_ir() const
+reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::overload_set::_codegen_ir(ir_generation_context & ctx) const
 {
-    auto functions = fmap(_overloads, [](auto && fn_decl) {
-        return fn_decl->get_function()->codegen_ir();
+    auto functions = fmap(_overloads, [&](auto && fn_decl) {
+        return fn_decl->get_function()->codegen_ir(ctx);
     });
 
     variable_ir ir;
@@ -83,7 +83,7 @@ void reaver::vapor::analyzer::_v1::function_declaration::print(std::ostream & os
     os << in << "}\n";
 }
 
-reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::function_declaration::_codegen_ir() const
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::function_declaration::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context &) const
 {
     return {};
 }
@@ -95,11 +95,13 @@ reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
             "overloadable function",
             _body->return_type(),
             {},
-            codegen::ir::function{
-                _parse.name.string,
-                {},
-                _body->codegen_return(),
-                _body->codegen_ir()
+            [name = _parse.name.string, body = _body](ir_generation_context & ctx) {
+                return codegen::ir::function{
+                    name,
+                    {},
+                    body->codegen_return(ctx),
+                    body->codegen_ir(ctx)
+                };
             },
             _parse.range
         );

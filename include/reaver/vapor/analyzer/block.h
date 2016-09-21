@@ -69,11 +69,11 @@ namespace reaver
 
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
-                codegen::ir::value codegen_return() const;
+                codegen::ir::value codegen_return(ir_generation_context &) const;
 
             private:
                 virtual future<> _analyze() override;
-                virtual statement_ir _codegen_ir() const override;
+                virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::block & _parse;
                 std::shared_ptr<scope> _scope;

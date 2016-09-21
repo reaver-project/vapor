@@ -23,9 +23,9 @@
 #include "vapor/analyzer/symbol.h"
 #include "vapor/codegen/ir/variable.h"
 
-std::vector<reaver::variant<std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable>, reaver::vapor::codegen::_v1::ir::function>> reaver::vapor::analyzer::_v1::symbol::codegen_ir() const
+std::vector<reaver::variant<std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable>, reaver::vapor::codegen::_v1::ir::function>> reaver::vapor::analyzer::_v1::symbol::codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
-    return fmap(_variable->codegen_ir(), [](auto && v) {
+    return fmap(_variable->codegen_ir(ctx), [](auto && v) {
         return fmap(std::forward<decltype(v)>(v), make_overload_set(
             [](codegen::ir::function f) { return std::move(f); },
             [](codegen::ir::value val) {

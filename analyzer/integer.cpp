@@ -28,14 +28,14 @@ std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::a
     return codegen::ir::builtin_types().integer;
 }
 
-reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::integer_constant::_codegen_ir() const
+reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::integer_constant::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context &) const
 {
     return {
         codegen::ir::value{ codegen::ir::integer_value{ _value } }
     };
 }
 
-reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::integer_literal::_codegen_ir() const
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::integer_literal::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context &) const
 {
     return { codegen::ir::instruction{
         none, none,

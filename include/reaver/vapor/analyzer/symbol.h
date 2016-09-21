@@ -96,7 +96,7 @@ namespace reaver
                     return *_future;
                 }
 
-                std::vector<variant<std::shared_ptr<codegen::ir::variable>, codegen::ir::function>> codegen_ir() const;
+                std::vector<variant<std::shared_ptr<codegen::ir::variable>, codegen::ir::function>> codegen_ir(ir_generation_context &) const;
 
             private:
                 mutable std::shared_mutex _lock;

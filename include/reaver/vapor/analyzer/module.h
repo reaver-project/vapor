@@ -39,6 +39,7 @@
 #include "statement.h"
 #include "function.h"
 #include "../codegen/ir/module.h"
+#include "ir_context.h"
 
 namespace reaver
 {

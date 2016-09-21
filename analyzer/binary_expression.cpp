@@ -58,10 +58,10 @@ reaver::future<> reaver::vapor::analyzer::_v1::binary_expression::_analyze()
         });
 }
 
-reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::binary_expression::_codegen_ir() const
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::binary_expression::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
-    auto lhs_instructions = _lhs->codegen_ir();
-    auto rhs_instructions = _rhs->codegen_ir();
+    auto lhs_instructions = _lhs->codegen_ir(ctx);
+    auto rhs_instructions = _rhs->codegen_ir(ctx);
 
     auto lhs_variable = lhs_instructions.back().result;
     auto rhs_variable = rhs_instructions.back().result;
@@ -69,9 +69,11 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::binary_
     auto bin_expr_instruction = codegen::ir::instruction{
         none, none,
         { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
-        { _overload->call_operand_ir(), lhs_variable, rhs_variable },
+        { _overload->call_operand_ir(ctx), lhs_variable, rhs_variable },
         codegen::ir::make_variable(_overload->return_type()->codegen_type())
     };
+
+    ctx.add_function_to_generate(_overload);
 
     // TODO: oops, there should be a different order of evaluation for right-associative and left-associative
     // (...probably)

@@ -94,11 +94,11 @@ namespace reaver
                     });
                 }
 
-                virtual statement_ir _codegen_ir() const override
+                virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
                 {
                     auto declared_var = codegen::ir::make_variable(_declared_symbol->get_type()->codegen_type(), _name);
 
-                    auto instructions = _init_expr->codegen_ir();
+                    auto instructions = _init_expr->codegen_ir(ctx);
                     instructions.insert(instructions.begin(), codegen::ir::instruction{
                         none,
                         { declared_var },

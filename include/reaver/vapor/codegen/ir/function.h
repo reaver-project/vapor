@@ -48,8 +48,16 @@ namespace reaver
                 {
                     os << "function `" << utf8(fn.name) << "`\n";
                     os << "{\n";
-                    assert(fn.arguments.empty());
+
+                    os << "arguments:\n";
+                    fmap(fn.arguments, [&](auto && val) {
+                        os << val << "\n";
+                        return unit{};
+                    });
+
                     os << "return value: " << fn.return_value << '\n';
+
+                    os << "instructions:\n";
                     fmap(fn.instructions, [&](auto && inst) {
                         os << inst << '\n';
                         return unit{};

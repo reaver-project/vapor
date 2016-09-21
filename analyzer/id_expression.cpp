@@ -46,7 +46,7 @@ reaver::future<> reaver::vapor::analyzer::_v1::id_expression::_analyze()
         });
 }
 
-reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::id_expression::_codegen_ir() const
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::id_expression::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context &) const
 {
     return { codegen::ir::instruction{
         none, none,

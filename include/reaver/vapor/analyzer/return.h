@@ -63,7 +63,7 @@ namespace reaver
                     return _value_expr->analyze();
                 }
 
-                virtual statement_ir _codegen_ir() const override;
+                virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::return_expression & _parse;
                 std::shared_ptr<expression> _value_expr;

@@ -72,7 +72,7 @@ namespace reaver
                         "<builtin integer addition>",
                         builtin_types().integer,
                         { builtin_types().integer, builtin_types().integer },
-                        [&] {
+                        [name](ir_generation_context &) {
                             auto lhs = codegen::ir::make_variable(
                                 builtin_types().integer->codegen_type()
                             );
@@ -97,7 +97,7 @@ namespace reaver
                                     }
                                 }
                             };
-                        }()
+                        }
                     );
                 }
 
@@ -132,7 +132,7 @@ namespace reaver
                 }
 
             private:
-                virtual variable_ir _codegen_ir() const override;
+                virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
                 boost::multiprecision::cpp_int _value;
             };
@@ -157,7 +157,7 @@ namespace reaver
                     return make_ready_future();
                 }
 
-                virtual statement_ir _codegen_ir() const override;
+                virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::integer_literal & _parse;
                 std::shared_ptr<integer_constant> _value;

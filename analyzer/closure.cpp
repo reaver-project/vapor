@@ -47,11 +47,13 @@ reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
             "closure",
             _body->return_type(),
             {},
-            codegen::ir::function{
-                U"__closure",
-                {},
-                _body->codegen_return(),
-                _body->codegen_ir()
+            [body = _body](ir_generation_context & ctx) {
+                return codegen::ir::function{
+                    U"__closure",
+                    {},
+                    body->codegen_return(ctx),
+                    body->codegen_ir(ctx)
+                };
             },
             _parse.range
         );
@@ -60,7 +62,7 @@ reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
     });
 }
 
-reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::closure::_codegen_ir() const
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::closure::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context &) const
 {
     return {
         codegen::ir::instruction{

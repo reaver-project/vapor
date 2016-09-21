@@ -23,10 +23,10 @@
 #include "vapor/analyzer/variable.h"
 #include "vapor/analyzer/expression.h"
 
-reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::expression_variable::_codegen_ir() const
+reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::expression_variable::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
     return {
-        _expression->codegen_ir().back().result
+        _expression->codegen_ir(ctx).back().result
     };
 }
 
