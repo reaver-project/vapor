@@ -24,13 +24,13 @@
 #include "vapor/analyzer/block.h"
 #include "vapor/analyzer/return.h"
 
-reaver::vapor::analyzer::_v1::block::block(const reaver::vapor::parser::block & parse, std::shared_ptr<reaver::vapor::analyzer::_v1::scope> lex_scope) : _parse{ parse }, _scope{ lex_scope->clone_local() }
+reaver::vapor::analyzer::_v1::block::block(const reaver::vapor::parser::block & parse, std::shared_ptr<reaver::vapor::analyzer::_v1::scope> lex_scope, bool is_top_level) : _parse{ parse }, _scope{ lex_scope->clone_local() }, _is_top_level{ is_top_level }
 {
     _statements = fmap(_parse.block_value, [&](auto && row) {
         return get<0>(fmap(row, make_overload_set(
             [&](const parser::block & block) -> std::shared_ptr<statement>
             {
-                return preanalyze_block(block, _scope);
+                return preanalyze_block(block, _scope, false);
             },
             [&](const parser::statement & statement)
             {
@@ -101,13 +101,55 @@ reaver::future<> reaver::vapor::analyzer::_v1::block::_analyze()
 
 std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyzer::_v1::block::_codegen_ir() const
 {
-    return mbind(_statements, [](auto && stmt) {
+    auto statements = mbind(_statements, [](auto && stmt) {
         return stmt->codegen_ir();
     });
+    fmap(_value_expr, [&](auto && expr) {
+        auto instructions = expr->codegen_ir();
+        std::move(instructions.begin(), instructions.end(), std::back_inserter(statements));
+        return unit{};
+    });
+
+    if (_is_top_level)
+    {
+        std::size_t return_index = 0;
+
+        auto to_u32string = [](auto && v) {
+            std::stringstream stream;
+            stream << v;
+            return boost::locale::conv::utf_to_utf<char32_t>(stream.str());
+        };
+
+        std::vector<codegen::ir::value> labeled_return_values;
+
+        fmap(statements, [&](auto && stmt) {
+            if (!stmt.instruction.template is<codegen::ir::return_instruction>())
+            {
+                return unit{};
+            }
+
+            auto label = U"__return_label_" + to_u32string(return_index);
+            stmt.label = label;
+            labeled_return_values.emplace_back(codegen::ir::label{ std::move(label) });
+            labeled_return_values.emplace_back(stmt.result);
+
+            return unit{};
+        });
+
+        statements.emplace_back(codegen::ir::instruction{
+            optional<std::u32string>{ U"__return_phi" }, none,
+            { boost::typeindex::type_id<codegen::ir::phi_instruction>() },
+            std::move(labeled_return_values),
+            codegen::ir::make_variable(return_type()->codegen_type())
+        });
+    }
+
+    return statements;
 }
 
 reaver::vapor::codegen::_v1::ir::value reaver::vapor::analyzer::_v1::block::codegen_return() const
 {
-    return codegen::ir::make_variable(return_type()->codegen_type());
+    assert(_is_top_level);
+    return codegen_ir().back().result;
 }
 

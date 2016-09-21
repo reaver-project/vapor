@@ -42,6 +42,11 @@ namespace reaver
                     optional<std::u32string> name;
                 };
 
+                struct label
+                {
+                    std::u32string name;
+                };
+
                 inline std::shared_ptr<variable> make_variable(std::shared_ptr<variable_type> type, optional<std::u32string> name = none)
                 {
                     return std::make_shared<variable>(variable{ std::move(type), std::move(name) });
@@ -49,7 +54,8 @@ namespace reaver
 
                 using value = variant<
                     std::shared_ptr<variable>,
-                    integer_value
+                    integer_value,
+                    label
                 >;
             }
         }}

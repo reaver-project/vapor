@@ -40,7 +40,7 @@ namespace reaver
         namespace analyzer { inline namespace _v1
         {
             class block;
-            std::shared_ptr<block> preanalyze_block(const parser::block &, std::shared_ptr<scope>);
+            std::shared_ptr<block> preanalyze_block(const parser::block &, std::shared_ptr<scope>, bool);
 
             class return_statement;
             class scope;
@@ -48,7 +48,7 @@ namespace reaver
             class block : public statement
             {
             public:
-                block(const parser::block & parse, std::shared_ptr<scope> lex_scope);
+                block(const parser::block & parse, std::shared_ptr<scope> lex_scope, bool is_top_level);
 
                 std::shared_ptr<type> value_type() const
                 {
@@ -79,11 +79,12 @@ namespace reaver
                 std::shared_ptr<scope> _scope;
                 std::vector<std::shared_ptr<statement>> _statements;
                 optional<std::shared_ptr<expression>> _value_expr;
+                const bool _is_top_level = false;
             };
 
-            inline std::shared_ptr<block> preanalyze_block(const parser::block & parse, std::shared_ptr<scope> lex_scope)
+            inline std::shared_ptr<block> preanalyze_block(const parser::block & parse, std::shared_ptr<scope> lex_scope, bool is_top_level)
             {
-                return std::make_shared<block>(parse, std::move(lex_scope));
+                return std::make_shared<block>(parse, std::move(lex_scope), is_top_level);
             }
         }}
     }

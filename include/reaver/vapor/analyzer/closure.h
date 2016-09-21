@@ -71,7 +71,7 @@ namespace reaver
                 closure(const parser::lambda_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _scope{ lex_scope->clone_local() }
                 {
                     _scope->close();
-                    _body = preanalyze_block(parse.body, _scope);
+                    _body = preanalyze_block(parse.body, _scope, true);
                 }
 
                 auto & parse() const

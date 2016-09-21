@@ -51,6 +51,12 @@ namespace reaver
                     {
                         return _type == other._type;
                     }
+
+                    template<typename T>
+                    bool is() const
+                    {
+                        return _type == boost::typeindex::type_id<T>();
+                    }
                 };
 
                 struct instruction
@@ -68,6 +74,7 @@ namespace reaver
                 struct materialization_instruction {};
                 struct pass_variable_instruction {};
                 struct return_instruction {};
+                struct phi_instruction {};
             };
         }}
     }

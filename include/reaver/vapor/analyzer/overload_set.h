@@ -87,7 +87,7 @@ namespace reaver
                 {
                     assert(!_parse.arguments);
 
-                    _body = preanalyze_block(*_parse.body, scope);
+                    _body = preanalyze_block(*_parse.body, scope, true);
                     auto set = _scope->get_or_init(_parse.name.string,
                         [&]{ return make_symbol(_parse.name.string, std::make_shared<overload_set>()); });
                 }
