@@ -20,31 +20,19 @@
  *
  **/
 
-#pragma once
+#include "vapor/codegen/generator.h"
+#include "vapor/codegen/ir/type.h"
 
-#include <memory>
+#include <cassert>
 
-#include "generator.h"
-
-namespace reaver
+std::u32string reaver::vapor::codegen::_v1::codegen_context::generate_if_necessary(std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> type)
 {
-    namespace vapor
+    if (_generated_types.find(type) != _generated_types.end())
     {
-        namespace codegen { inline namespace _v1
-        {
-            class cxx_generator : public code_generator
-            {
-            public:
-                virtual std::u32string generate(const ir::variable &, codegen_context &) const override;
-                virtual std::u32string generate(const ir::function &, codegen_context &) const override;
-                virtual std::u32string generate(const std::shared_ptr<ir::variable_type> &, codegen_context &) const override;
-            };
-
-            inline std::shared_ptr<code_generator> make_cxx()
-            {
-                return std::make_shared<cxx_generator>();
-            }
-        }}
+        return {};
     }
+
+    _generated_types.insert(type);
+    return _generator->generate(type, *this);
 }
 

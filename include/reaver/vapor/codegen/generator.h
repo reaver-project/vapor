@@ -22,16 +22,48 @@
 
 #pragma once
 
+#include <string>
+#include <unordered_set>
+
 namespace reaver
 {
     namespace vapor
     {
         namespace codegen { inline namespace _v1
         {
+            namespace ir
+            {
+                struct variable_type;
+                struct variable;
+                struct function;
+            }
+
+            class code_generator;
+
+            class codegen_context
+            {
+            public:
+                codegen_context(std::shared_ptr<code_generator> gen) : _generator{ std::move(gen) }
+                {
+                }
+
+                std::u32string generate_if_necessary(std::shared_ptr<ir::variable_type>);
+
+                std::size_t unnamed_variable_index = 0;
+
+            private:
+                std::unordered_set<std::shared_ptr<ir::variable_type>> _generated_types;
+                std::shared_ptr<code_generator> _generator;
+            };
+
             class code_generator
             {
             public:
                 virtual ~code_generator() = default;
+
+                virtual std::u32string generate(const ir::variable &, codegen_context &) const = 0;
+                virtual std::u32string generate(const ir::function &, codegen_context &) const = 0;
+                virtual std::u32string generate(const std::shared_ptr<ir::variable_type> &, codegen_context &) const = 0;
             };
         }}
     }

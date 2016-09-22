@@ -20,31 +20,31 @@
  *
  **/
 
-#pragma once
+#include <numeric>
 
-#include <memory>
+#include <reaver/prelude/monad.h>
 
-#include "generator.h"
+#include "vapor/codegen/result.h"
+#include "vapor/codegen/ir/module.h"
+#include "vapor/codegen/generator.h"
 
-namespace reaver
+reaver::vapor::codegen::_v1::result::result(std::vector<reaver::vapor::codegen::_v1::ir::module> ir, std::shared_ptr<code_generator> gen)
 {
-    namespace vapor
-    {
-        namespace codegen { inline namespace _v1
-        {
-            class cxx_generator : public code_generator
-            {
-            public:
-                virtual std::u32string generate(const ir::variable &, codegen_context &) const override;
-                virtual std::u32string generate(const ir::function &, codegen_context &) const override;
-                virtual std::u32string generate(const std::shared_ptr<ir::variable_type> &, codegen_context &) const override;
-            };
+    auto ctx = codegen_context{gen};
 
-            inline std::shared_ptr<code_generator> make_cxx()
-            {
-                return std::make_shared<cxx_generator>();
-            }
-        }}
-    }
+    auto strings = mbind(ir, [&](auto && module) {
+        return fmap(module.symbols, [&](auto && symbol) {
+            return get<std::u32string>(fmap(symbol, make_overload_set(
+                [&](std::shared_ptr<ir::variable> & var) {
+                    return gen->generate(*var, ctx);
+                },
+                [&](ir::function & fn) {
+                    return gen->generate(fn, ctx);
+                }
+            )));
+        });
+    });
+
+    _generated_code = std::accumulate(strings.begin(), strings.end(), std::u32string{});
 }
 

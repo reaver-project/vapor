@@ -39,7 +39,7 @@ namespace reaver
                 struct function
                 {
                     std::u32string name;
-                    std::vector<value> arguments;
+                    std::vector<std::shared_ptr<variable>> arguments;
                     value return_value;
                     std::vector<instruction> instructions;
                 };

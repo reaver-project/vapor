@@ -22,9 +22,7 @@
 
 #pragma once
 
-#include <memory>
-
-#include "generator.h"
+#include <string>
 
 namespace reaver
 {
@@ -32,17 +30,20 @@ namespace reaver
     {
         namespace codegen { inline namespace _v1
         {
-            class cxx_generator : public code_generator
+            namespace ir
             {
-            public:
-                virtual std::u32string generate(const ir::variable &, codegen_context &) const override;
-                virtual std::u32string generate(const ir::function &, codegen_context &) const override;
-                virtual std::u32string generate(const std::shared_ptr<ir::variable_type> &, codegen_context &) const override;
-            };
+                struct variable_type;
+                struct function;
+                struct variable;
+            }
 
-            inline std::shared_ptr<code_generator> make_cxx()
+            class codegen_context;
+
+            namespace cxx
             {
-                return std::make_shared<cxx_generator>();
+                std::u32string type_name(const std::shared_ptr<ir::variable_type> &, codegen_context &);
+                std::u32string function_name(const ir::function &, codegen_context &);
+                std::u32string variable_name(const ir::variable &, codegen_context &);
             }
         }}
     }

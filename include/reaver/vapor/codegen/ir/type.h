@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace reaver
 {
@@ -61,9 +62,12 @@ namespace reaver
                         std::shared_ptr<variable_type> integer;
                     };
 
-                    static builtin_types_t types;
-                    types.integer = std::make_shared<variable_type>();
-                    types.integer->name = U"int";
+                    static auto types = []{
+                        builtin_types_t types;
+                        types.integer = std::make_shared<variable_type>();
+                        types.integer->name = U"int";
+                        return types;
+                    }();
 
                     return types;
                 }

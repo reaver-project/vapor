@@ -20,31 +20,21 @@
  *
  **/
 
-#pragma once
+#include "vapor/codegen/cxx.h"
+#include "vapor/codegen/ir/type.h"
+#include "vapor/codegen/cxx/names.h"
 
-#include <memory>
+#include <cassert>
 
-#include "generator.h"
-
-namespace reaver
+std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate(const std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> & type, reaver::vapor::codegen::_v1::codegen_context & ctx) const
 {
-    namespace vapor
+    if (type == ir::builtin_types().integer)
     {
-        namespace codegen { inline namespace _v1
-        {
-            class cxx_generator : public code_generator
-            {
-            public:
-                virtual std::u32string generate(const ir::variable &, codegen_context &) const override;
-                virtual std::u32string generate(const ir::function &, codegen_context &) const override;
-                virtual std::u32string generate(const std::shared_ptr<ir::variable_type> &, codegen_context &) const override;
-            };
-
-            inline std::shared_ptr<code_generator> make_cxx()
-            {
-                return std::make_shared<cxx_generator>();
-            }
-        }}
+        return UR"code(#include <boost/multiprecision/cpp_int.hpp>
+)code";
     }
+
+    assert(type->members.empty());
+    return U"struct " + cxx::type_name(type, ctx) + U" {};\n";
 }
 

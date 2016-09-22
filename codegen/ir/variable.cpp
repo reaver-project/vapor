@@ -55,3 +55,19 @@ std::ostream & reaver::vapor::codegen::_v1::ir::operator<<(std::ostream & os, co
     )));
 }
 
+std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::codegen::_v1::ir::get_type(const reaver::vapor::codegen::_v1::ir::value & val)
+{
+    return get<0>(fmap(val, make_overload_set(
+        [](const std::shared_ptr<variable> & var) {
+            return var->type;
+        },
+        [](const ir::integer_value &) {
+            return ir::builtin_types().integer;
+        },
+        [](auto &&) {
+            assert(0);
+            return std::shared_ptr<ir::variable_type>();
+        }
+    )));
+}
+

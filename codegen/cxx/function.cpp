@@ -20,27 +20,38 @@
  *
  **/
 
+#include "vapor/codegen/cxx.h"
 #include "vapor/codegen/ir/function.h"
+#include "vapor/codegen/cxx/names.h"
 
-std::ostream & reaver::vapor::codegen::_v1::ir::operator<<(std::ostream & os, const reaver::vapor::codegen::_v1::ir::function & fn)
+#include <cassert>
+
+std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate(const reaver::vapor::codegen::_v1::ir::function & fn, reaver::vapor::codegen::_v1::codegen_context & ctx) const
 {
-    os << "function `" << utf8(fn.name) << "`\n";
-    os << "{\n";
+    std::u32string ret;
 
-    os << "arguments:\n";
-    fmap(fn.arguments, [&](auto && val) {
-        os << *val << "\n";
+    ret += ctx.generate_if_necessary(ir::get_type(fn.return_value));
+    fmap(fn.arguments, [&](auto && value) {
+        ret += ctx.generate_if_necessary(ir::get_type(value));
         return unit{};
     });
 
-    os << "return value: " << fn.return_value << '\n';
-
-    os << "instructions:\n";
-    fmap(fn.instructions, [&](auto && inst) {
-        os << inst << '\n';
+    ret += cxx::type_name(ir::get_type(fn.return_value), ctx);
+    ret += U" ";
+    ret += cxx::function_name(fn, ctx);
+    ret += U"(";
+    fmap(fn.arguments, [&](auto && var) {
+        ret += cxx::type_name(ir::get_type(var), ctx);
+        ret += U" ";
+        ret += cxx::variable_name(*var, ctx);
+        ret += U", ";
         return unit{};
     });
-    os << "}\n";
-    return os;
+    ret += U")\n{\n";
+    ret += U"}\n";
+
+    //assert(0);
+
+    return ret;
 }
 

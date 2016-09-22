@@ -62,6 +62,7 @@ namespace reaver
                 >;
 
                 std::ostream & operator<<(std::ostream & os, const value & val);
+                std::shared_ptr<variable_type> get_type(const value &);
             }
         }}
     }

@@ -23,6 +23,9 @@
 #pragma once
 
 #include <memory>
+#include <string>
+
+#include "../utf8.h"
 
 namespace reaver
 {
@@ -41,6 +44,15 @@ namespace reaver
             {
             public:
                 result(std::vector<codegen::ir::module>, std::shared_ptr<code_generator>);
+
+                friend std::ostream & operator<<(std::ostream & os, const result & res)
+                {
+                    os << utf8(res._generated_code) << '\n';
+                    return os;
+                }
+
+            private:
+                std::u32string _generated_code;
             };
         }}
     }
