@@ -35,6 +35,7 @@ reaver::vapor::analyzer::_v1::module::module(const reaver::vapor::parser::module
         }
     );
 
+    _scope->set_name(name(), codegen::ir::scope_type::module);
     _scope->close();
 }
 

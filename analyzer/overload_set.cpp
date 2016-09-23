@@ -55,9 +55,9 @@ std::shared_ptr<reaver::vapor::analyzer::_v1::function> reaver::vapor::analyzer:
     return nullptr;
 }
 
-std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::overload_set_type::_codegen_type() const
+std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::overload_set_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
-    return codegen::ir::make_type(U"__overload_set_add_some_uid_here", 0, {});
+    return codegen::ir::make_type(U"__overload_set_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.overload_set_index++)), _scope->codegen_ir(ctx), 0, {});
 }
 
 reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::overload_set::_codegen_ir(ir_generation_context & ctx) const
@@ -68,7 +68,7 @@ reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::overload
 
     variable_ir ir;
     std::move(functions.begin(), functions.end(), std::back_inserter(ir));
-    ir.emplace_back(codegen::ir::make_variable(_type->codegen_type()));
+    ir.emplace_back(codegen::ir::make_variable(_type->codegen_type(ctx)));
     return ir;
 }
 
@@ -91,24 +91,27 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::functio
 reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
 {
     return _body->analyze().then([&]{
+        auto set = _scope->get(_parse.name.string);
+        auto overloads = std::dynamic_pointer_cast<overload_set>(set->get_variable());
+        assert(overloads);
+
         _function = make_function(
             "overloadable function",
             _body->return_type(),
             {},
-            [name = _parse.name.string, body = _body](ir_generation_context & ctx) {
+            [=, name = _parse.name.string](ir_generation_context & ctx) {
+                auto scopes = _scope->codegen_ir(ctx);
+                scopes.emplace_back(overloads->get_type()->codegen_type(ctx)->name, codegen::ir::scope_type::type);
                 return codegen::ir::function{
-                    name,
-                    {},
-                    body->codegen_return(ctx),
-                    body->codegen_ir(ctx)
+                    U"operator()",
+                    std::move(scopes), {},
+                    _body->codegen_return(ctx),
+                    _body->codegen_ir(ctx)
                 };
             },
             _parse.range
         );
 
-        auto set = _scope->get(_parse.name.string);
-        auto overloads = std::dynamic_pointer_cast<overload_set>(set->get_variable());
-        assert(overloads);
         overloads->add_function(shared_from_this());
     });
 }

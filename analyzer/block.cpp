@@ -148,7 +148,7 @@ std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyze
                 optional<std::u32string>{ U"__return_phi" }, none,
                 { boost::typeindex::type_id<codegen::ir::phi_instruction>() },
                 std::move(labeled_return_values),
-                codegen::ir::make_variable(return_type()->codegen_type())
+                codegen::ir::make_variable(return_type()->codegen_type(ctx))
             });
         }
     }

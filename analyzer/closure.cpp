@@ -22,9 +22,9 @@
 
 #include "vapor/analyzer/closure.h"
 
-std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::closure_type::_codegen_type() const
+std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::closure_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
-    return codegen::ir::make_type(U"__closure_add_some_uid_here", 0, {});
+    return codegen::ir::make_type(U"__closure_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.closure_index++)), _scope->codegen_ir(ctx), 0, {});
 }
 
 void reaver::vapor::analyzer::_v1::closure::print(std::ostream & os, std::size_t indent) const
@@ -47,29 +47,31 @@ reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
             "closure",
             _body->return_type(),
             {},
-            [body = _body](ir_generation_context & ctx) {
+            [this](ir_generation_context & ctx) {
+                auto scopes = _scope->codegen_ir(ctx);
+                scopes.emplace_back(get_type()->codegen_type(ctx)->name, codegen::ir::scope_type::type);
                 return codegen::ir::function{
-                    U"__closure",
-                    {},
-                    body->codegen_return(ctx),
-                    body->codegen_ir(ctx)
+                    U"operator()",
+                    std::move(scopes), {},
+                    _body->codegen_return(ctx),
+                    _body->codegen_ir(ctx)
                 };
             },
             _parse.range
         );
-        auto type = std::make_shared<closure_type>(shared_from_this(), std::move(function));
-        _set_variable(make_expression_variable(shared_from_this(), std::move(type)));
+        _type = std::make_shared<closure_type>(_scope, shared_from_this(), std::move(function));
+        _set_variable(make_expression_variable(shared_from_this(), _type));
     });
 }
 
-reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::closure::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context &) const
+reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::closure::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
     return {
         codegen::ir::instruction{
             none, none,
             { boost::typeindex::type_id<codegen::ir::materialization_instruction>() },
             {},
-            { codegen::ir::make_variable(get_variable()->get_type()->codegen_type()) }
+            { codegen::ir::make_variable(get_variable()->get_type()->codegen_type(ctx)) }
         }
     };
 }

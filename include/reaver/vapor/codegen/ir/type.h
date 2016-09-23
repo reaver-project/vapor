@@ -26,6 +26,8 @@
 #include <string>
 #include <vector>
 
+#include "scope.h"
+
 namespace reaver
 {
     namespace vapor
@@ -46,13 +48,14 @@ namespace reaver
                 struct variable_type
                 {
                     std::u32string name;
+                    std::vector<scope> scopes;
                     std::size_t size;
                     std::vector<member> members;
                 };
 
-                inline auto make_type(std::u32string name, std::size_t size, std::vector<member> members)
+                inline auto make_type(std::u32string name, std::vector<scope> scopes, std::size_t size, std::vector<member> members)
                 {
-                    return std::make_shared<variable_type>(variable_type{ std::move(name), size, std::move(members) });
+                    return std::make_shared<variable_type>(variable_type{ std::move(name), std::move(scopes), size, std::move(members) });
                 }
 
                 inline const auto & builtin_types()

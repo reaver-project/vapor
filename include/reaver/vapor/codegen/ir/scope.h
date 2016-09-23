@@ -20,10 +20,36 @@
  *
  **/
 
-#include "vapor/analyzer/type.h"
+#pragma once
 
-std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::type_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context &) const
+#include <string>
+
+namespace reaver
 {
-    assert(0);
+    namespace vapor
+    {
+        namespace codegen { inline namespace _v1
+        {
+            namespace ir
+            {
+                enum class scope_type
+                {
+                    module,
+                    function,
+                    type
+                };
+
+                struct scope
+                {
+                    scope(std::u32string name, scope_type type) : name{ std::move(name) }, type{ type }
+                    {
+                    }
+
+                    const std::u32string name;
+                    const scope_type type;
+                };
+            }
+        }}
+    }
 }
 

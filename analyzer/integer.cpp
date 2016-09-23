@@ -23,7 +23,7 @@
 #include "vapor/analyzer/integer.h"
 #include "vapor/codegen/ir/variable.h"
 
-std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::integer_type::_codegen_type() const
+std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::integer_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context &) const
 {
     return codegen::ir::builtin_types().integer;
 }

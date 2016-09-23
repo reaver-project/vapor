@@ -62,7 +62,7 @@ namespace reaver
                 }
 
             private:
-                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type() const override;
+                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const override;
 
                 // throw all this shit into a .cpp file
                 template<typename Instruction>
@@ -72,21 +72,21 @@ namespace reaver
                         "<builtin integer addition>",
                         builtin_types().integer,
                         { builtin_types().integer, builtin_types().integer },
-                        [name](ir_generation_context &) {
+                        [name](ir_generation_context & ctx) {
                             auto lhs = codegen::ir::make_variable(
-                                builtin_types().integer->codegen_type()
+                                builtin_types().integer->codegen_type(ctx)
                             );
                             auto rhs = codegen::ir::make_variable(
-                                builtin_types().integer->codegen_type()
+                                builtin_types().integer->codegen_type(ctx)
                             );
 
                             auto retval = codegen::ir::make_variable(
-                                builtin_types().integer->codegen_type()
+                                builtin_types().integer->codegen_type(ctx)
                             );
 
                             return codegen::ir::function{
                                 name,
-                                { lhs, rhs },
+                                {}, { lhs, rhs },
                                 retval,
                                 {
                                     codegen::ir::instruction{

@@ -31,6 +31,8 @@
 #include <reaver/future.h>
 
 #include "../utf8.h"
+#include "../codegen/ir/scope.h"
+#include "ir_context.h"
 
 namespace reaver
 {
@@ -166,8 +168,33 @@ namespace reaver
                     return _symbols;
                 }
 
+                void set_name(std::u32string name, codegen::ir::scope_type type)
+                {
+                    assert(_name.empty());
+                    _name = std::move(name);
+                    _scope_type = type;
+                }
+
+                std::vector<codegen::ir::scope> codegen_ir(ir_generation_context & ctx) const
+                {
+                    std::vector<codegen::ir::scope> scopes;
+                    if (_parent)
+                    {
+                        scopes = _parent->codegen_ir(ctx);
+                    }
+
+                    if (!_name.empty())
+                    {
+                        scopes.emplace_back(_name, _scope_type);
+                    }
+                    return scopes;
+                }
+
             private:
                 mutable std::shared_mutex _lock;
+
+                std::u32string _name;
+                codegen::ir::scope_type _scope_type;
 
                 std::shared_ptr<scope> _parent;
                 std::unordered_map<std::u32string, std::shared_ptr<symbol>> _symbols;

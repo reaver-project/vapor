@@ -35,7 +35,19 @@ std::u32string reaver::vapor::codegen::_v1::cxx::type_name(const std::shared_ptr
         return U"::boost::multiprecision::cpp_int";
     }
 
-    return type->name;
+    std::u32string ret;
+
+    fmap(type->scopes, [&](auto && scope) {
+        if (scope.type == ir::scope_type::function)
+        {
+            assert(0);
+        }
+        ret += scope.name + U"::";
+        return unit{};
+    });
+
+    ret += type->name;
+    return ret;
 }
 
 std::u32string reaver::vapor::codegen::_v1::cxx::variable_name(const reaver::vapor::codegen::_v1::ir::variable & var, reaver::vapor::codegen::_v1::codegen_context & ctx)
@@ -50,6 +62,18 @@ std::u32string reaver::vapor::codegen::_v1::cxx::variable_name(const reaver::vap
 
 std::u32string reaver::vapor::codegen::_v1::cxx::function_name(const reaver::vapor::codegen::_v1::ir::function & fn, reaver::vapor::codegen::_v1::codegen_context &)
 {
-    return fn.name;
+    std::u32string ret;
+
+    fmap(fn.scopes, [&](auto && scope) {
+        if (scope.type == ir::scope_type::function)
+        {
+            assert(0);
+        }
+        ret += scope.name + U"::";
+        return unit{};
+    });
+
+    ret += fn.name;
+    return ret;
 }
 

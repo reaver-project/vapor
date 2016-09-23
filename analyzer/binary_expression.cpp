@@ -70,7 +70,7 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::binary_
         none, none,
         { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
         { _overload->call_operand_ir(ctx), lhs_variable, rhs_variable },
-        codegen::ir::make_variable(_overload->return_type()->codegen_type())
+        codegen::ir::make_variable(_overload->return_type()->codegen_type(ctx))
     };
 
     ctx.add_function_to_generate(_overload);

@@ -27,6 +27,7 @@
 
 #include "variable.h"
 #include "instruction.h"
+#include "scope.h"
 
 namespace reaver
 {
@@ -39,6 +40,7 @@ namespace reaver
                 struct function
                 {
                     std::u32string name;
+                    std::vector<scope> scopes;
                     std::vector<std::shared_ptr<variable>> arguments;
                     value return_value;
                     std::vector<instruction> instructions;

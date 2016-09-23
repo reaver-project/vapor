@@ -38,9 +38,24 @@ namespace reaver
         {
             class function;
 
+            // TODO: combined_overload_set and combined_overload_set_type
+            // those need to be distinct from normal ones for code generation reasons (SCOPES!)
+            // this is not a crucial feature *right now*, but it will be, and rather soon
+            // this is just a note so that I remember why the hell I can't use the existing types
+            //
+            // random bikeshedding thoughts:
+            // actually I might be able to do this differently, on the function level
+            // i.e. create a proxy_function that generates a function in current scope that calls
+            // a function that's in a different scope
+            // but that's going to be funny
+
             class overload_set_type : public type
             {
             public:
+                overload_set_type(std::shared_ptr<scope> lex_scope) : _scope{ std::move(lex_scope) }
+                {
+                }
+
                 void add_function(std::shared_ptr<function> fn);
 
                 virtual std::string explain() const override
@@ -51,9 +66,10 @@ namespace reaver
                 virtual std::shared_ptr<function> get_overload(lexer::token_type bracket, std::vector<std::shared_ptr<type>> args) const override;
 
             private:
-                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type() const override;
+                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const override;
 
                 std::vector<std::shared_ptr<function>> _functions;
+                std::shared_ptr<scope> _scope;
             };
 
             class function_declaration;
@@ -61,7 +77,7 @@ namespace reaver
             class overload_set : public variable
             {
             public:
-                overload_set() : _type{ std::make_shared<overload_set_type>() }
+                overload_set(std::shared_ptr<scope> lex_scope) : _type{ std::make_shared<overload_set_type>(std::move(lex_scope)) }
                 {
                 }
 
@@ -89,7 +105,7 @@ namespace reaver
 
                     _body = preanalyze_block(*_parse.body, scope, true);
                     auto set = _scope->get_or_init(_parse.name.string,
-                        [&]{ return make_symbol(_parse.name.string, std::make_shared<overload_set>()); });
+                        [&]{ return make_symbol(_parse.name.string, std::make_shared<overload_set>(scope)); });
                 }
 
                 std::shared_ptr<function> get_function() const

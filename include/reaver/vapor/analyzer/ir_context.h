@@ -44,6 +44,8 @@ namespace reaver
                 std::shared_ptr<const function> function_to_generate();
 
                 bool top_level_generation = true;
+                std::size_t overload_set_index = 0;
+                std::size_t closure_index = 0;
 
             private:
                 std::vector<std::shared_ptr<const function>> _functions_to_generate;

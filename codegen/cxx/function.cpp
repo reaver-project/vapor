@@ -24,8 +24,6 @@
 #include "vapor/codegen/ir/function.h"
 #include "vapor/codegen/cxx/names.h"
 
-#include <cassert>
-
 std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate(const reaver::vapor::codegen::_v1::ir::function & fn, reaver::vapor::codegen::_v1::codegen_context & ctx) const
 {
     std::u32string ret;
@@ -39,18 +37,22 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate(const reaver
     ret += cxx::type_name(ir::get_type(fn.return_value), ctx);
     ret += U" ";
     ret += cxx::function_name(fn, ctx);
-    ret += U"(";
+    ret += U"(\n";
     fmap(fn.arguments, [&](auto && var) {
-        ret += cxx::type_name(ir::get_type(var), ctx);
+        ret += U"    " + cxx::type_name(ir::get_type(var), ctx);
         ret += U" ";
         ret += cxx::variable_name(*var, ctx);
-        ret += U", ";
+        ret += U",\n";
         return unit{};
     });
+    if (!fn.arguments.empty())
+    {
+        ret.pop_back();
+        ret.pop_back();
+        ret.push_back(U'\n');
+    }
     ret += U")\n{\n";
     ret += U"}\n";
-
-    //assert(0);
 
     return ret;
 }
