@@ -57,19 +57,41 @@ std::shared_ptr<reaver::vapor::analyzer::_v1::function> reaver::vapor::analyzer:
 
 std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::overload_set_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
-    return codegen::ir::make_type(U"__overload_set_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.overload_set_index++)), _scope->codegen_ir(ctx), 0, {});
+    auto type = codegen::ir::make_type(
+        U"__overload_set_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.overload_set_index++)),
+        _scope->codegen_ir(ctx),
+        0,
+        fmap(_functions, [&](auto && fn) {
+            ctx.add_generated_function(fn);
+            return codegen::ir::member{ fn->codegen_ir(ctx) };
+        })
+    );
+
+    auto scopes = _scope->codegen_ir(ctx);
+    scopes.emplace_back(type->name, codegen::ir::scope_type::type);
+
+    fmap(type->members, [&](auto && member) {
+        fmap(member, make_overload_set(
+            [&](codegen::ir::function & fn) {
+                fn.scopes = scopes;
+                fn.parent_type = type;
+
+                return unit{};
+            },
+            [&](auto &&) {
+                assert(0);
+                return unit{};
+            }
+        ));
+        return unit{};
+    });
+
+    return type;
 }
 
 reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::overload_set::_codegen_ir(ir_generation_context & ctx) const
 {
-    auto functions = fmap(_overloads, [&](auto && fn_decl) {
-        return fn_decl->get_function()->codegen_ir(ctx);
-    });
-
-    variable_ir ir;
-    std::move(functions.begin(), functions.end(), std::back_inserter(ir));
-    ir.emplace_back(codegen::ir::make_variable(_type->codegen_type(ctx)));
-    return ir;
+    return { codegen::ir::make_variable(_type->codegen_type(ctx)) };
 }
 
 void reaver::vapor::analyzer::_v1::function_declaration::print(std::ostream & os, std::size_t indent) const
@@ -91,20 +113,14 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::functio
 reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
 {
     return _body->analyze().then([&]{
-        auto set = _scope->get(_parse.name.string);
-        auto overloads = std::dynamic_pointer_cast<overload_set>(set->get_variable());
-        assert(overloads);
-
         _function = make_function(
             "overloadable function",
             _body->return_type(),
             {},
             [=, name = _parse.name.string](ir_generation_context & ctx) {
-                auto scopes = _scope->codegen_ir(ctx);
-                scopes.emplace_back(overloads->get_type()->codegen_type(ctx)->name, codegen::ir::scope_type::type);
                 return codegen::ir::function{
                     U"operator()",
-                    std::move(scopes), {},
+                    {}, {},
                     _body->codegen_return(ctx),
                     _body->codegen_ir(ctx)
                 };
@@ -112,6 +128,9 @@ reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
             _parse.range
         );
 
+        auto set = _scope->get(_parse.name.string);
+        auto overloads = std::dynamic_pointer_cast<overload_set>(set->get_variable());
+        assert(overloads);
         overloads->add_function(shared_from_this());
     });
 }

@@ -80,6 +80,7 @@ reaver::vapor::codegen::_v1::ir::module reaver::vapor::analyzer::_v1::module::co
     auto ctx = ir_generation_context{};
 
     codegen::ir::module mod;
+    mod.name = fmap(_parse.name.id_expression_value, [&](auto && token) { return token.string; });
     mod.symbols = mbind(as_vector(_scope->declared_symbols()), [&](auto && symbol) {
         auto ir = symbol.second->codegen_ir(ctx);
         fmap(ir.back(), make_overload_set(

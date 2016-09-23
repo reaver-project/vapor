@@ -50,7 +50,22 @@ std::u32string reaver::vapor::codegen::_v1::cxx::type_name(const std::shared_ptr
     return ret;
 }
 
+std::u32string reaver::vapor::codegen::_v1::cxx::declaration_type_name(const std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> & type, reaver::vapor::codegen::_v1::codegen_context &)
+{
+    return type->name;
+}
+
 std::u32string reaver::vapor::codegen::_v1::cxx::variable_name(const reaver::vapor::codegen::_v1::ir::variable & var, reaver::vapor::codegen::_v1::codegen_context & ctx)
+{
+    if (var.name)
+    {
+        return *var.name;
+    }
+
+    return U"__unnamed_variable__" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.unnamed_variable_index++));
+}
+
+std::u32string reaver::vapor::codegen::_v1::cxx::declaration_variable_name(const reaver::vapor::codegen::_v1::ir::variable & var, reaver::vapor::codegen::_v1::codegen_context & ctx)
 {
     if (var.name)
     {
@@ -75,5 +90,10 @@ std::u32string reaver::vapor::codegen::_v1::cxx::function_name(const reaver::vap
 
     ret += fn.name;
     return ret;
+}
+
+std::u32string reaver::vapor::codegen::_v1::cxx::declaration_function_name(const reaver::vapor::codegen::_v1::ir::function & fn, reaver::vapor::codegen::_v1::codegen_context &)
+{
+    return fn.name;
 }
 

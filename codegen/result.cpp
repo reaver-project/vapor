@@ -32,19 +32,53 @@ reaver::vapor::codegen::_v1::result::result(std::vector<reaver::vapor::codegen::
 {
     auto ctx = codegen_context{gen};
 
-    auto strings = mbind(ir, [&](auto && module) {
-        return fmap(module.symbols, [&](auto && symbol) {
-            return get<std::u32string>(fmap(symbol, make_overload_set(
+    fmap(ir, [&](auto && module) {
+        fmap(module.name, [&](auto && token) {
+            _generated_code += U"namespace " + token + U"\n{\n";
+            return unit{};
+        });
+
+        fmap(module.symbols, [&](auto && symbol) {
+            return fmap(symbol, make_overload_set(
                 [&](std::shared_ptr<ir::variable> & var) {
-                    return gen->generate(*var, ctx);
+                    _generated_code += gen->generate_declaration(*var, ctx);
+                    return unit{};
                 },
                 [&](ir::function & fn) {
-                    return gen->generate(fn, ctx);
+                    _generated_code += gen->generate_declaration(fn, ctx);
+                    return unit{};
                 }
-            )));
+            ));
         });
+
+        fmap(module.name, [&](auto &&) {
+            _generated_code += U"}\n";
+            return unit{};
+        });
+
+        return unit{};
     });
 
-    _generated_code = std::accumulate(strings.begin(), strings.end(), std::u32string{});
+    _generated_code += std::move(ctx.put_into_global);
+    ctx.put_into_global = U"";
+
+    fmap(ir, [&](auto && module) {
+        fmap(module.symbols, [&](auto && symbol) {
+            return fmap(symbol, make_overload_set(
+                [&](std::shared_ptr<ir::variable> & var) {
+                    _generated_code += gen->generate_definition(*var, ctx);
+                    return unit{};
+                },
+                [&](ir::function & fn) {
+                    _generated_code += gen->generate_definition(fn, ctx);
+                    return unit{};
+                }
+            ));
+        });
+
+        return unit{};
+    });
+
+    _generated_code += ctx.put_into_global;
 }
 

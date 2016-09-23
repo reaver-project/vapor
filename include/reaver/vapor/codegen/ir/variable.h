@@ -25,7 +25,6 @@
 #include <reaver/variant.h>
 #include <reaver/optional.h>
 
-#include "type.h"
 #include "integer.h"
 #include "../../utf8.h"
 
@@ -37,6 +36,8 @@ namespace reaver
         {
             namespace ir
             {
+                struct variable_type;
+
                 struct variable
                 {
                     std::shared_ptr<variable_type> type;

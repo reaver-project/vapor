@@ -21,10 +21,23 @@
  **/
 
 #include "vapor/analyzer/closure.h"
+#include "vapor/codegen/ir/type.h"
 
 std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::closure_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
-    return codegen::ir::make_type(U"__closure_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.closure_index++)), _scope->codegen_ir(ctx), 0, {});
+    auto type = codegen::ir::make_type(U"__closure_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.closure_index++)), _scope->codegen_ir(ctx), 0, {});
+
+    auto scopes = _scope->codegen_ir(ctx);
+    scopes.emplace_back(type->name, codegen::ir::scope_type::type);
+
+    auto fn = _function->codegen_ir(ctx);
+    fn.scopes = scopes;
+    fn.parent_type = type;
+    type->members = { codegen::ir::member{ fn } };
+
+    ctx.add_generated_function(_function);
+
+    return type;
 }
 
 void reaver::vapor::analyzer::_v1::closure::print(std::ostream & os, std::size_t indent) const
@@ -48,13 +61,11 @@ reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
             _body->return_type(),
             {},
             [this](ir_generation_context & ctx) {
-                auto scopes = _scope->codegen_ir(ctx);
-                scopes.emplace_back(get_type()->codegen_type(ctx)->name, codegen::ir::scope_type::type);
                 return codegen::ir::function{
                     U"operator()",
-                    std::move(scopes), {},
+                    {}, {},
                     _body->codegen_return(ctx),
-                    _body->codegen_ir(ctx)
+                    _body->codegen_ir(ctx),
                 };
             },
             _parse.range

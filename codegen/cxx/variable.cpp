@@ -22,15 +22,26 @@
 
 #include "vapor/codegen/cxx.h"
 #include "vapor/codegen/ir/variable.h"
+#include "vapor/codegen/ir/type.h"
 #include "vapor/codegen/cxx/names.h"
 
 #include <cassert>
 
-std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate(const reaver::vapor::codegen::_v1::ir::variable & var, reaver::vapor::codegen::_v1::codegen_context & ctx) const
+std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_declaration(const reaver::vapor::codegen::_v1::ir::variable & var, reaver::vapor::codegen::_v1::codegen_context & ctx) const
 {
     std::u32string ret;
 
-    ret += ctx.generate_if_necessary(var.type);
+    ret += ctx.declare_if_necessary(var.type);
+    ret += U"extern " + cxx::type_name(var.type, ctx) + U" " + cxx::declaration_variable_name(var, ctx) + U";\n";
+
+    return ret;
+}
+
+std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_definition(const reaver::vapor::codegen::_v1::ir::variable & var, reaver::vapor::codegen::_v1::codegen_context & ctx) const
+{
+    std::u32string ret;
+
+    ret += ctx.define_if_necessary(var.type);
     ret += cxx::type_name(var.type, ctx) + U" " + cxx::variable_name(var, ctx) + U"{};\n";
 
     return ret;

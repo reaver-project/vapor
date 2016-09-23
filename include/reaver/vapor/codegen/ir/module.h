@@ -38,6 +38,7 @@ namespace reaver
             {
                 struct module
                 {
+                    std::vector<std::u32string> name;
                     std::vector<variant<std::shared_ptr<variable>, function>> symbols;
                 };
 

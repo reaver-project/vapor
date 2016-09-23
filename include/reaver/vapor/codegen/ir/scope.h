@@ -45,8 +45,8 @@ namespace reaver
                     {
                     }
 
-                    const std::u32string name;
-                    const scope_type type;
+                    std::u32string name;
+                    scope_type type;
                 };
             }
         }}

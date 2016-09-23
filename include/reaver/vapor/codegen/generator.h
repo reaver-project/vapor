@@ -47,12 +47,15 @@ namespace reaver
                 {
                 }
 
-                std::u32string generate_if_necessary(std::shared_ptr<ir::variable_type>);
+                std::u32string declare_if_necessary(std::shared_ptr<ir::variable_type>);
+                std::u32string define_if_necessary(std::shared_ptr<ir::variable_type>);
 
                 std::size_t unnamed_variable_index = 0;
+                std::u32string put_into_global;
 
             private:
-                std::unordered_set<std::shared_ptr<ir::variable_type>> _generated_types;
+                std::unordered_set<std::shared_ptr<ir::variable_type>> _declared_types;
+                std::unordered_set<std::shared_ptr<ir::variable_type>> _defined_types;
                 std::shared_ptr<code_generator> _generator;
             };
 
@@ -61,9 +64,12 @@ namespace reaver
             public:
                 virtual ~code_generator() = default;
 
-                virtual std::u32string generate(const ir::variable &, codegen_context &) const = 0;
-                virtual std::u32string generate(const ir::function &, codegen_context &) const = 0;
-                virtual std::u32string generate(const std::shared_ptr<ir::variable_type> &, codegen_context &) const = 0;
+                virtual std::u32string generate_declaration(const ir::variable &, codegen_context &) const = 0;
+                virtual std::u32string generate_declaration(const ir::function &, codegen_context &) const = 0;
+                virtual std::u32string generate_declaration(const std::shared_ptr<ir::variable_type> &, codegen_context &) const = 0;
+                virtual std::u32string generate_definition(const ir::variable &, codegen_context &) const = 0;
+                virtual std::u32string generate_definition(const ir::function &, codegen_context &) const = 0;
+                virtual std::u32string generate_definition(const std::shared_ptr<ir::variable_type> &, codegen_context &) const = 0;
             };
         }}
     }

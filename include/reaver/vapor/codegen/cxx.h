@@ -35,9 +35,12 @@ namespace reaver
             class cxx_generator : public code_generator
             {
             public:
-                virtual std::u32string generate(const ir::variable &, codegen_context &) const override;
-                virtual std::u32string generate(const ir::function &, codegen_context &) const override;
-                virtual std::u32string generate(const std::shared_ptr<ir::variable_type> &, codegen_context &) const override;
+                virtual std::u32string generate_declaration(const ir::variable &, codegen_context &) const override;
+                virtual std::u32string generate_declaration(const ir::function &, codegen_context &) const override;
+                virtual std::u32string generate_declaration(const std::shared_ptr<ir::variable_type> &, codegen_context &) const override;
+                virtual std::u32string generate_definition(const ir::variable &, codegen_context &) const override;
+                virtual std::u32string generate_definition(const ir::function &, codegen_context &) const override;
+                virtual std::u32string generate_definition(const std::shared_ptr<ir::variable_type> &, codegen_context &) const override;
             };
 
             inline std::shared_ptr<code_generator> make_cxx()

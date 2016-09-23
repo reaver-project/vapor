@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/codegen/ir/variable.h"
+#include "vapor/codegen/ir/type.h"
 
 std::ostream & reaver::vapor::codegen::_v1::ir::operator<<(std::ostream & os, const reaver::vapor::codegen::_v1::ir::variable & var)
 {

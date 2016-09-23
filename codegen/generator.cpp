@@ -25,14 +25,25 @@
 
 #include <cassert>
 
-std::u32string reaver::vapor::codegen::_v1::codegen_context::generate_if_necessary(std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> type)
+std::u32string reaver::vapor::codegen::_v1::codegen_context::declare_if_necessary(std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> type)
 {
-    if (_generated_types.find(type) != _generated_types.end())
+    if (_declared_types.find(type) != _declared_types.end())
     {
         return {};
     }
 
-    _generated_types.insert(type);
-    return _generator->generate(type, *this);
+    _declared_types.insert(type);
+    return _generator->generate_declaration(type, *this);
+}
+
+std::u32string reaver::vapor::codegen::_v1::codegen_context::define_if_necessary(std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> type)
+{
+    if (_defined_types.find(type) != _defined_types.end())
+    {
+        return {};
+    }
+
+    _defined_types.insert(type);
+    return _generator->generate_definition(type, *this);
 }
 

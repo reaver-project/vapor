@@ -26,7 +26,10 @@
 #include <string>
 #include <vector>
 
+#include <reaver/variant.h>
+
 #include "scope.h"
+#include "function.h"
 
 namespace reaver
 {
@@ -38,12 +41,14 @@ namespace reaver
             {
                 struct variable_type;
 
-                struct member
+                struct member_variable
                 {
                     std::u32string name;
                     std::shared_ptr<variable_type> type;
                     std::size_t offset;
                 };
+
+                using member = variant<member_variable, codegen::ir::function>;
 
                 struct variable_type
                 {

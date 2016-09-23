@@ -44,6 +44,7 @@ namespace reaver
                     std::vector<std::shared_ptr<variable>> arguments;
                     value return_value;
                     std::vector<instruction> instructions;
+                    std::weak_ptr<variable_type> parent_type = {};
                 };
 
                 std::ostream & operator<<(std::ostream & os, const function & fn);
