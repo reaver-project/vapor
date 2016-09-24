@@ -86,6 +86,7 @@ namespace reaver
                 struct materialization_instruction {};
                 struct pass_value_instruction {};
                 struct return_instruction {};
+                struct jump_instruction {};
                 struct phi_instruction {};
             };
         }}

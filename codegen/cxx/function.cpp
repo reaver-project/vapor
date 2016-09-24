@@ -22,9 +22,10 @@
 
 #include "vapor/codegen/cxx.h"
 #include "vapor/codegen/ir/function.h"
+#include "vapor/codegen/ir/variable.h"
 #include "vapor/codegen/cxx/names.h"
 
-std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_declaration(const reaver::vapor::codegen::_v1::ir::function & fn, reaver::vapor::codegen::_v1::codegen_context & ctx) const
+std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_declaration(reaver::vapor::codegen::_v1::ir::function & fn, reaver::vapor::codegen::_v1::codegen_context & ctx) const
 {
     std::u32string ret;
 
@@ -45,6 +46,8 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_declaration(
     fmap(fn.arguments, [&](auto && var) {
         ret += U"    " + cxx::type_name(ir::get_type(var), ctx);
         ret += U" ";
+        var->declared = true;
+        cxx::declaration_variable_name(*var, ctx); // HAAAAACK
         ret += cxx::variable_name(*var, ctx);
         ret += U",\n";
         return unit{};

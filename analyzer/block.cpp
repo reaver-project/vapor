@@ -150,6 +150,25 @@ std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyze
                 std::move(labeled_return_values),
                 codegen::ir::make_variable(return_type()->codegen_type(ctx))
             });
+
+            fmap(statements, [&](auto && stmt) {
+                if (!stmt.instruction.template is<codegen::ir::return_instruction>())
+                {
+                    return unit{};
+                }
+
+                stmt.instruction = boost::typeindex::type_id<codegen::ir::jump_instruction>();
+                stmt.operands = { codegen::ir::label{ U"__return_phi" } };
+
+                return unit{};
+            });
+
+            statements.emplace_back(codegen::ir::instruction{
+                none, none,
+                { boost::typeindex::type_id<codegen::ir::return_instruction>() },
+                {},
+                statements.back().result
+            });
         }
     }
 

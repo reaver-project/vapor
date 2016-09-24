@@ -28,7 +28,7 @@
 
 #include <cassert>
 
-std::u32string reaver::vapor::codegen::_v1::cxx::type_name(const std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> & type, reaver::vapor::codegen::_v1::codegen_context &)
+std::u32string reaver::vapor::codegen::_v1::cxx::type_name(const std::shared_ptr<const reaver::vapor::codegen::_v1::ir::variable_type> & type, reaver::vapor::codegen::_v1::codegen_context &)
 {
     if (type == ir::builtin_types().integer)
     {
@@ -65,14 +65,16 @@ std::u32string reaver::vapor::codegen::_v1::cxx::variable_name(const reaver::vap
     return U"__unnamed_variable__" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.unnamed_variable_index++));
 }
 
-std::u32string reaver::vapor::codegen::_v1::cxx::declaration_variable_name(const reaver::vapor::codegen::_v1::ir::variable & var, reaver::vapor::codegen::_v1::codegen_context & ctx)
+std::u32string reaver::vapor::codegen::_v1::cxx::declaration_variable_name(reaver::vapor::codegen::_v1::ir::variable & var, reaver::vapor::codegen::_v1::codegen_context & ctx)
 {
     if (var.name)
     {
         return *var.name;
     }
 
-    return U"__unnamed_variable__" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.unnamed_variable_index++));
+    auto name = U"__unnamed_variable__" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.unnamed_variable_index++));
+    var.name = name;
+    return name;
 }
 
 std::u32string reaver::vapor::codegen::_v1::cxx::function_name(const reaver::vapor::codegen::_v1::ir::function & fn, reaver::vapor::codegen::_v1::codegen_context &)

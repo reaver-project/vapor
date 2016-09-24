@@ -42,6 +42,7 @@ namespace reaver
                 {
                     std::shared_ptr<variable_type> type;
                     optional<std::u32string> name;
+                    bool declared = false;
                 };
 
                 struct label

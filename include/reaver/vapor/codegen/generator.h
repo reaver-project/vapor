@@ -65,8 +65,8 @@ namespace reaver
             public:
                 virtual ~code_generator() = default;
 
-                virtual std::u32string generate_declaration(const ir::variable &, codegen_context &) const = 0;
-                virtual std::u32string generate_declaration(const ir::function &, codegen_context &) const = 0;
+                virtual std::u32string generate_declaration(ir::variable &, codegen_context &) const = 0;
+                virtual std::u32string generate_declaration(ir::function &, codegen_context &) const = 0;
                 virtual std::u32string generate_declaration(const std::shared_ptr<ir::variable_type> &, codegen_context &) const = 0;
                 virtual std::u32string generate_definition(const ir::variable &, codegen_context &) const = 0;
                 virtual std::u32string generate_definition(const ir::function &, codegen_context &) const = 0;

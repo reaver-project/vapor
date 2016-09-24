@@ -94,6 +94,12 @@ namespace reaver
                                         { boost::typeindex::type_id<Instruction>() },
                                         { lhs, rhs },
                                         retval
+                                    },
+                                    codegen::ir::instruction{
+                                        none, none,
+                                        { boost::typeindex::type_id<codegen::ir::return_instruction>() },
+                                        {},
+                                        retval
                                     }
                                 }
                             };

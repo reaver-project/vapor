@@ -28,6 +28,7 @@
 
 #include "vapor/codegen/cxx.h"
 #include "vapor/codegen/ir/instruction.h"
+#include "vapor/codegen/cxx/names.h"
 
 namespace
 {
@@ -38,10 +39,7 @@ namespace
 
         auto generator = [](auto type_id) {
             using T = typename decltype(type_id)::type;
-
-            return [](const auto & inst, auto & ctx) {
-                return reaver::vapor::codegen::_v1::generate_cxx_instruction<T>(inst, ctx);
-            };
+            return &reaver::vapor::codegen::_v1::cxx::generate<T>;
         };
 
         static const std::unordered_map<boost::typeindex::type_index, dispatched_type, boost::hash<boost::typeindex::type_index>> dispatch_table = {
@@ -54,7 +52,41 @@ namespace
 
 std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate(const reaver::vapor::codegen::_v1::ir::instruction & inst, reaver::vapor::codegen::_v1::codegen_context & ctx) const
 {
-    return generate_helper<
+    std::u32string base;
+    if (inst.label)
+    {
+        base += *inst.label + U":\n";
+    }
+
+    if (inst.result.index() == 0)
+    {
+        auto && var = *get<std::shared_ptr<ir::variable>>(inst.result);
+        if (!var.declared)
+        {
+            var.declared = true;
+            base += cxx::type_name(var.type, ctx) + U" ";
+            cxx::declaration_variable_name(var, ctx); // generate a name
+            // this really needs its own interface
+        }
+    }
+
+    return base + generate_helper<
+        ir::declaration_instruction,
+        ir::function_call_instruction,
+        ir::materialization_instruction,
+        ir::pass_value_instruction,
+        ir::return_instruction,
+        ir::jump_instruction,
+        ir::phi_instruction,
+
+        ir::integer_addition_instruction,
+        ir::integer_multiplication_instruction
     >(inst, ctx);
+}
+
+template<>
+std::u32string reaver::vapor::codegen::_v1::cxx::generate<reaver::vapor::codegen::_v1::ir::pass_value_instruction>(const reaver::vapor::codegen::_v1::ir::instruction &, reaver::vapor::codegen::_v1::codegen_context &)
+{
+    return {};
 }
 
