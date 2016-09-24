@@ -55,7 +55,6 @@ namespace reaver
 
                 type(std::shared_ptr<scope> outer_scope) : _lex_scope{ outer_scope->clone_for_decl() }
                 {
-                    assert(0);
                 }
 
                 virtual ~type() = default;

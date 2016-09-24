@@ -59,7 +59,7 @@ std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::a
 {
     auto type = codegen::ir::make_type(
         U"__overload_set_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.overload_set_index++)),
-        _scope->codegen_ir(ctx),
+        get_scope()->codegen_ir(ctx),
         0,
         fmap(_functions, [&](auto && fn) {
             ctx.add_generated_function(fn);
@@ -67,7 +67,7 @@ std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::a
         })
     );
 
-    auto scopes = _scope->codegen_ir(ctx);
+    auto scopes = get_scope()->codegen_ir(ctx);
     scopes.emplace_back(type->name, codegen::ir::scope_type::type);
 
     fmap(type->members, [&](auto && member) {
@@ -91,7 +91,11 @@ std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::a
 
 reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::overload_set::_codegen_ir(ir_generation_context & ctx) const
 {
-    return { codegen::ir::make_variable(_type->codegen_type(ctx)) };
+    auto var = codegen::ir::make_variable(_type->codegen_type(ctx));
+    logger::dlog() << "here's inteesting";
+    var->scopes = _type->get_scope()->codegen_ir(ctx);
+    logger::dlog() << "here isn't";
+    return { std::move(var) };
 }
 
 void reaver::vapor::analyzer::_v1::function_declaration::print(std::ostream & os, std::size_t indent) const

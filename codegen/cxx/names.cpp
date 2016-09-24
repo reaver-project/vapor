@@ -59,7 +59,18 @@ std::u32string reaver::vapor::codegen::_v1::cxx::variable_name(const reaver::vap
 {
     if (var.name)
     {
-        return *var.name;
+        std::u32string ret;
+
+        fmap(var.scopes, [&](auto && scope) {
+            if (scope.type == ir::scope_type::function)
+            {
+                assert(0);
+            }
+            ret += scope.name + U"::";
+            return unit{};
+        });
+
+        return ret + *var.name;
     }
 
     return U"__unnamed_variable__" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.unnamed_variable_index++));

@@ -52,7 +52,7 @@ namespace reaver
             class overload_set_type : public type
             {
             public:
-                overload_set_type(std::shared_ptr<scope> lex_scope) : _scope{ std::move(lex_scope) }
+                overload_set_type(std::shared_ptr<scope> lex_scope) : type{ std::move(lex_scope) }
                 {
                 }
 
@@ -69,7 +69,6 @@ namespace reaver
                 virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const override;
 
                 std::vector<std::shared_ptr<function>> _functions;
-                std::shared_ptr<scope> _scope;
             };
 
             class function_declaration;

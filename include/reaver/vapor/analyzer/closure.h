@@ -39,7 +39,7 @@ namespace reaver
             class closure_type : public type
             {
             public:
-                closure_type(std::shared_ptr<scope> lex_scope, std::shared_ptr<expression> closure, std::shared_ptr<function> fn) : _closure{ std::move(closure) }, _function{ std::move(fn) }, _scope{ std::move(lex_scope) }
+                closure_type(std::shared_ptr<scope> lex_scope, std::shared_ptr<expression> closure, std::shared_ptr<function> fn) : type{ std::move(lex_scope) }, _closure{ std::move(closure) }, _function{ std::move(fn) }
                 {
                 }
 
@@ -63,7 +63,6 @@ namespace reaver
 
                 std::shared_ptr<expression> _closure;
                 std::shared_ptr<function> _function;
-                std::shared_ptr<scope> _scope;
             };
 
             class closure : public expression

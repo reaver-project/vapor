@@ -25,9 +25,9 @@
 
 std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::closure_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
-    auto type = codegen::ir::make_type(U"__closure_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.closure_index++)), _scope->codegen_ir(ctx), 0, {});
+    auto type = codegen::ir::make_type(U"__closure_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.closure_index++)), get_scope()->codegen_ir(ctx), 0, {});
 
-    auto scopes = _scope->codegen_ir(ctx);
+    auto scopes = get_scope()->codegen_ir(ctx);
     scopes.emplace_back(type->name, codegen::ir::scope_type::type);
 
     auto fn = _function->codegen_ir(ctx);
