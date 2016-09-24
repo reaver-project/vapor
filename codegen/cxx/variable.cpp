@@ -47,3 +47,20 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_definition(c
     return ret;
 }
 
+std::u32string reaver::vapor::codegen::_v1::cxx::value_of(const reaver::vapor::codegen::_v1::ir::value & val, reaver::vapor::codegen::_v1::codegen_context & ctx)
+{
+    return get<std::u32string>(fmap(val, make_overload_set(
+        [&](const codegen::ir::integer_value & val) {
+            std::ostringstream os;
+            os << val;
+            return boost::locale::conv::utf_to_utf<char32_t>(os.str());
+        },
+        [&](const std::shared_ptr<ir::variable> & var) {
+            return variable_name(*var, ctx);
+        },
+        [&](auto &&) {
+            assert(0);
+            return unit{};
+        }
+    )));
+}

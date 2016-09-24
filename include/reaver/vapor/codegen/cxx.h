@@ -25,6 +25,7 @@
 #include <memory>
 
 #include "generator.h"
+#include "ir/variable.h"
 
 namespace reaver
 {
@@ -49,6 +50,8 @@ namespace reaver
             {
                 template<typename T>
                 std::u32string generate(const ir::instruction &, codegen_context &);
+
+                std::u32string value_of(const ir::value &, codegen_context &);
             }
 
             inline std::shared_ptr<code_generator> make_cxx()

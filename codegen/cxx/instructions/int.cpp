@@ -27,24 +27,14 @@
 template<>
 std::u32string reaver::vapor::codegen::_v1::cxx::generate<reaver::vapor::codegen::_v1::ir::integer_addition_instruction>(const reaver::vapor::codegen::_v1::ir::instruction & inst, reaver::vapor::codegen::_v1::codegen_context & ctx)
 {
-    auto value = [&](auto && val) {
-        return get<std::u32string>(fmap(val, make_overload_set(
-            [&](const codegen::ir::integer_value & val) {
-                std::ostringstream os;
-                os << val;
-                return boost::locale::conv::utf_to_utf<char32_t>(os.str());
-            },
-            [&](const std::shared_ptr<ir::variable> & var) {
-                return variable_name(*var, ctx);
-            },
-            [&](auto &&) {
-                assert(0);
-                return unit{};
-            }
-        )));
-    };
-
     assert(inst.operands.size() == 2);
-    return variable_name(*get<std::shared_ptr<ir::variable>>(inst.result), ctx) + U" = " + value(inst.operands[0]) + U" + " + value(inst.operands[1]) + U";\n";
+    return variable_name(*get<std::shared_ptr<ir::variable>>(inst.result), ctx) + U" = " + value_of(inst.operands[0], ctx) + U" + " + value_of(inst.operands[1], ctx) + U";\n";
+}
+
+template<>
+std::u32string reaver::vapor::codegen::_v1::cxx::generate<reaver::vapor::codegen::_v1::ir::integer_multiplication_instruction>(const reaver::vapor::codegen::_v1::ir::instruction & inst, reaver::vapor::codegen::_v1::codegen_context & ctx)
+{
+    assert(inst.operands.size() == 2);
+    return variable_name(*get<std::shared_ptr<ir::variable>>(inst.result), ctx) + U" = " + value_of(inst.operands[0], ctx) + U" * " + value_of(inst.operands[1], ctx) + U";\n";
 }
 

@@ -27,28 +27,11 @@
 template<>
 std::u32string reaver::vapor::codegen::_v1::cxx::generate<reaver::vapor::codegen::_v1::ir::function_call_instruction>(const reaver::vapor::codegen::_v1::ir::instruction & inst, reaver::vapor::codegen::_v1::codegen_context & ctx)
 {
-    auto value = [&](auto && val) {
-        return get<std::u32string>(fmap(val, make_overload_set(
-            [&](const codegen::ir::integer_value & val) {
-                std::ostringstream os;
-                os << val;
-                return boost::locale::conv::utf_to_utf<char32_t>(os.str());
-            },
-            [&](const std::shared_ptr<ir::variable> & var) {
-                return variable_name(*var, ctx);
-            },
-            [&](auto &&) {
-                assert(0);
-                return unit{};
-            }
-        )));
-    };
-
     std::size_t actual_argument_offset = inst.operands.front().index() == 0 ? 2 : 1;
 
     std::u32string arguments;
     std::for_each(inst.operands.begin() + actual_argument_offset, inst.operands.end(), [&](auto && operand) {
-        arguments += value(operand);
+        arguments += value_of(operand, ctx);
         arguments += U", ";
     });
     if (inst.operands.size() > actual_argument_offset)

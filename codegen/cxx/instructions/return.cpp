@@ -27,24 +27,6 @@
 template<>
 std::u32string reaver::vapor::codegen::_v1::cxx::generate<reaver::vapor::codegen::_v1::ir::return_instruction>(const reaver::vapor::codegen::_v1::ir::instruction & inst, reaver::vapor::codegen::_v1::codegen_context & ctx)
 {
-    // need to get this out
-    auto value = [&](auto && val) {
-        return get<std::u32string>(fmap(val, make_overload_set(
-            [&](const codegen::ir::integer_value & val) {
-                std::ostringstream os;
-                os << val;
-                return boost::locale::conv::utf_to_utf<char32_t>(os.str());
-            },
-            [&](const std::shared_ptr<ir::variable> & var) {
-                return variable_name(*var, ctx);
-            },
-            [&](auto &&) {
-                assert(0);
-                return unit{};
-            }
-        )));
-    };
-
-    return U"return " + value(inst.result) + U";\n";
+    return U"return " + value_of(inst.result, ctx) + U";\n";
 }
 
