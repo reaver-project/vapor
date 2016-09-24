@@ -28,13 +28,13 @@ template<>
 std::u32string reaver::vapor::codegen::_v1::cxx::generate<reaver::vapor::codegen::_v1::ir::integer_addition_instruction>(const reaver::vapor::codegen::_v1::ir::instruction & inst, reaver::vapor::codegen::_v1::codegen_context & ctx)
 {
     assert(inst.operands.size() == 2);
-    return variable_name(*get<std::shared_ptr<ir::variable>>(inst.result), ctx) + U" = " + value_of(inst.operands[0], ctx) + U" + " + value_of(inst.operands[1], ctx) + U";\n";
+    return variable_of(inst.result, ctx) + U" = " + value_of(inst.operands[0], ctx) + U" + " + value_of(inst.operands[1], ctx) + U";\n";
 }
 
 template<>
 std::u32string reaver::vapor::codegen::_v1::cxx::generate<reaver::vapor::codegen::_v1::ir::integer_multiplication_instruction>(const reaver::vapor::codegen::_v1::ir::instruction & inst, reaver::vapor::codegen::_v1::codegen_context & ctx)
 {
     assert(inst.operands.size() == 2);
-    return variable_name(*get<std::shared_ptr<ir::variable>>(inst.result), ctx) + U" = " + value_of(inst.operands[0], ctx) + U" * " + value_of(inst.operands[1], ctx) + U";\n";
+    return variable_of(inst.result, ctx) + U" = " + value_of(inst.operands[0], ctx) + U" * " + value_of(inst.operands[1], ctx) + U";\n";
 }
 

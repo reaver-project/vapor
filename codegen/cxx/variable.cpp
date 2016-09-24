@@ -64,3 +64,10 @@ std::u32string reaver::vapor::codegen::_v1::cxx::value_of(const reaver::vapor::c
         }
     )));
 }
+
+std::u32string reaver::vapor::codegen::_v1::cxx::variable_of(const reaver::vapor::codegen::_v1::ir::value & val, reaver::vapor::codegen::_v1::codegen_context & ctx)
+{
+    assert(val.index() == 0);
+    return variable_name(*get<std::shared_ptr<ir::variable>>(val), ctx);
+}
+

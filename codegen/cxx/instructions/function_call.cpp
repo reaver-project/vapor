@@ -43,9 +43,9 @@ std::u32string reaver::vapor::codegen::_v1::cxx::generate<reaver::vapor::codegen
     std::u32string base_variable;
     if (actual_argument_offset == 2) // member call
     {
-        base_variable = cxx::variable_name(*get<std::shared_ptr<ir::variable>>(inst.operands.front()), ctx) + U".";
+        base_variable = variable_of(inst.operands.front(), ctx) + U".";
     }
 
-    return variable_name(*get<std::shared_ptr<ir::variable>>(inst.result), ctx) + U" = " + base_variable + get<codegen::ir::label>(inst.operands[actual_argument_offset - 1]).name + U"(" + arguments + U");\n";
+    return variable_of(inst.result, ctx) + U" = " + base_variable + get<codegen::ir::label>(inst.operands[actual_argument_offset - 1]).name + U"(" + arguments + U");\n";
 }
 
