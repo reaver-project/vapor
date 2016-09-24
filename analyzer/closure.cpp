@@ -77,12 +77,14 @@ reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
 
 reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::closure::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
+    auto var = codegen::ir::make_variable(get_variable()->get_type()->codegen_type(ctx));
+    var->scopes = _type->get_scope()->codegen_ir(ctx);
     return {
         codegen::ir::instruction{
             none, none,
             { boost::typeindex::type_id<codegen::ir::materialization_instruction>() },
             {},
-            { codegen::ir::make_variable(get_variable()->get_type()->codegen_type(ctx)) }
+            { std::move(var) }
         }
     };
 }
