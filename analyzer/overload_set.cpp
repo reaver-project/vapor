@@ -92,9 +92,7 @@ std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::a
 reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::overload_set::_codegen_ir(ir_generation_context & ctx) const
 {
     auto var = codegen::ir::make_variable(_type->codegen_type(ctx));
-    logger::dlog() << "here's inteesting";
     var->scopes = _type->get_scope()->codegen_ir(ctx);
-    logger::dlog() << "here isn't";
     return { std::move(var) };
 }
 

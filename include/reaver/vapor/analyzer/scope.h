@@ -180,16 +180,13 @@ namespace reaver
                     std::vector<codegen::ir::scope> scopes;
                     if (_parent)
                     {
-                        logger::dlog() << "recursing to parent";
                         scopes = _parent->codegen_ir(ctx);
                     }
 
                     if (!_name.empty())
                     {
-                        logger::dlog() << "giving name: " << utf8(_name);
                         scopes.emplace_back(_name, _scope_type);
                     }
-                    logger::dlog() << "returning";
                     return scopes;
                 }
 
