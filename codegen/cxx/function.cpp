@@ -97,7 +97,12 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_definition(c
         ret.pop_back();
         ret.push_back(U'\n');
     }
-    ret += U")\n{\n};\n";
+    ret += U")\n{\n";
+    fmap(fn.instructions, [&](auto && inst) {
+        ret += generate(inst, ctx);
+        return unit{};
+    });
+    ret += U"};\n";
 
     return ret;
 }

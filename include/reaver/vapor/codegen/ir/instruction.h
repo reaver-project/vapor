@@ -58,6 +58,11 @@ namespace reaver
                         return _type == boost::typeindex::type_id<T>();
                     }
 
+                    auto id() const
+                    {
+                        return _type;
+                    }
+
                     std::string explain() const
                     {
                         return _type.pretty_name();
