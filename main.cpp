@@ -20,6 +20,8 @@
  *
  **/
 
+#include <fstream>
+
 #include "vapor/utf8.h"
 #include "vapor/lexer.h"
 #include "vapor/parser.h"
@@ -71,6 +73,9 @@ int main() try
 
     reaver::logger::dlog() << "Generated code:";
     reaver::logger::dlog() << generated_code;
+
+    std::ofstream out{ "output/output.cpp", std::ios::trunc | std::ios::out };
+    out << generated_code;
 
     reaver::logger::default_logger().sync();
 }

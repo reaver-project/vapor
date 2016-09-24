@@ -6,3 +6,4 @@ vprc
 *.o
 .color_coded
 .ycm*
+output

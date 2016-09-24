@@ -136,7 +136,7 @@ std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyze
 
             auto label = U"__return_label_" + to_u32string(return_index);
             stmt.label = label;
-            labeled_return_values.emplace_back(codegen::ir::label{ std::move(label) });
+            labeled_return_values.emplace_back(codegen::ir::label{ std::move(label), {} });
             labeled_return_values.emplace_back(stmt.result);
 
             return unit{};
@@ -158,7 +158,7 @@ std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyze
                 }
 
                 stmt.instruction = boost::typeindex::type_id<codegen::ir::jump_instruction>();
-                stmt.operands = { codegen::ir::label{ U"__return_phi" } };
+                stmt.operands = { codegen::ir::label{ U"__return_phi", {} } };
 
                 return unit{};
             });

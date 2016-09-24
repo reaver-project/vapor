@@ -88,11 +88,15 @@ reaver::future<> reaver::vapor::analyzer::_v1::postfix_expression::_analyze()
 reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::postfix_expression::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
     auto base_expr_instructions = _base_expr->codegen_ir(ctx);
+    auto base_variable_value = base_expr_instructions.back().result;
+    assert(base_variable_value.index() == 0);
+    auto base_variable = get<std::shared_ptr<codegen::ir::variable>>(base_variable_value);
     auto arguments_instructions = fmap(_arguments, [&](auto && arg){ return arg->codegen_ir(ctx); });
 
     auto base_expr_variable = base_expr_instructions.back().result;
     auto arguments_values = fmap(arguments_instructions, [](auto && insts){ return insts.back().result; });
     arguments_values.insert(arguments_values.begin(), _overload->call_operand_ir(ctx));
+    arguments_values.insert(arguments_values.begin(), std::move(base_variable_value));
 
     auto postfix_expr_instruction = codegen::ir::instruction{
         none, none,

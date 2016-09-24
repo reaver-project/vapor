@@ -96,7 +96,7 @@ namespace reaver
 
                 codegen::ir::value call_operand_ir(ir_generation_context & ctx) const
                 {
-                    return { codegen::ir::label{ codegen_ir(ctx).name } };
+                    return { codegen::ir::label{ codegen_ir(ctx).name, {} } };
                 }
 
             private:

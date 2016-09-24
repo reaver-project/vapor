@@ -27,6 +27,7 @@
 
 #include "integer.h"
 #include "../../utf8.h"
+#include "scope.h"
 
 namespace reaver
 {
@@ -48,6 +49,7 @@ namespace reaver
                 struct label
                 {
                     std::u32string name;
+                    std::vector<scope> scopes;
                 };
 
                 inline std::shared_ptr<variable> make_variable(std::shared_ptr<variable_type> type, optional<std::u32string> name = none)

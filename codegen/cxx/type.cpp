@@ -46,10 +46,12 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_definition(c
     }
 
     std::u32string members;
+
     fmap(type->members, [&](auto && member) {
         fmap(member, make_overload_set(
             [&](codegen::ir::function & fn) {
                 members += generate_declaration(fn, ctx);
+                ctx.put_into_global += generate_definition(fn, ctx);
                 return unit{};
             },
             [&](auto &&) {
@@ -59,6 +61,7 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_definition(c
         ));
         return unit{};
     });
+
     return U"struct " + cxx::type_name(type, ctx) + U" {\n" + members + U"};\n";
 }
 
