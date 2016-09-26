@@ -85,7 +85,12 @@ namespace reaver
             protected:
                 std::shared_ptr<expression> _shared_from_this()
                 {
-                    return std::dynamic_pointer_cast<expression>(shared_from_this());
+                    return std::static_pointer_cast<expression>(shared_from_this());
+                }
+
+                std::weak_ptr<expression> _weak_from_this()
+                {
+                    return std::static_pointer_cast<expression>(shared_from_this());
                 }
 
                 virtual future<std::shared_ptr<statement>> _simplify(optimization_context & ctx) override final

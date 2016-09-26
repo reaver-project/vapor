@@ -81,7 +81,7 @@ namespace reaver
             class expression_variable : public variable
             {
             public:
-                expression_variable(std::shared_ptr<expression> expr, std::shared_ptr<type> type) : _expression{ expr }, _type{ type }
+                expression_variable(std::weak_ptr<expression> expr, std::shared_ptr<type> type) : _expression{ expr }, _type{ type }
                 {
                 }
 
@@ -94,11 +94,11 @@ namespace reaver
                 virtual future<std::shared_ptr<variable>> _simplify(optimization_context & ctx) override;
                 virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
-                std::shared_ptr<expression> _expression;
+                std::weak_ptr<expression> _expression;
                 std::shared_ptr<type> _type;
             };
 
-            inline std::shared_ptr<variable> make_expression_variable(std::shared_ptr<expression> expr, std::shared_ptr<type> type)
+            inline std::shared_ptr<variable> make_expression_variable(std::weak_ptr<expression> expr, std::shared_ptr<type> type)
             {
                 return std::make_shared<expression_variable>(expr, type);
             }

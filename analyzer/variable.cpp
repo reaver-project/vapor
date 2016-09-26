@@ -26,14 +26,15 @@
 reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::expression_variable::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
     return {
-        _expression->codegen_ir(ctx).back().result
+        _expression.lock()->codegen_ir(ctx).back().result
     };
 }
 
 reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::variable>> reaver::vapor::analyzer::_v1::expression_variable::_simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
-    return _expression->simplify_expr(ctx)
+    return _expression.lock()->simplify_expr(ctx)
         .then([&](auto && simplified) {
+            assert(simplified.use_count() > 1 || !"shit.");
             _expression = std::move(simplified);
             return shared_from_this();
         });

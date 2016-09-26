@@ -70,9 +70,8 @@ reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
             },
             _parse.range
         );
-        assert(!"closure: need to move to *some* weak pointers!");
-        _type = std::make_shared<closure_type>(_scope, _shared_from_this(), std::move(function));
-        _set_variable(make_expression_variable(_shared_from_this(), _type));
+        _type = std::make_shared<closure_type>(_scope, _weak_from_this(), std::move(function));
+        _set_variable(make_expression_variable(_weak_from_this(), _type));
     });
 }
 

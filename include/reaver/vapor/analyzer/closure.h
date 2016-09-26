@@ -39,7 +39,7 @@ namespace reaver
             class closure_type : public type
             {
             public:
-                closure_type(std::shared_ptr<scope> lex_scope, std::shared_ptr<expression> closure, std::shared_ptr<function> fn) : type{ std::move(lex_scope) }, _closure{ std::move(closure) }, _function{ std::move(fn) }
+                closure_type(std::shared_ptr<scope> lex_scope, std::weak_ptr<expression> closure, std::shared_ptr<function> fn) : type{ std::move(lex_scope) }, _closure{ std::move(closure) }, _function{ std::move(fn) }
                 {
                 }
 
@@ -61,7 +61,7 @@ namespace reaver
             private:
                 virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const override;
 
-                std::shared_ptr<expression> _closure;
+                std::weak_ptr<expression> _closure;
                 std::shared_ptr<function> _function;
             };
 
