@@ -73,11 +73,33 @@ namespace reaver
                     return _variable->get_type();
                 }
 
+                future<std::shared_ptr<expression>> simplify_expr(optimization_context & ctx)
+                {
+                    return ctx.get_future_or_init(this, [&]() {
+                        return make_ready_future().then([&]{
+                            return _simplify_expr(ctx);
+                        });
+                    });
+                }
+
             protected:
+                std::shared_ptr<expression> _shared_from_this()
+                {
+                    return std::enable_shared_from_this<expression>::shared_from_this();
+                }
+
+                virtual future<std::shared_ptr<statement>> _simplify(optimization_context & ctx) override final
+                {
+                    return simplify_expr(ctx).then([&](auto && simplified) {
+                        return static_cast<std::shared_ptr<statement>>(std::move(simplified));
+                    });
+                }
+
+                virtual future<std::shared_ptr<expression>> _simplify_expr(optimization_context &) = 0;
+
                 void _set_variable(std::shared_ptr<variable> var)
                 {
                     assert(var);
-                    assert(!_variable);
                     _variable = var;
                 }
 
@@ -89,6 +111,7 @@ namespace reaver
             {
             private:
                 virtual future<> _analyze() override;
+                virtual future<std::shared_ptr<expression>> _simplify_expr(optimization_context &) override;
 
                 virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
                 {

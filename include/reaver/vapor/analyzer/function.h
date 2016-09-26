@@ -31,6 +31,7 @@
 #include "../range.h"
 #include "../codegen/ir/function.h"
 #include "ir_context.h"
+#include "optimization_context.h"
 
 namespace reaver
 {
@@ -73,6 +74,9 @@ namespace reaver
                     });
                     return ret;
                 }
+
+                future<> simplify(optimization_context &);
+                future<> simplify(optimization_context &, std::vector<std::shared_ptr<variable>>);
 
                 codegen::ir::function codegen_ir(ir_generation_context & ctx) const
                 {

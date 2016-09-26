@@ -20,22 +20,15 @@
  *
  **/
 
-#include "vapor/analyzer/variable.h"
-#include "vapor/analyzer/expression.h"
+#include "vapor/analyzer/function.h"
 
-reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::expression_variable::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
+reaver::future<> reaver::vapor::analyzer::_v1::function::simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
-    return {
-        _expression->codegen_ir(ctx).back().result
-    };
+    assert(0);
 }
 
-reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::variable>> reaver::vapor::analyzer::_v1::expression_variable::_simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+reaver::future<> reaver::vapor::analyzer::_v1::function::simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx, std::vector<std::shared_ptr<variable>>)
 {
-    return _expression->simplify_expr(ctx)
-        .then([&](auto && simplified) {
-            _expression = std::move(simplified);
-            return shared_from_this();
-        });
+    assert(0);
 }
 

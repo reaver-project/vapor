@@ -70,9 +70,20 @@ reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
             },
             _parse.range
         );
-        _type = std::make_shared<closure_type>(_scope, shared_from_this(), std::move(function));
-        _set_variable(make_expression_variable(shared_from_this(), _type));
+        assert(!"closure: need to move to *some* weak pointers!");
+        _type = std::make_shared<closure_type>(_scope, _shared_from_this(), std::move(function));
+        _set_variable(make_expression_variable(_shared_from_this(), _type));
     });
+}
+
+reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::expression>> reaver::vapor::analyzer::_v1::closure::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+{
+    return _body->simplify(ctx)
+        .then([&](auto && simplified) {
+            _body = std::dynamic_pointer_cast<block>(std::move(simplified));
+            assert(0);
+            return _shared_from_this();
+        });
 }
 
 reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::closure::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const

@@ -52,6 +52,7 @@ namespace reaver
 
             private:
                 virtual future<> _analyze() override;
+                virtual future<std::shared_ptr<expression>> _simplify_expr(optimization_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::id_expression & _parse;

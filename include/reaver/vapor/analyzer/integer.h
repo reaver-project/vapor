@@ -163,6 +163,11 @@ namespace reaver
                     return make_ready_future();
                 }
 
+                virtual future<std::shared_ptr<expression>> _simplify_expr(optimization_context &) override
+                {
+                    return make_ready_future(_shared_from_this());
+                }
+
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::integer_literal & _parse;

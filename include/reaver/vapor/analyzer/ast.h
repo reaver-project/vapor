@@ -44,6 +44,7 @@ namespace reaver
                         {
                             auto ret = std::make_shared<module>(m);
                             ret->analyze();
+                            ret->simplify();
                             return ret;
                         });
                     }

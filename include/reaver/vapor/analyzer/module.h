@@ -53,6 +53,7 @@ namespace reaver
                 module(const parser::module & parse);
 
                 void analyze();
+                void simplify();
 
                 std::u32string name() const
                 {

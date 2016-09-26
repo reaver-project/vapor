@@ -81,7 +81,23 @@ reaver::future<> reaver::vapor::analyzer::_v1::postfix_expression::_analyze()
             assert(overload);
             _overload = std::move(overload);
 
-            _set_variable(make_expression_variable(shared_from_this(), _overload->return_type()));
+            _set_variable(make_expression_variable(_shared_from_this(), _overload->return_type()));
+        });
+}
+
+reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::expression>> reaver::vapor::analyzer::_v1::postfix_expression::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+{
+    return when_all(fmap(_arguments, [&](auto && expr) {
+            return expr->simplify_expr(ctx);
+        })).then([&](auto && simplified) {
+            _arguments = std::move(simplified);
+            return _base_expr->simplify_expr(ctx);
+        }).then([&](auto && simplified) {
+            _base_expr = std::move(simplified);
+            assert(0);
+            // return _overload->simplify(ctx);
+        }).then([&](){
+            return _shared_from_this();
         });
 }
 

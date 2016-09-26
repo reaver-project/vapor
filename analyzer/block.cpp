@@ -99,6 +99,29 @@ reaver::future<> reaver::vapor::analyzer::_v1::block::_analyze()
     return fut;
 }
 
+reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::statement>> reaver::vapor::analyzer::_v1::block::_simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+{
+    auto fut = when_all(
+        fmap(_statements, [&](auto && stmt) { return stmt->simplify(ctx); })
+    ).then([&](auto && simplified) {
+        _statements = std::move(simplified);
+    });
+
+    fmap(_value_expr, [&](auto && expr) {
+        fut = fut.then([&, expr]{
+            return expr->simplify_expr(ctx);
+        }).then([&](auto && simplified) {
+            _value_expr = std::move(simplified);
+        });
+        return unit{};
+    });
+
+    return fut.then([&]{
+        assert(0);
+        return shared_from_this();
+    });
+}
+
 std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyzer::_v1::block::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
     auto statements = mbind(_statements, [&](auto && stmt) {

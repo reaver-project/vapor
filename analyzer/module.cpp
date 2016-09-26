@@ -53,6 +53,26 @@ void reaver::vapor::analyzer::_v1::module::analyze()
     }
 }
 
+void reaver::vapor::analyzer::_v1::module::simplify()
+{
+    bool cont = true;
+    while (cont)
+    {
+        optimization_context ctx{};
+
+        auto all = when_all(fmap(_statements, [&](auto && stmt) {
+            return stmt->simplify(ctx);
+        }));
+
+        while (!all.try_get())
+        {
+            std::this_thread::sleep_for(std::chrono::nanoseconds(10000));
+        }
+
+        cont = ctx.did_something_happen();
+    }
+}
+
 void reaver::vapor::analyzer::_v1::module::print(std::ostream & os, std::size_t indent) const
 {
     auto in = std::string(indent, ' ');

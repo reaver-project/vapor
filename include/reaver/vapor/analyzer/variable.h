@@ -28,6 +28,7 @@
 #include "../codegen/ir/variable.h"
 #include "../codegen/ir/function.h"
 #include "ir_context.h"
+#include "optimization_context.h"
 
 namespace reaver
 {
@@ -40,12 +41,21 @@ namespace reaver
 
             using variable_ir = std::vector<variant<codegen::ir::value, codegen::ir::function>>;
 
-            class variable
+            class variable : public std::enable_shared_from_this<variable>
             {
             public:
                 virtual ~variable() = default;
 
                 virtual std::shared_ptr<type> get_type() const = 0;
+
+                future<std::shared_ptr<variable>> simplify(optimization_context & ctx)
+                {
+                    return ctx.get_future_or_init(this, [&]() {
+                        return make_ready_future().then([&]{
+                            return _simplify(ctx);
+                        });
+                    });
+                }
 
                 variable_ir codegen_ir(ir_generation_context & ctx) const
                 {
@@ -58,6 +68,11 @@ namespace reaver
                 }
 
             private:
+                virtual future<std::shared_ptr<variable>> _simplify(optimization_context &)
+                {
+                    return make_ready_future(shared_from_this());
+                }
+
                 virtual variable_ir _codegen_ir(ir_generation_context &) const = 0;
 
                 mutable optional<variable_ir> _ir;
@@ -76,6 +91,7 @@ namespace reaver
                 }
 
             private:
+                virtual future<std::shared_ptr<variable>> _simplify(optimization_context & ctx) override;
                 virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
                 std::shared_ptr<expression> _expression;

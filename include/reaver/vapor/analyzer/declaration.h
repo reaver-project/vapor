@@ -94,6 +94,11 @@ namespace reaver
                     });
                 }
 
+                virtual future<std::shared_ptr<statement>> _simplify(optimization_context & ctx) override
+                {
+                    return _init_expr->simplify(ctx);
+                }
+
                 virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
                 {
                     auto declared_var = codegen::ir::make_variable(_declared_symbol->get_type()->codegen_type(ctx), _name);

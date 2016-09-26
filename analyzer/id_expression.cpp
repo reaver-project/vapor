@@ -46,6 +46,15 @@ reaver::future<> reaver::vapor::analyzer::_v1::id_expression::_analyze()
         });
 }
 
+reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::expression>> reaver::vapor::analyzer::_v1::id_expression::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+{
+    return get_variable()->simplify(ctx)
+        .then([&](auto && simplified) {
+            assert(0);
+            return _shared_from_this();
+        });
+}
+
 reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::id_expression::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
     auto result = codegen::ir::make_variable(get_variable()->get_type()->codegen_type(ctx), name());

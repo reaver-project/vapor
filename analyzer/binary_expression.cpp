@@ -54,7 +54,23 @@ reaver::future<> reaver::vapor::analyzer::_v1::binary_expression::_analyze()
             _overload = resolve_overload(_lhs->get_type(), _rhs->get_type(), _op.type, _scope);
             assert(_overload);
 
-            this->_set_variable(make_expression_variable(this->shared_from_this(), _overload->return_type()));
+            this->_set_variable(make_expression_variable(this->_shared_from_this(), _overload->return_type()));
+        });
+}
+
+reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::expression>> reaver::vapor::analyzer::_v1::binary_expression::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+{
+    return when_all(
+            _lhs->simplify_expr(ctx),
+            _rhs->simplify_expr(ctx)
+        ).then([&](auto && simplified) {
+            _lhs = std::move(get<0>(simplified));
+            _rhs = std::move(get<1>(simplified));
+            return _overload->simplify(ctx);
+        }).then([&]() {
+            return _overload->simplify(ctx, { _lhs->get_variable(), _rhs->get_variable() });
+        }).then([&]() {
+            return _shared_from_this();
         });
 }
 

@@ -36,6 +36,7 @@ namespace reaver
             public:
                 unary_expression(const parser::unary_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }
                 {
+                    assert(0);
                 }
 
                 virtual void print(std::ostream &, std::size_t) const override
@@ -45,6 +46,11 @@ namespace reaver
 
             private:
                 virtual future<> _analyze() override
+                {
+                    assert(0);
+                }
+
+                virtual future<std::shared_ptr<expression>> _simplify_expr(optimization_context &) override
                 {
                     assert(0);
                 }

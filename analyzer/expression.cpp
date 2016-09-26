@@ -80,6 +80,16 @@ reaver::future<> reaver::vapor::analyzer::_v1::expression_list::_analyze()
         .then([&]{ _set_variable(value.back()->get_variable()); });
 }
 
+reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::expression>> reaver::vapor::analyzer::_v1::expression_list::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+{
+    return when_all(fmap(value, [&](auto && expr) { return expr->simplify_expr(ctx); }))
+        .then([&](auto && simplified) {
+            value = std::move(simplified);
+            assert(0);
+            return _shared_from_this();
+        });
+}
+
 void reaver::vapor::analyzer::_v1::expression_list::print(std::ostream & os, std::size_t indent) const
 {
     auto in = std::string(indent, ' ');

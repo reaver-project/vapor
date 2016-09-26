@@ -42,7 +42,7 @@ namespace reaver
 
                 virtual std::vector<std::shared_ptr<const return_statement>> get_returns() const override
                 {
-                    return { shared_from_this() };
+                    return { std::enable_shared_from_this<return_statement>::shared_from_this() };
                 }
 
                 std::shared_ptr<type> get_returned_type() const
@@ -61,6 +61,14 @@ namespace reaver
                 virtual future<> _analyze() override
                 {
                     return _value_expr->analyze();
+                }
+
+                virtual future<std::shared_ptr<statement>> _simplify(optimization_context & ctx) override
+                {
+                    return _value_expr->simplify_expr(ctx).then([&](auto && simplified) {
+                            _value_expr = std::move(simplified);
+                            return std::enable_shared_from_this<statement>::shared_from_this();
+                        });
                 }
 
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
