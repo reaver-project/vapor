@@ -43,7 +43,7 @@ namespace reaver
         {
             class scope;
 
-            class expression : public statement, public std::enable_shared_from_this<expression>
+            class expression : public statement
             {
             public:
                 expression() = default;
@@ -85,7 +85,7 @@ namespace reaver
             protected:
                 std::shared_ptr<expression> _shared_from_this()
                 {
-                    return std::enable_shared_from_this<expression>::shared_from_this();
+                    return std::dynamic_pointer_cast<expression>(shared_from_this());
                 }
 
                 virtual future<std::shared_ptr<statement>> _simplify(optimization_context & ctx) override final
