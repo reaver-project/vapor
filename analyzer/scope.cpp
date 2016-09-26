@@ -90,40 +90,12 @@ bool reaver::vapor::analyzer::_v1::scope::init(const std::u32string & name, std:
 
 reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::symbol>> reaver::vapor::analyzer::_v1::scope::get_future(const std::u32string & name)
 {
-    {
-        _shlock lock{ _lock };
-        auto it = _symbol_futures.find(name);
-        if (it != _symbol_futures.end())
-        {
-            return it->second;
-        }
-
-        auto value_it = _symbols.find(name);
-        if (value_it != _symbols.end())
-        {
-            return _symbol_futures.emplace(name, make_ready_future(value_it->second)).first->second;
-        }
-
-        if (_is_closed)
-        {
-            return make_exceptional_future<std::shared_ptr<symbol>>(failed_lookup{ name });
-        }
-    }
-
-    _ulock lock{ _lock };
-
     // need to repeat due to a logical race between the check before
     // and re-locking the lock
     auto it = _symbol_futures.find(name);
     if (it != _symbol_futures.end())
     {
         return it->second;
-    }
-
-    auto value_it = _symbols.find(name);
-    if (value_it != _symbols.end())
-    {
-        return _symbol_futures.emplace(name, make_ready_future(value_it->second)).first->second;
     }
 
     auto pair = make_promise<std::shared_ptr<symbol>>();
