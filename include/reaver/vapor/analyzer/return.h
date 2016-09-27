@@ -32,7 +32,7 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            class return_statement : public statement, public std::enable_shared_from_this<return_statement>
+            class return_statement : public statement
             {
             public:
                 return_statement(const parser::return_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }
@@ -42,7 +42,7 @@ namespace reaver
 
                 virtual std::vector<std::shared_ptr<const return_statement>> get_returns() const override
                 {
-                    return { std::enable_shared_from_this<return_statement>::shared_from_this() };
+                    return { _shared_from_this() };
                 }
 
                 std::shared_ptr<type> get_returned_type() const
@@ -58,6 +58,16 @@ namespace reaver
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
+                std::shared_ptr<return_statement> _shared_from_this()
+                {
+                    return std::static_pointer_cast<return_statement>(shared_from_this());
+                }
+
+                std::shared_ptr<const return_statement> _shared_from_this() const
+                {
+                    return std::static_pointer_cast<const return_statement>(shared_from_this());
+                }
+
                 virtual future<> _analyze() override
                 {
                     return _value_expr->analyze();

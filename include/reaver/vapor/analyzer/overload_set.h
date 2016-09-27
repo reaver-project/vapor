@@ -94,7 +94,7 @@ namespace reaver
                 std::shared_ptr<overload_set_type> _type;
             };
 
-            class function_declaration : public statement, public std::enable_shared_from_this<function_declaration>
+            class function_declaration : public statement
             {
             public:
                 function_declaration(const parser::function & parse, std::shared_ptr<scope> scope)
@@ -115,6 +115,11 @@ namespace reaver
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
+                std::shared_ptr<function_declaration> _shared_from_this()
+                {
+                    return std::static_pointer_cast<function_declaration>(shared_from_this());
+                }
+
                 virtual future<> _analyze() override;
                 virtual future<std::shared_ptr<statement>> _simplify(optimization_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;

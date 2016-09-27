@@ -53,7 +53,7 @@ void reaver::vapor::analyzer::_v1::scope::close()
         _close_promise->set();
     }
 
-    if (_is_shadowing_boundary && _parent)
+    if (!_is_shadowing_boundary && _parent)
     {
         _parent->close();
     }
@@ -61,6 +61,8 @@ void reaver::vapor::analyzer::_v1::scope::close()
 
 bool reaver::vapor::analyzer::_v1::scope::init(const std::u32string & name, std::shared_ptr<reaver::vapor::analyzer::_v1::symbol> symb)
 {
+    assert(!_is_closed);
+
     _ulock lock{ _lock };
 
     for (auto scope = shared_from_this(); scope; scope = scope->_parent)
@@ -77,25 +79,45 @@ bool reaver::vapor::analyzer::_v1::scope::init(const std::u32string & name, std:
     }
 
     _symbols.emplace(name, symb);
-
-    auto promise_it = _symbol_promises.find(name);
-    if (promise_it != _symbol_promises.end())
-    {
-        promise_it->second.set(symb);
-        _symbol_promises.erase(promise_it);
-    }
-
     return true;
 }
 
 reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::symbol>> reaver::vapor::analyzer::_v1::scope::get_future(const std::u32string & name)
 {
+    {
+        _shlock lock{ _lock };
+        auto it = _symbol_futures.find(name);
+        if (it != _symbol_futures.end())
+        {
+            return it->second;
+        }
+
+        auto value_it = _symbols.find(name);
+        if (value_it != _symbols.end())
+        {
+            return _symbol_futures.emplace(name, make_ready_future(value_it->second)).first->second;
+        }
+
+        if (_is_closed)
+        {
+            return make_exceptional_future<std::shared_ptr<symbol>>(failed_lookup{ name });
+        }
+    }
+
+    _ulock lock{ _lock };
+
     // need to repeat due to a logical race between the check before
     // and re-locking the lock
     auto it = _symbol_futures.find(name);
     if (it != _symbol_futures.end())
     {
         return it->second;
+    }
+
+    auto value_it = _symbols.find(name);
+    if (_is_closed && value_it != _symbols.end())
+    {
+        return _symbol_futures.emplace(name, make_ready_future(value_it->second)).first->second;
     }
 
     auto pair = make_promise<std::shared_ptr<symbol>>();

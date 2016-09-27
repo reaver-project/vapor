@@ -133,7 +133,7 @@ reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
         auto set = _scope->get(_parse.name.string);
         auto overloads = std::dynamic_pointer_cast<overload_set>(set->get_variable());
         assert(overloads);
-        overloads->add_function(std::enable_shared_from_this<function_declaration>::shared_from_this());
+        overloads->add_function(_shared_from_this());
     });
 }
 

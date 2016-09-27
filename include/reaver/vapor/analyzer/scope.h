@@ -125,6 +125,8 @@ namespace reaver
                 template<typename F>
                 auto get_or_init(const std::u32string & name, F init)
                 {
+                    assert(!_is_closed);
+
                     {
                         _shlock lock{ _lock };
                         auto it = _symbols.find(name);
@@ -146,13 +148,6 @@ namespace reaver
 
                     auto init_v = init();
                     _symbols.emplace(name, init_v);
-                    auto promise_it = _symbol_promises.find(name);
-                    if (promise_it != _symbol_promises.end())
-                    {
-                        promise_it->second.set(init_v);
-                        _symbol_promises.erase(promise_it);
-                    }
-
                     return init_v;
                 }
 
