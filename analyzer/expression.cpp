@@ -121,3 +121,10 @@ std::shared_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyze
     return ret;
 }
 
+void reaver::vapor::analyzer::_v1::variable_expression::print(std::ostream & os, std::size_t indent) const
+{
+    auto in = std::string(indent, ' ');
+    os << in << "variable expression:\n";
+    os << in << "type: " << get_variable()->get_type()->explain() << '\n';
+}
+

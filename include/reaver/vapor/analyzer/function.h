@@ -43,6 +43,7 @@ namespace reaver
             class block;
 
             using function_codegen = reaver::function<codegen::ir::function (ir_generation_context &)>;
+            using function_eval = reaver::function<std::shared_ptr<expression> (optimization_context &, std::vector<std::shared_ptr<variable>>)>;
 
             class function : public std::enable_shared_from_this<function>
             {
@@ -77,7 +78,7 @@ namespace reaver
                 }
 
                 future<> simplify(optimization_context &);
-                future<> simplify(optimization_context &, std::vector<std::shared_ptr<variable>>);
+                future<std::shared_ptr<expression>> simplify(optimization_context &, std::vector<std::shared_ptr<variable>>);
 
                 codegen::ir::function codegen_ir(ir_generation_context & ctx) const
                 {
@@ -109,6 +110,11 @@ namespace reaver
                     _body = std::move(body);
                 }
 
+                void set_eval(function_eval eval)
+                {
+                    _compile_time_eval = std::move(eval);
+                }
+
             private:
                 std::string _explanation;
                 optional<range_type> _range;
@@ -118,6 +124,8 @@ namespace reaver
                 std::vector<std::shared_ptr<type>> _argument_types;
                 function_codegen _codegen;
                 mutable optional<codegen::ir::function> _ir;
+
+                optional<function_eval> _compile_time_eval;
             };
 
             inline std::shared_ptr<function> make_function(std::string expl, std::shared_ptr<type> return_type, std::vector<std::shared_ptr<type>> arguments, function_codegen codegen, optional<range_type> range = none)

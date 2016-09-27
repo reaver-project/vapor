@@ -99,7 +99,13 @@ reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::expression>> reaver
             auto args = fmap(_arguments, [&](auto && expr){ return expr->get_variable(); });
             args.insert(args.begin(), _base_expr->get_variable());
             return _overload->simplify(ctx, std::move(args));
-        }).then([&](){
+        }).then([&](auto && simplified){
+            if (simplified)
+            {
+                ctx.something_heppened();
+                return std::move(simplified);
+            }
+
             return _shared_from_this();
         });
 }

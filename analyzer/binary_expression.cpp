@@ -64,12 +64,18 @@ reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::expression>> reaver
             _lhs->simplify_expr(ctx),
             _rhs->simplify_expr(ctx)
         ).then([&](auto && simplified) {
-            _lhs = std::move(get<0>(simplified));
-            _rhs = std::move(get<1>(simplified));
+            _lhs = get<0>(simplified);
+            _rhs = get<1>(simplified);
             return _overload->simplify(ctx);
         }).then([&]() {
             return _overload->simplify(ctx, { _lhs->get_variable(), _rhs->get_variable() });
-        }).then([&]() {
+        }).then([&, self = _shared_from_this()](auto && simplified) {
+            if (simplified)
+            {
+                ctx.something_heppened();
+                return std::move(simplified);
+            }
+
             return _shared_from_this();
         });
 }

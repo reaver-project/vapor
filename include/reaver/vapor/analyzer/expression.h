@@ -76,7 +76,7 @@ namespace reaver
                 future<std::shared_ptr<expression>> simplify_expr(optimization_context & ctx)
                 {
                     return ctx.get_future_or_init(this, [&]() {
-                        return make_ready_future().then([&]{
+                        return make_ready_future().then([&, self = _shared_from_this()]{
                             return _simplify_expr(ctx);
                         });
                     });
@@ -131,6 +131,43 @@ namespace reaver
                 range_type range;
                 std::vector<std::shared_ptr<expression>> value;
             };
+
+            class variable_expression : public expression
+            {
+            public:
+                variable_expression(std::shared_ptr<variable> var)
+                {
+                    _set_variable(std::move(var));
+                }
+
+                virtual void print(std::ostream & os, std::size_t indent) const override;
+
+            private:
+                virtual future<> _analyze() override
+                {
+                    return make_ready_future();
+                }
+
+                virtual future<std::shared_ptr<expression>> _simplify_expr(optimization_context &) override
+                {
+                    return make_ready_future(_shared_from_this());
+                }
+
+                virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
+                {
+                    return { codegen::ir::instruction {
+                        none, none,
+                        { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
+                        {},
+                        codegen::ir::value{ get<0>(get_variable()->codegen_ir(ctx).back()) }
+                    } };
+                }
+            };
+
+            inline auto make_variable_expression(std::shared_ptr<variable> var)
+            {
+                return std::make_shared<variable_expression>(std::move(var));
+            }
 
             std::shared_ptr<expression> preanalyze_expression(const parser::expression & expr, const std::shared_ptr<scope> & lex_scope);
             std::shared_ptr<expression> preanalyze_expression(const parser::expression_list & expr, const std::shared_ptr<scope> & lex_scope);

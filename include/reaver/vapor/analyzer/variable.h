@@ -67,6 +67,11 @@ namespace reaver
                     return *_ir;
                 }
 
+                virtual bool is_constant() const
+                {
+                    return false;
+                }
+
             private:
                 virtual future<std::shared_ptr<variable>> _simplify(optimization_context &)
                 {

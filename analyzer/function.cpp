@@ -21,14 +21,35 @@
  **/
 
 #include "vapor/analyzer/function.h"
+#include "vapor/analyzer/block.h"
 
 reaver::future<> reaver::vapor::analyzer::_v1::function::simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
+    auto body = _body.lock();
+    if (body)
+    {
+        return body->simplify(ctx)
+            .then([&](auto && simplified) {
+                _body = std::dynamic_pointer_cast<block>(std::move(simplified));
+            });
+    }
+
     return make_ready_future();
 }
 
-reaver::future<> reaver::vapor::analyzer::_v1::function::simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx, std::vector<std::shared_ptr<variable>>)
+reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::expression>> reaver::vapor::analyzer::_v1::function::simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx, std::vector<std::shared_ptr<variable>> args)
 {
-    return make_ready_future();
+    if (auto body = _body.lock())
+    {
+        // need to do something smart with arguments in this case
+        return make_ready_future(std::shared_ptr<expression>());
+    }
+
+    if (_compile_time_eval)
+    {
+        return make_ready_future((*_compile_time_eval)(ctx, args));
+    }
+
+    assert(0);
 }
 
