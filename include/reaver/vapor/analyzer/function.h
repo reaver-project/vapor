@@ -40,6 +40,7 @@ namespace reaver
         namespace analyzer { inline namespace _v1
         {
             class type;
+            class block;
 
             using function_codegen = reaver::function<codegen::ir::function (ir_generation_context &)>;
 
@@ -103,10 +104,16 @@ namespace reaver
                     return { codegen::ir::label{ codegen_ir(ctx).name, {} } };
                 }
 
+                void set_body(std::weak_ptr<block> body)
+                {
+                    _body = std::move(body);
+                }
+
             private:
                 std::string _explanation;
                 optional<range_type> _range;
 
+                std::weak_ptr<block> _body;
                 std::shared_ptr<type> _return_type;
                 std::vector<std::shared_ptr<type>> _argument_types;
                 function_codegen _codegen;

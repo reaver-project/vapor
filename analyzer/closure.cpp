@@ -70,6 +70,8 @@ reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
             },
             _parse.range
         );
+        function->set_body(_body);
+
         _type = std::make_shared<closure_type>(_scope, _weak_from_this(), std::move(function));
         _set_variable(make_expression_variable(_weak_from_this(), _type));
     });
@@ -80,7 +82,6 @@ reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::expression>> reaver
     return _body->simplify(ctx)
         .then([&](auto && simplified) {
             _body = std::dynamic_pointer_cast<block>(std::move(simplified));
-            assert(0);
             return _shared_from_this();
         });
 }

@@ -117,7 +117,6 @@ reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::statement>> reaver:
     });
 
     return fut.then([&]{
-        assert(0);
         return shared_from_this();
     });
 }

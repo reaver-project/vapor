@@ -50,7 +50,7 @@ reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::expression>> reaver
 {
     return get_variable()->simplify(ctx)
         .then([&](auto && simplified) {
-            assert(0);
+            this->_set_variable(std::move(simplified));
             return _shared_from_this();
         });
 }

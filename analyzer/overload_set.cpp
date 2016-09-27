@@ -129,6 +129,7 @@ reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
             },
             _parse.range
         );
+        _function->set_body(_body);
 
         auto set = _scope->get(_parse.name.string);
         auto overloads = std::dynamic_pointer_cast<overload_set>(set->get_variable());
@@ -142,7 +143,6 @@ reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::statement>> reaver:
     return _body->simplify(ctx).then([&](auto && simplified) {
         // this feels so wrong
         _body = std::dynamic_pointer_cast<block>(std::move(simplified));
-        assert(0);
         return std::enable_shared_from_this<statement>::shared_from_this();
     });
 }

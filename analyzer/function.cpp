@@ -24,11 +24,11 @@
 
 reaver::future<> reaver::vapor::analyzer::_v1::function::simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
-    assert(0);
+    return make_ready_future();
 }
 
 reaver::future<> reaver::vapor::analyzer::_v1::function::simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx, std::vector<std::shared_ptr<variable>>)
 {
-    assert(0);
+    return make_ready_future();
 }
 

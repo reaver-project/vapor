@@ -94,8 +94,11 @@ reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::expression>> reaver
             return _base_expr->simplify_expr(ctx);
         }).then([&](auto && simplified) {
             _base_expr = std::move(simplified);
-            assert(0);
-            // return _overload->simplify(ctx);
+            return _overload->simplify(ctx);
+        }).then([&](){
+            auto args = fmap(_arguments, [&](auto && expr){ return expr->get_variable(); });
+            args.insert(args.begin(), _base_expr->get_variable());
+            return _overload->simplify(ctx, std::move(args));
         }).then([&](){
             return _shared_from_this();
         });
