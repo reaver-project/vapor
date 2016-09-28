@@ -63,6 +63,9 @@ namespace reaver
 
                     auto fut = std::forward<F>(f)();
                     futs.emplace(ptr, fut);
+
+                    _handle_expressions(ptr, fut);
+
                     return fut;
                 }
 
@@ -89,6 +92,14 @@ namespace reaver
 
                 template<typename T>
                 auto _get_futures() = delete;
+
+                template<typename T, typename Future>
+                void _handle_expressions(T *, Future &&)
+                {
+                }
+
+                // sorry for this, but need a definition of expression for this one thing...
+                void _handle_expressions(expression * ptr, future<std::shared_ptr<expression>> & fut);
             };
 
             template<>

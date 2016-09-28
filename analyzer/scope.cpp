@@ -93,13 +93,7 @@ reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::symbol>> reaver::va
         }
 
         auto value_it = _symbols.find(name);
-        if (value_it != _symbols.end())
-        {
-            assert(shared_from_this());
-            return _symbol_futures.emplace(name, make_ready_future(value_it->second)).first->second;
-        }
-
-        if (_is_closed)
+        if (_is_closed && value_it == _symbols.end())
         {
             return make_exceptional_future<std::shared_ptr<symbol>>(failed_lookup{ name });
         }

@@ -68,7 +68,7 @@ namespace reaver
                 future<std::shared_ptr<statement>> simplify(optimization_context & ctx)
                 {
                     return ctx.get_future_or_init(this, [&]() {
-                        return make_ready_future().then([&]{
+                        return make_ready_future().then([&, self = shared_from_this()]() {
                             return _simplify(ctx);
                         });
                     });

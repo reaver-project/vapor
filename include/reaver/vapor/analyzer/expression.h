@@ -75,8 +75,8 @@ namespace reaver
 
                 future<std::shared_ptr<expression>> simplify_expr(optimization_context & ctx)
                 {
-                    return ctx.get_future_or_init(this, [&]() {
-                        return make_ready_future().then([&, self = _shared_from_this()]{
+                    return ctx.get_future_or_init(this, [&, self = _shared_from_this()]() {
+                        return make_ready_future().then([&, self = _shared_from_this()]() {
                             return _simplify_expr(ctx);
                         });
                     });
@@ -95,7 +95,7 @@ namespace reaver
 
                 virtual future<std::shared_ptr<statement>> _simplify(optimization_context & ctx) override final
                 {
-                    return simplify_expr(ctx).then([&](auto && simplified) {
+                    return simplify_expr(ctx).then([&, self = _shared_from_this()](auto && simplified) {
                         return static_cast<std::shared_ptr<statement>>(std::move(simplified));
                     });
                 }
