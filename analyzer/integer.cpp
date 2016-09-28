@@ -99,7 +99,7 @@ std::shared_ptr<reaver::vapor::analyzer::_v1::function> reaver::vapor::analyzer:
 
         if (!args[0]->is_constant() || !args[1]->is_constant())
         {
-            return std::shared_ptr<variable_expression>();
+            return std::shared_ptr<expression>();
         }
 
         auto lhs = std::static_pointer_cast<integer_constant>(args[0]);
@@ -120,7 +120,7 @@ std::shared_ptr<reaver::vapor::analyzer::_v1::function> reaver::vapor::analyzer:
 
         if (!args[0]->is_constant() || !args[1]->is_constant())
         {
-            return std::shared_ptr<variable_expression>();
+            return std::shared_ptr<expression>();
         }
 
         auto lhs = std::static_pointer_cast<integer_constant>(args[0]);

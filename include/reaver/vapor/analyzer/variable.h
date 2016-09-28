@@ -72,6 +72,11 @@ namespace reaver
                     return false;
                 }
 
+                virtual bool is_equal(std::shared_ptr<const variable>) const
+                {
+                    return false;
+                }
+
             private:
                 virtual future<std::shared_ptr<variable>> _simplify(optimization_context &)
                 {

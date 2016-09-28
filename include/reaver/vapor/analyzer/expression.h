@@ -164,7 +164,7 @@ namespace reaver
                 }
             };
 
-            inline auto make_variable_expression(std::shared_ptr<variable> var)
+            inline std::shared_ptr<expression> make_variable_expression(std::shared_ptr<variable> var)
             {
                 return std::make_shared<variable_expression>(std::move(var));
             }

@@ -67,6 +67,17 @@ namespace reaver
                     return mbind(_statements, [](auto && stmt){ return stmt->get_returns(); });
                 }
 
+                bool has_return_expression() const
+                {
+                    return _value_expr;
+                }
+
+                std::shared_ptr<expression> get_return_expression() const
+                {
+                    assert(_value_expr);
+                    return *_value_expr;
+                }
+
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
                 codegen::ir::value codegen_return(ir_generation_context &) const;

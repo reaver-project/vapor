@@ -20,8 +20,11 @@
  *
  **/
 
+#include "vapor/parser/expression_list.h"
+#include "vapor/parser/lambda_expression.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/block.h"
+#include "vapor/analyzer/return.h"
 
 reaver::future<> reaver::vapor::analyzer::_v1::function::simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
@@ -41,7 +44,23 @@ reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::expression>> reaver
 {
     if (auto body = _body.lock())
     {
-        // need to do something smart with arguments in this case
+        auto returns = body->get_returns();
+
+        assert(body->has_return_expression() || returns.size());
+        auto var = body->has_return_expression() ? body->get_return_expression()->get_variable() : returns.front()->get_returned_variable();
+        auto begin = body->has_return_expression() ? returns.begin() : returns.begin() + 1;
+
+        if (!var->is_constant())
+        {
+            return make_ready_future(std::shared_ptr<expression>());
+        }
+
+        if (std::all_of(begin, returns.end(), [](auto && ret) { return ret->get_returned_variable()->is_constant(); })
+            && std::all_of(begin, returns.end(), [&](auto && ret) { return ret->get_returned_variable()->is_equal(var); }))
+        {
+            return make_ready_future(make_variable_expression(var));
+        }
+
         return make_ready_future(std::shared_ptr<expression>());
     }
 

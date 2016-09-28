@@ -97,6 +97,18 @@ namespace reaver
                     return true;
                 }
 
+                virtual bool is_equal(std::shared_ptr<const variable> other_var) const override
+                {
+                    auto other = std::dynamic_pointer_cast<const integer_constant>(other_var);
+                    if (!other)
+                    {
+                        // todo: conversions somehow
+                        return false;
+                    }
+
+                    return other->get_value() == _value;
+                }
+
             private:
                 virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
