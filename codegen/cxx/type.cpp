@@ -30,7 +30,7 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_declaration(
 {
     if (type == ir::builtin_types().integer)
     {
-        ctx.put_into_global += UR"code(#include <boost/multiprecision/cpp_int.hpp>
+        ctx.put_into_global_before += UR"code(#include <boost/multiprecision/cpp_int.hpp>
 )code";
         return {};
     }

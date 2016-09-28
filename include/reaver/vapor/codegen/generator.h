@@ -52,6 +52,7 @@ namespace reaver
                 std::u32string define_if_necessary(std::shared_ptr<ir::variable_type>);
 
                 std::size_t unnamed_variable_index = 0;
+                std::u32string put_into_global_before;
                 std::u32string put_into_global;
 
             private:

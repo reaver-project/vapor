@@ -59,7 +59,9 @@ reaver::vapor::codegen::_v1::result::result(std::vector<reaver::vapor::codegen::
         return unit{};
     });
 
-    _generated_code += std::move(ctx.put_into_global);
+    auto declarations = ctx.put_into_global_before + _generated_code + ctx.put_into_global;
+    _generated_code = U"";
+    ctx.put_into_global_before = U"";
     ctx.put_into_global = U"";
 
     fmap(ir, [&](auto && module) {
@@ -79,6 +81,6 @@ reaver::vapor::codegen::_v1::result::result(std::vector<reaver::vapor::codegen::
         return unit{};
     });
 
-    _generated_code += ctx.put_into_global;
+    _generated_code = declarations + ctx.put_into_global_before + _generated_code + ctx.put_into_global;
 }
 
