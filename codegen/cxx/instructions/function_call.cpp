@@ -24,8 +24,9 @@
 #include "vapor/codegen/ir/instruction.h"
 #include "vapor/codegen/cxx/names.h"
 
+namespace reaver { namespace vapor { namespace codegen { inline namespace _v1 { namespace cxx {
 template<>
-std::u32string reaver::vapor::codegen::_v1::cxx::generate<reaver::vapor::codegen::_v1::ir::function_call_instruction>(const reaver::vapor::codegen::_v1::ir::instruction & inst, reaver::vapor::codegen::_v1::codegen_context & ctx)
+std::u32string generate<ir::function_call_instruction>(const ir::instruction & inst, codegen_context & ctx)
 {
     std::size_t actual_argument_offset = inst.operands.front().index() == 0 ? 2 : 1;
 
@@ -48,4 +49,5 @@ std::u32string reaver::vapor::codegen::_v1::cxx::generate<reaver::vapor::codegen
 
     return variable_of(inst.result, ctx) + U" = " + base_variable + get<codegen::ir::label>(inst.operands[actual_argument_offset - 1]).name + U"(" + arguments + U");\n";
 }
+}}}}}
 

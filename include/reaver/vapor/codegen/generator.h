@@ -24,6 +24,7 @@
 
 #include <string>
 #include <unordered_set>
+#include <memory>
 
 namespace reaver
 {

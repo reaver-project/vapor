@@ -50,8 +50,8 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_definition(c
     fmap(type->members, [&](auto && member) {
         fmap(member, make_overload_set(
             [&](codegen::ir::function & fn) {
-                members += generate_declaration(fn, ctx);
-                ctx.put_into_global += generate_definition(fn, ctx);
+                members += this->generate_declaration(fn, ctx);
+                ctx.put_into_global += this->generate_definition(fn, ctx);
                 return unit{};
             },
             [&](auto &&) {

@@ -24,9 +24,11 @@
 #include "vapor/codegen/ir/instruction.h"
 #include "vapor/codegen/cxx/names.h"
 
+namespace reaver { namespace vapor { namespace codegen { inline namespace _v1 { namespace cxx {
 template<>
-std::u32string reaver::vapor::codegen::_v1::cxx::generate<reaver::vapor::codegen::_v1::ir::return_instruction>(const reaver::vapor::codegen::_v1::ir::instruction & inst, reaver::vapor::codegen::_v1::codegen_context & ctx)
+std::u32string generate<ir::return_instruction>(const ir::instruction & inst, codegen_context & ctx)
 {
     return U"return " + value_of(inst.result, ctx) + U";\n";
 }
+}}}}}
 

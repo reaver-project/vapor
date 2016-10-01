@@ -84,9 +84,11 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate(const reaver
     >(inst, ctx);
 }
 
+namespace reaver { namespace vapor { namespace codegen { inline namespace _v1 { namespace cxx {
 template<>
-std::u32string reaver::vapor::codegen::_v1::cxx::generate<reaver::vapor::codegen::_v1::ir::pass_value_instruction>(const reaver::vapor::codegen::_v1::ir::instruction &, reaver::vapor::codegen::_v1::codegen_context &)
+std::u32string generate<ir::pass_value_instruction>(const ir::instruction &, codegen_context &)
 {
     return {};
 }
+}}}}}
 

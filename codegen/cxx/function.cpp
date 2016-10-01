@@ -102,7 +102,7 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_definition(c
     }
     ret += U")\n{\n";
     fmap(fn.instructions, [&](auto && inst) {
-        ret += generate(inst, ctx);
+        ret += this->generate(inst, ctx);
         return unit{};
     });
     ret += U"};\n";
