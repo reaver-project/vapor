@@ -54,7 +54,8 @@ namespace reaver
                 {
                 }
 
-                variable * get_variable() const
+                // do NOT abuse the fact this is virtual!
+                virtual variable * get_variable() const
                 {
                     if (!_variable)
                     {
@@ -176,6 +177,11 @@ namespace reaver
                 variable_ref_expression(variable * var) : _referenced(var)
                 {
                     _set_variable(make_expression_variable(this, _referenced->get_type()));
+                }
+
+                virtual variable * get_variable() const final override
+                {
+                    return _referenced;
                 }
 
                 virtual void print(std::ostream & os, std::size_t indent) const override;

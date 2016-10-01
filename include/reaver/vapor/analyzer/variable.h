@@ -100,6 +100,9 @@ namespace reaver
                     return _type;
                 }
 
+                virtual bool is_constant() const override;
+                virtual bool is_equal(const variable *) const override;
+
             private:
                 virtual future<variable *> _simplify(optimization_context & ctx) override;
                 virtual variable_ir _codegen_ir(ir_generation_context &) const override;

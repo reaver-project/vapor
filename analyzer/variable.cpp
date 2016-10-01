@@ -40,3 +40,13 @@ reaver::future<reaver::vapor::analyzer::_v1::variable *> reaver::vapor::analyzer
         });
 }
 
+bool reaver::vapor::analyzer::_v1::expression_variable::is_constant() const
+{
+    return _expression->get_variable()->is_constant();
+}
+
+bool reaver::vapor::analyzer::_v1::expression_variable::is_equal(const reaver::vapor::analyzer::_v1::variable * ptr) const
+{
+    return _expression->get_variable()->is_equal(ptr);
+}
+
