@@ -25,6 +25,7 @@
 #include "../parser/return_expression.h"
 #include "statement.h"
 #include "expression.h"
+#include "helpers.h"
 
 namespace reaver
 {
@@ -35,22 +36,22 @@ namespace reaver
             class return_statement : public statement
             {
             public:
-                return_statement(const parser::return_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }
+                return_statement(const parser::return_expression & parse, scope * lex_scope) : _parse{ parse }
                 {
                     _value_expr = preanalyze_expression(parse.return_value, lex_scope);
                 }
 
-                virtual std::vector<std::shared_ptr<const return_statement>> get_returns() const override
+                virtual std::vector<const return_statement *> get_returns() const override
                 {
-                    return { _shared_from_this() };
+                    return { this };
                 }
 
-                std::shared_ptr<type> get_returned_type() const
+                type * get_returned_type() const
                 {
                     return _value_expr->get_type();
                 }
 
-                std::shared_ptr<variable> get_returned_variable() const
+                variable * get_returned_variable() const
                 {
                     return _value_expr->get_variable();
                 }
@@ -58,38 +59,29 @@ namespace reaver
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
-                std::shared_ptr<return_statement> _shared_from_this()
-                {
-                    return std::static_pointer_cast<return_statement>(shared_from_this());
-                }
-
-                std::shared_ptr<const return_statement> _shared_from_this() const
-                {
-                    return std::static_pointer_cast<const return_statement>(shared_from_this());
-                }
 
                 virtual future<> _analyze() override
                 {
                     return _value_expr->analyze();
                 }
 
-                virtual future<std::shared_ptr<statement>> _simplify(optimization_context & ctx) override
+                virtual future<statement *> _simplify(optimization_context & ctx) override
                 {
-                    return _value_expr->simplify_expr(ctx).then([&](auto && simplified) {
-                            _value_expr = std::move(simplified);
-                            return std::enable_shared_from_this<statement>::shared_from_this();
+                    return _value_expr->simplify_expr(ctx).then([&](auto && simplified) -> statement * {
+                            replace_uptr(_value_expr, simplified, ctx);
+                            return this;
                         });
                 }
 
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::return_expression & _parse;
-                std::shared_ptr<expression> _value_expr;
+                std::unique_ptr<expression> _value_expr;
             };
 
-            inline std::shared_ptr<return_statement> preanalyze_return(const parser::return_expression & parse, std::shared_ptr<scope> lex_scope)
+            inline std::unique_ptr<return_statement> preanalyze_return(const parser::return_expression & parse, scope * lex_scope)
             {
-                return std::make_shared<return_statement>(parse, lex_scope);
+                return std::make_unique<return_statement>(parse, lex_scope);
             }
         }}
     }

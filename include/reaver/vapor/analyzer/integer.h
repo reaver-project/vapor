@@ -41,7 +41,7 @@ namespace reaver
             class integer_type : public type
             {
             public:
-                virtual std::shared_ptr<function> get_overload(lexer::token_type token, std::shared_ptr<type> rhs) const override
+                virtual function * get_overload(lexer::token_type token, const type * rhs) const override
                 {
                     switch (token)
                     {
@@ -67,8 +67,8 @@ namespace reaver
                 // throw all this shit into a .cpp file
                 template<typename Instruction, typename Eval>
                 static auto _generate_function(const char32_t * name, Eval eval);
-                static std::shared_ptr<function> _addition();
-                static std::shared_ptr<function> _multiplication();
+                static function * _addition();
+                static function * _multiplication();
             };
 
             class integer_constant : public literal
@@ -82,9 +82,9 @@ namespace reaver
                 {
                 }
 
-                virtual std::shared_ptr<type> get_type() const override
+                virtual type * get_type() const override
                 {
-                    return builtin_types().integer;
+                    return builtin_types().integer.get();
                 }
 
                 auto get_value() const
@@ -97,9 +97,9 @@ namespace reaver
                     return true;
                 }
 
-                virtual bool is_equal(std::shared_ptr<const variable> other_var) const override
+                virtual bool is_equal(const variable * other_var) const override
                 {
-                    auto other = std::dynamic_pointer_cast<const integer_constant>(other_var);
+                    auto other = dynamic_cast<const integer_constant *>(other_var);
                     if (!other)
                     {
                         // todo: conversions somehow
@@ -118,9 +118,11 @@ namespace reaver
             class integer_literal : public expression
             {
             public:
-                integer_literal(const parser::integer_literal & parse) : _parse{ parse }, _value{ std::make_shared<integer_constant>(parse) }
+                integer_literal(const parser::integer_literal & parse) : _parse{ parse }
                 {
-                    _set_variable(_value);
+                    auto val = std::make_unique<integer_constant>(parse);
+                    _value = val.get();
+                    _set_variable(std::move(val));
                 }
 
                 virtual void print(std::ostream & os, std::size_t indent) const override
@@ -135,21 +137,20 @@ namespace reaver
                     return make_ready_future();
                 }
 
-                virtual future<std::shared_ptr<expression>> _simplify_expr(optimization_context &) override
+                virtual future<expression *> _simplify_expr(optimization_context &) override
                 {
-                    return make_ready_future(_shared_from_this());
+                    return make_ready_future<expression *>(this);
                 }
 
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::integer_literal & _parse;
-                std::shared_ptr<integer_constant> _value;
+                integer_constant * _value;
             };
 
-            inline std::shared_ptr<type> make_integer_type()
+            inline std::unique_ptr<type> make_integer_type()
             {
-                static auto int_t = std::make_shared<integer_type>();
-                return int_t;
+                return std::make_unique<integer_type>();
             }
         }}
     }

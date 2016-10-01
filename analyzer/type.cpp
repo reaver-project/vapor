@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/type.h"
+#include "vapor/analyzer/symbol.h"
 
 std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::type_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context &) const
 {

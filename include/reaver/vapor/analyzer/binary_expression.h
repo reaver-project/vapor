@@ -36,7 +36,7 @@ namespace reaver
             class binary_expression : public expression
             {
             public:
-                binary_expression(const parser::binary_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _scope{ lex_scope }, _op{ _parse.op },
+                binary_expression(const parser::binary_expression & parse, scope * lex_scope) : _parse{ parse }, _scope{ lex_scope }, _op{ _parse.op },
                     _lhs{ preanalyze_expression(_parse.lhs, lex_scope) },
                     _rhs{ preanalyze_expression(_parse.rhs, lex_scope) }
                 {
@@ -46,20 +46,20 @@ namespace reaver
 
             private:
                 virtual future<> _analyze() override;
-                virtual future<std::shared_ptr<expression>> _simplify_expr(optimization_context &) override;
+                virtual future<expression *> _simplify_expr(optimization_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::binary_expression & _parse;
-                std::shared_ptr<scope> _scope;
+                scope * _scope;
                 lexer::token _op;
-                std::shared_ptr<expression> _lhs;
-                std::shared_ptr<expression> _rhs;
-                std::shared_ptr<function> _overload;
+                std::unique_ptr<expression> _lhs;
+                std::unique_ptr<expression> _rhs;
+                function * _overload;
             };
 
-            inline std::shared_ptr<binary_expression> preanalyze_binary_expression(const parser::binary_expression & parse, std::shared_ptr<scope> lex_scope)
+            inline std::unique_ptr<binary_expression> preanalyze_binary_expression(const parser::binary_expression & parse, scope * lex_scope)
             {
-                return std::make_shared<binary_expression>(parse, std::move(lex_scope));
+                return std::make_unique<binary_expression>(parse, lex_scope);
             }
         }}
     }

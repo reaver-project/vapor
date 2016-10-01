@@ -24,8 +24,9 @@
 #include "vapor/analyzer/postfix_expression.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/id_expression.h"
+#include "vapor/analyzer/helpers.h"
 
-reaver::vapor::analyzer::_v1::postfix_expression::postfix_expression(const reaver::vapor::parser::postfix_expression & parse, std::shared_ptr<reaver::vapor::analyzer::_v1::scope> lex_scope) : _parse{ parse }, _scope{ lex_scope }, _brace{ parse.bracket_type }
+reaver::vapor::analyzer::_v1::postfix_expression::postfix_expression(const reaver::vapor::parser::postfix_expression & parse, reaver::vapor::analyzer::_v1::scope * lex_scope) : _parse{ parse }, _scope{ lex_scope }, _brace{ parse.bracket_type }
 {
     fmap(_parse.base_expression, make_overload_set(
         [&](const parser::expression_list & expr_list){
@@ -73,40 +74,40 @@ reaver::future<> reaver::vapor::analyzer::_v1::postfix_expression::_analyze()
         }).then([&]{
             if (!_parse.bracket_type)
             {
-                _set_variable(_base_expr->get_variable());
+                _set_variable(make_expression_variable(_base_expr.get(), _base_expr->get_type()));
                 return;
             }
 
-            auto overload = resolve_overload(_base_expr->get_type(), *_parse.bracket_type, fmap(_arguments, [](auto && arg){ return arg->get_type(); }), _scope);
+            auto overload = resolve_overload(_base_expr->get_type(), *_parse.bracket_type, fmap(_arguments, [](auto && arg) -> const type * { return arg->get_type(); }), _scope);
             assert(overload);
             _overload = std::move(overload);
 
-            _set_variable(make_expression_variable(_shared_from_this(), _overload->return_type()));
+            _set_variable(make_expression_variable(this, _overload->return_type()));
         });
 }
 
-reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::expression>> reaver::vapor::analyzer::_v1::postfix_expression::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::postfix_expression::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
     return when_all(fmap(_arguments, [&](auto && expr) {
             return expr->simplify_expr(ctx);
         })).then([&](auto && simplified) {
-            _arguments = std::move(simplified);
+            replace_uptrs(_arguments, simplified, ctx);
             return _base_expr->simplify_expr(ctx);
         }).then([&](auto && simplified) {
-            _base_expr = std::move(simplified);
+            replace_uptr(_base_expr, simplified, ctx);
             return _overload->simplify(ctx);
         }).then([&](){
             auto args = fmap(_arguments, [&](auto && expr){ return expr->get_variable(); });
             args.insert(args.begin(), _base_expr->get_variable());
             return _overload->simplify(ctx, std::move(args));
-        }).then([&](auto && simplified){
+        }).then([&](auto && simplified) -> expression * {
             if (simplified)
             {
                 ctx.something_heppened();
-                return std::move(simplified);
+                return simplified;
             }
 
-            return _shared_from_this();
+            return this;
         });
 }
 

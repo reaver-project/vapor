@@ -23,18 +23,26 @@
 #include "vapor/parser.h"
 #include "vapor/analyzer/block.h"
 #include "vapor/analyzer/return.h"
+#include "vapor/analyzer/symbol.h"
 
-reaver::vapor::analyzer::_v1::block::block(const reaver::vapor::parser::block & parse, std::shared_ptr<reaver::vapor::analyzer::_v1::scope> lex_scope, bool is_top_level) : _parse{ parse }, _scope{ lex_scope->clone_local() }, _is_top_level{ is_top_level }
+reaver::vapor::analyzer::_v1::block::block(const reaver::vapor::parser::block & parse, reaver::vapor::analyzer::_v1::scope * lex_scope, bool is_top_level) : _parse{ parse }, _scope{ lex_scope->clone_local() }, _is_top_level{ is_top_level }
 {
     _statements = fmap(_parse.block_value, [&](auto && row) {
         return get<0>(fmap(row, make_overload_set(
-            [&](const parser::block & block) -> std::shared_ptr<statement>
+            [&](const parser::block & block) -> std::unique_ptr<statement>
             {
-                return preanalyze_block(block, _scope, false);
+                return preanalyze_block(block, _scope.get(), false);
             },
             [&](const parser::statement & statement)
             {
-                return preanalyze_statement(statement, _scope);
+                auto scope_ptr = _scope.get();
+                auto ret = preanalyze_statement(statement, scope_ptr);
+                if (scope_ptr != _scope.get())
+                {
+                    _scope.release()->keep_alive();
+                    _scope.reset(scope_ptr);
+                }
+                return ret;
             }
         )));
     });
@@ -42,12 +50,12 @@ reaver::vapor::analyzer::_v1::block::block(const reaver::vapor::parser::block & 
     _scope->close();
 
     _value_expr = fmap(_parse.value_expression, [&](auto && val_expr) {
-        auto expr = preanalyze_expression(val_expr, _scope);
+        auto expr = preanalyze_expression(val_expr, _scope.get());
         return expr;
     });
 }
 
-std::shared_ptr<reaver::vapor::analyzer::_v1::type> reaver::vapor::analyzer::_v1::block::return_type() const
+reaver::vapor::analyzer::_v1::type * reaver::vapor::analyzer::_v1::block::return_type() const
 {
     auto return_types = fmap(get_returns(), [](auto && stmt){ return stmt->get_returned_type(); });
 
@@ -92,32 +100,32 @@ reaver::future<> reaver::vapor::analyzer::_v1::block::_analyze()
     );
 
     fmap(_value_expr, [&](auto && expr) {
-        fut = fut.then([expr]{ return expr->analyze(); });
+        fut = fut.then([expr = expr.get()]{ return expr->analyze(); });
         return unit{};
     });
 
     return fut;
 }
 
-reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::statement>> reaver::vapor::analyzer::_v1::block::_simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+reaver::future<reaver::vapor::analyzer::_v1::statement *> reaver::vapor::analyzer::_v1::block::_simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
     auto fut = when_all(
         fmap(_statements, [&](auto && stmt) { return stmt->simplify(ctx); })
     ).then([&](auto && simplified) {
-        _statements = std::move(simplified);
+        replace_uptrs(_statements, simplified, ctx);
     });
 
     fmap(_value_expr, [&](auto && expr) {
-        fut = fut.then([&, expr]{
+        fut = fut.then([&, expr = expr.get()]{
             return expr->simplify_expr(ctx);
         }).then([&](auto && simplified) {
-            _value_expr = std::move(simplified);
+            replace_uptr(*_value_expr, simplified, ctx);
         });
         return unit{};
     });
 
-    return fut.then([&]{
-        return shared_from_this();
+    return fut.then([&]() -> statement * {
+        return this;
     });
 }
 

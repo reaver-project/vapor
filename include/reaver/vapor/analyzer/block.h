@@ -40,7 +40,7 @@ namespace reaver
         namespace analyzer { inline namespace _v1
         {
             class block;
-            std::shared_ptr<block> preanalyze_block(const parser::block &, std::shared_ptr<scope>, bool);
+            std::unique_ptr<block> preanalyze_block(const parser::block &, scope *, bool);
 
             class return_statement;
             class scope;
@@ -48,9 +48,9 @@ namespace reaver
             class block : public statement
             {
             public:
-                block(const parser::block & parse, std::shared_ptr<scope> lex_scope, bool is_top_level);
+                block(const parser::block & parse, scope * lex_scope, bool is_top_level);
 
-                std::shared_ptr<type> value_type() const
+                type * value_type() const
                 {
                     if (_value_expr)
                     {
@@ -60,9 +60,9 @@ namespace reaver
                     return nullptr;
                 }
 
-                std::shared_ptr<type> return_type() const;
+                type * return_type() const;
 
-                virtual std::vector<std::shared_ptr<const return_statement>> get_returns() const override
+                virtual std::vector<const return_statement *> get_returns() const override
                 {
                     return mbind(_statements, [](auto && stmt){ return stmt->get_returns(); });
                 }
@@ -72,10 +72,10 @@ namespace reaver
                     return _value_expr;
                 }
 
-                std::shared_ptr<expression> get_return_expression() const
+                expression * get_return_expression() const
                 {
                     assert(_value_expr);
-                    return *_value_expr;
+                    return _value_expr->get();
                 }
 
                 virtual void print(std::ostream & os, std::size_t indent) const override;
@@ -84,19 +84,19 @@ namespace reaver
 
             private:
                 virtual future<> _analyze() override;
-                virtual future<std::shared_ptr<statement>> _simplify(optimization_context &) override;
+                virtual future<statement *> _simplify(optimization_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::block & _parse;
-                std::shared_ptr<scope> _scope;
-                std::vector<std::shared_ptr<statement>> _statements;
-                optional<std::shared_ptr<expression>> _value_expr;
+                std::unique_ptr<scope> _scope;
+                std::vector<std::unique_ptr<statement>> _statements;
+                optional<std::unique_ptr<expression>> _value_expr;
                 const bool _is_top_level = false;
             };
 
-            inline std::shared_ptr<block> preanalyze_block(const parser::block & parse, std::shared_ptr<scope> lex_scope, bool is_top_level)
+            inline std::unique_ptr<block> preanalyze_block(const parser::block & parse, scope * lex_scope, bool is_top_level)
             {
-                return std::make_shared<block>(parse, std::move(lex_scope), is_top_level);
+                return std::make_unique<block>(parse, std::move(lex_scope), is_top_level);
             }
         }}
     }

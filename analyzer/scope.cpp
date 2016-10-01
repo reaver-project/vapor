@@ -21,6 +21,12 @@
  **/
 
 #include "vapor/analyzer/scope.h"
+#include "vapor/analyzer/symbol.h"
+
+reaver::vapor::analyzer::_v1::scope::~scope()
+{
+    close();
+}
 
 void reaver::vapor::analyzer::_v1::scope::close()
 {
@@ -39,7 +45,7 @@ void reaver::vapor::analyzer::_v1::scope::close()
             auto it = _symbols.find(promise.first);
             if (it != _symbols.end())
             {
-                promise.second.set(it->second);
+                promise.second.set(it->second.get());
                 continue;
             }
 
@@ -59,13 +65,13 @@ void reaver::vapor::analyzer::_v1::scope::close()
     }
 }
 
-bool reaver::vapor::analyzer::_v1::scope::init(const std::u32string & name, std::shared_ptr<reaver::vapor::analyzer::_v1::symbol> symb)
+bool reaver::vapor::analyzer::_v1::scope::init(const std::u32string & name, std::unique_ptr<reaver::vapor::analyzer::_v1::symbol> symb)
 {
     assert(!_is_closed);
 
     _ulock lock{ _lock };
 
-    for (auto scope = shared_from_this(); scope; scope = scope->_parent)
+    for (auto scope = this; scope; scope = scope->_parent)
     {
         if (scope->_symbols.find(name) != scope->_symbols.end())
         {
@@ -78,11 +84,11 @@ bool reaver::vapor::analyzer::_v1::scope::init(const std::u32string & name, std:
         }
     }
 
-    _symbols.emplace(name, symb);
+    _symbols.emplace(name, std::move(symb));
     return true;
 }
 
-reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::symbol>> reaver::vapor::analyzer::_v1::scope::get_future(const std::u32string & name)
+reaver::future<reaver::vapor::analyzer::_v1::symbol *> reaver::vapor::analyzer::_v1::scope::get_future(const std::u32string & name)
 {
     {
         _shlock lock{ _lock };
@@ -95,7 +101,7 @@ reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::symbol>> reaver::va
         auto value_it = _symbols.find(name);
         if (_is_closed && value_it == _symbols.end())
         {
-            return make_exceptional_future<std::shared_ptr<symbol>>(failed_lookup{ name });
+            return make_exceptional_future<symbol *>(failed_lookup{ name });
         }
     }
 
@@ -112,15 +118,15 @@ reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::symbol>> reaver::va
     auto value_it = _symbols.find(name);
     if (_is_closed && value_it != _symbols.end())
     {
-        return _symbol_futures.emplace(name, make_ready_future(value_it->second)).first->second;
+        return _symbol_futures.emplace(name, make_ready_future(value_it->second.get())).first->second;
     }
 
-    auto pair = make_promise<std::shared_ptr<symbol>>();
+    auto pair = make_promise<symbol *>();
     _symbol_promises.emplace(name, std::move(pair.promise));
     return _symbol_futures.emplace(name, std::move(pair.future)).first->second;
 }
 
-reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::symbol>> reaver::vapor::analyzer::_v1::scope::resolve(const std::u32string & name)
+reaver::future<reaver::vapor::analyzer::_v1::symbol *> reaver::vapor::analyzer::_v1::scope::resolve(const std::u32string & name)
 {
     {
         _shlock lock{ _lock };
@@ -132,7 +138,7 @@ reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::symbol>> reaver::va
         }
     }
 
-    auto pair = make_promise<std::shared_ptr<symbol>>();
+    auto pair = make_promise<symbol *>();
 
     get_future(name).then([promise = pair.promise](auto && symb) {
         promise.set(symb);

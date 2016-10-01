@@ -43,23 +43,23 @@ namespace reaver
             class block;
 
             using function_codegen = reaver::function<codegen::ir::function (ir_generation_context &)>;
-            using function_eval = reaver::function<std::shared_ptr<expression> (optimization_context &, std::vector<std::shared_ptr<variable>>)>;
+            using function_eval = reaver::function<expression * (optimization_context &, std::vector<variable *>)>;
 
-            class function : public std::enable_shared_from_this<function>
+            class function
             {
             public:
-                function(std::string explanation, std::shared_ptr<type> ret, std::vector<std::shared_ptr<type>> args, function_codegen codegen, optional<range_type> range = none)
+                function(std::string explanation, type * ret, std::vector<type *> args, function_codegen codegen, optional<range_type> range = none)
                     : _explanation{ std::move(explanation) }, _range{ std::move(range) },
-                    _return_type{ std::move(ret) }, _argument_types{ std::move(args) }, _codegen{ std::move(codegen) }
+                    _return_type{ ret }, _argument_types{ std::move(args) }, _codegen{ std::move(codegen) }
                 {
                 }
 
-                std::shared_ptr<type> return_type() const
+                type * return_type() const
                 {
                     return _return_type;
                 }
 
-                std::vector<std::shared_ptr<type>> arguments() const
+                std::vector<type *> arguments() const
                 {
                     return _argument_types;
                 }
@@ -78,7 +78,7 @@ namespace reaver
                 }
 
                 future<> simplify(optimization_context &);
-                future<std::shared_ptr<expression>> simplify(optimization_context &, std::vector<std::shared_ptr<variable>>);
+                future<expression *> simplify(optimization_context &, std::vector<variable *>);
 
                 codegen::ir::function codegen_ir(ir_generation_context & ctx) const
                 {
@@ -92,7 +92,7 @@ namespace reaver
 
                     if (state)
                     {
-                        ctx.add_generated_function(shared_from_this());
+                        ctx.add_generated_function(this);
                     }
 
                     ctx.top_level_generation = state;
@@ -105,9 +105,9 @@ namespace reaver
                     return { codegen::ir::label{ codegen_ir(ctx).name, {} } };
                 }
 
-                void set_body(std::weak_ptr<block> body)
+                void set_body(block * body)
                 {
-                    _body = std::move(body);
+                    _body = body;
                 }
 
                 void set_eval(function_eval eval)
@@ -119,18 +119,18 @@ namespace reaver
                 std::string _explanation;
                 optional<range_type> _range;
 
-                std::weak_ptr<block> _body;
-                std::shared_ptr<type> _return_type;
-                std::vector<std::shared_ptr<type>> _argument_types;
+                block * _body = nullptr;
+                type * _return_type;
+                std::vector<type *> _argument_types;
                 function_codegen _codegen;
                 mutable optional<codegen::ir::function> _ir;
 
                 optional<function_eval> _compile_time_eval;
             };
 
-            inline std::shared_ptr<function> make_function(std::string expl, std::shared_ptr<type> return_type, std::vector<std::shared_ptr<type>> arguments, function_codegen codegen, optional<range_type> range = none)
+            inline std::unique_ptr<function> make_function(std::string expl, type * return_type, std::vector<type *> arguments, function_codegen codegen, optional<range_type> range = none)
             {
-                return std::make_shared<function>(std::move(expl), std::move(return_type), std::move(arguments), std::move(codegen), std::move(range));
+                return std::make_unique<function>(std::move(expl), std::move(return_type), std::move(arguments), std::move(codegen), std::move(range));
             }
         }}
     }

@@ -45,7 +45,7 @@ namespace reaver
 
             using statement_ir = std::vector<codegen::ir::instruction>;
 
-            class statement : public std::enable_shared_from_this<statement>
+            class statement
             {
             public:
                 statement() = default;
@@ -65,16 +65,16 @@ namespace reaver
                     return *_analysis_future;
                 }
 
-                future<std::shared_ptr<statement>> simplify(optimization_context & ctx)
+                future<statement *> simplify(optimization_context & ctx)
                 {
                     return ctx.get_future_or_init(this, [&]() {
-                        return make_ready_future().then([&, self = shared_from_this()]() {
+                        return make_ready_future().then([&]() {
                             return _simplify(ctx);
                         });
                     });
                 }
 
-                virtual std::vector<std::shared_ptr<const return_statement>> get_returns() const
+                virtual std::vector<const return_statement *> get_returns() const
                 {
                     return {};
                 }
@@ -93,7 +93,7 @@ namespace reaver
 
             private:
                 virtual future<> _analyze() = 0;
-                virtual future<std::shared_ptr<statement>> _simplify(optimization_context &) = 0;
+                virtual future<statement *> _simplify(optimization_context &) = 0;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const = 0;
 
                 std::mutex _future_lock;
@@ -102,7 +102,7 @@ namespace reaver
                 mutable optional<statement_ir> _ir;
             };
 
-            std::shared_ptr<statement> preanalyze_statement(const parser::statement & parse, std::shared_ptr<scope> & lex_scope);
+            std::unique_ptr<statement> preanalyze_statement(const parser::statement & parse, scope *& lex_scope);
         }}
     }
 }

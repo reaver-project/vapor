@@ -65,8 +65,8 @@ namespace reaver
 
             private:
                 const parser::module & _parse;
-                std::shared_ptr<scope> _scope;
-                std::vector<std::shared_ptr<statement>> _statements;
+                std::unique_ptr<scope> _scope;
+                std::vector<std::unique_ptr<statement>> _statements;
                 std::vector<future<>> _analysis_futures;
             };
         }}

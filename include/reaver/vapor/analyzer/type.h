@@ -46,34 +46,34 @@ namespace reaver
         {
             class function;
 
-            class type : public std::enable_shared_from_this<type>
+            class type
             {
             public:
-                type() : _lex_scope{ std::make_shared<scope>() }
+                type() : _lex_scope{ std::make_unique<scope>() }
                 {
                 }
 
-                type(std::shared_ptr<scope> outer_scope) : _lex_scope{ outer_scope->clone_for_decl() }
+                type(scope * outer_scope) : _lex_scope{ outer_scope->clone_for_class() }
                 {
                 }
 
                 virtual ~type() = default;
 
-                virtual std::shared_ptr<function> get_overload(lexer::token_type, std::shared_ptr<type>) const
+                virtual function * get_overload(lexer::token_type, const type *) const
                 {
                     return nullptr;
                 }
 
-                virtual std::shared_ptr<function> get_overload(lexer::token_type, std::vector<std::shared_ptr<type>>) const
+                virtual function * get_overload(lexer::token_type, std::vector<const type *>) const
                 {
                     return nullptr;
                 }
 
                 virtual std::string explain() const = 0;
 
-                virtual std::shared_ptr<scope> get_scope() const
+                virtual scope * get_scope() const
                 {
-                    return _lex_scope;
+                    return _lex_scope.get();
                 }
 
                 std::shared_ptr<codegen::ir::variable_type> codegen_type(ir_generation_context & ctx) const
@@ -89,7 +89,7 @@ namespace reaver
             private:
                 virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const = 0;
 
-                std::shared_ptr<scope> _lex_scope;
+                std::unique_ptr<scope> _lex_scope;
                 mutable optional<std::shared_ptr<codegen::ir::variable_type>> _codegen_t;
             };
 
@@ -108,7 +108,7 @@ namespace reaver
             // these here are currently kinda silly
             // will get less silly and properly separated once typeclasses are a thing
 
-            inline std::shared_ptr<function> resolve_overload(const std::shared_ptr<type> & lhs, const std::shared_ptr<type> & rhs, lexer::token_type op, std::shared_ptr<scope> in_scope)
+            inline function * resolve_overload(const type * lhs, const type * rhs, lexer::token_type op, scope * in_scope)
             {
                 auto overload = lhs->get_overload(op, rhs);
                 if (overload)
@@ -120,7 +120,7 @@ namespace reaver
                 assert(0);
             }
 
-            inline std::shared_ptr<function> resolve_overload(const std::shared_ptr<type> & base_expr, lexer::token_type bracket_type, std::vector<std::shared_ptr<type>> arguments, std::shared_ptr<scope> in_scope)
+            inline function * resolve_overload(const type * base_expr, lexer::token_type bracket_type, std::vector<const type *> arguments, scope * in_scope)
             {
                 auto overload = base_expr->get_overload(bracket_type, arguments);
                 if (overload)
@@ -131,13 +131,13 @@ namespace reaver
                 assert(0);
             }
 
-            std::shared_ptr<type> make_integer_type();
+            std::unique_ptr<type> make_integer_type();
 
             inline const auto & builtin_types()
             {
                 struct builtin_types_t
                 {
-                    using member_t = std::shared_ptr<class type>;
+                    using member_t = std::unique_ptr<class type>;
 
                     member_t type;
                     member_t integer;
@@ -146,7 +146,7 @@ namespace reaver
                 static auto builtins = []{
                     builtin_types_t builtins;
 
-                    builtins.type = std::make_shared<type_type>();
+                    builtins.type = std::make_unique<type_type>();
                     builtins.integer = make_integer_type();
 
                     return builtins;

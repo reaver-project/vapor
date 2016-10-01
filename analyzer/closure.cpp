@@ -21,6 +21,8 @@
  **/
 
 #include "vapor/analyzer/closure.h"
+#include "vapor/analyzer/helpers.h"
+#include "vapor/analyzer/symbol.h"
 #include "vapor/codegen/ir/type.h"
 
 std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::closure_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
@@ -35,7 +37,7 @@ std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::a
     fn.parent_type = type;
     type->members = { codegen::ir::member{ fn } };
 
-    ctx.add_generated_function(_function);
+    ctx.add_generated_function(_function.get());
 
     return type;
 }
@@ -70,19 +72,19 @@ reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
             },
             _parse.range
         );
-        function->set_body(_body);
+        function->set_body(_body.get());
 
-        _type = std::make_shared<closure_type>(_scope, _weak_from_this(), std::move(function));
-        _set_variable(make_expression_variable(_weak_from_this(), _type));
+        _type = std::make_unique<closure_type>(_scope.get(), this, std::move(function));
+        _set_variable(make_expression_variable(this, _type.get()));
     });
 }
 
-reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::expression>> reaver::vapor::analyzer::_v1::closure::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::closure::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
     return _body->simplify(ctx)
-        .then([&](auto && simplified) {
-            _body = std::dynamic_pointer_cast<block>(std::move(simplified));
-            return _shared_from_this();
+        .then([&](auto && simplified) -> expression * {
+            replace_uptr(_body, dynamic_cast<block *>(simplified), ctx);
+            return this;
         });
 }
 

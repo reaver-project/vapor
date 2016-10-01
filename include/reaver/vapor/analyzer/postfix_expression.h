@@ -41,26 +41,26 @@ namespace reaver
             class postfix_expression : public expression
             {
             public:
-                postfix_expression(const parser::postfix_expression & parse, std::shared_ptr<scope> lex_scope);
+                postfix_expression(const parser::postfix_expression & parse, scope * lex_scope);
 
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
                 virtual future<> _analyze() override;
-                virtual future<std::shared_ptr<expression>> _simplify_expr(optimization_context &) override;
+                virtual future<expression *> _simplify_expr(optimization_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::postfix_expression & _parse;
-                std::shared_ptr<scope> _scope;
-                std::shared_ptr<expression> _base_expr;
+                scope * _scope;
+                std::unique_ptr<expression> _base_expr;
                 optional<lexer::token_type> _brace;
-                std::vector<std::shared_ptr<expression>> _arguments;
-                std::shared_ptr<function> _overload;
+                std::vector<std::unique_ptr<expression>> _arguments;
+                function * _overload;
             };
 
-            inline std::shared_ptr<postfix_expression> preanalyze_postfix_expression(const parser::postfix_expression & parse, std::shared_ptr<scope> lex_scope)
+            inline std::unique_ptr<postfix_expression> preanalyze_postfix_expression(const parser::postfix_expression & parse, scope * lex_scope)
             {
-                return std::make_shared<postfix_expression>(parse, std::move(lex_scope));
+                return std::make_unique<postfix_expression>(parse, lex_scope);
             }
         }}
     }

@@ -20,13 +20,16 @@
  *
  **/
 
+#include <numeric>
+
 #include "vapor/parser.h"
 #include "vapor/analyzer/overload_set.h"
 #include "vapor/analyzer/function.h"
+#include "vapor/analyzer/helpers.h"
 #include "vapor/codegen/ir/function.h"
 #include "vapor/codegen/ir/type.h"
 
-void reaver::vapor::analyzer::_v1::overload_set_type::add_function(std::shared_ptr<reaver::vapor::analyzer::_v1::function> fn)
+void reaver::vapor::analyzer::_v1::overload_set_type::add_function(reaver::vapor::analyzer::_v1::function * fn)
 {
     if (std::find_if(_functions.begin(), _functions.end(), [&](auto && f) {
             return f->arguments() == fn->arguments();
@@ -35,15 +38,23 @@ void reaver::vapor::analyzer::_v1::overload_set_type::add_function(std::shared_p
         assert(0);
     }
 
-    _functions.push_back(std::move(fn));
+    _functions.push_back(fn);
 }
 
-std::shared_ptr<reaver::vapor::analyzer::_v1::function> reaver::vapor::analyzer::_v1::overload_set_type::get_overload(reaver::vapor::lexer::token_type bracket, std::vector<std::shared_ptr<reaver::vapor::analyzer::_v1::type>> args) const
+reaver::vapor::analyzer::_v1::function * reaver::vapor::analyzer::_v1::overload_set_type::get_overload(reaver::vapor::lexer::token_type bracket, std::vector<const reaver::vapor::analyzer::_v1::type *> args) const
 {
     if (bracket == lexer::token_type::round_bracket_open)
     {
         auto it = std::find_if(_functions.begin(), _functions.end(), [&](auto && f) {
-            return f->arguments() == args;
+            // this is dumb
+            // but you apparently can't compare `vector<T>` and `vector<const T>`...
+            return std::inner_product(
+                args.begin(), args.end(),
+                f->arguments().begin(),
+                true,
+                std::logical_and<>(),
+                std::equal_to<>()
+            );
         });
 
         if (it != _functions.end())
@@ -129,21 +140,20 @@ reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
             },
             _parse.range
         );
-        _function->set_body(_body);
+        _function->set_body(_body.get());
 
         auto set = _scope->get(_parse.name.string);
-        auto overloads = std::dynamic_pointer_cast<overload_set>(set->get_variable());
+        auto overloads = dynamic_cast<overload_set *>(set->get_variable());
         assert(overloads);
-        overloads->add_function(_shared_from_this());
+        overloads->add_function(this);
     });
 }
 
-reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::statement>> reaver::vapor::analyzer::_v1::function_declaration::_simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+reaver::future<reaver::vapor::analyzer::_v1::statement *> reaver::vapor::analyzer::_v1::function_declaration::_simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
-    return _body->simplify(ctx).then([&](auto && simplified) {
-        // this feels so wrong
-        _body = std::dynamic_pointer_cast<block>(std::move(simplified));
-        return std::enable_shared_from_this<statement>::shared_from_this();
+    return _body->simplify(ctx).then([&](auto && simplified) -> statement * {
+        replace_uptr(_body, dynamic_cast<block *>(simplified), ctx);
+        return this;
     });
 }
 

@@ -34,7 +34,7 @@ namespace reaver
             class unary_expression : public expression
             {
             public:
-                unary_expression(const parser::unary_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }
+                unary_expression(const parser::unary_expression & parse, scope * lex_scope) : _parse{ parse }
                 {
                     assert(0);
                 }
@@ -50,7 +50,7 @@ namespace reaver
                     assert(0);
                 }
 
-                virtual future<std::shared_ptr<expression>> _simplify_expr(optimization_context &) override
+                virtual future<expression *> _simplify_expr(optimization_context &) override
                 {
                     assert(0);
                 }
@@ -63,9 +63,9 @@ namespace reaver
                 const parser::unary_expression & _parse;
             };
 
-            std::shared_ptr<unary_expression> preanalyze_unary_expression(const parser::unary_expression & parse, std::shared_ptr<scope> lex_scope)
+            std::unique_ptr<unary_expression> preanalyze_unary_expression(const parser::unary_expression & parse, scope * lex_scope)
             {
-                return std::make_shared<unary_expression>(parse, std::move(lex_scope));
+                return std::make_unique<unary_expression>(parse, lex_scope);
             }
         }}
     }

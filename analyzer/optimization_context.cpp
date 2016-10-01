@@ -22,8 +22,11 @@
 
 #include "vapor/analyzer/optimization_context.h"
 #include "vapor/analyzer/expression.h"
+#include "vapor/analyzer/symbol.h"
 
-void reaver::vapor::analyzer::_v1::optimization_context::_handle_expressions(reaver::vapor::analyzer::_v1::expression * ptr, reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::expression>> & fut)
+reaver::vapor::analyzer::_v1::optimization_context::~optimization_context() = default;
+
+void reaver::vapor::analyzer::_v1::optimization_context::_handle_expressions(reaver::vapor::analyzer::_v1::expression * ptr, reaver::future<reaver::vapor::analyzer::_v1::expression *> & fut)
 {
     if (_statement_futures.find(ptr) != _statement_futures.end())
     {
@@ -31,7 +34,21 @@ void reaver::vapor::analyzer::_v1::optimization_context::_handle_expressions(rea
     }
 
     _statement_futures.emplace(ptr, fut.then([](auto && expr) {
-        return std::static_pointer_cast<statement>(expr);
+        return static_cast<statement *>(expr);
     }));
+}
+
+void reaver::vapor::analyzer::_v1::optimization_context::keep_alive(reaver::vapor::analyzer::_v1::statement * ptr)
+{
+    std::lock_guard<std::mutex> lock{ _keep_alive_lock };
+    auto inserted = _keep_alive_stmt.emplace(ptr).second;
+    assert(inserted);
+}
+
+void reaver::vapor::analyzer::_v1::optimization_context::keep_alive(reaver::vapor::analyzer::_v1::variable * ptr)
+{
+    std::lock_guard<std::mutex> lock{ _keep_alive_lock };
+    auto inserted = _keep_alive_var.emplace(ptr).second;
+    assert(inserted);
 }
 

@@ -52,94 +52,95 @@ namespace reaver
             class overload_set_type : public type
             {
             public:
-                overload_set_type(std::shared_ptr<scope> lex_scope) : type{ std::move(lex_scope) }
+                overload_set_type(scope * lex_scope) : type{ lex_scope }
                 {
                 }
 
-                void add_function(std::shared_ptr<function> fn);
+                void add_function(function * fn);
 
                 virtual std::string explain() const override
                 {
                     return "overload set (TODO: add location and member info)";
                 }
 
-                virtual std::shared_ptr<function> get_overload(lexer::token_type bracket, std::vector<std::shared_ptr<type>> args) const override;
+                virtual function * get_overload(lexer::token_type bracket, std::vector<const type *> args) const override;
 
             private:
                 virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const override;
 
-                std::vector<std::shared_ptr<function>> _functions;
+                std::vector<function *> _functions;
             };
 
             class function_declaration;
 
-            class overload_set : public variable
+            class overload_set : public variable, public std::enable_shared_from_this<overload_set>
             {
             public:
-                overload_set(std::shared_ptr<scope> lex_scope) : _type{ std::make_shared<overload_set_type>(std::move(lex_scope)) }
+                overload_set(scope * lex_scope) : _type{ std::make_unique<overload_set_type>(lex_scope) }
                 {
                 }
 
-                void add_function(std::shared_ptr<function_declaration> fn);
+                void add_function(function_declaration * fn);
 
-                virtual std::shared_ptr<type> get_type() const override
+                virtual type * get_type() const override
                 {
-                    return _type;
+                    return _type.get();
                 }
 
             private:
                 virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
-                std::vector<std::shared_ptr<function_declaration>> _overloads;
-                std::shared_ptr<overload_set_type> _type;
+                std::vector<function_declaration *> _overloads;
+                std::unique_ptr<overload_set_type> _type;
             };
 
             class function_declaration : public statement
             {
             public:
-                function_declaration(const parser::function & parse, std::shared_ptr<scope> scope)
+                function_declaration(const parser::function & parse, scope * scope)
                     : _parse{ parse }, _scope{ scope }
                 {
                     assert(!_parse.arguments);
 
                     _body = preanalyze_block(*_parse.body, scope, true);
-                    auto set = _scope->get_or_init(_parse.name.string,
-                        [&]{ return make_symbol(_parse.name.string, std::make_shared<overload_set>(scope)); });
+                    std::shared_ptr<overload_set> keep_count;
+                    auto symbol = _scope->get_or_init(_parse.name.string, [&]{
+                        keep_count = std::make_shared<overload_set>(scope);
+                        return make_symbol(_parse.name.string, keep_count.get());
+                    });
+
+                    _overload_set = dynamic_cast<overload_set *>(symbol->get_variable())->shared_from_this();
                 }
 
-                std::shared_ptr<function> get_function() const
+                function * get_function() const
                 {
-                    return _function;
+                    return _function.get();
                 }
 
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
-                std::shared_ptr<function_declaration> _shared_from_this()
-                {
-                    return std::static_pointer_cast<function_declaration>(shared_from_this());
-                }
-
                 virtual future<> _analyze() override;
-                virtual future<std::shared_ptr<statement>> _simplify(optimization_context &) override;
+                virtual future<statement *> _simplify(optimization_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::function & _parse;
 
-                std::shared_ptr<block> _body;
-                std::shared_ptr<scope> _scope;
-                std::shared_ptr<function> _function;
+                std::unique_ptr<block> _body;
+                scope * _scope;
+                std::unique_ptr<function> _function;
+                std::shared_ptr<overload_set> _overload_set;
             };
 
-            inline void overload_set::add_function(std::shared_ptr<function_declaration> fn)
+            inline void overload_set::add_function(function_declaration * fn)
             {
                 _type->add_function(fn->get_function());
                 _overloads.push_back(std::move(fn));
             }
 
-            inline std::shared_ptr<function_declaration> preanalyze_function(const parser::function & func, std::shared_ptr<scope> & lex_scope)
+            inline std::unique_ptr<function_declaration> preanalyze_function(const parser::function & func, scope * & lex_scope)
             {
-                return std::make_shared<function_declaration>(func, lex_scope);
+                return std::make_unique<function_declaration>(func, lex_scope);
             }
         }}
     }

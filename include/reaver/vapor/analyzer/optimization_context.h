@@ -40,8 +40,10 @@ namespace reaver
             class optimization_context
             {
             public:
+                ~optimization_context();
+
                 template<typename T, typename F>
-                future<std::shared_ptr<T>> get_future_or_init(T * ptr, F && f)
+                future<T *> get_future_or_init(T * ptr, F && f)
                 {
                     auto && futs = _get_futures<T>();
 
@@ -79,6 +81,9 @@ namespace reaver
                     return _something_heppened;
                 }
 
+                void keep_alive(statement * ptr);
+                void keep_alive(variable * ptr);
+
             private:
                 std::atomic<bool> _something_heppened{ false };
 
@@ -86,9 +91,13 @@ namespace reaver
                 using _shlock = std::shared_lock<std::shared_mutex>;
 
                 mutable std::shared_mutex _futures_lock;
-                std::unordered_map<statement *, future<std::shared_ptr<statement>>> _statement_futures;
-                std::unordered_map<expression *, future<std::shared_ptr<expression>>> _expression_futures;
-                std::unordered_map<variable *, future<std::shared_ptr<variable>>> _variable_futures;
+                std::unordered_map<statement *, future<statement *>> _statement_futures;
+                std::unordered_map<expression *, future<expression *>> _expression_futures;
+                std::unordered_map<variable *, future<variable *>> _variable_futures;
+
+                std::mutex _keep_alive_lock;
+                std::unordered_set<std::unique_ptr<statement>> _keep_alive_stmt;
+                std::unordered_set<std::unique_ptr<variable>> _keep_alive_var;
 
                 template<typename T>
                 auto _get_futures() = delete;
@@ -99,7 +108,7 @@ namespace reaver
                 }
 
                 // sorry for this, but need a definition of expression for this one thing...
-                void _handle_expressions(expression * ptr, future<std::shared_ptr<expression>> & fut);
+                void _handle_expressions(expression * ptr, future<expression *> & fut);
             };
 
             template<>

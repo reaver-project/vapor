@@ -26,12 +26,19 @@
 #include "vapor/parser.h"
 #include "vapor/analyzer/module.h"
 
-reaver::vapor::analyzer::_v1::module::module(const reaver::vapor::parser::module & parse) : _parse{ parse }, _scope{ std::make_shared<reaver::vapor::analyzer::_v1::scope>() }
+reaver::vapor::analyzer::_v1::module::module(const reaver::vapor::parser::module & parse) : _parse{ parse }, _scope{ std::make_unique<reaver::vapor::analyzer::_v1::scope>() }
 {
     _statements = fmap(
         _parse.statements,
         [&](const auto & statement){
-            return preanalyze_statement(statement, _scope);
+            auto scope_ptr = _scope.get();
+            auto ret = preanalyze_statement(statement, scope_ptr);
+            if (scope_ptr != _scope.get())
+            {
+                _scope.release()->keep_alive();
+                _scope.reset(scope_ptr);
+            }
+            return ret;
         }
     );
 
@@ -91,7 +98,12 @@ namespace
     template<typename Map>
     auto as_vector(Map && map)
     {
-        return std::vector<typename std::remove_cv_t<std::remove_reference_t<Map>>::value_type>{ map.begin(), map.end() };
+        std::vector<std::pair<std::u32string, reaver::vapor::analyzer::_v1::symbol *>> ret;
+        ret.reserve(map.size());
+        std::transform(map.begin(), map.end(), std::back_inserter(ret), [](auto && pair) {
+            return std::make_pair(pair.first, pair.second.get());
+        });
+        return ret;
     }
 }
 

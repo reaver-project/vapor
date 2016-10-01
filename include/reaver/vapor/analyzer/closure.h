@@ -23,6 +23,7 @@
 #pragma once
 
 #include <memory>
+#include <numeric>
 
 #include "../parser/lambda_expression.h"
 #include "scope.h"
@@ -39,7 +40,7 @@ namespace reaver
             class closure_type : public type
             {
             public:
-                closure_type(std::shared_ptr<scope> lex_scope, std::weak_ptr<expression> closure, std::shared_ptr<function> fn) : type{ std::move(lex_scope) }, _closure{ std::move(closure) }, _function{ std::move(fn) }
+                closure_type(scope * lex_scope, expression * closure, std::unique_ptr<function> fn) : type{ lex_scope }, _closure{ std::move(closure) }, _function{ std::move(fn) }
                 {
                 }
 
@@ -48,11 +49,17 @@ namespace reaver
                     return "closure (TODO: location)";
                 }
 
-                virtual std::shared_ptr<function> get_overload(lexer::token_type bracket, std::vector<std::shared_ptr<type>> args) const override
+                virtual function * get_overload(lexer::token_type bracket, std::vector<const type *> args) const override
                 {
-                    if (_function->arguments() == args)
+                    if (std::inner_product(
+                            args.begin(), args.end(),
+                            _function->arguments().begin(),
+                            true,
+                            std::logical_and<>(),
+                            std::equal_to<>()
+                        ))
                     {
-                        return _function;
+                        return _function.get();
                     }
 
                     return nullptr;
@@ -61,17 +68,17 @@ namespace reaver
             private:
                 virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const override;
 
-                std::weak_ptr<expression> _closure;
-                std::shared_ptr<function> _function;
+                expression * _closure;
+                std::unique_ptr<function> _function;
             };
 
             class closure : public expression
             {
             public:
-                closure(const parser::lambda_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _scope{ lex_scope->clone_local() }
+                closure(const parser::lambda_expression & parse, scope * lex_scope) : _parse{ parse }, _scope{ lex_scope->clone_local() }
                 {
                     _scope->close();
-                    _body = preanalyze_block(parse.body, _scope, true);
+                    _body = preanalyze_block(parse.body, _scope.get(), true);
                 }
 
                 auto & parse() const
@@ -83,18 +90,18 @@ namespace reaver
 
             private:
                 virtual future<> _analyze() override;
-                virtual future<std::shared_ptr<expression>> _simplify_expr(optimization_context &) override;
+                virtual future<expression *> _simplify_expr(optimization_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::lambda_expression & _parse;
-                std::shared_ptr<scope> _scope;
-                std::shared_ptr<block> _body;
-                std::shared_ptr<type> _type;
+                std::unique_ptr<scope> _scope;
+                std::unique_ptr<block> _body;
+                std::unique_ptr<type> _type;
             };
 
-            inline std::shared_ptr<closure> preanalyze_closure(const parser::lambda_expression & parse, std::shared_ptr<scope> lex_scope)
+            inline std::unique_ptr<closure> preanalyze_closure(const parser::lambda_expression & parse, scope * lex_scope)
             {
-                return std::make_shared<closure>(parse, std::move(lex_scope));
+                return std::make_unique<closure>(parse, lex_scope);
             }
         }}
     }

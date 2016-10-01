@@ -23,6 +23,7 @@
 #include "vapor/parser/expression_list.h"
 #include "vapor/parser/lambda_expression.h"
 #include "vapor/analyzer/return.h"
+#include "vapor/analyzer/symbol.h"
 
 void reaver::vapor::analyzer::_v1::return_statement::print(std::ostream & os, std::size_t indent) const
 {

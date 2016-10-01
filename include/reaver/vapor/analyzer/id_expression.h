@@ -39,7 +39,7 @@ namespace reaver
             class id_expression : public expression
             {
             public:
-                id_expression(const parser::id_expression & parse, std::shared_ptr<scope> lex_scope) : _parse{ parse }, _lex_scope{ lex_scope }
+                id_expression(const parser::id_expression & parse, scope * lex_scope) : _parse{ parse }, _lex_scope{ lex_scope }
                 {
                 }
 
@@ -52,16 +52,17 @@ namespace reaver
 
             private:
                 virtual future<> _analyze() override;
-                virtual future<std::shared_ptr<expression>> _simplify_expr(optimization_context &) override;
+                virtual future<expression *> _simplify_expr(optimization_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::id_expression & _parse;
-                std::shared_ptr<scope> _lex_scope;
+                scope * _lex_scope;
+                variable * _referenced;
             };
 
-            inline std::shared_ptr<id_expression> preanalyze_id_expression(const parser::id_expression & parse, std::shared_ptr<scope> lex_scope)
+            inline std::unique_ptr<id_expression> preanalyze_id_expression(const parser::id_expression & parse, scope * lex_scope)
             {
-                return std::make_shared<id_expression>(parse, std::move(lex_scope));
+                return std::make_unique<id_expression>(parse, lex_scope);
             }
         }}
     }

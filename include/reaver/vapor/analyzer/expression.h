@@ -28,6 +28,7 @@
 
 #include "variable.h"
 #include "statement.h"
+#include "helpers.h"
 
 namespace reaver
 {
@@ -49,21 +50,21 @@ namespace reaver
                 expression() = default;
                 virtual ~expression() = default;
 
-                expression(std::shared_ptr<variable> var) : _variable{ std::move(var) }
+                expression(std::unique_ptr<variable> var) : _variable{ std::move(var) }
                 {
                 }
 
-                std::shared_ptr<variable> get_variable() const
+                variable * get_variable() const
                 {
                     if (!_variable)
                     {
                         assert(!"someone tried to get variable before analyzing... or forgot to set variable from analyze");
                     }
 
-                    return _variable;
+                    return _variable.get();
                 }
 
-                std::shared_ptr<type> get_type()
+                type * get_type()
                 {
                     if (!_variable)
                     {
@@ -73,50 +74,46 @@ namespace reaver
                     return _variable->get_type();
                 }
 
-                future<std::shared_ptr<expression>> simplify_expr(optimization_context & ctx)
+                future<expression *> simplify_expr(optimization_context & ctx)
                 {
-                    return ctx.get_future_or_init(this, [&, self = _shared_from_this()]() {
-                        return make_ready_future().then([&, self = _shared_from_this()]() {
+                    return ctx.get_future_or_init(this, [&]() {
+                        return make_ready_future().then([&]() {
                             return _simplify_expr(ctx);
                         });
                     });
                 }
 
             protected:
-                std::shared_ptr<expression> _shared_from_this()
+                virtual future<statement *> _simplify(optimization_context & ctx) override final
                 {
-                    return std::static_pointer_cast<expression>(shared_from_this());
-                }
-
-                std::weak_ptr<expression> _weak_from_this()
-                {
-                    return std::static_pointer_cast<expression>(shared_from_this());
-                }
-
-                virtual future<std::shared_ptr<statement>> _simplify(optimization_context & ctx) override final
-                {
-                    return simplify_expr(ctx).then([&, self = _shared_from_this()](auto && simplified) {
-                        return static_cast<std::shared_ptr<statement>>(std::move(simplified));
+                    return simplify_expr(ctx).then([&](auto && simplified) -> statement * {
+                        return simplified;
                     });
                 }
 
-                virtual future<std::shared_ptr<expression>> _simplify_expr(optimization_context &) = 0;
+                virtual future<expression *> _simplify_expr(optimization_context &) = 0;
 
-                void _set_variable(std::shared_ptr<variable> var)
+                void _set_variable(std::unique_ptr<variable> var)
                 {
                     assert(var);
-                    _variable = var;
+                    assert(!_variable);
+                    _variable = std::move(var);
+                }
+
+                void _set_variable(variable * ptr, optimization_context & ctx)
+                {
+                    replace_uptr(_variable, ptr, ctx);
                 }
 
             private:
-                std::shared_ptr<variable> _variable;
+                std::unique_ptr<variable> _variable;
             };
 
             class expression_list : public expression
             {
             private:
                 virtual future<> _analyze() override;
-                virtual future<std::shared_ptr<expression>> _simplify_expr(optimization_context &) override;
+                virtual future<expression *> _simplify_expr(optimization_context &) override;
 
                 virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
                 {
@@ -129,13 +126,13 @@ namespace reaver
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
                 range_type range;
-                std::vector<std::shared_ptr<expression>> value;
+                std::vector<std::unique_ptr<expression>> value;
             };
 
             class variable_expression : public expression
             {
             public:
-                variable_expression(std::shared_ptr<variable> var)
+                variable_expression(std::unique_ptr<variable> var)
                 {
                     _set_variable(std::move(var));
                 }
@@ -148,9 +145,13 @@ namespace reaver
                     return make_ready_future();
                 }
 
-                virtual future<std::shared_ptr<expression>> _simplify_expr(optimization_context &) override
+                virtual future<expression *> _simplify_expr(optimization_context & ctx) override
                 {
-                    return make_ready_future(_shared_from_this());
+                    return get_variable()->simplify(ctx)
+                        .then([&](auto && simplified) -> expression * {
+                            _set_variable(simplified, ctx);
+                            return this;
+                        });
                 }
 
                 virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
@@ -164,13 +165,56 @@ namespace reaver
                 }
             };
 
-            inline std::shared_ptr<expression> make_variable_expression(std::shared_ptr<variable> var)
+            inline std::unique_ptr<expression> make_variable_expression(std::unique_ptr<variable> var)
             {
-                return std::make_shared<variable_expression>(std::move(var));
+                return std::make_unique<variable_expression>(std::move(var));
             }
 
-            std::shared_ptr<expression> preanalyze_expression(const parser::expression & expr, const std::shared_ptr<scope> & lex_scope);
-            std::shared_ptr<expression> preanalyze_expression(const parser::expression_list & expr, const std::shared_ptr<scope> & lex_scope);
+            class variable_ref_expression : public expression
+            {
+            public:
+                variable_ref_expression(variable * var) : _referenced(var)
+                {
+                    _set_variable(make_expression_variable(this, _referenced->get_type()));
+                }
+
+                virtual void print(std::ostream & os, std::size_t indent) const override;
+
+            private:
+                virtual future<> _analyze() override
+                {
+                    return make_ready_future();
+                }
+
+                virtual future<expression *> _simplify_expr(optimization_context & ctx) override
+                {
+                    return _referenced->simplify(ctx)
+                        .then([&](auto && simplified) -> expression * {
+                            _referenced = simplified;
+                            return this;
+                        });
+                }
+
+                virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
+                {
+                    return { codegen::ir::instruction {
+                        none, none,
+                        { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
+                        {},
+                        codegen::ir::value{ get<0>(_referenced->codegen_ir(ctx).back()) }
+                    } };
+                }
+
+                variable * _referenced;
+            };
+
+            inline std::unique_ptr<expression> make_variable_ref_expression(variable * var)
+            {
+                return std::make_unique<variable_ref_expression>(var);
+            }
+
+            std::unique_ptr<expression> preanalyze_expression(const parser::expression & expr, scope * lex_scope);
+            std::unique_ptr<expression> preanalyze_expression(const parser::expression_list & expr, scope * lex_scope);
         }}
     }
 }

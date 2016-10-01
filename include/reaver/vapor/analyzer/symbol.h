@@ -39,12 +39,12 @@ namespace reaver
                 using _shlock = std::shared_lock<std::shared_mutex>;
 
             public:
-                symbol(std::u32string name, std::shared_ptr<variable> variable)
-                    : _name{ std::move(name) }, _variable{ std::move(variable) }
+                symbol(std::u32string name, variable * variable)
+                    : _name{ std::move(name) }, _variable{ variable }
                 {
                 }
 
-                void set_variable(std::shared_ptr<variable> var)
+                void set_variable(variable * var)
                 {
                     _ulock lock{ _lock };
 
@@ -56,7 +56,7 @@ namespace reaver
                     }
                 }
 
-                std::shared_ptr<variable> get_variable() const
+                variable * get_variable() const
                 {
                     _shlock lock{ _lock };
 
@@ -64,7 +64,7 @@ namespace reaver
                     return _variable;
                 }
 
-                std::shared_ptr<type> get_type() const
+                type * get_type() const
                 {
                     _shlock lock{ _lock };
 
@@ -90,7 +90,7 @@ namespace reaver
                         return *_future;
                     }
 
-                    auto pair = make_promise<std::shared_ptr<variable>>();
+                    auto pair = make_promise<variable *>();
                     _promise = std::move(pair.promise);
                     _future = std::move(pair.future);
                     return *_future;
@@ -103,14 +103,14 @@ namespace reaver
 
                 std::u32string _name;
 
-                std::shared_ptr<variable> _variable;
-                optional<future<std::shared_ptr<variable>>> _future;
-                optional<manual_promise<std::shared_ptr<variable>>> _promise;
+                variable * _variable;
+                optional<future<variable *>> _future;
+                optional<manual_promise<variable *>> _promise;
             };
 
-            inline auto make_symbol(std::u32string name, std::shared_ptr<variable> variable = nullptr)
+            inline auto make_symbol(std::u32string name, variable * variable = nullptr)
             {
-                return std::make_shared<symbol>(std::move(name), std::move(variable));
+                return std::make_unique<symbol>(std::move(name), variable);
             }
         }}
     }

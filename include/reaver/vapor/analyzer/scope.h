@@ -53,7 +53,7 @@ namespace reaver
 
             class symbol;
 
-            class scope : public std::enable_shared_from_this<scope>
+            class scope
             {
                 struct _key {};
 
@@ -75,42 +75,39 @@ namespace reaver
                 using _shlock = std::shared_lock<std::shared_mutex>;
 
             public:
-                scope(_key, std::shared_ptr<scope> parent_scope, bool is_local, bool is_shadowing_boundary) : _parent{ std::move(parent_scope) }, _is_local_scope{ is_local }, _is_shadowing_boundary{ is_shadowing_boundary }
+                scope(_key, scope * parent_scope, bool is_local, bool is_shadowing_boundary) : _parent{ parent_scope }, _is_local_scope{ is_local }, _is_shadowing_boundary{ is_shadowing_boundary }
                 {
                     _init_close();
                 }
 
-                ~scope() noexcept
-                {
-                    close();
-                }
+                ~scope();
 
                 void close();
 
-                std::shared_ptr<scope> clone_for_decl()
+                scope * clone_for_decl()
                 {
                     if (_is_local_scope)
                     {
-                        return std::make_shared<scope>(_key{}, shared_from_this(), true, false);
+                        return new scope{ _key{}, this, _is_local_scope, false };
                     }
 
-                    return shared_from_this();
+                    return this;
                 }
 
-                std::shared_ptr<scope> clone_local()
+                std::unique_ptr<scope> clone_local()
                 {
-                    return std::make_shared<scope>(_key{}, shared_from_this(), true, true);
+                    return std::make_unique<scope>(_key{}, this, true, true);
                 }
 
-                std::shared_ptr<scope> clone_for_class()
+                std::unique_ptr<scope> clone_for_class()
                 {
-                    return std::make_shared<scope>(_key{}, shared_from_this(), false, true);
+                    return std::make_unique<scope>(_key{}, this, false, true);
                 }
 
                 auto get(const std::u32string & name) const
                 {
                     _shlock lock{ _lock };
-                    return _symbols.at(name);
+                    return _symbols.at(name).get();
                 }
 
                 auto try_get(const std::u32string & name) const
@@ -120,7 +117,7 @@ namespace reaver
                     return it != _symbols.end() ? make_optional(it->second) : none;
                 }
 
-                bool init(const std::u32string & name, std::shared_ptr<symbol> symb);
+                bool init(const std::u32string & name, std::unique_ptr<symbol> symb);
 
                 template<typename F>
                 auto get_or_init(const std::u32string & name, F init)
@@ -132,7 +129,7 @@ namespace reaver
                         auto it = _symbols.find(name);
                         if (it != _symbols.end())
                         {
-                            return it->second;
+                            return it->second.get();
                         }
                     }
 
@@ -143,19 +140,20 @@ namespace reaver
                     auto it = _symbols.find(name);
                     if (it != _symbols.end())
                     {
-                        return it->second;
+                        return it->second.get();
                     }
 
                     auto init_v = init();
-                    _symbols.emplace(name, init_v);
-                    return init_v;
+                    auto ret = init_v.get();
+                    _symbols.emplace(name, std::move(init_v));
+                    return ret;
                 }
 
                 // this will always give you a thingy from *current* scope
                 // if you want to get from any of the scopes up
                 // do use resolve()
-                future<std::shared_ptr<symbol>> get_future(const std::u32string & name);
-                future<std::shared_ptr<symbol>> resolve(const std::u32string & name);
+                future<symbol *> get_future(const std::u32string & name);
+                future<symbol *> resolve(const std::u32string & name);
 
                 const auto & declared_symbols() const
                 {
@@ -185,16 +183,24 @@ namespace reaver
                     return scopes;
                 }
 
+                void keep_alive()
+                {
+                    assert(_parent);
+                    auto inserted = _parent->_keepalive.emplace(this).second;
+                    assert(inserted);
+                }
+
             private:
                 mutable std::shared_mutex _lock;
 
                 std::u32string _name;
                 codegen::ir::scope_type _scope_type;
 
-                std::shared_ptr<scope> _parent;
-                std::unordered_map<std::u32string, std::shared_ptr<symbol>> _symbols;
-                std::unordered_map<std::u32string, future<std::shared_ptr<symbol>>> _symbol_futures;
-                std::unordered_map<std::u32string, manual_promise<std::shared_ptr<symbol>>> _symbol_promises;
+                scope * _parent = nullptr;
+                std::unordered_set<std::unique_ptr<scope>> _keepalive;
+                std::unordered_map<std::u32string, std::unique_ptr<symbol>> _symbols;
+                std::unordered_map<std::u32string, future<symbol *>> _symbol_futures;
+                std::unordered_map<std::u32string, manual_promise<symbol *>> _symbol_promises;
                 const bool _is_local_scope = false;
                 const bool _is_shadowing_boundary = false;
                 bool _is_closed = false;

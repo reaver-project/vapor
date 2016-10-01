@@ -39,12 +39,13 @@ namespace reaver
             class declaration : public statement
             {
             public:
-                declaration(const parser::declaration & parse, std::shared_ptr<scope> old_scope, std::shared_ptr<scope> new_scope)
+                declaration(const parser::declaration & parse, scope * old_scope, scope * new_scope)
                     : _parse{ parse }, _name{ parse.identifier.string }
                 {
                     _init_expr = preanalyze_expression(_parse.rhs, old_scope);
-                    _declared_symbol = make_symbol(_name);
-                    if (!new_scope->init(_name, _declared_symbol))
+                    auto symbol = make_symbol(_name);
+                    _declared_symbol = symbol.get();
+                    if (!new_scope->init(_name, std::move(symbol)))
                     {
                         assert(0);
                     }
@@ -72,7 +73,7 @@ namespace reaver
 
                 auto initializer_expression() const
                 {
-                    return _init_expr;
+                    return _init_expr.get();
                 }
 
                 virtual void print(std::ostream & os, std::size_t indent) const override
@@ -94,7 +95,7 @@ namespace reaver
                     });
                 }
 
-                virtual future<std::shared_ptr<statement>> _simplify(optimization_context & ctx) override
+                virtual future<statement *> _simplify(optimization_context & ctx) override
                 {
                     return _init_expr->simplify(ctx);
                 }
@@ -116,15 +117,15 @@ namespace reaver
 
                 const parser::declaration & _parse;
                 std::u32string _name;
-                std::shared_ptr<symbol> _declared_symbol;
-                std::shared_ptr<expression> _init_expr;
+                symbol * _declared_symbol;
+                std::unique_ptr<expression> _init_expr;
             };
 
-            inline std::shared_ptr<declaration> preanalyze_declaration(const parser::declaration & parse, std::shared_ptr<scope> & lex_scope)
+            inline std::unique_ptr<declaration> preanalyze_declaration(const parser::declaration & parse, scope *& lex_scope)
             {
                 auto old_scope = lex_scope;
                 lex_scope = old_scope->clone_for_decl();
-                return std::make_shared<declaration>(parse, old_scope, lex_scope);
+                return std::make_unique<declaration>(parse, old_scope, lex_scope);
             }
         }}
     }

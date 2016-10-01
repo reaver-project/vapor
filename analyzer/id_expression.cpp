@@ -42,22 +42,23 @@ reaver::future<> reaver::vapor::analyzer::_v1::id_expression::_analyze()
         }).then([](auto && symbol) {
             return symbol->get_variable_future();
         }).then([this](auto && variable) {
-            this->_set_variable(variable);
+            _referenced = variable;
+            this->_set_variable(make_expression_variable(this, _referenced->get_type()));
         });
 }
 
-reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::expression>> reaver::vapor::analyzer::_v1::id_expression::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::id_expression::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
-    return get_variable()->simplify(ctx)
-        .then([&](auto && simplified) {
-            this->_set_variable(std::move(simplified));
-            return _shared_from_this();
+    return _referenced->simplify(ctx)
+        .then([&](auto && simplified) -> expression * {
+            _referenced = simplified;
+            return this;
         });
 }
 
 reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::id_expression::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
-    auto result = codegen::ir::make_variable(get_variable()->get_type()->codegen_type(ctx), name());
+    auto result = codegen::ir::make_variable(_referenced->get_type()->codegen_type(ctx), name());
     result->declared = true;
     return { codegen::ir::instruction{
         none, none,

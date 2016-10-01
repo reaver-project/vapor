@@ -27,6 +27,8 @@
 #include <reaver/error.h>
 #include <reaver/id.h>
 
+#include "optimization_context.h"
+
 namespace reaver
 {
     namespace vapor
@@ -51,8 +53,27 @@ namespace reaver
                 error(std::move(message), parse, default_error_engine());
             }
 
-            template<typename... Ts>
-            using shptr_variant = variant<std::shared_ptr<Ts>...>;
+            template<typename T, typename U>
+            auto replace_uptr(std::unique_ptr<T> & uptr, U * ptr, optimization_context & ctx) -> decltype(uptr.reset(ptr))
+            {
+                if (uptr.get() != ptr)
+                {
+                    ctx.keep_alive(uptr.release());
+                    uptr.reset(ptr);
+                }
+            }
+
+            template<typename T, typename U>
+            void replace_uptrs(std::vector<std::unique_ptr<T>> & uptrs, const std::vector<U *> & ptrs, optimization_context & ctx)
+            {
+                assert(uptrs.size() == ptrs.size());
+
+                auto it_ptrs = ptrs.begin();
+                for (auto it = uptrs.begin(), end = uptrs.end(); it != end; ++it, ++it_ptrs)
+                {
+                    replace_uptr(*it, *it_ptrs, ctx);
+                }
+            }
         }}
     }
 }

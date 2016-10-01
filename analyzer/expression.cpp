@@ -27,46 +27,48 @@
 #include "vapor/analyzer/postfix_expression.h"
 #include "vapor/analyzer/unary_expression.h"
 #include "vapor/analyzer/import.h"
+#include "vapor/analyzer/helpers.h"
+#include "vapor/analyzer/symbol.h"
 
-std::shared_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyzer::_v1::preanalyze_expression(const reaver::vapor::parser::_v1::expression & expr, const std::shared_ptr<reaver::vapor::analyzer::_v1::scope> & lex_scope)
+std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyzer::_v1::preanalyze_expression(const reaver::vapor::parser::_v1::expression & expr, reaver::vapor::analyzer::_v1::scope * lex_scope)
 {
     return get<0>(fmap(expr.expression_value, make_overload_set(
-        [](const parser::string_literal & string) -> std::shared_ptr<expression>
+        [](const parser::string_literal & string) -> std::unique_ptr<expression>
         {
             assert(0);
             return nullptr;
         },
 
-        [](const parser::integer_literal & integer) -> std::shared_ptr<expression>
+        [](const parser::integer_literal & integer) -> std::unique_ptr<expression>
         {
-            return std::make_shared<integer_literal>(integer);
+            return std::make_unique<integer_literal>(integer);
         },
 
-        [&](const parser::postfix_expression & postfix) -> std::shared_ptr<expression>
+        [&](const parser::postfix_expression & postfix) -> std::unique_ptr<expression>
         {
             auto pexpr = preanalyze_postfix_expression(postfix, lex_scope);
             return pexpr;
         },
 
-        [](const parser::import_expression & import) -> std::shared_ptr<expression>
+        [](const parser::import_expression & import) -> std::unique_ptr<expression>
         {
             assert(0);
-            return std::shared_ptr<import_expression>();
+            return std::unique_ptr<import_expression>();
         },
 
-        [&](const parser::lambda_expression & lambda_expr) -> std::shared_ptr<expression>
+        [&](const parser::lambda_expression & lambda_expr) -> std::unique_ptr<expression>
         {
             auto lambda = preanalyze_closure(lambda_expr, lex_scope);
             return lambda;
         },
 
-        [](const parser::unary_expression & unary_expr) -> std::shared_ptr<expression>
+        [](const parser::unary_expression & unary_expr) -> std::unique_ptr<expression>
         {
             assert(0);
-            return std::shared_ptr<unary_expression>();
+            return std::unique_ptr<unary_expression>();
         },
 
-        [&](const parser::binary_expression & binary_expr) -> std::shared_ptr<expression>
+        [&](const parser::binary_expression & binary_expr) -> std::unique_ptr<expression>
         {
             auto binexpr = preanalyze_binary_expression(binary_expr, lex_scope);
             return binexpr;
@@ -77,16 +79,16 @@ std::shared_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyze
 reaver::future<> reaver::vapor::analyzer::_v1::expression_list::_analyze()
 {
     return when_all(fmap(value, [&](auto && expr) { return expr->analyze(); }))
-        .then([&]{ _set_variable(value.back()->get_variable()); });
+        .then([&]{ _set_variable(make_expression_variable(this, value.back()->get_variable()->get_type())); });
 }
 
-reaver::future<std::shared_ptr<reaver::vapor::analyzer::_v1::expression>> reaver::vapor::analyzer::_v1::expression_list::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::expression_list::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
     return when_all(fmap(value, [&](auto && expr) { return expr->simplify_expr(ctx); }))
-        .then([&](auto && simplified) {
-            value = std::move(simplified);
+        .then([&](auto && simplified) -> expression * {
+            replace_uptrs(value, simplified, ctx);
             assert(0);
-            return _shared_from_this();
+            return this;
         });
 }
 
@@ -104,14 +106,14 @@ void reaver::vapor::analyzer::_v1::expression_list::print(std::ostream & os, std
     });
 }
 
-std::shared_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyzer::_v1::preanalyze_expression(const reaver::vapor::parser::expression_list & expr, const std::shared_ptr<reaver::vapor::analyzer::_v1::scope> & lex_scope)
+std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyzer::_v1::preanalyze_expression(const reaver::vapor::parser::expression_list & expr, reaver::vapor::analyzer::_v1::scope * lex_scope)
 {
     if (expr.expressions.size() == 1)
     {
         return preanalyze_expression(expr.expressions.front(), lex_scope);
     }
 
-    auto ret = std::make_shared<expression_list>();
+    auto ret = std::make_unique<expression_list>();
     ret->value.reserve(expr.expressions.size());
     std::transform(expr.expressions.begin(), expr.expressions.end(), std::back_inserter(ret->value), [&](auto && expr)
     {
@@ -125,6 +127,13 @@ void reaver::vapor::analyzer::_v1::variable_expression::print(std::ostream & os,
 {
     auto in = std::string(indent, ' ');
     os << in << "variable expression:\n";
+    os << in << "type: " << get_variable()->get_type()->explain() << '\n';
+}
+
+void reaver::vapor::analyzer::_v1::variable_ref_expression::print(std::ostream & os, std::size_t indent) const
+{
+    auto in = std::string(indent, ' ');
+    os << in << "variable ref expression:\n";
     os << in << "type: " << get_variable()->get_type()->explain() << '\n';
 }
 

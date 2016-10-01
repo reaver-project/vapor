@@ -42,7 +42,7 @@ namespace reaver
                     {
                         _modules = fmap(_original_ast, [](auto && m)
                         {
-                            auto ret = std::make_shared<module>(m);
+                            auto ret = std::make_unique<module>(m);
                             ret->analyze();
                             ret->simplify();
                             return ret;
@@ -92,7 +92,7 @@ namespace reaver
 
             private:
                 parser::ast _original_ast;
-                std::vector<std::shared_ptr<module>> _modules;
+                std::vector<std::unique_ptr<module>> _modules;
             };
 
             std::ostream & operator<<(std::ostream & os, std::reference_wrapper<ast> tree)

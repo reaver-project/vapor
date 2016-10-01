@@ -41,17 +41,17 @@ namespace reaver
 
             using variable_ir = std::vector<variant<codegen::ir::value, codegen::ir::function>>;
 
-            class variable : public std::enable_shared_from_this<variable>
+            class variable
             {
             public:
                 virtual ~variable() = default;
 
-                virtual std::shared_ptr<type> get_type() const = 0;
+                virtual type * get_type() const = 0;
 
-                future<std::shared_ptr<variable>> simplify(optimization_context & ctx)
+                future<variable *> simplify(optimization_context & ctx)
                 {
                     return ctx.get_future_or_init(this, [&]() {
-                        return make_ready_future().then([&]{
+                        return make_ready_future().then([&]() {
                             return _simplify(ctx);
                         });
                     });
@@ -72,15 +72,15 @@ namespace reaver
                     return false;
                 }
 
-                virtual bool is_equal(std::shared_ptr<const variable>) const
+                virtual bool is_equal(const variable *) const
                 {
                     return false;
                 }
 
             private:
-                virtual future<std::shared_ptr<variable>> _simplify(optimization_context &)
+                virtual future<variable *> _simplify(optimization_context &)
                 {
-                    return make_ready_future(shared_from_this());
+                    return make_ready_future(this);
                 }
 
                 virtual variable_ir _codegen_ir(ir_generation_context &) const = 0;
@@ -91,26 +91,26 @@ namespace reaver
             class expression_variable : public variable
             {
             public:
-                expression_variable(std::weak_ptr<expression> expr, std::shared_ptr<type> type) : _expression{ expr }, _type{ type }
+                expression_variable(expression * expr, type * type) : _expression{ expr }, _type{ type }
                 {
                 }
 
-                virtual std::shared_ptr<type> get_type() const override
+                virtual type * get_type() const override
                 {
                     return _type;
                 }
 
             private:
-                virtual future<std::shared_ptr<variable>> _simplify(optimization_context & ctx) override;
+                virtual future<variable *> _simplify(optimization_context & ctx) override;
                 virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
-                std::weak_ptr<expression> _expression;
-                std::shared_ptr<type> _type;
+                expression * _expression;
+                type * _type;
             };
 
-            inline std::shared_ptr<variable> make_expression_variable(std::weak_ptr<expression> expr, std::shared_ptr<type> type)
+            inline std::unique_ptr<variable> make_expression_variable(expression * expr, type * type)
             {
-                return std::make_shared<expression_variable>(expr, type);
+                return std::make_unique<expression_variable>(expr, type);
             }
         }}
     }

@@ -22,7 +22,7 @@
 
 #include "vapor/analyzer/ir_context.h"
 
-void reaver::vapor::analyzer::_v1::ir_generation_context::add_function_to_generate(const std::shared_ptr<const reaver::vapor::analyzer::_v1::function> & fn)
+void reaver::vapor::analyzer::_v1::ir_generation_context::add_function_to_generate(const reaver::vapor::analyzer::_v1::function * fn)
 {
     if (_generated_functions.find(fn) != _generated_functions.end())
     {
@@ -35,7 +35,7 @@ void reaver::vapor::analyzer::_v1::ir_generation_context::add_function_to_genera
     }
 }
 
-void reaver::vapor::analyzer::_v1::ir_generation_context::add_generated_function(const std::shared_ptr<const reaver::vapor::analyzer::_v1::function> & fn)
+void reaver::vapor::analyzer::_v1::ir_generation_context::add_generated_function(const reaver::vapor::analyzer::_v1::function * fn)
 {
     _generated_functions.insert(fn);
 
@@ -46,7 +46,7 @@ void reaver::vapor::analyzer::_v1::ir_generation_context::add_generated_function
     }
 }
 
-std::shared_ptr<const reaver::vapor::analyzer::_v1::function> reaver::vapor::analyzer::_v1::ir_generation_context::function_to_generate()
+const reaver::vapor::analyzer::_v1::function * reaver::vapor::analyzer::_v1::ir_generation_context::function_to_generate()
 {
     if (_functions_to_generate.size())
     {
