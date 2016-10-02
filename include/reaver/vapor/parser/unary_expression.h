@@ -39,6 +39,13 @@ namespace reaver
                 expression operand;
             };
 
+            inline bool operator==(const unary_expression & lhs, const unary_expression & rhs)
+            {
+                return lhs.range == rhs.range
+                    && lhs.op == rhs.op
+                    && lhs.operand == rhs.operand;
+            }
+
             const std::vector<lexer::token_type> & unary_operators();
 
             inline bool is_unary_operator(lexer::token_type t)

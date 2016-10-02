@@ -41,6 +41,14 @@ namespace reaver
                 expression rhs;
             };
 
+            inline bool operator==(const binary_expression & lhs, const binary_expression & rhs)
+            {
+                return lhs.range == rhs.range
+                    && lhs.op == rhs.op
+                    && lhs.lhs == rhs.lhs
+                    && lhs.rhs == rhs.rhs;
+            }
+
             const std::vector<lexer::token_type> & binary_operators();
 
             inline bool is_binary_operator(lexer::token_type t)

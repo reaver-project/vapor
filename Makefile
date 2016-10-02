@@ -1,5 +1,5 @@
-CXX = g++
-LD = g++
+CXX = c++
+LD = c++
 CXXFLAGS += -Os -Wall -std=c++1z -MP -MD -fPIC -Wno-unused-parameter -g -Wno-unused-private-field -Wnon-virtual-dtor
 SOFLAGS += -shared
 LDFLAGS +=

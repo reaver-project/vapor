@@ -70,6 +70,12 @@ namespace reaver
                 > expression_value = postfix_expression();
             };
 
+            inline bool operator==(const expression & lhs, const expression & rhs)
+            {
+                return lhs.range == rhs.range
+                    && lhs.expression_value == rhs.expression_value;
+            }
+
             expression parse_expression(context & ctx, bool special_assignment = false);
 
             void print(const expression & expr, std::ostream & os, std::size_t indent = 0);

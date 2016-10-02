@@ -150,7 +150,7 @@ namespace reaver
                 {
                     return get_variable()->simplify(ctx)
                         .then([&](auto && simplified) -> expression * {
-                            _set_variable(simplified, ctx);
+                            this->_set_variable(simplified, ctx);
                             return this;
                         });
                 }

@@ -41,6 +41,11 @@ namespace reaver
                 std::vector<lexer::token> id_expression_value;
             };
 
+            inline bool operator==(const id_expression & lhs, const id_expression & rhs)
+            {
+                return lhs.range == rhs.range && lhs.id_expression_value == rhs.id_expression_value;
+            }
+
             id_expression parse_id_expression(context & ctx);
 
             void print(const id_expression & ide, std::ostream & os, std::size_t indent = 0);

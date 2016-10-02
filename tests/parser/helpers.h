@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016 Michał "Griwes" Dominiak
+ * Copyright © 2014 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,8 +22,10 @@
 
 #pragma once
 
-#include "../range.h"
-#include "helpers.h"
+#include <reaver/mayfly.h>
+
+#include "vapor/lexer.h"
+#include "vapor/parser.h"
 
 namespace reaver
 {
@@ -31,17 +33,16 @@ namespace reaver
     {
         namespace parser { inline namespace _v1
         {
-            struct capture_list
+            template<typename T, typename F>
+            auto test(std::u32string program, T expected, F && parser)
             {
-                range_type range;
-            };
-
-            inline bool operator==(const capture_list & lhs, const capture_list & rhs)
-            {
-                return lhs.range == rhs.range;
+                return [program = std::move(program), expected = std::move(expected), parser = std::move(parser)]()
+                {
+                    context ctx;
+                    ctx.begin = lexer::iterator{ program.begin(), program.end() };
+                    MAYFLY_REQUIRE(expected == parser(ctx));
+                };
             }
-
-            capture_list parse_capture_list(context & ctx);
         }}
     }
 }

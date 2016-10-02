@@ -37,6 +37,12 @@ namespace reaver
                 expression return_value;
             };
 
+            inline bool operator==(const return_expression & lhs, const return_expression & rhs)
+            {
+                return lhs.range == rhs.range
+                    && lhs.return_value == rhs.return_value;
+            }
+
             return_expression parse_return_expression(context & ctx);
 
             void print(const return_expression & ret, std::ostream & os, std::size_t indent = 0);

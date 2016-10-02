@@ -41,6 +41,14 @@ namespace reaver
                 optional<lexer::token> suffix;
             };
 
+            template<lexer::token_type TokenType>
+            bool operator==(const literal<TokenType> & lhs, const literal<TokenType> & rhs)
+            {
+                return lhs.range == rhs.range
+                    && lhs.value == rhs.value
+                    && lhs.suffix == rhs.suffix;
+            }
+
             using string_literal = literal<lexer::token_type::string>;
             using integer_literal = literal<lexer::token_type::integer>;
 

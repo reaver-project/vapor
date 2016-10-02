@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,34 +22,41 @@
 
 #include <reaver/mayfly.h>
 
-#include <string>
-#include <vector>
-
-#include "vapor/lexer.h"
 #include "helpers.h"
 
-using namespace reaver::vapor::lexer;
+using namespace reaver::vapor;
+using namespace reaver::vapor::parser;
 
-MAYFLY_BEGIN_SUITE("lexer");
-MAYFLY_BEGIN_SUITE("strings");
+MAYFLY_BEGIN_SUITE("parser");
+MAYFLY_BEGIN_SUITE("id_expression");
 
-MAYFLY_ADD_TESTCASE("simple string", test(UR"("foo" "bar")",
-    {
-        { token_type::string, U"\"foo\"", { 0, 5 } },
-        { token_type::string, U"\"bar\"", { 6, 11 } }
-    }
+MAYFLY_ADD_TESTCASE("simple id-expression", test(UR"(foo)",
+    id_expression{
+        { 0, 3 },
+        {
+            { lexer::token_type::identifier, UR"(foo)", { 0, 3 } }
+        }
+    },
+    &parse_id_expression
 ));
 
-MAYFLY_ADD_TESTCASE("escaped string", test(UR"("foo\"bar")",
-    {
-        { token_type::string, U"\"foo\\\"bar\"", { 0, 10 } },
-    }
+MAYFLY_ADD_TESTCASE("complex id-expression", test(UR"(foo.bar.baz)",
+    id_expression{
+        { 0, 11 },
+        {
+            { lexer::token_type::identifier, UR"(foo)", { 0, 3 } },
+            { lexer::token_type::identifier, UR"(bar)", { 4, 7 } },
+            { lexer::token_type::identifier, UR"(baz)", { 8, 11 } }
+        }
+    },
+    &parse_id_expression
 ));
 
-MAYFLY_ADD_TESTCASE("line broken string", test(UR"("foo\
-bar")",
-    {
-        { token_type::string, U"\"foo\\\nbar\"", { 0, 10 } },
+MAYFLY_ADD_TESTCASE("invalid id-expression", test(UR"(.foo.bar)",
+    0,
+    [](auto && ctx) {
+        MAYFLY_REQUIRE_THROWS_TYPE(expectation_failure, parse_id_expression(ctx));
+        return 0;
     }
 ));
 

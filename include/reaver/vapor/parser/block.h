@@ -42,6 +42,13 @@ namespace reaver
                 optional<expression_list> value_expression;
             };
 
+            inline bool operator==(const block & lhs, const block & rhs)
+            {
+                return lhs.range == rhs.range
+                    && lhs.block_value == rhs.block_value
+                    && lhs.value_expression == rhs.value_expression;
+            }
+
             block parse_block(context & ctx);
             block parse_single_statement_block(context & ctx);
 

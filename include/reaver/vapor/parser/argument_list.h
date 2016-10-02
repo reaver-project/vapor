@@ -36,6 +36,11 @@ namespace reaver
                 range_type range;
             };
 
+            inline bool operator==(const argument_list & lhs, const argument_list & rhs)
+            {
+                return lhs.range == rhs.range;
+            }
+
             argument_list parse_argument_list(context & ctx);
         }}
     }

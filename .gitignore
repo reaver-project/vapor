@@ -7,3 +7,4 @@ vprc
 .color_coded
 .ycm*
 output
+tests/test

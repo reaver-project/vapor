@@ -45,6 +45,14 @@ namespace reaver
                 std::vector<expression> arguments;
             };
 
+            inline bool operator==(const postfix_expression & lhs, const postfix_expression & rhs)
+            {
+                return lhs.range == rhs.range
+                    && lhs.base_expression == rhs.base_expression
+                    && lhs.bracket_type == rhs.bracket_type
+                    && lhs.arguments == rhs.arguments;
+            }
+
             postfix_expression parse_postfix_expression(context & ctx);
 
             void print(const postfix_expression & expr, std::ostream & os, std::size_t indent = 0);

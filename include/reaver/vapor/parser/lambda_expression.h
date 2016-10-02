@@ -44,6 +44,14 @@ namespace reaver
                 block body;
             };
 
+            inline bool operator==(const lambda_expression & lhs, const lambda_expression & rhs)
+            {
+                return lhs.range == rhs.range
+                    && lhs.captures == rhs.captures
+                    && lhs.arguments == rhs.arguments
+                    && lhs.body == rhs.body;
+            }
+
             lambda_expression parse_lambda_expression(context & ctx);
 
             void print(const lambda_expression & expr, std::ostream & os, std::size_t indent = 0);

@@ -51,6 +51,12 @@ namespace reaver
                 > statement_value = expression_list();
             };
 
+            inline bool operator==(const statement & lhs, const statement & rhs)
+            {
+                return lhs.range == rhs.range
+                    && lhs.statement_value == rhs.statement_value;
+            }
+
             statement parse_statement(context & ctx);
 
             void print(const statement & stmt, std::ostream & os, std::size_t indent = 0);

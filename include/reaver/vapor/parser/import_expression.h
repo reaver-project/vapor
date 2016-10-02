@@ -41,6 +41,12 @@ namespace reaver
                 variant<id_expression, string_literal> module_name = id_expression();
             };
 
+            inline bool operator==(const import_expression & lhs, const import_expression & rhs)
+            {
+                return lhs.range == rhs.range
+                    && lhs.module_name == rhs.module_name;
+            }
+
             import_expression parse_import_expression(context & ctx);
 
             void print(const import_expression & expr, std::ostream & os, std::size_t indent = 0);
