@@ -37,6 +37,24 @@ std::u32string program = UR"program(module hello_world
         return 5 + 6 * 7 + 8;
     }
 
+    function conditional()
+    {
+        if (1 + 2 == 4)
+        {
+            return 0;
+        }
+
+        else if (2 + 2 == 7)
+        {
+            return 0;
+        }
+
+        else
+        {
+            return 1;
+        }
+    }
+
     function entry()
     {
         return foo() + bar();
