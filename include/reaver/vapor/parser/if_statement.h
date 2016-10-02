@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016 Michał "Griwes" Dominiak
+ * Copyright © 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,18 +22,7 @@
 
 #pragma once
 
-#include <string>
-
-#include <reaver/variant.h>
-
-#include "helpers.h"
-#include "expression_list.h"
-#include "declaration.h"
-#include "return_expression.h"
-#include "unary_expression.h"
-#include "binary_expression.h"
-#include "function.h"
-#include "if_statement.h"
+#include "expression.h"
 
 namespace reaver
 {
@@ -41,27 +30,27 @@ namespace reaver
     {
         namespace parser { inline namespace _v1
         {
-            struct statement
+            struct block;
+
+            struct if_statement
             {
                 range_type range;
-                variant<
-                    declaration,
-                    return_expression,
-                    expression_list,
-                    function,
-                    if_statement
-                > statement_value = expression_list();
+                expression condition;
+                recursive_wrapper<block> then_block;
+                optional<recursive_wrapper<block>> else_block;
             };
 
-            inline bool operator==(const statement & lhs, const statement & rhs)
+            inline bool operator==(const if_statement & lhs, const if_statement & rhs)
             {
                 return lhs.range == rhs.range
-                    && lhs.statement_value == rhs.statement_value;
+                    && lhs.condition == rhs.condition
+                    && *lhs.then_block == rhs.then_block
+                    && lhs.else_block == rhs.else_block;
             }
 
-            statement parse_statement(context & ctx);
+            if_statement parse_if_statement(context & ctx);
 
-            void print(const statement & stmt, std::ostream & os, std::size_t indent = 0);
+            void print(const if_statement & stmt, std::ostream & os, std::size_t indent = 0);
         }}
     }
 }
