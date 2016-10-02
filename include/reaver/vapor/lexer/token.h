@@ -53,8 +53,13 @@ namespace reaver
                 let,
                 return_,
                 function,
+
+                if_,
+                else_,
+
                 dot,
                 comma,
+
                 curly_bracket_open,
                 curly_bracket_close,
                 square_bracket_open,
