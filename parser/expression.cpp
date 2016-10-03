@@ -47,6 +47,11 @@ reaver::vapor::parser::_v1::expression reaver::vapor::parser::_v1::parse_express
         ret.expression_value = parse_literal<lexer::token_type::integer>(ctx);
     }
 
+    else if (peek(ctx, lexer::token_type::boolean))
+    {
+        ret.expression_value = parse_literal<lexer::token_type::boolean>(ctx);
+    }
+
     else if (peek(ctx, lexer::token_type::identifier))
     {
         ret.expression_value = parse_postfix_expression(ctx);

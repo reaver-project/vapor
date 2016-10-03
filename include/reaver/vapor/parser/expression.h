@@ -62,6 +62,7 @@ namespace reaver
                 variant<
                     literal<lexer::token_type::string>,
                     literal<lexer::token_type::integer>,
+                    literal<lexer::token_type::boolean>,
                     postfix_expression,
                     import_expression,
                     recursive_wrapper<lambda_expression>,

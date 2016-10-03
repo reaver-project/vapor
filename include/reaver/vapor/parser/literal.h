@@ -51,6 +51,7 @@ namespace reaver
 
             using string_literal = literal<lexer::token_type::string>;
             using integer_literal = literal<lexer::token_type::integer>;
+            using boolean_literal = literal<lexer::token_type::boolean>;
 
             template<lexer::token_type TokenType>
             auto parse_literal(context & ctx)
