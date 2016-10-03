@@ -51,6 +51,9 @@ namespace reaver
                         case lexer::token_type::star:
                             return _multiplication();
 
+                        case lexer::token_type::equals:
+                            return _equal_comparison();
+
                         default:
                             assert(!"unimplemented int op");
                     }
@@ -64,11 +67,11 @@ namespace reaver
             private:
                 virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const override;
 
-                // throw all this shit into a .cpp file
                 template<typename Instruction, typename Eval>
-                static auto _generate_function(const char32_t * name, Eval eval);
+                static auto _generate_function(const char32_t * name, const char * desc, Eval eval, type * return_type);
                 static function * _addition();
                 static function * _multiplication();
+                static function * _equal_comparison();
             };
 
             class integer_constant : public literal
@@ -148,10 +151,7 @@ namespace reaver
                 integer_constant * _value;
             };
 
-            inline std::unique_ptr<type> make_integer_type()
-            {
-                return std::make_unique<integer_type>();
-            }
+            std::unique_ptr<type> make_integer_type();
         }}
     }
 }

@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/integer.h"
+#include "vapor/analyzer/boolean.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/codegen/ir/variable.h"
 #include "vapor/codegen/ir/type.h"
@@ -47,14 +48,19 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::integer
     } };
 }
 
+std::unique_ptr<reaver::vapor::analyzer::_v1::type> reaver::vapor::analyzer::_v1::make_integer_type()
+{
+    return std::make_unique<integer_type>();
+}
+
 template<typename Instruction, typename Eval>
-auto reaver::vapor::analyzer::_v1::integer_type::_generate_function(const char32_t * name, Eval eval)
+auto reaver::vapor::analyzer::_v1::integer_type::_generate_function(const char32_t * name, const char * desc, Eval eval, reaver::vapor::analyzer::_v1::type * return_type)
 {
     auto fun = make_function(
-        "<builtin integer addition>",
-        builtin_types().integer.get(),
+        desc,
+        return_type,
         { builtin_types().integer.get(), builtin_types().integer.get() },
-        [name](ir_generation_context & ctx) {
+        [name, return_type](ir_generation_context & ctx) {
             auto lhs = codegen::ir::make_variable(
                 builtin_types().integer->codegen_type(ctx)
             );
@@ -63,7 +69,7 @@ auto reaver::vapor::analyzer::_v1::integer_type::_generate_function(const char32
             );
 
             auto retval = codegen::ir::make_variable(
-                builtin_types().integer->codegen_type(ctx)
+                return_type->codegen_type(ctx)
             );
 
             return codegen::ir::function{
@@ -91,43 +97,30 @@ auto reaver::vapor::analyzer::_v1::integer_type::_generate_function(const char32
     return fun;
 }
 
-reaver::vapor::analyzer::_v1::function * reaver::vapor::analyzer::_v1::integer_type::_addition()
-{
-    static auto eval = [](auto &&, const std::vector<variable *> & args) {
-        assert(args.size() == 2);
-        assert(args[0]->get_type() == builtin_types().integer.get());
-        assert(args[1]->get_type() == builtin_types().integer.get());
+#define ADD_OPERATION(NAME, BUILTIN_NAME, OPERATOR, RESULT_TYPE) \
+    reaver::vapor::analyzer::_v1::function * reaver::vapor::analyzer::_v1::integer_type::_ ## NAME() \
+    { \
+        static auto eval = [](auto &&, const std::vector<variable *> & args) { \
+            assert(args.size() == 2); \
+            assert(args[0]->get_type() == builtin_types().integer.get()); \
+            assert(args[1]->get_type() == builtin_types().integer.get()); \
+ \
+            if (!args[0]->is_constant() || !args[1]->is_constant()) \
+            { \
+                return (expression *)nullptr; \
+            } \
+ \
+            auto lhs = static_cast<integer_constant *>(args[0]); \
+            auto rhs = static_cast<integer_constant *>(args[1]); \
+            return make_variable_expression(std::make_unique<RESULT_TYPE ## _constant>(lhs->get_value() OPERATOR rhs->get_value())).release(); \
+        }; \
+        static auto NAME = _generate_function<codegen::ir::integer_ ## NAME ## _instruction>( \
+            BUILTIN_NAME, "<builtin integer " #NAME ">", \
+            eval, builtin_types(). RESULT_TYPE .get()); \
+        return NAME.get(); \
+    }
 
-        if (!args[0]->is_constant() || !args[1]->is_constant())
-        {
-            return (expression *)nullptr;
-        }
-
-        auto lhs = static_cast<integer_constant *>(args[0]);
-        auto rhs = static_cast<integer_constant *>(args[1]);
-        return make_variable_expression(std::make_unique<integer_constant>(lhs->get_value() + rhs->get_value())).release();
-    };
-    static auto addition = _generate_function<codegen::ir::integer_addition_instruction>(U"__builtin_integer_operator_plus", eval);
-    return addition.get();
-}
-
-reaver::vapor::analyzer::_v1::function * reaver::vapor::analyzer::_v1::integer_type::_multiplication()
-{
-    static auto eval = [](auto &&, const std::vector<variable *> & args) {
-        assert(args.size() == 2);
-        assert(args[0]->get_type() == builtin_types().integer.get());
-        assert(args[1]->get_type() == builtin_types().integer.get());
-
-        if (!args[0]->is_constant() || !args[1]->is_constant())
-        {
-            return (expression *)nullptr;
-        }
-
-        auto lhs = static_cast<integer_constant *>(args[0]);
-        auto rhs = static_cast<integer_constant *>(args[1]);
-        return make_variable_expression(std::make_unique<integer_constant>(lhs->get_value() * rhs->get_value())).release();
-    };
-    static auto multiplication = _generate_function<codegen::ir::integer_multiplication_instruction>(U"__builtin_integer_operator_star", eval);
-    return multiplication.get();
-}
+ADD_OPERATION(addition, U"__builtin_integer_operator_plus", +, integer);
+ADD_OPERATION(multiplication, U"__builtin_integer_operator_star", *, integer);
+ADD_OPERATION(equal_comparison, U"__builtin_integer_operator_equals", ==, boolean);
 
