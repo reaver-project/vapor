@@ -47,6 +47,8 @@ namespace reaver
                 string_suffix,
                 integer,
                 integer_suffix,
+                boolean,
+
                 module,
                 import,
                 auto_,
