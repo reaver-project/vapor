@@ -68,12 +68,15 @@ namespace reaver
                     struct builtin_types_t
                     {
                         std::shared_ptr<variable_type> integer;
+                        std::shared_ptr<variable_type> boolean;
                     };
 
                     static auto types = []{
                         builtin_types_t types;
                         types.integer = std::make_shared<variable_type>();
                         types.integer->name = U"int";
+                        types.boolean = std::make_shared<variable_type>();
+                        types.boolean->name = U"bool";
                         return types;
                     }();
 

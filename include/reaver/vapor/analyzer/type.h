@@ -132,6 +132,7 @@ namespace reaver
             }
 
             std::unique_ptr<type> make_integer_type();
+            std::unique_ptr<type> make_boolean_type();
 
             inline const auto & builtin_types()
             {
@@ -141,6 +142,7 @@ namespace reaver
 
                     member_t type;
                     member_t integer;
+                    member_t boolean;
                 };
 
                 static auto builtins = []{
@@ -148,6 +150,7 @@ namespace reaver
 
                     builtins.type = std::make_unique<type_type>();
                     builtins.integer = make_integer_type();
+                    builtins.boolean = make_boolean_type();
 
                     return builtins;
                 }();

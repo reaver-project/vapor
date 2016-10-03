@@ -26,6 +26,7 @@
 #include <reaver/optional.h>
 
 #include "integer.h"
+#include "boolean.h"
 #include "../../utf8.h"
 #include "scope.h"
 
@@ -63,6 +64,7 @@ namespace reaver
                 using value = variant<
                     std::shared_ptr<variable>,
                     integer_value,
+                    boolean_value,
                     label
                 >;
 
