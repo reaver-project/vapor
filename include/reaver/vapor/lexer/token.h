@@ -143,6 +143,7 @@ namespace reaver
                 switch (t)
                 {
                     case token_type::integer: return token_type::integer_suffix;
+                    case token_type::boolean: return token_type::none;
                     default: throw invalid_suffix_requested{};
                 }
             }

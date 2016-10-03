@@ -39,7 +39,7 @@ std::u32string program = UR"program(module hello_world
 
     function conditional()
     {
-        if (1 + 2 == 4)
+        if (false)
         {
             return 0;
         }
