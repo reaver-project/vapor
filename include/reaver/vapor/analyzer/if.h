@@ -22,10 +22,9 @@
 
 #pragma once
 
-#include "../parser/return_expression.h"
+#include "../parser/if_statement.h"
 #include "statement.h"
-#include "expression.h"
-#include "helpers.h"
+#include "block.h"
 
 namespace reaver
 {
@@ -33,54 +32,44 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            class return_statement : public statement
+            class if_statement : public statement
             {
             public:
-                return_statement(const parser::return_expression & parse, scope * lex_scope) : _parse{ parse }
+                if_statement(const parser::if_statement & parse, scope * lex_scope) : _parse{ parse }
                 {
-                    _value_expr = preanalyze_expression(parse.return_value, lex_scope);
+                    _condition = preanalyze_expression(parse.condition, lex_scope);
+                    _then_block = preanalyze_block(parse.then_block, lex_scope, false);
+                    _else_block = fmap(parse.else_block, [&](auto && parse) {
+                        return preanalyze_block(parse, lex_scope, false);
+                    });
                 }
 
                 virtual std::vector<const return_statement *> get_returns() const override
                 {
-                    return { this };
-                }
-
-                type * get_returned_type() const
-                {
-                    return _value_expr->get_type();
-                }
-
-                variable * get_returned_variable() const
-                {
-                    return _value_expr->get_variable();
+                    std::vector<block *> blocks{ _then_block.get() };
+                    fmap(_else_block, [&](auto && block) { blocks.push_back(block.get()); return unit{}; });
+                    return mbind(blocks, [&](auto && block) {
+                        return block->get_returns();
+                    });
                 }
 
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
-                virtual future<> _analyze() override
-                {
-                    return _value_expr->analyze();
-                }
-
-                virtual future<statement *> _simplify(optimization_context & ctx) override
-                {
-                    return _value_expr->simplify_expr(ctx).then([&](auto && simplified) -> statement * {
-                            replace_uptr(_value_expr, simplified, ctx);
-                            return this;
-                        });
-                }
-
+                virtual future<> _analyze() override;
+                virtual future<statement *> _simplify(optimization_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-                const parser::return_expression & _parse;
-                std::unique_ptr<expression> _value_expr;
+                const parser::if_statement & _parse;
+
+                std::unique_ptr<expression> _condition;
+                std::unique_ptr<block> _then_block;
+                optional<std::unique_ptr<block>> _else_block;
             };
 
-            inline std::unique_ptr<return_statement> preanalyze_return(const parser::return_expression & parse, scope * lex_scope)
+            inline std::unique_ptr<if_statement> preanalyze_if_statement(const parser::if_statement & parse, scope * lex_scope)
             {
-                return std::make_unique<return_statement>(parse, lex_scope);
+                return std::make_unique<if_statement>(parse, lex_scope);
             }
         }}
     }

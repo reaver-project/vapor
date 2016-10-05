@@ -29,6 +29,7 @@
 #include "vapor/analyzer/return.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/function.h"
+#include "vapor/analyzer/if.h"
 
 std::unique_ptr<reaver::vapor::analyzer::_v1::statement> reaver::vapor::analyzer::_v1::preanalyze_statement(const reaver::vapor::parser::statement & parse, reaver::vapor::analyzer::_v1::scope * & lex_scope)
 {
@@ -54,6 +55,12 @@ std::unique_ptr<reaver::vapor::analyzer::_v1::statement> reaver::vapor::analyzer
         [&](const parser::function & func) -> std::unique_ptr<statement>
         {
             auto ret = preanalyze_function(func, lex_scope);
+            return ret;
+        },
+
+        [&](const parser::if_statement & if_stmt) -> std::unique_ptr<statement>
+        {
+            auto ret = preanalyze_if_statement(if_stmt, lex_scope);
             return ret;
         },
 
