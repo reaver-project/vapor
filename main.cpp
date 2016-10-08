@@ -57,7 +57,7 @@ std::u32string program = UR"program(module hello_world
 
     function entry()
     {
-        return foo() + bar();
+        return foo() + bar() + conditional();
     }
 })program";
 
