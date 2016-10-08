@@ -78,7 +78,7 @@ namespace reaver
                 future<expression *> simplify_expr(optimization_context & ctx)
                 {
                     return ctx.get_future_or_init(this, [&]() {
-                        return make_ready_future().then([&]() {
+                        return make_ready_future().then([this, &ctx]() {
                             return _simplify_expr(ctx);
                         });
                     });

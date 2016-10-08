@@ -59,6 +59,7 @@ namespace reaver
                         if (!_is_future_assigned)
                         {
                             _analysis_future = _analyze();
+                            _is_future_assigned = true;
                         }
                     }
 
@@ -68,7 +69,7 @@ namespace reaver
                 future<statement *> simplify(optimization_context & ctx)
                 {
                     return ctx.get_future_or_init(this, [&]() {
-                        return make_ready_future().then([&]() {
+                        return make_ready_future().then([this, &ctx]() {
                             return _simplify(ctx);
                         });
                     });
