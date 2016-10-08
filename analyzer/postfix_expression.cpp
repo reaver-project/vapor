@@ -75,14 +75,20 @@ reaver::future<> reaver::vapor::analyzer::_v1::postfix_expression::_analyze()
             if (!_parse.bracket_type)
             {
                 _set_variable(make_expression_variable(_base_expr.get(), _base_expr->get_type()));
-                return;
+                return make_ready_future();
             }
 
-            auto overload = resolve_overload(_base_expr->get_type(), *_parse.bracket_type, fmap(_arguments, [](auto && arg) -> const type * { return arg->get_type(); }), _scope);
-            assert(overload);
-            _overload = std::move(overload);
-
-            _set_variable(make_expression_variable(this, _overload->return_type()));
+            return resolve_overload(
+                _base_expr->get_type(),
+                *_parse.bracket_type,
+                    fmap(_arguments, [](auto && arg) -> const type * { return arg->get_type(); }),
+                _scope
+            ).then([&](auto && overload) {
+                    _overload = overload;
+                    return _overload->return_type();
+                }).then([&](auto && ret_type) {
+                    _set_variable(make_expression_variable(this, ret_type));
+                });
         });
 }
 
@@ -128,7 +134,7 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::postfix
         none, none,
         { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
         std::move(arguments_values),
-        { codegen::ir::make_variable(_overload->return_type()->codegen_type(ctx)) }
+        { codegen::ir::make_variable((*_overload->return_type().try_get())->codegen_type(ctx)) }
     };
 
     ctx.add_function_to_generate(_overload);

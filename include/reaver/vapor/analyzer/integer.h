@@ -41,18 +41,18 @@ namespace reaver
             class integer_type : public type
             {
             public:
-                virtual function * get_overload(lexer::token_type token, const type * rhs) const override
+                virtual future<function *> get_overload(lexer::token_type token, const type * rhs) const override
                 {
                     switch (token)
                     {
                         case lexer::token_type::plus:
-                            return _addition();
+                            return make_ready_future(_addition());
 
                         case lexer::token_type::star:
-                            return _multiplication();
+                            return make_ready_future(_multiplication());
 
                         case lexer::token_type::equals:
-                            return _equal_comparison();
+                            return make_ready_future(_equal_comparison());
 
                         default:
                             assert(!"unimplemented int op");

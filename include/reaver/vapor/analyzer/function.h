@@ -52,11 +52,20 @@ namespace reaver
                     : _explanation{ std::move(explanation) }, _range{ std::move(range) },
                     _return_type{ ret }, _argument_types{ std::move(args) }, _codegen{ std::move(codegen) }
                 {
+                    if (ret)
+                    {
+                        _return_type_future = make_ready_future(ret);
+                        return;
+                    }
+
+                    auto pair = make_promise<type *>();
+                    _return_type_promise = std::move(pair.promise);
+                    _return_type_future = std::move(pair.future);
                 }
 
-                type * return_type() const
+                future<type *> return_type() const
                 {
-                    return _return_type;
+                    return *_return_type_future;
                 }
 
                 std::vector<type *> arguments() const
@@ -105,6 +114,13 @@ namespace reaver
                     return { codegen::ir::label{ codegen_ir(ctx).name, {} } };
                 }
 
+                void set_return_type(type * ret)
+                {
+                    std::unique_lock<std::mutex> lock{ _ret_lock };
+                    _return_type = ret;
+                    fmap(_return_type_promise, [ret](auto && promise) { promise.set(ret); return unit{}; });
+                }
+
                 void set_body(block * body)
                 {
                     _body = body;
@@ -121,6 +137,10 @@ namespace reaver
 
                 block * _body = nullptr;
                 type * _return_type;
+                mutable std::mutex _ret_lock;
+                optional<future<type *>> _return_type_future;
+                optional<manual_promise<type *>> _return_type_promise;
+
                 std::vector<type *> _argument_types;
                 function_codegen _codegen;
                 mutable optional<codegen::ir::function> _ir;

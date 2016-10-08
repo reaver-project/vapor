@@ -59,14 +59,14 @@ namespace reaver
 
                 virtual ~type() = default;
 
-                virtual function * get_overload(lexer::token_type, const type *) const
+                virtual future<function *> get_overload(lexer::token_type, const type *) const
                 {
-                    return nullptr;
+                    return make_ready_future<function *>(nullptr);
                 }
 
-                virtual function * get_overload(lexer::token_type, std::vector<const type *>) const
+                virtual future<function *> get_overload(lexer::token_type, std::vector<const type *>) const
                 {
-                    return nullptr;
+                    return make_ready_future<function *>(nullptr);
                 }
 
                 virtual std::string explain() const = 0;
@@ -108,27 +108,22 @@ namespace reaver
             // these here are currently kinda silly
             // will get less silly and properly separated once typeclasses are a thing
 
-            inline function * resolve_overload(const type * lhs, const type * rhs, lexer::token_type op, scope * in_scope)
+            inline future<function *> resolve_overload(const type * lhs, const type * rhs, lexer::token_type op, scope * in_scope)
             {
-                auto overload = lhs->get_overload(op, rhs);
-                if (overload)
-                {
-                    return overload;
-                }
-
-                logger::dlog() << lhs << " " << lexer::token_types[+op] << " " << rhs << " = ?";
-                assert(0);
+                return lhs->get_overload(op, rhs)
+                    .then([](auto && overload) {
+                        assert(overload);
+                        return overload;
+                    });
             }
 
-            inline function * resolve_overload(const type * base_expr, lexer::token_type bracket_type, std::vector<const type *> arguments, scope * in_scope)
+            inline future<function *> resolve_overload(const type * base_expr, lexer::token_type bracket_type, std::vector<const type *> arguments, scope * in_scope)
             {
-                auto overload = base_expr->get_overload(bracket_type, arguments);
-                if (overload)
-                {
-                    return overload;
-                }
-
-                assert(0);
+                return base_expr->get_overload(bracket_type, std::move(arguments))
+                    .then([](auto && overload) {
+                        assert(overload);
+                        return overload;
+                    });
             }
 
             std::unique_ptr<type> make_integer_type();

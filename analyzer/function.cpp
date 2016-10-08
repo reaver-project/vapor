@@ -44,24 +44,30 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
 {
     if (_body)
     {
-        auto returns = _body->get_returns();
+        return _body->simplify(ctx)
+            .then([&](auto && simplified) {
+                _body = dynamic_cast<block *>(simplified);
+                assert(_body);
 
-        assert(_body->has_return_expression() || returns.size());
-        auto var = _body->has_return_expression() ? _body->get_return_expression()->get_variable() : returns.front()->get_returned_variable();
-        auto begin = _body->has_return_expression() ? returns.begin() : returns.begin() + 1;
+                auto returns = _body->get_returns();
 
-        if (!var->is_constant())
-        {
-            return make_ready_future<expression *>(nullptr);
-        }
+                assert(_body->has_return_expression() || returns.size());
+                auto var = _body->has_return_expression() ? _body->get_return_expression()->get_variable() : returns.front()->get_returned_variable();
+                auto begin = _body->has_return_expression() ? returns.begin() : returns.begin() + 1;
 
-        if (std::all_of(begin, returns.end(), [](auto && ret) { return ret->get_returned_variable()->is_constant(); })
-            && std::all_of(begin, returns.end(), [&](auto && ret) { return ret->get_returned_variable()->is_equal(var); }))
-        {
-            return make_ready_future(make_variable_ref_expression(var).release());
-        }
+                if (!var->is_constant())
+                {
+                    return make_ready_future<expression *>(nullptr);
+                }
 
-        return make_ready_future<expression *>(nullptr);
+                if (std::all_of(begin, returns.end(), [](auto && ret) { return ret->get_returned_variable()->is_constant(); })
+                    && std::all_of(begin, returns.end(), [&](auto && ret) { return ret->get_returned_variable()->is_equal(var); }))
+                {
+                    return make_ready_future(make_variable_ref_expression(var).release());
+                }
+
+                return make_ready_future<expression *>(nullptr);
+            });
     }
 
     if (_compile_time_eval)

@@ -39,12 +39,12 @@ namespace reaver
             class boolean_type : public type
             {
             public:
-                virtual function * get_overload(lexer::token_type token, const type * rhs) const override
+                virtual future<function *> get_overload(lexer::token_type token, const type * rhs) const override
                 {
                     switch (token)
                     {
                         case lexer::token_type::equals:
-                            return _equal_comparison();
+                            return make_ready_future(_equal_comparison());
 
                         default:
                             assert(!"unimplemented int op");
