@@ -55,8 +55,15 @@ std::u32string reaver::vapor::codegen::_v1::cxx::value_of(const reaver::vapor::c
             os << val;
             return boost::locale::conv::utf_to_utf<char32_t>(os.str());
         },
+        [&](const codegen::ir::boolean_value & val) -> std::u32string {
+            return val.value ? U"true" : U"false";
+        },
         [&](const std::shared_ptr<ir::variable> & var) {
             return variable_name(*var, ctx);
+        },
+        [&](const codegen::ir::label & label) {
+            assert(label.scopes.empty());
+            return label.name;
         },
         [&](auto &&) {
             assert(0);

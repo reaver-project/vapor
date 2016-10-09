@@ -71,42 +71,47 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_declaration(
 
 std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_definition(const reaver::vapor::codegen::_v1::ir::function & fn, reaver::vapor::codegen::_v1::codegen_context & ctx) const
 {
-    std::u32string ret;
+    std::u32string header;
 
     if (auto type = fn.parent_type.lock())
     {
-        ret += ctx.declare_if_necessary(type);
+        header += ctx.declare_if_necessary(type);
     }
-    ret += ctx.declare_if_necessary(ir::get_type(fn.return_value));
+    header += ctx.declare_if_necessary(ir::get_type(fn.return_value));
     fmap(fn.arguments, [&](auto && value) {
-        ret += ctx.declare_if_necessary(ir::get_type(value));
+        header += ctx.declare_if_necessary(ir::get_type(value));
         return unit{};
     });
 
-    ret += cxx::type_name(ir::get_type(fn.return_value), ctx);
-    ret += U" ";
-    ret += cxx::function_name(fn, ctx);
-    ret += U"(\n";
+    header += cxx::type_name(ir::get_type(fn.return_value), ctx);
+    header += U" ";
+    header += cxx::function_name(fn, ctx);
+    header += U"(\n";
     fmap(fn.arguments, [&](auto && var) {
-        ret += U"    " + cxx::type_name(ir::get_type(var), ctx);
-        ret += U" ";
-        ret += cxx::variable_name(*var, ctx);
-        ret += U",\n";
+        header += U"    " + cxx::type_name(ir::get_type(var), ctx);
+        header += U" ";
+        header += cxx::variable_name(*var, ctx);
+        header += U",\n";
         return unit{};
     });
     if (!fn.arguments.empty())
     {
-        ret.pop_back();
-        ret.pop_back();
-        ret.push_back(U'\n');
+        header.pop_back();
+        header.pop_back();
+        header.push_back(U'\n');
     }
-    ret += U")\n{\n";
+    header += U")\n{\n";
+
+    std::u32string body;
+
     fmap(fn.instructions, [&](auto && inst) {
-        ret += this->generate(inst, ctx);
+        body += this->generate(inst, ctx);
         return unit{};
     });
-    ret += U"};\n";
+    body += U"};\n";
 
+    auto ret = header + ctx.put_into_function_header + body;
+    ctx.put_into_function_header.clear();
     return ret;
 }
 

@@ -104,6 +104,44 @@ reaver::future<reaver::vapor::analyzer::_v1::statement *> reaver::vapor::analyze
 
 reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::if_statement::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
-    assert(0);
+    // instructions returning those labels are silly
+    // really need to do this better at some point
+    // (future refactor perhaps)
+    // (perhaps once I have tuples, so they can return unit type values)
+
+    auto condition_instructions = _condition->codegen_ir(ctx);
+    auto condition_variable = condition_instructions.back().result;
+
+    auto else_label = U"__else" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.label_index++));
+
+    auto then_instructions = _then_block->codegen_ir(ctx);
+    auto else_instructions = _else_block
+        ? [&]() {
+            auto ir = _else_block.get()->codegen_ir(ctx);
+            ir.front().label = else_label;
+            return ir;
+        }()
+        : statement_ir{
+            codegen::ir::instruction{
+                else_label, {},
+                boost::typeindex::type_id<codegen::ir::noop_instruction>(),
+                {}, codegen::ir::label{ else_label, {} }
+            }
+        };
+
+    auto jump = codegen::ir::instruction{
+        {}, {},
+        boost::typeindex::type_id<codegen::ir::jump_instruction>(),
+        { condition_variable, codegen::ir::label{ else_label, {} } },
+        codegen::ir::label{ else_label, {} }
+    };
+
+    statement_ir ret;
+    ret.reserve(condition_instructions.size() + 1 + then_instructions.size() + else_instructions.size());
+    std::move(condition_instructions.begin(), condition_instructions.end(), std::back_inserter(ret));
+    ret.push_back(std::move(jump));
+    std::move(then_instructions.begin(), then_instructions.end(), std::back_inserter(ret));
+    std::move(else_instructions.begin(), else_instructions.end(), std::back_inserter(ret));
+    return ret;
 }
 

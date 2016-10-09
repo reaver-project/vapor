@@ -25,6 +25,8 @@
 
 std::ostream & reaver::vapor::codegen::_v1::ir::operator<<(std::ostream & os, const reaver::vapor::codegen::_v1::ir::variable & var)
 {
+    os << *var.type << "\n\n";
+
     if (var.name)
     {
         os << "variable `" << utf8(*var.name) << "` of type `" << utf8(var.type->name) << "`";
@@ -45,6 +47,9 @@ std::ostream & reaver::vapor::codegen::_v1::ir::operator<<(std::ostream & os, co
         },
         [&](const integer_value & int_) -> auto & {
             return os << int_.value;
+        },
+        [&](const boolean_value & bool_) -> auto & {
+            return os << bool_.value;
         },
         [&](const label & lbl) -> auto & {
             return os << "label `" << utf8(lbl.name) << "`";

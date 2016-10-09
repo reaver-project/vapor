@@ -55,6 +55,7 @@ namespace reaver
                 std::size_t unnamed_variable_index = 0;
                 std::u32string put_into_global_before;
                 std::u32string put_into_global;
+                std::u32string put_into_function_header;
 
             private:
                 std::unordered_set<std::shared_ptr<ir::variable_type>> _declared_types;

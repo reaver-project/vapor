@@ -23,18 +23,13 @@
 #include "vapor/codegen/cxx.h"
 #include "vapor/codegen/ir/instruction.h"
 #include "vapor/codegen/cxx/names.h"
-#include "vapor/codegen/generator.h"
 
 namespace reaver { namespace vapor { namespace codegen { inline namespace _v1 { namespace cxx {
 template<>
-std::u32string generate<ir::phi_instruction>(const ir::instruction & inst, codegen_context & ctx)
+std::u32string generate<ir::boolean_equal_comparison_instruction>(const ir::instruction & inst, reaver::vapor::codegen::_v1::codegen_context & ctx)
 {
-    assert(inst.label);
-
-    auto type_string = type_name(get_type(inst.result), ctx);
-    ctx.put_into_function_header += U"std::aligned_storage_t<sizeof(" + type_string + U"), alignof(" + type_string + U")> __phi_variable" + *inst.label + U";\n";
-
-    return variable_of(inst.result, ctx) + U" = " + U"std::move(*reinterpret_cast<" + type_name(get_type(inst.result), ctx) + U" *>(&__phi_variable" + *inst.label + U"));\n";
+    assert(inst.operands.size() == 2);
+    return variable_of(inst.result, ctx) + U" = " + value_of(inst.operands[0], ctx) + U" == " + value_of(inst.operands[1], ctx) + U";\n";
 }
 }}}}}
 

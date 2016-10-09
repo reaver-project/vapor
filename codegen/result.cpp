@@ -32,6 +32,11 @@ reaver::vapor::codegen::_v1::result::result(std::vector<reaver::vapor::codegen::
 {
     auto ctx = codegen_context{gen};
 
+    _generated_code = UR"code(#include <type_traits>
+#include <utility>
+)code";
+
+
     fmap(ir, [&](auto && module) {
         fmap(module.name, [&](auto && token) {
             _generated_code += U"namespace " + token + U"\n{\n";

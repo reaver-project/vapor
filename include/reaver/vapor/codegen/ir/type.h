@@ -58,6 +58,36 @@ namespace reaver
                     std::vector<member> members;
                 };
 
+                inline std::ostream & operator<<(std::ostream & os, const variable_type & type)
+                {
+                    if (type.members.empty())
+                    {
+                        return os;
+                    }
+
+                    os << "type\n{\n";
+                    os << "name: " << utf8(type.name) << "\n";
+                    os << "<print scopes one day!>\n";
+                    os << "size: " << type.size << "\n";
+
+                    fmap(type.members, [&](auto && member) {
+                        fmap(member, make_overload_set(
+                            [&](const function & fun) {
+                                os << fun << '\n';
+                                return unit{};
+                            },
+                            [&](auto &&) {
+                                assert(0);
+                                return unit{};
+                            }
+                        ));
+                        return unit{};
+                    });
+
+                    os << "}\n";
+                    return os;
+                }
+
                 inline auto make_type(std::u32string name, std::vector<scope> scopes, std::size_t size, std::vector<member> members)
                 {
                     return std::make_shared<variable_type>(variable_type{ std::move(name), std::move(scopes), size, std::move(members) });

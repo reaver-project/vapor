@@ -88,6 +88,7 @@ namespace reaver
                 struct return_instruction {};
                 struct jump_instruction {};
                 struct phi_instruction {};
+                struct noop_instruction {};
             };
         }}
     }

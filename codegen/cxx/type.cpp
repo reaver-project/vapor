@@ -35,12 +35,22 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_declaration(
         return {};
     }
 
+    if (type == ir::builtin_types().boolean)
+    {
+        return {};
+    }
+
     return U"struct " + cxx::declaration_type_name(type, ctx) + U";\n";
 }
 
 std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_definition(const std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> & type, reaver::vapor::codegen::_v1::codegen_context & ctx) const
 {
     if (type == ir::builtin_types().integer)
+    {
+        return {};
+    }
+
+    if (type == ir::builtin_types().boolean)
     {
         return {};
     }

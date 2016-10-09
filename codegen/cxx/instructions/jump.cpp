@@ -26,9 +26,16 @@
 
 namespace reaver { namespace vapor { namespace codegen { inline namespace _v1 { namespace cxx {
 template<>
-std::u32string generate<ir::jump_instruction>(const ir::instruction &, codegen_context &)
+std::u32string generate<ir::jump_instruction>(const ir::instruction & inst, codegen_context & ctx)
 {
-    assert(0);
+    assert(inst.operands.size() > 0 && inst.operands.size() % 2 == 0);
+
+    std::u32string ret;
+    for (std::size_t i = 0; i < inst.operands.size() / 2; ++i)
+    {
+        ret += U"if (" + cxx::value_of(inst.operands[i * 2], ctx) + U") { goto " + cxx::value_of(inst.operands[i * 2 + 1], ctx) + U"; }\n";
+    }
+    return ret;
 }
 }}}}}
 

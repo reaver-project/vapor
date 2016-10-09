@@ -78,15 +78,27 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate(const reaver
         ir::return_instruction,
         ir::jump_instruction,
         ir::phi_instruction,
+        ir::noop_instruction,
 
         ir::integer_addition_instruction,
-        ir::integer_multiplication_instruction
+        ir::integer_multiplication_instruction,
+        ir::integer_equal_comparison_instruction,
+
+        ir::boolean_equal_comparison_instruction
     >(inst, ctx);
 }
 
 namespace reaver { namespace vapor { namespace codegen { inline namespace _v1 { namespace cxx {
 template<>
 std::u32string generate<ir::pass_value_instruction>(const ir::instruction &, codegen_context &)
+{
+    return {};
+}
+}}}}}
+
+namespace reaver { namespace vapor { namespace codegen { inline namespace _v1 { namespace cxx {
+template<>
+std::u32string generate<ir::noop_instruction>(const ir::instruction &, codegen_context &)
 {
     return {};
 }
