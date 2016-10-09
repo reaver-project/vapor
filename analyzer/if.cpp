@@ -28,7 +28,25 @@
 
 void reaver::vapor::analyzer::_v1::if_statement::print(std::ostream & os, std::size_t indent) const
 {
-    assert(0);
+    auto in = std::string(indent, ' ');
+    os << in << "if statement at " << _parse.range << '\n';
+    os << in << "condition:\n";
+    os << in << "{\n";
+    _condition->print(os, indent + 4);
+    os << in << "}\n";
+
+    os << in << "then-block:\n";
+    os << in << "{\n";
+    _then_block->print(os, indent + 4);
+    os << in << "}\n";
+
+    fmap(_else_block, [&](auto && block) {
+        os << in << "else-block:\n";
+        os << in << "{\n";
+        block->print(os, indent + 4);
+        os << in << "}\n";
+        return unit{};
+    });
 }
 
 reaver::future<> reaver::vapor::analyzer::_v1::if_statement::_analyze()
