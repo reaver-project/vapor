@@ -47,7 +47,7 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_definition(c
     return ret;
 }
 
-std::u32string reaver::vapor::codegen::_v1::cxx::value_of(const reaver::vapor::codegen::_v1::ir::value & val, reaver::vapor::codegen::_v1::codegen_context & ctx)
+std::u32string reaver::vapor::codegen::_v1::cxx::value_of(const reaver::vapor::codegen::_v1::ir::value & val, reaver::vapor::codegen::_v1::codegen_context & ctx, bool dont_unref)
 {
     return get<std::u32string>(fmap(val, make_overload_set(
         [&](const codegen::ir::integer_value & val) {
@@ -59,7 +59,7 @@ std::u32string reaver::vapor::codegen::_v1::cxx::value_of(const reaver::vapor::c
             return val.value ? U"true" : U"false";
         },
         [&](const std::shared_ptr<ir::variable> & var) {
-            return variable_name(*var, ctx);
+            return variable_name(*var, ctx) + (var->argument || dont_unref ? U"" : U".reference()");
         },
         [&](const codegen::ir::label & label) {
             assert(label.scopes.empty());

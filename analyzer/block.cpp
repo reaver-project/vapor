@@ -156,10 +156,12 @@ std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyze
 
         std::vector<codegen::ir::value> labeled_return_values;
 
-        fmap(statements, [&](auto && stmt) {
+        for (std::size_t i = 0; i < statements.size(); ++i)
+        {
+            auto & stmt = statements[i];
             if (!stmt.instruction.template is<codegen::ir::return_instruction>())
             {
-                return unit{};
+                continue;
             }
 
             std::u32string label;
@@ -172,11 +174,24 @@ std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyze
             {
                 label = stmt.label;
             }
-            labeled_return_values.emplace_back(codegen::ir::label{ std::move(label), {} });
-            labeled_return_values.emplace_back(stmt.result);
 
-            return unit{};
-        });
+            // create a variable for the constant return value
+            auto result = stmt.result;
+            if (result.index() != 0)
+            {
+                auto var = make_variable(get_type(result));
+                statements.insert(statements.begin() + i++, {
+                    {}, {},
+                    { boost::typeindex::type_id<codegen::ir::materialization_instruction>() },
+                    { result },
+                    var
+                });
+                result = var;
+            }
+
+            labeled_return_values.emplace_back(codegen::ir::label{ std::move(label), {} });
+            labeled_return_values.emplace_back(result);
+        }
 
         if (labeled_return_values.size() != 2)
         {

@@ -22,6 +22,7 @@
 
 #include "vapor/codegen/generator.h"
 #include "vapor/codegen/ir/type.h"
+#include "vapor/codegen/cxx/names.h" // baaaaad, need to sort this nonsense out
 
 #include <cassert>
 
@@ -45,5 +46,28 @@ std::u32string reaver::vapor::codegen::_v1::codegen_context::define_if_necessary
 
     _defined_types.insert(type);
     return _generator->generate_definition(type, *this);
+}
+
+std::u32string reaver::vapor::codegen::_v1::codegen_context::get_storage_for(std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> type)
+{
+    auto it = _unallocated_variables.find(type);
+    if (it != _unallocated_variables.end())
+    {
+        if (!it->second.empty())
+        {
+            auto ret = std::move(it->second.back());
+            it->second.pop_back();
+            return ret;
+        }
+    }
+
+    auto var = U"__pseudoregister" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(storage_object_index++));
+    put_into_function_header += U"::reaver::manual_object<" + cxx::type_name(type, *this) + U"> " + var + U";\n";
+    return var;
+}
+
+void reaver::vapor::codegen::_v1::codegen_context::free_storage_for(std::u32string name, std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> type)
+{
+    _unallocated_variables[std::move(type)].push_back(std::move(name));
 }
 

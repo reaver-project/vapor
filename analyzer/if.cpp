@@ -112,6 +112,14 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::if_stat
     auto condition_instructions = _condition->codegen_ir(ctx);
     auto condition_variable = condition_instructions.back().result;
 
+    auto negated_variable = codegen::ir::make_variable(builtin_types().boolean->codegen_type(ctx));
+    auto negation = codegen::ir::instruction{
+        {}, {},
+        { boost::typeindex::type_id<codegen::ir::boolean_negation_instruction>() },
+        { condition_variable },
+        negated_variable
+    };
+
     auto else_label = U"__else" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.label_index++));
 
     auto then_instructions = _then_block->codegen_ir(ctx);
@@ -131,14 +139,15 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::if_stat
 
     auto jump = codegen::ir::instruction{
         {}, {},
-        boost::typeindex::type_id<codegen::ir::jump_instruction>(),
-        { condition_variable, codegen::ir::label{ else_label, {} } },
+        { boost::typeindex::type_id<codegen::ir::jump_instruction>() },
+        { negated_variable, codegen::ir::label{ else_label, {} } },
         codegen::ir::label{ else_label, {} }
     };
 
     statement_ir ret;
-    ret.reserve(condition_instructions.size() + 1 + then_instructions.size() + else_instructions.size());
+    ret.reserve(condition_instructions.size() + 2 + then_instructions.size() + else_instructions.size());
     std::move(condition_instructions.begin(), condition_instructions.end(), std::back_inserter(ret));
+    ret.push_back(std::move(negation));
     ret.push_back(std::move(jump));
     std::move(then_instructions.begin(), then_instructions.end(), std::back_inserter(ret));
     std::move(else_instructions.begin(), else_instructions.end(), std::back_inserter(ret));

@@ -34,6 +34,7 @@ reaver::vapor::codegen::_v1::result::result(std::vector<reaver::vapor::codegen::
 
     _generated_code = UR"code(#include <type_traits>
 #include <utility>
+#include <reaver/manual.h>
 )code";
 
 

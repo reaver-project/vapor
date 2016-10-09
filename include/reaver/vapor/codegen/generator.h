@@ -25,6 +25,7 @@
 #include <string>
 #include <unordered_set>
 #include <memory>
+#include <unordered_map>
 
 namespace reaver
 {
@@ -52,7 +53,16 @@ namespace reaver
                 std::u32string declare_if_necessary(std::shared_ptr<ir::variable_type>);
                 std::u32string define_if_necessary(std::shared_ptr<ir::variable_type>);
 
+                std::u32string get_storage_for(std::shared_ptr<ir::variable_type>);
+                void free_storage_for(std::u32string, std::shared_ptr<ir::variable_type>);
+
+                void clear_storage()
+                {
+                    _unallocated_variables.clear();
+                }
+
                 std::size_t unnamed_variable_index = 0;
+                std::size_t storage_object_index = 0;
                 std::u32string put_into_global_before;
                 std::u32string put_into_global;
                 std::u32string put_into_function_header;
@@ -61,6 +71,8 @@ namespace reaver
                 std::unordered_set<std::shared_ptr<ir::variable_type>> _declared_types;
                 std::unordered_set<std::shared_ptr<ir::variable_type>> _defined_types;
                 std::shared_ptr<code_generator> _generator;
+
+                std::unordered_map<std::shared_ptr<ir::variable_type>, std::vector<std::u32string>> _unallocated_variables;
             };
 
             class code_generator

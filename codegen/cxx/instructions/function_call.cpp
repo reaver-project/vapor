@@ -47,7 +47,7 @@ std::u32string generate<ir::function_call_instruction>(const ir::instruction & i
         base_variable = variable_of(inst.operands.front(), ctx) + U".";
     }
 
-    return variable_of(inst.result, ctx) + U" = " + base_variable + get<codegen::ir::label>(inst.operands[actual_argument_offset - 1]).name + U"(" + arguments + U");\n";
+    return variable_of(inst.result, ctx) + U".emplace(" + base_variable + get<codegen::ir::label>(inst.operands[actual_argument_offset - 1]).name + U"(" + arguments + U"));\n";
 }
 }}}}}
 

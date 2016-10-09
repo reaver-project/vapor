@@ -26,9 +26,10 @@
 
 namespace reaver { namespace vapor { namespace codegen { inline namespace _v1 { namespace cxx {
 template<>
-std::u32string generate<ir::materialization_instruction>(const ir::instruction &, codegen_context &)
+std::u32string generate<ir::materialization_instruction>(const ir::instruction & inst, codegen_context & ctx)
 {
-    assert(0);
+    assert(inst.operands.size() == 1);
+    return variable_of(inst.result, ctx) + U".emplace(" + value_of(inst.operands.front(), ctx) + U");\n";
 }
 }}}}}
 

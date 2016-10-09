@@ -92,6 +92,8 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_definition(c
         header += U" ";
         header += cxx::variable_name(*var, ctx);
         header += U",\n";
+
+        var->argument = true;
         return unit{};
     });
     if (!fn.arguments.empty())
@@ -101,6 +103,27 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_definition(c
         header.push_back(U'\n');
     }
     header += U")\n{\n";
+
+    // fix phi variable names
+    fmap(fn.instructions, [&](auto && inst) {
+        if (inst.instruction.template is<ir::phi_instruction>())
+        {
+            assert(inst.label);
+            std::u32string var_name = U"__phi_variable" + *inst.label;
+
+            for (std::size_t i = 0; i < inst.operands.size() / 2; ++i)
+            {
+                auto && result = inst.operands[i * 2 + 1];
+                assert(result.index() == 0);
+
+                auto && var = *get<std::shared_ptr<ir::variable>>(result);
+                var.name = var_name;
+                var.declared = true;
+            }
+        }
+
+        return unit{};
+    });
 
     std::u32string body;
 
@@ -112,6 +135,7 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_definition(c
 
     auto ret = header + ctx.put_into_function_header + body;
     ctx.put_into_function_header.clear();
+    ctx.clear_storage();
     return ret;
 }
 

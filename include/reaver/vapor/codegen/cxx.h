@@ -51,7 +51,7 @@ namespace reaver
                 template<typename T>
                 std::u32string generate(const ir::instruction &, codegen_context &);
 
-                std::u32string value_of(const ir::value &, codegen_context &);
+                std::u32string value_of(const ir::value &, codegen_context &, bool = false);
                 std::u32string variable_of(const ir::value &, codegen_context &);
             }
 

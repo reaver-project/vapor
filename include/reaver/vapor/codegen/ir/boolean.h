@@ -38,6 +38,7 @@ namespace reaver
                 };
 
                 struct boolean_equal_comparison_instruction {};
+                struct boolean_negation_instruction {};
             }
         }}
     }
