@@ -34,6 +34,8 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_declaration(
     ret += ctx.declare_if_necessary(var.type);
     ret += U"extern " + cxx::type_name(var.type, ctx) + U" " + cxx::declaration_variable_name(var, ctx) + U";\n";
 
+    var.declared = true;
+
     return ret;
 }
 
@@ -76,5 +78,16 @@ std::u32string reaver::vapor::codegen::_v1::cxx::variable_of(const reaver::vapor
 {
     assert(val.index() == 0);
     return variable_name(*get<std::shared_ptr<ir::variable>>(val), ctx);
+}
+
+void reaver::vapor::codegen::_v1::cxx::mark_destroyed(const reaver::vapor::codegen::_v1::ir::value & val, reaver::vapor::codegen::_v1::codegen_context & ctx)
+{
+    assert(val.index() == 0);
+    auto && var = *get<std::shared_ptr<ir::variable>>(val);
+    if (!var.destroyed)
+    {
+        var.destroyed = true;
+        ctx.free_storage_for(*var.name, var.type);
+    }
 }
 

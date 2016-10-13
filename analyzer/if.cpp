@@ -120,22 +120,35 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::if_stat
         negated_variable
     };
 
-    auto else_label = U"__else" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.label_index++));
+    auto else_label = U"__else_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.label_index++));
+    auto after_else_label = U"__after_else_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.label_index++));
+
+    auto destroy_negation = codegen::ir::instruction{
+        {}, {},
+        { boost::typeindex::type_id<codegen::ir::temporary_destruction_instruction>() },
+        { negated_variable },
+        negated_variable
+    };
+
+    auto destroy_condition = codegen::ir::instruction{
+        {}, {},
+        { boost::typeindex::type_id<codegen::ir::temporary_destruction_instruction>() },
+        { condition_variable },
+        condition_variable
+    };
 
     auto then_instructions = _then_block->codegen_ir(ctx);
-    auto else_instructions = _else_block
-        ? [&]() {
-            auto ir = _else_block.get()->codegen_ir(ctx);
-            ir.front().label = else_label;
-            return ir;
-        }()
-        : statement_ir{
-            codegen::ir::instruction{
-                else_label, {},
-                boost::typeindex::type_id<codegen::ir::noop_instruction>(),
-                {}, codegen::ir::label{ else_label, {} }
-            }
-        };
+    auto else_instructions = [&]() {
+        statement_ir ir;
+        if (_else_block)
+        {
+            ir = _else_block.get()->codegen_ir(ctx);
+        }
+
+        ir.insert(ir.begin(), destroy_negation);
+        ir.front().label = else_label;
+        return ir;
+    }();
 
     auto jump = codegen::ir::instruction{
         {}, {},
@@ -144,13 +157,31 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::if_stat
         codegen::ir::label{ else_label, {} }
     };
 
+    auto jump_over_else = codegen::ir::instruction{
+        {}, {},
+        { boost::typeindex::type_id<codegen::ir::jump_instruction>() },
+        { codegen::ir::boolean_value{ true }, codegen::ir::label{ after_else_label, {} } },
+        codegen::ir::label{ after_else_label, {} }
+    };
+
+    auto after_else = codegen::ir::instruction{
+        after_else_label, {},
+        { boost::typeindex::type_id<codegen::ir::noop_instruction>() },
+        {},
+        codegen::ir::label{ after_else_label, {} }
+    };
+
     statement_ir ret;
-    ret.reserve(condition_instructions.size() + 2 + then_instructions.size() + else_instructions.size());
+    ret.reserve(condition_instructions.size() + 6 + then_instructions.size() + else_instructions.size());
     std::move(condition_instructions.begin(), condition_instructions.end(), std::back_inserter(ret));
     ret.push_back(std::move(negation));
+    ret.push_back(std::move(destroy_condition));
     ret.push_back(std::move(jump));
+    ret.push_back(std::move(destroy_negation));
     std::move(then_instructions.begin(), then_instructions.end(), std::back_inserter(ret));
+    ret.push_back(std::move(jump_over_else));
     std::move(else_instructions.begin(), else_instructions.end(), std::back_inserter(ret));
+    ret.push_back(std::move(after_else));
     return ret;
 }
 

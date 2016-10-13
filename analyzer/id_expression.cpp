@@ -58,8 +58,7 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
 
 reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::id_expression::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
-    auto result = codegen::ir::make_variable(_referenced->get_type()->codegen_type(ctx), name());
-    result->declared = true;
+    auto result = get<std::shared_ptr<codegen::ir::variable>>(get<codegen::ir::value>(_referenced->codegen_ir(ctx).back()));
     return { codegen::ir::instruction{
         none, none,
         { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },

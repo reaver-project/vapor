@@ -42,11 +42,32 @@ namespace reaver
 
                 struct variable
                 {
+                    virtual ~variable() = default;
+
+                    variable(std::shared_ptr<variable_type> type, optional<std::u32string> name) : type{ std::move(type) }, name{ std::move(name) }
+                    {
+                    }
+
                     std::shared_ptr<variable_type> type;
                     optional<std::u32string> name;
                     bool declared = false;
+                    bool destroyed = false;
                     bool argument = false;
+                    bool temporary = true;
                     std::vector<scope> scopes = {};
+
+                    virtual bool is_move() const
+                    {
+                        return false;
+                    }
+                };
+
+                struct move_variable : variable
+                {
+                    virtual bool is_move() const override
+                    {
+                        return true;
+                    }
                 };
 
                 struct label

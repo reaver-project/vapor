@@ -61,7 +61,7 @@ std::u32string reaver::vapor::codegen::_v1::codegen_context::get_storage_for(std
         }
     }
 
-    auto var = U"__pseudoregister" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(storage_object_index++));
+    auto var = U"__pseudoregister_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(storage_object_index++));
     put_into_function_header += U"::reaver::manual_object<" + cxx::type_name(type, *this) + U"> " + var + U";\n";
     return var;
 }

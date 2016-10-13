@@ -89,6 +89,7 @@ namespace reaver
 
                 const parser::block & _parse;
                 std::unique_ptr<scope> _scope;
+                const scope * const _original_scope;
                 std::vector<std::unique_ptr<statement>> _statements;
                 optional<std::unique_ptr<expression>> _value_expr;
                 const bool _is_top_level = false;

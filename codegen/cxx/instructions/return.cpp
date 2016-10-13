@@ -28,6 +28,7 @@ namespace reaver { namespace vapor { namespace codegen { inline namespace _v1 { 
 template<>
 std::u32string generate<ir::return_instruction>(const ir::instruction & inst, codegen_context & ctx)
 {
+    mark_destroyed(inst.result, ctx);
     return U"return " + value_of(inst.result, ctx, true) + U".move();\n";
 }
 }}}}}

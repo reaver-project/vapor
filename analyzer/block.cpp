@@ -25,7 +25,7 @@
 #include "vapor/analyzer/return.h"
 #include "vapor/analyzer/symbol.h"
 
-reaver::vapor::analyzer::_v1::block::block(const reaver::vapor::parser::block & parse, reaver::vapor::analyzer::_v1::scope * lex_scope, bool is_top_level) : _parse{ parse }, _scope{ lex_scope->clone_local() }, _is_top_level{ is_top_level }
+reaver::vapor::analyzer::_v1::block::block(const reaver::vapor::parser::block & parse, reaver::vapor::analyzer::_v1::scope * lex_scope, bool is_top_level) : _parse{ parse }, _scope{ lex_scope->clone_local() }, _original_scope{ _scope.get() }, _is_top_level{ is_top_level }
 {
     _statements = fmap(_parse.block_value, [&](auto && row) {
         return get<0>(fmap(row, make_overload_set(
@@ -145,6 +145,37 @@ std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyze
         std::move(instructions.begin(), instructions.end(), std::back_inserter(statements));
         return unit{};
     });
+
+    statement_ir scope_cleanup;
+    for (auto scope = _scope.get(); scope != _original_scope->parent(); scope = scope->parent())
+    {
+        std::transform(
+            scope->symbols_in_order().rbegin(), scope->symbols_in_order().rend(),
+            std::back_inserter(scope_cleanup),
+            [&ctx](auto && symbol) {
+                auto variable_ir = symbol->get_variable()->codegen_ir(ctx);
+                auto variable = get<codegen::ir::value>(variable_ir.back());
+                return codegen::ir::instruction{
+                    {}, {},
+                    { boost::typeindex::type_id<codegen::ir::destruction_instruction>() },
+                    { variable },
+                    variable
+                };
+            }
+        );
+    }
+
+    for (std::size_t i = 0; i < statements.size(); ++i)
+    {
+        auto & stmt = statements[i];
+        if (!stmt.instruction.template is<codegen::ir::return_instruction>())
+        {
+            continue;
+        }
+
+        statements.insert(statements.begin() + i, scope_cleanup.begin(), scope_cleanup.end());
+        i += scope_cleanup.size();
+    }
 
     if (_is_top_level)
     {

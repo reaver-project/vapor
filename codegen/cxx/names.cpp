@@ -73,7 +73,7 @@ std::u32string reaver::vapor::codegen::_v1::cxx::variable_name(const reaver::vap
         return ret + *var.name;
     }
 
-    return U"__unnamed_variable__" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.unnamed_variable_index++));
+    return U"__unnamed_variable_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.unnamed_variable_index++));
 }
 
 std::u32string reaver::vapor::codegen::_v1::cxx::declaration_variable_name(reaver::vapor::codegen::_v1::ir::variable & var, reaver::vapor::codegen::_v1::codegen_context & ctx)
@@ -83,7 +83,7 @@ std::u32string reaver::vapor::codegen::_v1::cxx::declaration_variable_name(reave
         return *var.name;
     }
 
-    auto name = U"__unnamed_variable__" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.unnamed_variable_index++));
+    auto name = U"__unnamed_variable_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.unnamed_variable_index++));
     var.name = name;
     return name;
 }

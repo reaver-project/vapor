@@ -53,6 +53,7 @@ namespace reaver
 
                 std::u32string value_of(const ir::value &, codegen_context &, bool = false);
                 std::u32string variable_of(const ir::value &, codegen_context &);
+                void mark_destroyed(const ir::value &, codegen_context &);
             }
 
             inline std::shared_ptr<code_generator> make_cxx()

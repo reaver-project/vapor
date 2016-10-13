@@ -47,22 +47,25 @@ void reaver::vapor::analyzer::_v1::postfix_expression::print(std::ostream & os, 
     auto in = std::string(indent, ' ');
     os << in << "postfix expression at " << _parse.range << '\n';
     os << in << "type: " << get_variable()->get_type()->explain() << '\n';
-    os << in << "selected overload: " << _overload->explain() << '\n';
     os << in << "base expression:\n";
     os << in << "{\n";
     _base_expr->print(os, indent + 4);
     os << in << "}\n";
 
-    os << in << "bracket type: " << lexer::token_types[+_brace] << '\n';
+    if (_parse.bracket_type)
+    {
+        os << in << "selected overload: " << _overload->explain() << '\n';
+        os << in << "bracket type: " << lexer::token_types[+_brace] << '\n';
 
-    os << in << "arguments:\n";
-    fmap(_arguments, [&](auto && arg) {
-        os << in << "{\n";
-        arg->print(os, indent + 4);
-        os << in << "}\n";
+        os << in << "arguments:\n";
+        fmap(_arguments, [&](auto && arg) {
+            os << in << "{\n";
+            arg->print(os, indent + 4);
+            os << in << "}\n";
 
-        return unit{};
-    });
+            return unit{};
+        });
+    }
 }
 
 reaver::future<> reaver::vapor::analyzer::_v1::postfix_expression::_analyze()
@@ -101,25 +104,38 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
             return _base_expr->simplify_expr(ctx);
         }).then([&](auto && simplified) {
             replace_uptr(_base_expr, simplified, ctx);
-            return _overload->simplify(ctx);
-        }).then([&](){
-            auto args = fmap(_arguments, [&](auto && expr){ return expr->get_variable(); });
-            args.insert(args.begin(), _base_expr->get_variable());
-            return _overload->simplify(ctx, std::move(args));
-        }).then([&](auto && simplified) -> expression * {
-            if (simplified)
+
+            if (!_parse.bracket_type)
             {
-                ctx.something_heppened();
-                return simplified;
+                return make_ready_future(_base_expr.release());
             }
 
-            return this;
+            return _overload->simplify(ctx)
+                .then([&](){
+                    auto args = fmap(_arguments, [&](auto && expr){ return expr->get_variable(); });
+                    args.insert(args.begin(), _base_expr->get_variable());
+                    return _overload->simplify(ctx, std::move(args));
+                }).then([&](auto && simplified) -> expression * {
+                    if (simplified)
+                    {
+                        ctx.something_heppened();
+                        return simplified;
+                    }
+
+                    return this;
+                });
         });
 }
 
 reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::postfix_expression::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
     auto base_expr_instructions = _base_expr->codegen_ir(ctx);
+
+    if (!_parse.bracket_type)
+    {
+        return base_expr_instructions;
+    }
+
     auto base_variable_value = base_expr_instructions.back().result;
     assert(base_variable_value.index() == 0);
     auto base_variable = get<std::shared_ptr<codegen::ir::variable>>(base_variable_value);

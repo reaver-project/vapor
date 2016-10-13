@@ -69,9 +69,10 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate(const reaver
     }
 
     return base + generate_helper<
-        ir::declaration_instruction,
         ir::function_call_instruction,
         ir::materialization_instruction,
+        ir::destruction_instruction,
+        ir::temporary_destruction_instruction,
         ir::pass_value_instruction,
         ir::return_instruction,
         ir::jump_instruction,

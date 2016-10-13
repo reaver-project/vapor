@@ -26,12 +26,33 @@
 
 namespace reaver { namespace vapor { namespace codegen { inline namespace _v1 { namespace cxx {
 template<>
-std::u32string generate<ir::declaration_instruction>(const ir::instruction & inst, codegen_context & ctx)
+std::u32string generate<ir::destruction_instruction>(const ir::instruction & inst, codegen_context & ctx)
 {
-    assert(inst.declared_variable);
-    assert(inst.operands.empty());
-    auto && var = **inst.declared_variable;
-    return type_name(var.type, ctx) + U" " + declaration_variable_name(var, ctx) + U";\n";
+    if (inst.result.index() != 0)
+    {
+        return {};
+    }
+
+    mark_destroyed(inst.result, ctx);
+    return value_of(inst.result, ctx, true) + U".destroy();\n";
+}
+
+template<>
+std::u32string generate<ir::temporary_destruction_instruction>(const ir::instruction & inst, codegen_context & ctx)
+{
+    if (inst.result.index() != 0)
+    {
+        return {};
+    }
+
+    auto && var = get<std::shared_ptr<ir::variable>>(inst.result);
+    if (!var->temporary)
+    {
+        return {};
+    }
+
+    mark_destroyed(inst.result, ctx);
+    return value_of(inst.result, ctx, true) + U".destroy();\n";
 }
 }}}}}
 
