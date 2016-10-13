@@ -114,5 +114,5 @@ auto reaver::vapor::analyzer::_v1::boolean_type::_generate_function(const char32
         return NAME.get(); \
     }
 
-ADD_OPERATION(equal_comparison, U"__builtin_integer_operator_equals", ==, boolean);
+ADD_OPERATION(equal_comparison, U"__builtin_boolean_operator_equals", ==, boolean);
 
