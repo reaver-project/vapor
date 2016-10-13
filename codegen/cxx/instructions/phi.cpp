@@ -30,12 +30,18 @@ template<>
 std::u32string generate<ir::phi_instruction>(const ir::instruction & inst, codegen_context & ctx)
 {
     assert(inst.label);
+    auto this_phi_var = U"__phi_variable" + *inst.label;
 
     auto type_string = type_name(get_type(inst.result), ctx);
-    ctx.put_into_function_header += U"::reaver::manual_object<" + type_string + U"> __phi_variable" + *inst.label + U";\n";
+    ctx.put_into_function_header += U"::reaver::manual_object<" + type_string + U"> " + this_phi_var + U";\n";
 
-    ctx.free_storage_for(U"__phi_variable" + *inst.label, get<std::shared_ptr<ir::variable>>(inst.result)->type);
-    return variable_of(inst.result, ctx) + U".emplace(__phi_variable" + *inst.label + U".move());\n";
+    if (variable_of(inst.result, ctx) != this_phi_var)
+    {
+        ctx.free_storage_for(this_phi_var, get<std::shared_ptr<ir::variable>>(inst.result)->type);
+        return variable_of(inst.result, ctx) + U".emplace(" + this_phi_var + U".move());\n";
+    }
+
+    return {};
 }
 }}}}}
 

@@ -58,7 +58,7 @@ namespace reaver
 
                     virtual bool is_move() const
                     {
-                        return false;
+                        return temporary;
                     }
                 };
 

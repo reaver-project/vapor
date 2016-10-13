@@ -58,6 +58,23 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate(const reaver
         base += *inst.label + U":\n";
     }
 
+    // make all pieces of storage that are moved-from during this instruction
+    // available for storage of the result of this instruction
+    fmap(inst.operands, [&](auto && operand) {
+        return fmap(operand, make_overload_set(
+            [&](const std::shared_ptr<ir::variable> & var) {
+                if (!var->argument && var->is_move())
+                {
+                    cxx::mark_destroyed(var, ctx);
+                }
+                return unit{};
+            },
+            [&](auto &&) {
+                return unit{};
+            }
+        ));
+    });
+
     if (inst.result.index() == 0)
     {
         auto && var = *get<std::shared_ptr<ir::variable>>(inst.result);

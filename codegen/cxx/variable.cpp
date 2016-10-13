@@ -61,7 +61,12 @@ std::u32string reaver::vapor::codegen::_v1::cxx::value_of(const reaver::vapor::c
             return val.value ? U"true" : U"false";
         },
         [&](const std::shared_ptr<ir::variable> & var) {
-            return variable_name(*var, ctx) + (var->argument || dont_unref ? U"" : U".reference()");
+            return variable_name(*var, ctx) + (
+                var->argument || dont_unref
+                ? U""
+                : var->is_move()
+                    ? U".move()"
+                    : U".reference()");
         },
         [&](const codegen::ir::label & label) {
             assert(label.scopes.empty());

@@ -99,41 +99,15 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::binary_
         codegen::ir::make_variable((*_overload->return_type().try_get())->codegen_type(ctx))
     };
 
-    // TEMPORARY HACK
-    auto cleanup = statement_ir{
-        {
-            none, none,
-            { boost::typeindex::type_id<codegen::ir::temporary_destruction_instruction>() },
-            { rhs_variable },
-            rhs_variable
-        },
-        {
-            none, none,
-            { boost::typeindex::type_id<codegen::ir::temporary_destruction_instruction>() },
-            { lhs_variable },
-            lhs_variable
-        }
-    };
-
-    // THIS IS ALSO A PART OF THE TEMPORARY HACK
-    auto pass_value = codegen::ir::instruction{
-        none, none,
-        { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
-        { bin_expr_instruction.result },
-        bin_expr_instruction.result
-    };
-
     ctx.add_function_to_generate(_overload);
 
     // TODO: oops, there should be a different order of evaluation for right-associative and left-associative
     // (...probably)
     statement_ir ret;
-    ret.reserve(lhs_instructions.size() + rhs_instructions.size() + 1 + 3);
+    ret.reserve(lhs_instructions.size() + rhs_instructions.size() + 1);
     std::move(lhs_instructions.begin(), lhs_instructions.end(), std::back_inserter(ret));
     std::move(rhs_instructions.begin(), rhs_instructions.end(), std::back_inserter(ret));
     ret.push_back(std::move(bin_expr_instruction));
-    std::move(cleanup.begin(), cleanup.end(), std::back_inserter(ret));
-    ret.push_back(std::move(pass_value));
 
     return ret;
 }
