@@ -90,7 +90,7 @@ reaver::future<> reaver::vapor::analyzer::_v1::postfix_expression::_analyze()
                     _overload = overload;
                     return _overload->return_type();
                 }).then([&](auto && ret_type) {
-                    _set_variable(make_expression_variable(this, ret_type));
+                    this->_set_variable(make_expression_variable(this, ret_type));
                 });
         });
 }
