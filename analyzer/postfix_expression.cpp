@@ -118,7 +118,7 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
                 }).then([&](auto && simplified) -> expression * {
                     if (simplified)
                     {
-                        ctx.something_heppened();
+                        ctx.something_happened();
                         return simplified;
                     }
 
