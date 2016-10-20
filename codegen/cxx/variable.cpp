@@ -87,7 +87,11 @@ std::u32string reaver::vapor::codegen::_v1::cxx::variable_of(const reaver::vapor
 
 void reaver::vapor::codegen::_v1::cxx::mark_destroyed(const reaver::vapor::codegen::_v1::ir::value & val, reaver::vapor::codegen::_v1::codegen_context & ctx)
 {
-    assert(val.index() == 0);
+    if (val.index() != 0)
+    {
+        return;
+    }
+
     auto && var = *get<std::shared_ptr<ir::variable>>(val);
     if (!var.destroyed)
     {

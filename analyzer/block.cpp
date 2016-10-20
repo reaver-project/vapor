@@ -206,43 +206,49 @@ std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyze
                 label = stmt.label;
             }
 
-            // create a variable for the constant return value
-            auto result = stmt.result;
-            if (result.index() != 0)
-            {
-                auto var = make_variable(get_type(result));
-                statements.insert(statements.begin() + i++, {
-                    {}, {},
-                    { boost::typeindex::type_id<codegen::ir::materialization_instruction>() },
-                    { result },
-                    var
-                });
-                result = var;
-            }
-
             labeled_return_values.emplace_back(codegen::ir::label{ std::move(label), {} });
-            labeled_return_values.emplace_back(result);
+            labeled_return_values.emplace_back(stmt.result);
         }
 
-        if (labeled_return_values.size() != 2)
+        if (labeled_return_values.size() > 2)
         {
-            statements.emplace_back(codegen::ir::instruction{
-                optional<std::u32string>{ U"__return_phi" }, none,
-                { boost::typeindex::type_id<codegen::ir::phi_instruction>() },
-                std::move(labeled_return_values),
-                codegen::ir::make_variable(return_type()->codegen_type(ctx))
-            });
+            std::size_t return_value_index = 0;
 
-            fmap(statements, [&](auto && stmt) {
+            for (std::size_t i = 0; i < statements.size(); ++i)
+            {
+                auto & stmt = statements[i];
+
                 if (!stmt.instruction.template is<codegen::ir::return_instruction>())
                 {
-                    return unit{};
+                    continue;
                 }
 
                 stmt.instruction = boost::typeindex::type_id<codegen::ir::jump_instruction>();
                 stmt.operands = { codegen::ir::boolean_value{ true }, codegen::ir::label{ U"__return_phi", {} } };
 
-                return unit{};
+                // create a variable for the constant return value
+                if (stmt.result.index() != 0)
+                {
+                    auto old_result = stmt.result;
+                    auto var = make_variable(get_type(old_result));
+                    stmt.result = var;
+                    statements.insert(statements.begin() + i++, {
+                        {}, {},
+                        { boost::typeindex::type_id<codegen::ir::materialization_instruction>() },
+                        { old_result },
+                        var
+                    });
+                    labeled_return_values[2 * return_value_index + 1] = var;
+                }
+
+                ++return_value_index;
+            }
+
+            statements.emplace_back(codegen::ir::instruction{
+                optional<std::u32string>{ U"__return_phi" }, none,
+                { boost::typeindex::type_id<codegen::ir::phi_instruction>() },
+                std::move(labeled_return_values),
+                codegen::ir::make_variable(return_type()->codegen_type(ctx))
             });
 
             statements.emplace_back(codegen::ir::instruction{

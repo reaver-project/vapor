@@ -29,7 +29,13 @@ template<>
 std::u32string generate<ir::return_instruction>(const ir::instruction & inst, codegen_context & ctx)
 {
     mark_destroyed(inst.result, ctx);
-    return U"return " + value_of(inst.result, ctx, true) + U".move();\n";
+    std::u32string suffix;
+    if (inst.result.index() == 0)
+    {
+        suffix = U".move()";
+    }
+
+    return U"return " + value_of(inst.result, ctx, true) + suffix + U";\n";
 }
 }}}}}
 

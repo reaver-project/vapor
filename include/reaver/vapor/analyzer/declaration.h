@@ -97,16 +97,27 @@ namespace reaver
 
                 virtual future<statement *> _simplify(optimization_context & ctx) override
                 {
-                    return _init_expr->simplify(ctx);
+                    return _init_expr->simplify_expr(ctx)
+                        .then([&](auto && simplified) {
+                            replace_uptr(_init_expr, simplified, ctx);
+                        }).then([&]() {
+                            return _declared_symbol->simplify(ctx);
+                        }).then([&]() -> statement * {
+                            return this;
+                        });
                 }
 
                 virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
                 {
                     auto ir = _init_expr->codegen_ir(ctx);
-                    auto var = get<std::shared_ptr<codegen::ir::variable>>(ir.back().result);
-                    ir.back().declared_variable = var;
-                    var->name = _name;
-                    var->temporary = false;
+
+                    if (ir.back().result.index() == 0)
+                    {
+                        auto var = get<std::shared_ptr<codegen::ir::variable>>(ir.back().result);
+                        ir.back().declared_variable = var;
+                        var->name = _name;
+                        var->temporary = false;
+                    }
                     return ir;
                 }
 

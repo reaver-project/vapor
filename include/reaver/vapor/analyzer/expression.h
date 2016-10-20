@@ -67,12 +67,14 @@ namespace reaver
 
                 type * get_type()
                 {
-                    if (!_variable)
+                    auto var = get_variable();
+
+                    if (!var)
                     {
                         assert(!"someone tried to get type before analyzing... or forgot to set variable from analyze");
                     }
 
-                    return _variable->get_type();
+                    return var->get_type();
                 }
 
                 future<expression *> simplify_expr(optimization_context & ctx)
@@ -176,7 +178,6 @@ namespace reaver
             public:
                 variable_ref_expression(variable * var) : _referenced(var)
                 {
-                    _set_variable(make_expression_variable(this, _referenced->get_type()));
                 }
 
                 virtual variable * get_variable() const final override
