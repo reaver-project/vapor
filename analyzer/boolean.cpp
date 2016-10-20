@@ -96,8 +96,8 @@ auto reaver::vapor::analyzer::_v1::boolean_type::_generate_function(const char32
     { \
         static auto eval = [](auto &&, const std::vector<variable *> & args) { \
             assert(args.size() == 2); \
-            assert(args[0]->get_type() == builtin_types().integer.get()); \
-            assert(args[1]->get_type() == builtin_types().integer.get()); \
+            assert(args[0]->get_type() == builtin_types().boolean.get()); \
+            assert(args[1]->get_type() == builtin_types().boolean.get()); \
  \
             if (!args[0]->is_constant() || !args[1]->is_constant()) \
             { \
@@ -108,7 +108,7 @@ auto reaver::vapor::analyzer::_v1::boolean_type::_generate_function(const char32
             auto rhs = static_cast<boolean_constant *>(args[1]); \
             return make_variable_expression(std::make_unique<RESULT_TYPE ## _constant>(lhs->get_value() OPERATOR rhs->get_value())).release(); \
         }; \
-        static auto NAME = _generate_function<codegen::ir::integer_ ## NAME ## _instruction>( \
+        static auto NAME = _generate_function<codegen::ir::boolean_ ## NAME ## _instruction>( \
             BUILTIN_NAME, "<builtin boolean " #NAME ">", \
             eval, builtin_types(). RESULT_TYPE .get()); \
         return NAME.get(); \
