@@ -24,13 +24,11 @@
 
 #include <memory>
 
-#include <boost/multiprecision/integer.hpp>
-
 #include "literal.h"
 #include "../parser/literal.h"
 #include "expression.h"
 #include "function.h"
-#include "../codegen/ir/integer.h"
+#include "../codegen/ir/boolean.h"
 
 namespace reaver
 {
@@ -38,19 +36,13 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            class integer_type : public type
+            class boolean_type : public type
             {
             public:
                 virtual future<function *> get_overload(lexer::token_type token, const type * rhs) const override
                 {
                     switch (token)
                     {
-                        case lexer::token_type::plus:
-                            return make_ready_future(_addition());
-
-                        case lexer::token_type::star:
-                            return make_ready_future(_multiplication());
-
                         case lexer::token_type::equals:
                             return make_ready_future(_equal_comparison());
 
@@ -61,7 +53,7 @@ namespace reaver
 
                 virtual std::string explain() const override
                 {
-                    return "integer";
+                    return "boolean";
                 }
 
             private:
@@ -69,25 +61,23 @@ namespace reaver
 
                 template<typename Instruction, typename Eval>
                 static auto _generate_function(const char32_t * name, const char * desc, Eval eval, type * return_type);
-                static function * _addition();
-                static function * _multiplication();
                 static function * _equal_comparison();
             };
 
-            class integer_constant : public literal
+            class boolean_constant : public literal
             {
             public:
-                integer_constant(const parser::integer_literal & parse) : _value{ utf8(parse.value.string) }
+                boolean_constant(const parser::boolean_literal & parse) : _value{ parse.value.string == U"true" }
                 {
                 }
 
-                integer_constant(boost::multiprecision::cpp_int value) : _value{ std::move(value) }
+                boolean_constant(bool value) : _value{ value }
                 {
                 }
 
                 virtual type * get_type() const override
                 {
-                    return builtin_types().integer.get();
+                    return builtin_types().boolean.get();
                 }
 
                 auto get_value() const
@@ -102,7 +92,7 @@ namespace reaver
 
                 virtual bool is_equal(const variable * other_var) const override
                 {
-                    auto other = dynamic_cast<const integer_constant *>(other_var);
+                    auto other = dynamic_cast<const boolean_constant *>(other_var);
                     if (!other)
                     {
                         // todo: conversions somehow
@@ -115,15 +105,15 @@ namespace reaver
             private:
                 virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
-                boost::multiprecision::cpp_int _value;
+                bool _value;
             };
 
-            class integer_literal : public expression
+            class boolean_literal : public expression
             {
             public:
-                integer_literal(const parser::integer_literal & parse) : _parse{ parse }
+                boolean_literal(const parser::boolean_literal & parse) : _parse{ parse }
                 {
-                    auto val = std::make_unique<integer_constant>(parse);
+                    auto val = std::make_unique<boolean_constant>(parse);
                     _value = val.get();
                     _set_variable(std::move(val));
                 }
@@ -131,7 +121,7 @@ namespace reaver
                 virtual void print(std::ostream & os, std::size_t indent) const override
                 {
                     auto in = std::string(indent, ' ');
-                    os << in << "integer literal with value of " << _value->get_value() << " at " << _parse.range << '\n';
+                    os << in << "boolean literal with value of " << _value->get_value() << " at " << _parse.range << '\n';
                 }
 
             private:
@@ -147,11 +137,14 @@ namespace reaver
 
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-                const parser::integer_literal & _parse;
-                integer_constant * _value;
+                const parser::boolean_literal & _parse;
+                boolean_constant * _value;
             };
 
-            std::unique_ptr<type> make_integer_type();
+            inline std::unique_ptr<type> make_boolean_type()
+            {
+                return std::make_unique<boolean_type>();
+            }
         }}
     }
 }

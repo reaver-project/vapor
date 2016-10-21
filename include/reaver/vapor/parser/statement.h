@@ -33,6 +33,7 @@
 #include "unary_expression.h"
 #include "binary_expression.h"
 #include "function.h"
+#include "if_statement.h"
 
 namespace reaver
 {
@@ -47,7 +48,8 @@ namespace reaver
                     declaration,
                     return_expression,
                     expression_list,
-                    function
+                    function,
+                    if_statement
                 > statement_value = expression_list();
             };
 

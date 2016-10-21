@@ -71,21 +71,21 @@ namespace reaver
                     return fut;
                 }
 
-                void something_heppened()
+                void something_happened()
                 {
-                    _something_heppened = true;
+                    _something_happened = true;
                 }
 
                 bool did_something_happen() const
                 {
-                    return _something_heppened;
+                    return _something_happened;
                 }
 
                 void keep_alive(statement * ptr);
                 void keep_alive(variable * ptr);
 
             private:
-                std::atomic<bool> _something_heppened{ false };
+                std::atomic<bool> _something_happened{ false };
 
                 using _ulock = std::unique_lock<std::shared_mutex>;
                 using _shlock = std::shared_lock<std::shared_mutex>;
@@ -100,7 +100,7 @@ namespace reaver
                 std::unordered_set<std::unique_ptr<variable>> _keep_alive_var;
 
                 template<typename T>
-                auto _get_futures() = delete;
+                auto & _get_futures() = delete;
 
                 template<typename T, typename Future>
                 void _handle_expressions(T *, Future &&)
@@ -112,19 +112,19 @@ namespace reaver
             };
 
             template<>
-            inline auto optimization_context::_get_futures<statement>()
+            inline auto & optimization_context::_get_futures<statement>()
             {
                 return _statement_futures;
             }
 
             template<>
-            inline auto optimization_context::_get_futures<expression>()
+            inline auto & optimization_context::_get_futures<expression>()
             {
                 return _expression_futures;
             }
 
             template<>
-            inline auto optimization_context::_get_futures<variable>()
+            inline auto & optimization_context::_get_futures<variable>()
             {
                 return _variable_futures;
             }

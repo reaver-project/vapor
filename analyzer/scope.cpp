@@ -84,6 +84,7 @@ bool reaver::vapor::analyzer::_v1::scope::init(const std::u32string & name, std:
         }
     }
 
+    _symbols_in_order.push_back(symb.get());
     _symbols.emplace(name, std::move(symb));
     return true;
 }

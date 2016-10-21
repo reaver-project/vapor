@@ -20,39 +20,39 @@
  *
  **/
 
-#pragma once
+#include "vapor/codegen/cxx.h"
+#include "vapor/codegen/ir/instruction.h"
+#include "vapor/codegen/cxx/names.h"
 
-#include <vector>
-#include <memory>
-#include <unordered_set>
-
-#include <reaver/logger.h>
-
-namespace reaver
+namespace reaver { namespace vapor { namespace codegen { inline namespace _v1 { namespace cxx {
+template<>
+std::u32string generate<ir::destruction_instruction>(const ir::instruction & inst, codegen_context & ctx)
 {
-    namespace vapor
+    if (inst.result.index() != 0)
     {
-        namespace analyzer { inline namespace _v1
-        {
-            class function;
-
-            class ir_generation_context
-            {
-            public:
-                void add_function_to_generate(const function * fn);
-                void add_generated_function(const function * fn);
-                const function * function_to_generate();
-
-                bool top_level_generation = true;
-                std::size_t overload_set_index = 0;
-                std::size_t closure_index = 0;
-                std::size_t label_index = 0;
-
-            private:
-                std::vector<const function *> _functions_to_generate;
-                std::unordered_set<const function *> _generated_functions;
-            };
-        }}
+        return {};
     }
+
+    mark_destroyed(inst.result, ctx);
+    return value_of(inst.result, ctx, true) + U".destroy();\n";
 }
+
+template<>
+std::u32string generate<ir::temporary_destruction_instruction>(const ir::instruction & inst, codegen_context & ctx)
+{
+    if (inst.result.index() != 0)
+    {
+        return {};
+    }
+
+    auto && var = get<std::shared_ptr<ir::variable>>(inst.result);
+    if (!var->temporary)
+    {
+        return {};
+    }
+
+    mark_destroyed(inst.result, ctx);
+    return value_of(inst.result, ctx, true) + U".destroy();\n";
+}
+}}}}}
 

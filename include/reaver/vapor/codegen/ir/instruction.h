@@ -81,13 +81,15 @@ namespace reaver
 
                 std::ostream & operator<<(std::ostream & os, const instruction & inst);
 
-                struct declaration_instruction {};
                 struct function_call_instruction {};
                 struct materialization_instruction {};
+                struct destruction_instruction {};
+                struct temporary_destruction_instruction {};
                 struct pass_value_instruction {};
                 struct return_instruction {};
                 struct jump_instruction {};
                 struct phi_instruction {};
+                struct noop_instruction {};
             };
         }}
     }

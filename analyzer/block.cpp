@@ -25,7 +25,7 @@
 #include "vapor/analyzer/return.h"
 #include "vapor/analyzer/symbol.h"
 
-reaver::vapor::analyzer::_v1::block::block(const reaver::vapor::parser::block & parse, reaver::vapor::analyzer::_v1::scope * lex_scope, bool is_top_level) : _parse{ parse }, _scope{ lex_scope->clone_local() }, _is_top_level{ is_top_level }
+reaver::vapor::analyzer::_v1::block::block(const reaver::vapor::parser::block & parse, reaver::vapor::analyzer::_v1::scope * lex_scope, bool is_top_level) : _parse{ parse }, _scope{ lex_scope->clone_local() }, _original_scope{ _scope.get() }, _is_top_level{ is_top_level }
 {
     _statements = fmap(_parse.block_value, [&](auto && row) {
         return get<0>(fmap(row, make_overload_set(
@@ -146,10 +146,39 @@ std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyze
         return unit{};
     });
 
+    statement_ir scope_cleanup;
+    for (auto scope = _scope.get(); scope != _original_scope->parent(); scope = scope->parent())
+    {
+        std::transform(
+            scope->symbols_in_order().rbegin(), scope->symbols_in_order().rend(),
+            std::back_inserter(scope_cleanup),
+            [&ctx](auto && symbol) {
+                auto variable_ir = symbol->get_variable()->codegen_ir(ctx);
+                auto variable = get<codegen::ir::value>(variable_ir.back());
+                return codegen::ir::instruction{
+                    {}, {},
+                    { boost::typeindex::type_id<codegen::ir::destruction_instruction>() },
+                    { variable },
+                    variable
+                };
+            }
+        );
+    }
+
+    for (std::size_t i = 0; i < statements.size(); ++i)
+    {
+        auto & stmt = statements[i];
+        if (!stmt.instruction.template is<codegen::ir::return_instruction>())
+        {
+            continue;
+        }
+
+        statements.insert(statements.begin() + i, scope_cleanup.begin(), scope_cleanup.end());
+        i += scope_cleanup.size();
+    }
+
     if (_is_top_level)
     {
-        std::size_t return_index = 0;
-
         auto to_u32string = [](auto && v) {
             std::stringstream stream;
             stream << v;
@@ -158,39 +187,68 @@ std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyze
 
         std::vector<codegen::ir::value> labeled_return_values;
 
-        fmap(statements, [&](auto && stmt) {
+        for (std::size_t i = 0; i < statements.size(); ++i)
+        {
+            auto & stmt = statements[i];
             if (!stmt.instruction.template is<codegen::ir::return_instruction>())
             {
-                return unit{};
+                continue;
             }
 
-            auto label = U"__return_label_" + to_u32string(return_index);
-            stmt.label = label;
+            std::u32string label;
+            if (!stmt.label)
+            {
+                label = U"__return_label_" + to_u32string(ctx.label_index++);
+                stmt.label = label;
+            }
+            else
+            {
+                label = stmt.label;
+            }
+
             labeled_return_values.emplace_back(codegen::ir::label{ std::move(label), {} });
             labeled_return_values.emplace_back(stmt.result);
+        }
 
-            return unit{};
-        });
-
-        if (labeled_return_values.size() == 1)
+        if (labeled_return_values.size() > 2)
         {
+            std::size_t return_value_index = 0;
+
+            for (std::size_t i = 0; i < statements.size(); ++i)
+            {
+                auto & stmt = statements[i];
+
+                if (!stmt.instruction.template is<codegen::ir::return_instruction>())
+                {
+                    continue;
+                }
+
+                stmt.instruction = boost::typeindex::type_id<codegen::ir::jump_instruction>();
+                stmt.operands = { codegen::ir::boolean_value{ true }, codegen::ir::label{ U"__return_phi", {} } };
+
+                // create a variable for the constant return value
+                if (stmt.result.index() != 0)
+                {
+                    auto old_result = stmt.result;
+                    auto var = make_variable(get_type(old_result));
+                    stmt.result = var;
+                    statements.insert(statements.begin() + i++, {
+                        {}, {},
+                        { boost::typeindex::type_id<codegen::ir::materialization_instruction>() },
+                        { old_result },
+                        var
+                    });
+                    labeled_return_values[2 * return_value_index + 1] = var;
+                }
+
+                ++return_value_index;
+            }
+
             statements.emplace_back(codegen::ir::instruction{
                 optional<std::u32string>{ U"__return_phi" }, none,
                 { boost::typeindex::type_id<codegen::ir::phi_instruction>() },
                 std::move(labeled_return_values),
                 codegen::ir::make_variable(return_type()->codegen_type(ctx))
-            });
-
-            fmap(statements, [&](auto && stmt) {
-                if (!stmt.instruction.template is<codegen::ir::return_instruction>())
-                {
-                    return unit{};
-                }
-
-                stmt.instruction = boost::typeindex::type_id<codegen::ir::jump_instruction>();
-                stmt.operands = { codegen::ir::label{ U"__return_phi", {} } };
-
-                return unit{};
             });
 
             statements.emplace_back(codegen::ir::instruction{

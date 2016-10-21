@@ -35,13 +35,20 @@ static auto token_types_init = []() -> reaver::unit
     token_types[+token_type::string] = "string";
     token_types[+token_type::integer] = "integer";
     token_types[+token_type::integer_suffix] = "integer-suffix";
+    token_types[+token_type::boolean] = "boolean";
+
     token_types[+token_type::module] = "module";
     token_types[+token_type::import] = "import";
     token_types[+token_type::auto_] = "auto";
     token_types[+token_type::let] = "let";
     token_types[+token_type::return_] = "return";
     token_types[+token_type::function] = "function";
+    token_types[+token_type::if_] = "if";
+    token_types[+token_type::else_] = "else";
+
+    token_types[+token_type::comma] = ",";
     token_types[+token_type::dot] = ".";
+
     token_types[+token_type::curly_bracket_open] = "{";
     token_types[+token_type::curly_bracket_close] = "}";
     token_types[+token_type::square_bracket_open] = "[";
@@ -102,12 +109,17 @@ static auto token_types_init = []() -> reaver::unit
 }();
 
 const std::unordered_map<std::u32string, token_type> reaver::vapor::lexer::_v1::keywords = {
+    { U"true", token_type::boolean },
+    { U"false", token_type::boolean },
+
     { U"module", token_type::module },
     { U"import", token_type::import },
     { U"auto", token_type::auto_ },
     { U"let", token_type::let },
     { U"return", token_type::return_ },
     { U"function", token_type::function },
+    { U"if", token_type::if_ },
+    { U"else", token_type::else_ },
 };
 
 const std::unordered_map<char32_t, token_type> reaver::vapor::lexer::_v1::symbols1 = {

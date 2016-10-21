@@ -34,6 +34,13 @@ reaver::vapor::parser::_v1::statement reaver::vapor::parser::_v1::parse_statemen
         ret.statement_value = std::move(func);
     }
 
+    else if (peek(ctx, lexer::token_type::if_))
+    {
+        auto if_ = parse_if_statement(ctx);
+        ret.range = if_.range;
+        ret.statement_value = std::move(if_);
+    }
+
     else
     {
         if (peek(ctx, lexer::token_type::let))

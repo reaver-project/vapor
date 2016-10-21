@@ -49,7 +49,7 @@ namespace reaver
                     return "closure (TODO: location)";
                 }
 
-                virtual function * get_overload(lexer::token_type bracket, std::vector<const type *> args) const override
+                virtual future<function *> get_overload(lexer::token_type bracket, std::vector<const type *> args) const override
                 {
                     if (std::inner_product(
                             args.begin(), args.end(),
@@ -59,10 +59,10 @@ namespace reaver
                             std::equal_to<>()
                         ))
                     {
-                        return _function.get();
+                        return make_ready_future(_function.get());
                     }
 
-                    return nullptr;
+                    return make_ready_future<function *>(nullptr);
                 }
 
             private:

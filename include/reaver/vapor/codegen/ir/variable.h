@@ -26,6 +26,7 @@
 #include <reaver/optional.h>
 
 #include "integer.h"
+#include "boolean.h"
 #include "../../utf8.h"
 #include "scope.h"
 
@@ -41,10 +42,32 @@ namespace reaver
 
                 struct variable
                 {
+                    virtual ~variable() = default;
+
+                    variable(std::shared_ptr<variable_type> type, optional<std::u32string> name) : type{ std::move(type) }, name{ std::move(name) }
+                    {
+                    }
+
                     std::shared_ptr<variable_type> type;
                     optional<std::u32string> name;
                     bool declared = false;
+                    bool destroyed = false;
+                    bool argument = false;
+                    bool temporary = true;
                     std::vector<scope> scopes = {};
+
+                    virtual bool is_move() const
+                    {
+                        return temporary;
+                    }
+                };
+
+                struct move_variable : variable
+                {
+                    virtual bool is_move() const override
+                    {
+                        return true;
+                    }
                 };
 
                 struct label
@@ -63,6 +86,7 @@ namespace reaver
                 using value = variant<
                     std::shared_ptr<variable>,
                     integer_value,
+                    boolean_value,
                     label
                 >;
 

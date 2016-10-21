@@ -22,36 +22,35 @@
 
 #pragma once
 
-#include <vector>
-#include <memory>
-#include <unordered_set>
-
-#include <reaver/logger.h>
+#include "expression.h"
 
 namespace reaver
 {
     namespace vapor
     {
-        namespace analyzer { inline namespace _v1
+        namespace parser { inline namespace _v1
         {
-            class function;
+            struct block;
 
-            class ir_generation_context
+            struct if_statement
             {
-            public:
-                void add_function_to_generate(const function * fn);
-                void add_generated_function(const function * fn);
-                const function * function_to_generate();
-
-                bool top_level_generation = true;
-                std::size_t overload_set_index = 0;
-                std::size_t closure_index = 0;
-                std::size_t label_index = 0;
-
-            private:
-                std::vector<const function *> _functions_to_generate;
-                std::unordered_set<const function *> _generated_functions;
+                range_type range;
+                expression condition;
+                recursive_wrapper<block> then_block;
+                optional<recursive_wrapper<block>> else_block;
             };
+
+            inline bool operator==(const if_statement & lhs, const if_statement & rhs)
+            {
+                return lhs.range == rhs.range
+                    && lhs.condition == rhs.condition
+                    && *lhs.then_block == rhs.then_block
+                    && lhs.else_block == rhs.else_block;
+            }
+
+            if_statement parse_if_statement(context & ctx);
+
+            void print(const if_statement & stmt, std::ostream & os, std::size_t indent = 0);
         }}
     }
 }

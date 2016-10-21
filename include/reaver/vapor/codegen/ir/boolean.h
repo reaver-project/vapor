@@ -22,36 +22,24 @@
 
 #pragma once
 
-#include <vector>
-#include <memory>
-#include <unordered_set>
-
-#include <reaver/logger.h>
+#include <boost/multiprecision/cpp_int.hpp>
 
 namespace reaver
 {
     namespace vapor
     {
-        namespace analyzer { inline namespace _v1
+        namespace codegen { inline namespace _v1
         {
-            class function;
-
-            class ir_generation_context
+            namespace ir
             {
-            public:
-                void add_function_to_generate(const function * fn);
-                void add_generated_function(const function * fn);
-                const function * function_to_generate();
+                struct boolean_value
+                {
+                    bool value;
+                };
 
-                bool top_level_generation = true;
-                std::size_t overload_set_index = 0;
-                std::size_t closure_index = 0;
-                std::size_t label_index = 0;
-
-            private:
-                std::vector<const function *> _functions_to_generate;
-                std::unordered_set<const function *> _generated_functions;
-            };
+                struct boolean_equal_comparison_instruction {};
+                struct boolean_negation_instruction {};
+            }
         }}
     }
 }

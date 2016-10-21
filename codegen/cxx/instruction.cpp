@@ -58,35 +58,64 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate(const reaver
         base += *inst.label + U":\n";
     }
 
+    // make all pieces of storage that are moved-from during this instruction
+    // available for storage of the result of this instruction
+    fmap(inst.operands, [&](auto && operand) {
+        return fmap(operand, make_overload_set(
+            [&](const std::shared_ptr<ir::variable> & var) {
+                if (!var->argument && var->is_move())
+                {
+                    cxx::mark_destroyed(var, ctx);
+                }
+                return unit{};
+            },
+            [&](auto &&) {
+                return unit{};
+            }
+        ));
+    });
+
     if (inst.result.index() == 0)
     {
         auto && var = *get<std::shared_ptr<ir::variable>>(inst.result);
         if (!var.declared)
         {
             var.declared = true;
-            base += cxx::type_name(var.type, ctx) + U" ";
-            cxx::declaration_variable_name(var, ctx); // generate a name
-            // this really needs its own interface
+            var.name = ctx.get_storage_for(var.type);
         }
     }
 
     return base + generate_helper<
-        ir::declaration_instruction,
         ir::function_call_instruction,
         ir::materialization_instruction,
+        ir::destruction_instruction,
+        ir::temporary_destruction_instruction,
         ir::pass_value_instruction,
         ir::return_instruction,
         ir::jump_instruction,
         ir::phi_instruction,
+        ir::noop_instruction,
 
         ir::integer_addition_instruction,
-        ir::integer_multiplication_instruction
+        ir::integer_multiplication_instruction,
+        ir::integer_equal_comparison_instruction,
+
+        ir::boolean_equal_comparison_instruction,
+        ir::boolean_negation_instruction
     >(inst, ctx);
 }
 
 namespace reaver { namespace vapor { namespace codegen { inline namespace _v1 { namespace cxx {
 template<>
 std::u32string generate<ir::pass_value_instruction>(const ir::instruction &, codegen_context &)
+{
+    return {};
+}
+}}}}}
+
+namespace reaver { namespace vapor { namespace codegen { inline namespace _v1 { namespace cxx {
+template<>
+std::u32string generate<ir::noop_instruction>(const ir::instruction &, codegen_context &)
 {
     return {};
 }

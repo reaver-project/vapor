@@ -50,6 +50,11 @@ namespace reaver
 
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
+                virtual variable * get_variable() const override
+                {
+                    return _referenced;
+                }
+
             private:
                 virtual future<> _analyze() override;
                 virtual future<expression *> _simplify_expr(optimization_context &) override;

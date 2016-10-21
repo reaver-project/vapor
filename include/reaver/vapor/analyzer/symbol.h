@@ -96,6 +96,15 @@ namespace reaver
                     return *_future;
                 }
 
+                future<> simplify(optimization_context & ctx)
+                {
+                    return get_variable()->simplify(ctx)
+                        .then([&](auto && simplified) {
+                            _ulock lock{ _lock };
+                            _variable = simplified;
+                        });
+                }
+
                 std::vector<variant<std::shared_ptr<codegen::ir::variable>, codegen::ir::function>> codegen_ir(ir_generation_context &) const;
 
             private:

@@ -24,6 +24,7 @@
 #include "vapor/analyzer/closure.h"
 #include "vapor/analyzer/binary_expression.h"
 #include "vapor/analyzer/integer.h"
+#include "vapor/analyzer/boolean.h"
 #include "vapor/analyzer/postfix_expression.h"
 #include "vapor/analyzer/unary_expression.h"
 #include "vapor/analyzer/import.h"
@@ -42,6 +43,11 @@ std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyze
         [](const parser::integer_literal & integer) -> std::unique_ptr<expression>
         {
             return std::make_unique<integer_literal>(integer);
+        },
+
+        [](const parser::boolean_literal & boolean) -> std::unique_ptr<expression>
+        {
+            return std::make_unique<boolean_literal>(boolean);
         },
 
         [&](const parser::postfix_expression & postfix) -> std::unique_ptr<expression>

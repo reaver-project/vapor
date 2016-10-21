@@ -37,9 +37,28 @@ std::u32string program = UR"program(module hello_world
         return 5 + 6 * 7 + 8;
     }
 
+    function conditional()
+    {
+        if (false)
+        {
+            return 0;
+        }
+
+        else if (2 + 2 == 7)
+        {
+            return 0;
+        }
+
+        else
+        {
+            return 1;
+        }
+    }
+
     function entry()
     {
-        return foo() + bar();
+        let partial = foo() + bar();
+        return partial + conditional();
     }
 })program";
 
@@ -57,13 +76,19 @@ int main() try
     }
     reaver::logger::dlog();
 
+    reaver::logger::default_logger().sync();
+
     reaver::logger::dlog() << "AST:";
     reaver::vapor::parser::ast ast{ iterator };
     reaver::logger::dlog() << ast;
 
+    reaver::logger::default_logger().sync();
+
     reaver::logger::dlog() << "Analyzed AST:";
     reaver::vapor::analyzer::ast analyzed_ast{ std::move(ast) };
     reaver::logger::dlog() << std::ref(analyzed_ast);
+
+    reaver::logger::default_logger().sync();
 
     auto ir = analyzed_ast.codegen_ir();
     reaver::vapor::codegen::result generated_code{ ir, reaver::vapor::codegen::make_cxx() };

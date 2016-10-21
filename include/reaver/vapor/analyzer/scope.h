@@ -84,6 +84,11 @@ namespace reaver
 
                 void close();
 
+                scope * parent() const
+                {
+                    return _parent;
+                }
+
                 scope * clone_for_decl()
                 {
                     if (_is_local_scope)
@@ -145,6 +150,7 @@ namespace reaver
 
                     auto init_v = init();
                     auto ret = init_v.get();
+                    _symbols_in_order.push_back(init_v.get());
                     _symbols.emplace(name, std::move(init_v));
                     return ret;
                 }
@@ -183,6 +189,12 @@ namespace reaver
                     return scopes;
                 }
 
+                const auto & symbols_in_order() const
+                {
+                    assert(_is_closed);
+                    return _symbols_in_order;
+                }
+
                 void keep_alive()
                 {
                     assert(_parent);
@@ -199,6 +211,7 @@ namespace reaver
                 scope * _parent = nullptr;
                 std::unordered_set<std::unique_ptr<scope>> _keepalive;
                 std::unordered_map<std::u32string, std::unique_ptr<symbol>> _symbols;
+                std::vector<symbol *> _symbols_in_order;
                 std::unordered_map<std::u32string, future<symbol *>> _symbol_futures;
                 std::unordered_map<std::u32string, manual_promise<symbol *>> _symbol_promises;
                 const bool _is_local_scope = false;

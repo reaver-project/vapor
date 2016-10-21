@@ -53,10 +53,12 @@ reaver::future<> reaver::vapor::analyzer::_v1::binary_expression::_analyze()
             _lhs->analyze(),
             _rhs->analyze()
         ).then([&](auto &&) {
-            _overload = resolve_overload(_lhs->get_type(), _rhs->get_type(), _op.type, _scope);
-            assert(_overload);
-
-            this->_set_variable(make_expression_variable(this, _overload->return_type()));
+            return resolve_overload(_lhs->get_type(), _rhs->get_type(), _op.type, _scope);
+        }).then([&](auto && overload) {
+            _overload = overload;
+            return _overload->return_type();
+        }).then([&](auto && ret_type) {
+            this->_set_variable(make_expression_variable(this, ret_type));
         });
 }
 
@@ -74,7 +76,7 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
         }).then([&](auto && simplified) -> expression * {
             if (simplified)
             {
-                ctx.something_heppened();
+                ctx.something_happened();
                 return simplified;
             }
 
@@ -94,7 +96,7 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::binary_
         none, none,
         { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
         { _overload->call_operand_ir(ctx), lhs_variable, rhs_variable },
-        codegen::ir::make_variable(_overload->return_type()->codegen_type(ctx))
+        codegen::ir::make_variable((*_overload->return_type().try_get())->codegen_type(ctx))
     };
 
     ctx.add_function_to_generate(_overload);

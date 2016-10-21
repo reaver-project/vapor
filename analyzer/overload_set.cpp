@@ -31,6 +31,8 @@
 
 void reaver::vapor::analyzer::_v1::overload_set_type::add_function(reaver::vapor::analyzer::_v1::function * fn)
 {
+    std::unique_lock<std::mutex> lock{ _functions_lock };
+
     if (std::find_if(_functions.begin(), _functions.end(), [&](auto && f) {
             return f->arguments() == fn->arguments();
         }) != _functions.end())
@@ -41,8 +43,10 @@ void reaver::vapor::analyzer::_v1::overload_set_type::add_function(reaver::vapor
     _functions.push_back(fn);
 }
 
-reaver::vapor::analyzer::_v1::function * reaver::vapor::analyzer::_v1::overload_set_type::get_overload(reaver::vapor::lexer::token_type bracket, std::vector<const reaver::vapor::analyzer::_v1::type *> args) const
+reaver::future<reaver::vapor::analyzer::_v1::function *> reaver::vapor::analyzer::_v1::overload_set_type::get_overload(reaver::vapor::lexer::token_type bracket, std::vector<const reaver::vapor::analyzer::_v1::type *> args) const
 {
+    std::unique_lock<std::mutex> lock{ _functions_lock };
+
     if (bracket == lexer::token_type::round_bracket_open)
     {
         auto it = std::find_if(_functions.begin(), _functions.end(), [&](auto && f) {
@@ -59,11 +63,12 @@ reaver::vapor::analyzer::_v1::function * reaver::vapor::analyzer::_v1::overload_
 
         if (it != _functions.end())
         {
-            return *it;
+            auto ret = *it;
+            return make_ready_future(ret);
         }
     }
 
-    return nullptr;
+    return make_ready_future<function *>(nullptr);
 }
 
 std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::overload_set_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
@@ -112,7 +117,7 @@ void reaver::vapor::analyzer::_v1::function_declaration::print(std::ostream & os
     auto in = std::string(indent, ' ');
     os << in << "function declaration of `" << utf8(_parse.name.string) << "` at " << _parse.range << '\n';
     assert(!_parse.arguments);
-    os << in << "return type: " << _function->return_type()->explain() << '\n';
+    os << in << "return type: " << (*_function->return_type().try_get())->explain() << '\n';
     os << in << "{\n";
     _body->print(os, indent + 4);
     os << in << "}\n";
@@ -125,27 +130,25 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::functio
 
 reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
 {
-    return _body->analyze().then([&]{
-        _function = make_function(
-            "overloadable function",
-            _body->return_type(),
-            {},
-            [=, name = _parse.name.string](ir_generation_context & ctx) {
-                return codegen::ir::function{
-                    U"operator()",
-                    {}, {},
-                    _body->codegen_return(ctx),
-                    _body->codegen_ir(ctx)
-                };
-            },
-            _parse.range
-        );
-        _function->set_body(_body.get());
+    _function = make_function(
+        "overloadable function",
+        nullptr,
+        {},
+        [=, name = _parse.name.string](ir_generation_context & ctx) {
+            return codegen::ir::function{
+                U"operator()",
+                {}, {},
+                _body->codegen_return(ctx),
+                _body->codegen_ir(ctx)
+            };
+        },
+        _parse.range
+    );
+    _overload_set->add_function(this);
 
-        auto set = _scope->get(_parse.name.string);
-        auto overloads = dynamic_cast<overload_set *>(set->get_variable());
-        assert(overloads);
-        overloads->add_function(this);
+    return _body->analyze().then([&]{
+        _function->set_return_type(_body->return_type());
+        _function->set_body(_body.get());
     });
 }
 

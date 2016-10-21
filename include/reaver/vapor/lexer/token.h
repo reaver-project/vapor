@@ -47,14 +47,21 @@ namespace reaver
                 string_suffix,
                 integer,
                 integer_suffix,
+                boolean,
+
                 module,
                 import,
                 auto_,
                 let,
                 return_,
                 function,
+
+                if_,
+                else_,
+
                 dot,
                 comma,
+
                 curly_bracket_open,
                 curly_bracket_close,
                 square_bracket_open,
@@ -136,6 +143,7 @@ namespace reaver
                 switch (t)
                 {
                     case token_type::integer: return token_type::integer_suffix;
+                    case token_type::boolean: return token_type::none;
                     default: throw invalid_suffix_requested{};
                 }
             }

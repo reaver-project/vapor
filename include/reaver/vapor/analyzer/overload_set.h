@@ -63,11 +63,12 @@ namespace reaver
                     return "overload set (TODO: add location and member info)";
                 }
 
-                virtual function * get_overload(lexer::token_type bracket, std::vector<const type *> args) const override;
+                virtual future<function *> get_overload(lexer::token_type bracket, std::vector<const type *> args) const override;
 
             private:
                 virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const override;
 
+                mutable std::mutex _functions_lock;
                 std::vector<function *> _functions;
             };
 

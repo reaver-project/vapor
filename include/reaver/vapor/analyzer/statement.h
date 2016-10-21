@@ -59,6 +59,7 @@ namespace reaver
                         if (!_is_future_assigned)
                         {
                             _analysis_future = _analyze();
+                            _is_future_assigned = true;
                         }
                     }
 
@@ -68,7 +69,7 @@ namespace reaver
                 future<statement *> simplify(optimization_context & ctx)
                 {
                     return ctx.get_future_or_init(this, [&]() {
-                        return make_ready_future().then([&]() {
+                        return make_ready_future().then([this, &ctx]() {
                             return _simplify(ctx);
                         });
                     });
@@ -102,7 +103,36 @@ namespace reaver
                 mutable optional<statement_ir> _ir;
             };
 
+            class null_statement : public statement
+            {
+            public:
+                virtual void print(std::ostream &, std::size_t) const override
+                {
+                }
+
+            private:
+                virtual future<> _analyze() override
+                {
+                    return make_ready_future();
+                }
+
+                virtual future<statement *> _simplify(optimization_context &) override
+                {
+                    return make_ready_future<statement *>(this);
+                }
+
+                virtual statement_ir _codegen_ir(ir_generation_context &) const override
+                {
+                    return {};
+                }
+            };
+
             std::unique_ptr<statement> preanalyze_statement(const parser::statement & parse, scope *& lex_scope);
+
+            inline std::unique_ptr<statement> make_null_statement()
+            {
+                return std::make_unique<null_statement>();
+            }
         }}
     }
 }
