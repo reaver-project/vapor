@@ -60,10 +60,10 @@ reaver::vapor::parser::_v1::block reaver::vapor::parser::_v1::parse_single_state
 {
     block ret;
 
-    expect(ctx, lexer::token_type::block_value);
+    auto start = expect(ctx, lexer::token_type::block_value).range.start();
     auto expr = parse_expression(ctx);
-    ret.range = expr.range;
-    ret.value_expression = expression_list{ ret.range, { std::move(expr) } };
+    ret.range = { start, expr.range.end() };
+    ret.value_expression = expression_list{ expr.range, { std::move(expr) } };
 
     return ret;
 }

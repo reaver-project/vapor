@@ -43,7 +43,14 @@ reaver::vapor::parser::_v1::function reaver::vapor::parser::_v1::parse_function(
         ret.return_type = parse_expression(ctx);
     }
 
-    ret.body = parse_block(ctx);
+    if (peek(ctx, lexer::token_type::curly_bracket_open))
+    {
+        ret.body = parse_block(ctx);
+    }
+    else
+    {
+        ret.body = parse_single_statement_block(ctx);
+    }
 
     ret.range = { start, ret.body->range.end() };
 
