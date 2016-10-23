@@ -68,9 +68,10 @@ void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::lambda_
 
     os << in << "`lambda-expression` at " << expr.range << '\n';
 
-    assert(!expr.captures && !expr.arguments);
+    assert(!expr.captures);
 
     os << in << "{\n";
+    fmap(expr.arguments, [&](auto && arguments){ print(arguments, os, indent + 4); return unit{}; });
     print(expr.body, os, indent + 4);
     os << in << "}\n";
 }

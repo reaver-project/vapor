@@ -50,11 +50,11 @@ std::u32string program = UR"program(module hello_world
         }
     }
 
-    function entry(arg : int)
+    let entry = λ(arg : int)
     {
         let partial = foo() + bar();
         return partial + conditional(100, arg);
-    }
+    };
 })program";
 
 int main() try
