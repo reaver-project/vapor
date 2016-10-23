@@ -37,28 +37,23 @@ std::u32string program = UR"program(module hello_world
         return 5 + 6 * 7 + 8;
     }
 
-    function conditional()
+    function conditional(x : int, y : int)
     {
-        if (false)
+        if (x * y < 123)
         {
-            return 0;
-        }
-
-        else if (2 + 2 == 7)
-        {
-            return 0;
+            return x + y;
         }
 
         else
         {
-            return 1;
+            return x - y;
         }
     }
 
-    function entry()
+    function entry(arg : int)
     {
         let partial = foo() + bar();
-        return partial + conditional();
+        return partial + conditional(100, arg);
     }
 })program";
 
