@@ -32,7 +32,6 @@ reaver::vapor::parser::_v1::postfix_expression reaver::vapor::parser::_v1::parse
         using namespace lexer;
         switch (type)
         {
-            case token_type::angle_bracket_open: return token_type::angle_bracket_close;
             case token_type::round_bracket_open: return token_type::round_bracket_close;
             case token_type::square_bracket_open: return token_type::square_bracket_close;
             case token_type::curly_bracket_open: return token_type::curly_bracket_close;
@@ -59,8 +58,7 @@ reaver::vapor::parser::_v1::postfix_expression reaver::vapor::parser::_v1::parse
         end = range.end();
     }
 
-    for (auto && type : { lexer::token_type::round_bracket_open, lexer::token_type::square_bracket_open, lexer::token_type::curly_bracket_open,
-        lexer::token_type::angle_bracket_open })
+    for (auto && type : { lexer::token_type::round_bracket_open, lexer::token_type::square_bracket_open, lexer::token_type::curly_bracket_open })
     {
         if (peek(ctx, type))
         {

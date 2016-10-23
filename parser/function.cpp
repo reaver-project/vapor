@@ -61,11 +61,12 @@ void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::functio
 {
     auto in = std::string(indent, ' ');
 
-    assert(!f.arguments && !f.return_type);
+    assert(!f.return_type);
 
     os << in << "`function` at " << f.range << '\n';
     os << in << "{\n";
     os << std::string(indent + 4, ' ') << f.name << '\n';
+    fmap(f.arguments, [&](auto && arguments){ print(arguments, os, indent + 4); return unit{}; });
     print(*f.body, os, indent + 4);
     os << in << "}\n";
 }
