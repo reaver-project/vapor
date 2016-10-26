@@ -52,13 +52,14 @@ reaver::future<reaver::vapor::analyzer::_v1::function *> reaver::vapor::analyzer
         auto it = std::find_if(_functions.begin(), _functions.end(), [&](auto && f) {
             // this is dumb
             // but you apparently can't compare `vector<T>` and `vector<const T>`...
-            return std::inner_product(
-                args.begin(), args.end(),
-                f->arguments().begin(),
-                true,
-                std::logical_and<>(),
-                std::equal_to<>()
-            );
+            return args.size() == f->arguments().size()
+                && std::inner_product(
+                    args.begin(), args.end(),
+                    f->arguments().begin(),
+                    true,
+                    std::logical_and<>(),
+                    std::equal_to<>()
+                );
         });
 
         if (it != _functions.end())
@@ -68,7 +69,7 @@ reaver::future<reaver::vapor::analyzer::_v1::function *> reaver::vapor::analyzer
         }
     }
 
-    return make_ready_future<function *>(nullptr);
+    return make_ready_future(static_cast<function *>(nullptr));
 }
 
 std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::overload_set_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
@@ -146,7 +147,16 @@ reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
     );
     _overload_set->add_function(this);
 
-    return _body->analyze().then([&]{
+    return when_all(fmap(_argument_list, [&](auto && arg) {
+        return arg.type_expression->analyze();
+    })).then([&]{
+        fmap(_argument_list, [&](auto && arg) {
+            arg.variable->set_type(arg.type_expression->get_variable());
+            return unit{};
+        });
+
+        return _body->analyze();
+    }).then([&]{
         _function->set_return_type(_body->return_type());
         _function->set_body(_body.get());
     });

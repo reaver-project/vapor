@@ -30,6 +30,7 @@
 #include "statement.h"
 #include "block.h"
 #include "function.h"
+#include "argument_list.h"
 
 namespace reaver
 {
@@ -51,18 +52,19 @@ namespace reaver
 
                 virtual future<function *> get_overload(lexer::token_type bracket, std::vector<const type *> args) const override
                 {
-                    if (std::inner_product(
-                            args.begin(), args.end(),
-                            _function->arguments().begin(),
-                            true,
-                            std::logical_and<>(),
-                            std::equal_to<>()
-                        ))
+                    if (args.size() == _function->arguments().size()
+                            && std::inner_product(
+                                args.begin(), args.end(),
+                                _function->arguments().begin(),
+                                true,
+                                std::logical_and<>(),
+                                std::equal_to<>()
+                            ))
                     {
                         return make_ready_future(_function.get());
                     }
 
-                    return make_ready_future<function *>(nullptr);
+                    return make_ready_future(static_cast<function *>(nullptr));
                 }
 
             private:
@@ -77,7 +79,12 @@ namespace reaver
             public:
                 closure(const parser::lambda_expression & parse, scope * lex_scope) : _parse{ parse }, _scope{ lex_scope->clone_local() }
                 {
+                    fmap(parse.arguments, [&](auto && arglist) {
+                        _argument_list = preanalyze_argument_list(arglist, _scope.get());
+                        return unit{};
+                    });
                     _scope->close();
+
                     _body = preanalyze_block(parse.body, _scope.get(), true);
                 }
 
@@ -97,6 +104,8 @@ namespace reaver
                 std::unique_ptr<scope> _scope;
                 std::unique_ptr<block> _body;
                 std::unique_ptr<type> _type;
+
+                argument_list _argument_list;
             };
 
             inline std::unique_ptr<closure> preanalyze_closure(const parser::lambda_expression & parse, scope * lex_scope)

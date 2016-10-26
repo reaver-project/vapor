@@ -56,8 +56,16 @@ void reaver::vapor::analyzer::_v1::closure::print(std::ostream & os, std::size_t
 
 reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
 {
-    return _body->analyze().then([&]
-    {
+    return when_all(fmap(_argument_list, [&](auto && arg) {
+        return arg.type_expression->analyze();
+    })).then([&]{
+        fmap(_argument_list, [&](auto && arg) {
+            arg.variable->set_type(arg.type_expression->get_variable());
+            return unit{};
+        });
+
+        return _body->analyze();
+    }).then([&] {
         auto function = make_function(
             "closure",
             _body->return_type(),
