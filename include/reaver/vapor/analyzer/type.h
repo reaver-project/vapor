@@ -61,12 +61,12 @@ namespace reaver
 
                 virtual future<function *> get_overload(lexer::token_type, const type *) const
                 {
-                    return make_ready_future<function *>(nullptr);
+                    return make_ready_future(static_cast<function *>(nullptr));
                 }
 
                 virtual future<function *> get_overload(lexer::token_type, std::vector<const type *>) const
                 {
-                    return make_ready_future<function *>(nullptr);
+                    return make_ready_future(static_cast<function *>(nullptr));
                 }
 
                 virtual std::string explain() const = 0;

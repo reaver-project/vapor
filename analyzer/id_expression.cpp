@@ -32,7 +32,8 @@ void reaver::vapor::analyzer::_v1::id_expression::print(std::ostream & os, std::
 
 reaver::future<> reaver::vapor::analyzer::_v1::id_expression::_analyze()
 {
-    return std::accumulate(_parse.id_expression_value.begin() + 1, _parse.id_expression_value.end(), _lex_scope->resolve(_parse.id_expression_value.front().string),
+    return std::accumulate(_parse.id_expression_value.begin() + 1, _parse.id_expression_value.end(),
+        _lex_scope->resolve(_parse.id_expression_value.front().string),
         [&](auto fut, auto && ident) {
             return fut.then([&ident](auto && symbol) {
                 return symbol->get_variable_future();
