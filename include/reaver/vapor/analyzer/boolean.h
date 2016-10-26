@@ -141,10 +141,7 @@ namespace reaver
                 boolean_constant * _value;
             };
 
-            inline std::unique_ptr<type> make_boolean_type()
-            {
-                return std::make_unique<boolean_type>();
-            }
+            std::unique_ptr<type> make_boolean_type();
         }}
     }
 }

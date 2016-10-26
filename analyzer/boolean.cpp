@@ -47,6 +47,11 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::boolean
     } };
 }
 
+std::unique_ptr<reaver::vapor::analyzer::_v1::type> reaver::vapor::analyzer::_v1::make_boolean_type()
+{
+    return std::make_unique<boolean_type>();
+}
+
 template<typename Instruction, typename Eval>
 auto reaver::vapor::analyzer::_v1::boolean_type::_generate_function(const char32_t * name, const char * desc, Eval eval, reaver::vapor::analyzer::_v1::type * return_type)
 {
