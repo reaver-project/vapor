@@ -59,6 +59,17 @@ namespace reaver
                         if (!_is_future_assigned)
                         {
                             _analysis_future = _analyze();
+                            _analysis_future->on_error([](std::exception_ptr ptr){
+                                try
+                                {
+                                    std::rethrow_exception(ptr);
+                                }
+
+                                catch (...)
+                                {
+                                    std::terminate();
+                                }
+                            }).detach(); // this is wrooong
                             _is_future_assigned = true;
                         }
                     }
