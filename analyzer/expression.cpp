@@ -84,8 +84,7 @@ std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyze
 
 reaver::future<> reaver::vapor::analyzer::_v1::expression_list::_analyze()
 {
-    return when_all(fmap(value, [&](auto && expr) { return expr->analyze(); }))
-        .then([&]{ _set_variable(make_expression_variable(this, value.back()->get_variable()->get_type())); });
+    return when_all(fmap(value, [&](auto && expr) { return expr->analyze(); }));
 }
 
 reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::expression_list::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)

@@ -77,7 +77,6 @@ reaver::future<> reaver::vapor::analyzer::_v1::postfix_expression::_analyze()
         }).then([&]{
             if (!_parse.bracket_type)
             {
-                _set_variable(make_expression_variable(_base_expr.get(), _base_expr->get_type()));
                 return make_ready_future();
             }
 
@@ -167,5 +166,15 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::postfix
     ret.push_back(std::move(postfix_expr_instruction));
 
     return ret;
+}
+
+reaver::vapor::analyzer::_v1::variable * reaver::vapor::analyzer::_v1::postfix_expression::get_variable() const
+{
+    if (!_parse.bracket_type)
+    {
+        return _base_expr->get_variable();
+    }
+
+    return expression::get_variable();
 }
 

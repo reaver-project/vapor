@@ -128,6 +128,11 @@ namespace reaver
             public:
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
+                virtual variable * get_variable() const override
+                {
+                    return value.back()->get_variable();
+                }
+
                 range_type range;
                 std::vector<std::unique_ptr<expression>> value;
             };
