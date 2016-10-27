@@ -121,6 +121,7 @@ auto reaver::vapor::analyzer::_v1::integer_type::_generate_function(const char32
     }
 
 ADD_OPERATION(addition, U"__builtin_integer_operator_plus", +, integer);
+ADD_OPERATION(subtraction, U"__builtin_integer_operator_minus", -, integer);
 ADD_OPERATION(multiplication, U"__builtin_integer_operator_star", *, integer);
 ADD_OPERATION(equal_comparison, U"__builtin_integer_operator_equals", ==, boolean);
 ADD_OPERATION(less_comparison, U"__builtin_integer_operator_less", <, boolean);

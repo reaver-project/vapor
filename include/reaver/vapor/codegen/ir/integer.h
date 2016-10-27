@@ -38,6 +38,7 @@ namespace reaver
                 };
 
                 struct integer_addition_instruction {};
+                struct integer_subtraction_instruction {};
                 struct integer_multiplication_instruction {};
                 struct integer_equal_comparison_instruction {};
                 struct integer_less_comparison_instruction {};

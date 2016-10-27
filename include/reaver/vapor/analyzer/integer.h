@@ -48,6 +48,9 @@ namespace reaver
                         case lexer::token_type::plus:
                             return make_ready_future(_addition());
 
+                        case lexer::token_type::minus:
+                            return make_ready_future(_subtraction());
+
                         case lexer::token_type::star:
                             return make_ready_future(_multiplication());
 
@@ -73,6 +76,7 @@ namespace reaver
                 template<typename Instruction, typename Eval>
                 static auto _generate_function(const char32_t * name, const char * desc, Eval eval, type * return_type);
                 static function * _addition();
+                static function * _subtraction();
                 static function * _multiplication();
                 static function * _equal_comparison();
                 static function * _less_comparison();
