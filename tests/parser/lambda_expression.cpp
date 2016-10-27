@@ -96,6 +96,134 @@ MAYFLY_ADD_TESTCASE("no arguments, deduced type, regular body", test(
     &parse_lambda_expression
 ));
 
+MAYFLY_ADD_TESTCASE("one argument, deduced type, simple body", test(
+    UR"(λ(x : int) => constant;)",
+    lambda_expression{
+        { 0, 22 },
+        {},
+        reaver::make_optional(argument_list{
+            { 2, 9 },
+            {
+                argument{
+                    { 2, 9 },
+                    { lexer::token_type::identifier, UR"(x)", { 2, 3 } },
+                    {
+                        { 6, 9 },
+                        postfix_expression{
+                            { 6, 9 },
+                            id_expression{
+                                { 6, 9 },
+                                {
+                                    { lexer::token_type::identifier, UR"(int)", { 6, 9 } }
+                                }
+                            },
+                            {},
+                            {}
+                        }
+                    }
+                }
+            }
+        }),
+        block{
+            { 11, 22 },
+            {},
+            { expression_list{
+                { 14, 22 },
+                {
+                    {
+                        { 14, 22 },
+                        postfix_expression{
+                            { 14, 22 },
+                            { id_expression{
+                                { 14, 22 },
+                                {
+                                    { lexer::token_type::identifier, UR"(constant)", { 14, 22 } }
+                                }
+                            } },
+                            {},
+                            {}
+                        }
+                    }
+                }
+            } }
+        }
+    },
+    &parse_lambda_expression
+));
+
+MAYFLY_ADD_TESTCASE("two arguments, deduced type, simple body", test(
+    UR"(λ(x : int, y : bool) => constant;)",
+    lambda_expression{
+        { 0, 32 },
+        {},
+        reaver::make_optional(argument_list{
+            { 2, 19 },
+            {
+                argument{
+                    { 2, 9 },
+                    { lexer::token_type::identifier, UR"(x)", { 2, 3 } },
+                    {
+                        { 6, 9 },
+                        postfix_expression{
+                            { 6, 9 },
+                            id_expression{
+                                { 6, 9 },
+                                {
+                                    { lexer::token_type::identifier, UR"(int)", { 6, 9 } }
+                                }
+                            },
+                            {},
+                            {}
+                        }
+                    }
+                },
+                argument{
+                    { 11, 19 },
+                    { lexer::token_type::identifier, UR"(y)", { 11, 12 } },
+                    {
+                        { 15, 19 },
+                        postfix_expression{
+                            { 15, 19 },
+                            id_expression{
+                                { 15, 19 },
+                                {
+                                    { lexer::token_type::identifier, UR"(bool)", { 15, 19 } }
+                                }
+                            },
+                            {},
+                            {}
+                        }
+                    }
+                }
+            }
+        }),
+        block{
+            { 21, 32 },
+            {},
+            { expression_list{
+                { 24, 32 },
+                {
+                    {
+                        { 24, 32 },
+                        postfix_expression{
+                            { 24, 32 },
+                            { id_expression{
+                                { 24, 32 },
+                                {
+                                    { lexer::token_type::identifier, UR"(constant)", { 24, 32 } }
+                                }
+                            } },
+                            {},
+                            {}
+                        }
+                    }
+                }
+            } }
+        }
+    },
+    &parse_lambda_expression
+));
+
 MAYFLY_END_SUITE;
 MAYFLY_END_SUITE;
 
