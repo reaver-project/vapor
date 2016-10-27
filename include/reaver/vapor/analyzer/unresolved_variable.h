@@ -36,7 +36,7 @@ namespace reaver
             class unresolved_variable : public variable
             {
             public:
-                unresolved_variable()
+                unresolved_variable(std::u32string name) : _name{ std::move(name) }
                 {
                 }
 
@@ -54,21 +54,30 @@ namespace reaver
                 {
                     assert(type && type->get_type() == builtin_types().type.get());
                     _type = dynamic_cast<type_variable *>(type);
-                    assert(_type);
                 }
 
             private:
-                virtual variable_ir _codegen_ir(ir_generation_context &) const override
+                // TODO: there's a chance this should be an assert
+                // and that this all should be replaced during simplification
+                // but for now, this also has to work
+                virtual variable_ir _codegen_ir(ir_generation_context & ctx) const override
                 {
-                    assert(0);
+                    assert(_type && _type->get_value());
+                    return {
+                        codegen::ir::make_variable(
+                            _type->get_value()->codegen_type(ctx),
+                            _name
+                        )
+                    };
                 }
 
                 type_variable * _type = nullptr;
+                std::u32string _name;
             };
 
-            inline std::unique_ptr<unresolved_variable> make_unresolved_variable()
+            inline std::unique_ptr<unresolved_variable> make_unresolved_variable(std::u32string name)
             {
-                return std::make_unique<unresolved_variable>();
+                return std::make_unique<unresolved_variable>(std::move(name));
             }
         }}
     }

@@ -47,7 +47,10 @@ void reaver::vapor::analyzer::_v1::closure::print(std::ostream & os, std::size_t
     auto in = std::string(indent, ' ');
     os << in << "closure at " << _parse.range << '\n';
     assert(!_parse.captures);
-    assert(!_parse.arguments);
+    fmap(_argument_list, [&, in = std::string(indent + 4, ' ')](auto && argument) {
+        os << in << "argument `" << utf8(argument.name) << "` of type `" << argument.variable->get_type()->explain() << "`\n";
+        return unit{};
+    });
     os << in << "return type: " << _body->return_type()->explain() << '\n';
     os << in << "{\n";
     _body->print(os, indent + 4);
@@ -66,20 +69,33 @@ reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
 
         return _body->analyze();
     }).then([&] {
+        auto arg_types = fmap(_argument_list, [&](auto && arg) {
+            // TODO: this must be done somewhat differently
+            auto type_var = dynamic_cast<type_variable *>(arg.type_expression->get_variable());
+            assert(type_var);
+            return type_var->get_value();
+        });
+
         auto function = make_function(
             "closure",
             _body->return_type(),
-            {},
+            std::move(arg_types),
             [this](ir_generation_context & ctx) {
                 return codegen::ir::function{
                     U"operator()",
-                    {}, {},
+                    {},
+                    fmap(_argument_list, [&](auto && arg) {
+                        return get<std::shared_ptr<codegen::ir::variable>>(
+                            get<codegen::ir::value>(arg.variable->codegen_ir(ctx))
+                        );
+                    }),
                     _body->codegen_return(ctx),
                     _body->codegen_ir(ctx),
                 };
             },
             _parse.range
         );
+
         function->set_body(_body.get());
 
         _type = std::make_unique<closure_type>(_scope.get(), this, std::move(function));

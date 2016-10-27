@@ -131,6 +131,11 @@ namespace reaver
                     _compile_time_eval = std::move(eval);
                 }
 
+                void set_arguments(std::vector<type *> arg_types)
+                {
+                    _argument_types = std::move(arg_types);
+                }
+
             private:
                 std::string _explanation;
                 optional<range_type> _range;

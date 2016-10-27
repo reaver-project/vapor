@@ -69,6 +69,7 @@ reaver::future<reaver::vapor::analyzer::_v1::function *> reaver::vapor::analyzer
         }
     }
 
+    assert(0);
     return make_ready_future(static_cast<function *>(nullptr));
 }
 
@@ -117,7 +118,13 @@ void reaver::vapor::analyzer::_v1::function_declaration::print(std::ostream & os
 {
     auto in = std::string(indent, ' ');
     os << in << "function declaration of `" << utf8(_parse.name.string) << "` at " << _parse.range << '\n';
-    assert(!_parse.arguments);
+    os << in << "arguments:\n";
+    os << in << "{\n";
+    fmap(_argument_list, [&, in = std::string(indent + 4, ' ')](auto && argument) {
+        os << in << "argument `" << utf8(argument.name) << "` of type `" << argument.variable->get_type()->explain() << "`\n";
+        return unit{};
+    });
+    os << in << "}\n";
     os << in << "return type: " << (*_function->return_type().try_get())->explain() << '\n';
     os << in << "{\n";
     _body->print(os, indent + 4);
@@ -138,7 +145,12 @@ reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
         [=, name = _parse.name.string](ir_generation_context & ctx) {
             return codegen::ir::function{
                 U"operator()",
-                {}, {},
+                {},
+                fmap(_argument_list, [&](auto && arg) {
+                    return get<std::shared_ptr<codegen::ir::variable>>(
+                        get<codegen::ir::value>(arg.variable->codegen_ir(ctx))
+                    );
+                }),
                 _body->codegen_return(ctx),
                 _body->codegen_ir(ctx)
             };
@@ -150,15 +162,21 @@ reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
     return when_all(fmap(_argument_list, [&](auto && arg) {
         return arg.type_expression->analyze();
     })).then([&]{
-        fmap(_argument_list, [&](auto && arg) {
+        auto arg_types = fmap(_argument_list, [&](auto && arg) {
             arg.variable->set_type(arg.type_expression->get_variable());
-            return unit{};
+
+            // TODO: this must be done somewhat differently
+            auto type_var = dynamic_cast<type_variable *>(arg.type_expression->get_variable());
+            assert(type_var);
+            return type_var->get_value();
         });
+
+        _function->set_arguments(std::move(arg_types));
 
         return _body->analyze();
     }).then([&]{
-        _function->set_return_type(_body->return_type());
         _function->set_body(_body.get());
+        _function->set_return_type(_body->return_type());
     });
 }
 
