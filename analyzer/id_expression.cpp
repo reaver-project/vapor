@@ -66,7 +66,7 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::id_expr
         none, none,
         { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
         {},
-        { get<codegen::ir::value>(_referenced->codegen_ir(ctx).back()) }
+        { get<codegen::ir::value>(_referenced->codegen_ir(ctx)) }
     } };
 }
 

@@ -24,6 +24,8 @@
 
 #include <memory>
 
+#include <reaver/optional.h>
+
 #include "type.h"
 #include "../codegen/ir/variable.h"
 #include "../codegen/ir/function.h"
@@ -39,7 +41,7 @@ namespace reaver
             class type;
             class expression;
 
-            using variable_ir = std::vector<variant<codegen::ir::value, codegen::ir::function>>;
+            using variable_ir = variant<none_t, codegen::ir::value, std::vector<codegen::ir::function>>;
 
             class variable
             {

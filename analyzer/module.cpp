@@ -62,7 +62,7 @@ void reaver::vapor::analyzer::_v1::module::analyze()
 
 void reaver::vapor::analyzer::_v1::module::simplify()
 {
-    bool cont = true;
+    bool cont = false;
     while (cont)
     {
         optimization_context ctx{};
@@ -115,17 +115,21 @@ reaver::vapor::codegen::_v1::ir::module reaver::vapor::analyzer::_v1::module::co
     mod.name = fmap(_parse.name.id_expression_value, [&](auto && token) { return token.string; });
     mod.symbols = mbind(as_vector(_scope->declared_symbols()), [&](auto && symbol) {
         auto ir = symbol.second->codegen_ir(ctx);
-        fmap(ir.back(), make_overload_set(
+        return get<0>(fmap(ir, make_overload_set(
+            [](none_t) -> codegen::ir::module_symbols_t {
+                assert(0);
+            },
             [&](std::shared_ptr<codegen::ir::variable> symb) {
                 symb->name = symbol.second->get_name();
-                return unit{};
+                return codegen::ir::module_symbols_t{ symb };
             },
             [&](auto && symb) {
-                symb.name = symbol.second->get_name();
-                return unit{};
+                return fmap(symb, [&](auto && symb) -> typename codegen::ir::module_symbols_t::value_type {
+                    symb.name = symbol.second->get_name();
+                    return symb;
+                });
             }
-        ));
-        return ir;
+        )));
     });
 
     while (auto fn = ctx.function_to_generate())

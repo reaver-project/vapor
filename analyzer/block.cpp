@@ -154,7 +154,7 @@ std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyze
             std::back_inserter(scope_cleanup),
             [&ctx](auto && symbol) {
                 auto variable_ir = symbol->get_variable()->codegen_ir(ctx);
-                auto variable = get<codegen::ir::value>(variable_ir.back());
+                auto variable = get<codegen::ir::value>(variable_ir);
                 return codegen::ir::instruction{
                     {}, {},
                     { boost::typeindex::type_id<codegen::ir::destruction_instruction>() },

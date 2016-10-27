@@ -56,7 +56,7 @@ namespace reaver
             private:
                 virtual variable_ir _codegen_ir(ir_generation_context &) const override
                 {
-                    return {};
+                    return none;
                 }
 
                 type * _type;

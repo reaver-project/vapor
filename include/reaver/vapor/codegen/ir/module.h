@@ -36,10 +36,12 @@ namespace reaver
         {
             namespace ir
             {
+                using module_symbols_t = std::vector<variant<std::shared_ptr<variable>, function>>;
+
                 struct module
                 {
                     std::vector<std::u32string> name;
-                    std::vector<variant<std::shared_ptr<variable>, function>> symbols;
+                    module_symbols_t symbols;
                 };
 
                 std::ostream & operator<<(std::ostream & os, const module & mod);

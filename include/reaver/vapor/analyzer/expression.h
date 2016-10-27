@@ -168,7 +168,7 @@ namespace reaver
                         none, none,
                         { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
                         {},
-                        codegen::ir::value{ get<0>(get_variable()->codegen_ir(ctx).back()) }
+                        get<codegen::ir::value>(get_variable()->codegen_ir(ctx))
                     } };
                 }
             };
@@ -213,7 +213,7 @@ namespace reaver
                         none, none,
                         { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
                         {},
-                        codegen::ir::value{ get<0>(_referenced->codegen_ir(ctx).back()) }
+                        get<codegen::ir::value>(_referenced->codegen_ir(ctx))
                     } };
                 }
 

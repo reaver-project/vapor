@@ -23,17 +23,14 @@
 #include "vapor/analyzer/symbol.h"
 #include "vapor/codegen/ir/variable.h"
 
-std::vector<reaver::variant<std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable>, reaver::vapor::codegen::_v1::ir::function>> reaver::vapor::analyzer::_v1::symbol::codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
+reaver::variant<std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable>, std::vector<reaver::vapor::codegen::_v1::ir::function>> reaver::vapor::analyzer::_v1::symbol::codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
-    return fmap(_variable->codegen_ir(ctx), [](auto && v) {
-        return fmap(std::forward<decltype(v)>(v), make_overload_set(
-            [](codegen::ir::function f) { return std::move(f); },
-            [](codegen::ir::value val) {
-                return get<std::shared_ptr<codegen::ir::variable>>(fmap(std::move(val), make_overload_set(
-                    [](std::shared_ptr<codegen::ir::variable> var) { return std::move(var); },
-                    [](auto &&) { assert(0); return unit{}; }
-                )));
-            }));
-        });
+    return fmap(_variable->codegen_ir(ctx), make_overload_set(
+        [](none_t) { return std::vector<codegen::ir::function>{}; },
+        [](std::vector<codegen::ir::function> fs) { return fs; },
+        [](codegen::ir::value val) {
+            return get<std::shared_ptr<codegen::ir::variable>>(val);
+        }
+    ));
 }
 
