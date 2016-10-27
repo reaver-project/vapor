@@ -32,12 +32,14 @@ std::u32string program = UR"program(module hello_world
 {
     let foo = λ => 1 * 2 + 3 * 4;
 
+    let foobar = int;
+
     function bar()
     {
         return 5 + 6 * 7 + 8;
     }
 
-    function conditional(x : int, y : int)
+    function conditional(x : foobar, y : int)
     {
         if (x * y < 123)
         {
