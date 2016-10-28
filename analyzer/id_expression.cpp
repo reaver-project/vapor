@@ -51,7 +51,7 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
 {
     return _referenced->simplify(ctx)
         .then([&](auto && simplified) -> expression * {
-            if (simplified)
+            if (simplified && simplified != _referenced)
             {
                 _referenced = simplified;
                 ctx.something_happened();

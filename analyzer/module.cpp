@@ -62,7 +62,7 @@ void reaver::vapor::analyzer::_v1::module::analyze()
 
 void reaver::vapor::analyzer::_v1::module::simplify()
 {
-    bool cont = false;
+    bool cont = true;
     while (cont)
     {
         optimization_context ctx{};
