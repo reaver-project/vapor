@@ -48,9 +48,9 @@ namespace reaver
             class function
             {
             public:
-                function(std::string explanation, type * ret, std::vector<type *> args, function_codegen codegen, optional<range_type> range = none)
+                function(std::string explanation, type * ret, std::vector<variable *> args, function_codegen codegen, optional<range_type> range = none)
                     : _explanation{ std::move(explanation) }, _range{ std::move(range) },
-                    _return_type{ ret }, _argument_types{ std::move(args) }, _codegen{ std::move(codegen) }
+                    _return_type{ ret }, _arguments{ std::move(args) }, _codegen{ std::move(codegen) }
                 {
                     if (ret)
                     {
@@ -68,9 +68,9 @@ namespace reaver
                     return *_return_type_future;
                 }
 
-                std::vector<type *> arguments() const
+                std::vector<variable *> arguments() const
                 {
-                    return _argument_types;
+                    return _arguments;
                 }
 
                 std::string explain() const
@@ -131,9 +131,9 @@ namespace reaver
                     _compile_time_eval = std::move(eval);
                 }
 
-                void set_arguments(std::vector<type *> arg_types)
+                void set_arguments(std::vector<variable *> args)
                 {
-                    _argument_types = std::move(arg_types);
+                    _arguments = std::move(args);
                 }
 
             private:
@@ -146,14 +146,14 @@ namespace reaver
                 optional<future<type *>> _return_type_future;
                 optional<manual_promise<type *>> _return_type_promise;
 
-                std::vector<type *> _argument_types;
+                std::vector<variable *> _arguments;
                 function_codegen _codegen;
                 mutable optional<codegen::ir::function> _ir;
 
                 optional<function_eval> _compile_time_eval;
             };
 
-            inline std::unique_ptr<function> make_function(std::string expl, type * return_type, std::vector<type *> arguments, function_codegen codegen, optional<range_type> range = none)
+            inline std::unique_ptr<function> make_function(std::string expl, type * return_type, std::vector<variable *> arguments, function_codegen codegen, optional<range_type> range = none)
             {
                 return std::make_unique<function>(std::move(expl), std::move(return_type), std::move(arguments), std::move(codegen), std::move(range));
             }

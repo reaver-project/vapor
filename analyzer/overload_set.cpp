@@ -58,7 +58,7 @@ reaver::future<reaver::vapor::analyzer::_v1::function *> reaver::vapor::analyzer
                     f->arguments().begin(),
                     true,
                     std::logical_and<>(),
-                    std::equal_to<>()
+                    [](auto && type, auto && var) { return type == var->get_type(); }
                 );
         });
 
@@ -162,16 +162,12 @@ reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
     return when_all(fmap(_argument_list, [&](auto && arg) {
         return arg.type_expression->analyze();
     })).then([&]{
-        auto arg_types = fmap(_argument_list, [&](auto && arg) {
+        auto arg_variables = fmap(_argument_list, [&](auto && arg) -> variable * {
             arg.variable->set_type(arg.type_expression->get_variable());
-
-            // TODO: this must be done somewhat differently
-            auto type_var = dynamic_cast<type_variable *>(arg.type_expression->get_variable());
-            assert(type_var);
-            return type_var->get_value();
+            return arg.variable.get();
         });
 
-        _function->set_arguments(std::move(arg_types));
+        _function->set_arguments(std::move(arg_variables));
 
         return _body->analyze();
     }).then([&]{

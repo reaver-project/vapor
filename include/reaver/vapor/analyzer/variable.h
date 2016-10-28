@@ -43,6 +43,13 @@ namespace reaver
 
             using variable_ir = variant<none_t, codegen::ir::value, std::vector<codegen::ir::function>>;
 
+            inline auto get_ir_variable(const variable_ir & ir)
+            {
+                return get<std::shared_ptr<codegen::ir::variable>>(
+                    get<codegen::ir::value>(ir)
+                );
+            }
+
             class variable
             {
             public:
@@ -116,6 +123,34 @@ namespace reaver
             inline std::unique_ptr<variable> make_expression_variable(expression * expr, type * type)
             {
                 return std::make_unique<expression_variable>(expr, type);
+            }
+
+            class blank_variable : public variable
+            {
+            public:
+                blank_variable(type * t) : _type{ t }
+                {
+                }
+
+                virtual type * get_type() const override
+                {
+                    return _type;
+                }
+
+            private:
+                virtual variable_ir _codegen_ir(ir_generation_context & ctx) const override
+                {
+                    return codegen::ir::make_variable(
+                        _type->codegen_type(ctx)
+                    );
+                }
+
+                type * _type;
+            };
+
+            inline std::unique_ptr<variable> make_blank_variable(type * type)
+            {
+                return std::make_unique<blank_variable>(type);
             }
         }}
     }

@@ -58,7 +58,7 @@ namespace reaver
                                 _function->arguments().begin(),
                                 true,
                                 std::logical_and<>(),
-                                std::equal_to<>()
+                                [](auto && type, auto && var) { return type == var->get_type(); }
                             ))
                     {
                         return make_ready_future(_function.get());

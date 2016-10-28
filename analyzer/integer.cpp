@@ -56,17 +56,19 @@ std::unique_ptr<reaver::vapor::analyzer::_v1::type> reaver::vapor::analyzer::_v1
 template<typename Instruction, typename Eval>
 auto reaver::vapor::analyzer::_v1::integer_type::_generate_function(const char32_t * name, const char * desc, Eval eval, reaver::vapor::analyzer::_v1::type * return_type)
 {
+    auto lhs = make_blank_variable(builtin_types().integer.get());
+    auto rhs = make_blank_variable(builtin_types().integer.get());
+
+    auto lhs_arg = lhs.get();
+    auto rhs_arg = rhs.get();
+
     auto fun = make_function(
         desc,
         return_type,
-        { builtin_types().integer.get(), builtin_types().integer.get() },
-        [name, return_type](ir_generation_context & ctx) {
-            auto lhs = codegen::ir::make_variable(
-                builtin_types().integer->codegen_type(ctx)
-            );
-            auto rhs = codegen::ir::make_variable(
-                builtin_types().integer->codegen_type(ctx)
-            );
+        { lhs_arg, rhs_arg },
+        [name, return_type, lhs = std::move(lhs), rhs = std::move(rhs)](ir_generation_context & ctx) {
+            auto lhs_ir = get_ir_variable(lhs->codegen_ir(ctx));
+            auto rhs_ir = get_ir_variable(rhs->codegen_ir(ctx));
 
             auto retval = codegen::ir::make_variable(
                 return_type->codegen_type(ctx)
@@ -74,13 +76,13 @@ auto reaver::vapor::analyzer::_v1::integer_type::_generate_function(const char32
 
             return codegen::ir::function{
                 name,
-                {}, { lhs, rhs },
+                {}, { lhs_ir, rhs_ir },
                 retval,
                 {
                     codegen::ir::instruction{
                         none, none,
                         { boost::typeindex::type_id<Instruction>() },
-                        { lhs, rhs },
+                        { lhs_ir, rhs_ir },
                         retval
                     },
                     codegen::ir::instruction{

@@ -69,17 +69,14 @@ reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
 
         return _body->analyze();
     }).then([&] {
-        auto arg_types = fmap(_argument_list, [&](auto && arg) {
-            // TODO: this must be done somewhat differently
-            auto type_var = dynamic_cast<type_variable *>(arg.type_expression->get_variable());
-            assert(type_var);
-            return type_var->get_value();
+        auto arg_variables = fmap(_argument_list, [&](auto && arg) -> variable * {
+            return arg.variable.get();
         });
 
         auto function = make_function(
             "closure",
             _body->return_type(),
-            std::move(arg_types),
+            std::move(arg_variables),
             [this](ir_generation_context & ctx) {
                 return codegen::ir::function{
                     U"operator()",
