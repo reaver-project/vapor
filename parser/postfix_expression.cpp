@@ -73,12 +73,16 @@ reaver::vapor::parser::_v1::postfix_expression reaver::vapor::parser::_v1::parse
     {
         if (!peek(ctx, closing(*ret.bracket_type)))
         {
+            auto old_stack = std::move(ctx.operator_stack);
+
             ret.arguments.push_back(parse_expression(ctx));
             while (peek(ctx, lexer::token_type::comma))
             {
                 expect(ctx, lexer::token_type::comma);
                 ret.arguments.push_back(parse_expression(ctx));
             }
+
+            ctx.operator_stack = std::move(old_stack);
         }
         end = expect(ctx, closing(*ret.bracket_type)).range.end();
     }
