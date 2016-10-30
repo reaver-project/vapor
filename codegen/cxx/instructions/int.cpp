@@ -59,5 +59,12 @@ std::u32string generate<ir::integer_less_comparison_instruction>(const ir::instr
     assert(inst.operands.size() == 2);
     return variable_of(inst.result, ctx) + U".emplace(" + value_of(inst.operands[0], ctx) + U" < " + value_of(inst.operands[1], ctx) + U");\n";
 }
+
+template<>
+std::u32string generate<ir::integer_less_equal_comparison_instruction>(const ir::instruction & inst, codegen_context & ctx)
+{
+    assert(inst.operands.size() == 2);
+    return variable_of(inst.result, ctx) + U".emplace(" + value_of(inst.operands[0], ctx) + U" <= " + value_of(inst.operands[1], ctx) + U");\n";
+}
 }}}}}
 

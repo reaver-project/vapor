@@ -60,6 +60,9 @@ namespace reaver
                         case lexer::token_type::less:
                             return make_ready_future(_less_comparison());
 
+                        case lexer::token_type::less_equal:
+                            return make_ready_future(_less_equal_comparison());
+
                         default:
                             assert(!"unimplemented int op");
                     }
@@ -80,6 +83,7 @@ namespace reaver
                 static function * _multiplication();
                 static function * _equal_comparison();
                 static function * _less_comparison();
+                static function * _less_equal_comparison();
             };
 
             class integer_constant : public literal

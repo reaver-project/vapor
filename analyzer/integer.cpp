@@ -127,4 +127,5 @@ ADD_OPERATION(subtraction, U"__builtin_integer_operator_minus", -, integer);
 ADD_OPERATION(multiplication, U"__builtin_integer_operator_star", *, integer);
 ADD_OPERATION(equal_comparison, U"__builtin_integer_operator_equals", ==, boolean);
 ADD_OPERATION(less_comparison, U"__builtin_integer_operator_less", <, boolean);
+ADD_OPERATION(less_equal_comparison, U"__builtin_integer_operator_less_equal", <, boolean);
 

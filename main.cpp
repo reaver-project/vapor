@@ -32,7 +32,7 @@ std::u32string program = UR"program(module hello_world
 {
     function fibonacci(n : int)
     {
-        if (n == 0)
+        if (n <= 0)
         {
             return 0;
         }
