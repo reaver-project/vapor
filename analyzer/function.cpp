@@ -50,7 +50,7 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
                 assert(_body);
 
                 return [&]{
-                    if (args.size() && std::all_of(args.begin(), args.end(), [](auto && arg){ return arg->is_constant(); }))
+                    if (args.size())
                     {
                         auto body = _body->clone_with_replacement(
                             _arguments,
