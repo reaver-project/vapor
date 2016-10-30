@@ -30,32 +30,32 @@
 
 std::u32string program = UR"program(module hello_world
 {
-    let foo = λ => 1 * 2 + 3 * 4;
-
-    let foobar = int;
-
-    function bar()
+    function fibonacci(n : int)
     {
-        return 5 + 6 * 7 + 8;
-    }
-
-    function conditional(x : foobar, y : int)
-    {
-        if (x * y < 123)
+        if (n == 0)
         {
-            return x + y;
+            return 0;
         }
 
-        else
+        if (n == 1)
         {
-            return x - y;
+            return 1;
         }
+
+        if (n == 2)
+        {
+            return 1;
+        }
+
+        return fibonacci(n - 1) + fibonacci(n - 2);
     }
 
     let entry = λ(arg : int)
     {
-        let partial = foo() + bar();
-        return arg + conditional(100, partial);
+        let constant_foldable = fibonacci(7);
+        let non_constant_foldable = fibonacci(arg);
+
+        return constant_foldable + non_constant_foldable;
     };
 })program";
 
