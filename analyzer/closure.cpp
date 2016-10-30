@@ -100,6 +100,11 @@ reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
     });
 }
 
+std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyzer::_v1::closure::_clone_expr_with_replacement(reaver::vapor::analyzer::_v1::replacements & repl) const
+{
+    assert(!"this shouldn't be called, or, when called, should return an empty expression...");
+}
+
 reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::closure::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
     return _body->simplify(ctx)

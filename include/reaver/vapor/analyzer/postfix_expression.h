@@ -47,12 +47,17 @@ namespace reaver
                 virtual variable * get_variable() const override;
 
             private:
+                postfix_expression(const postfix_expression & other) : _parse{ other._parse }, _brace{ other._brace }, _overload{ other._overload }
+                {
+                }
+
                 virtual future<> _analyze() override;
+                virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
                 virtual future<expression *> _simplify_expr(optimization_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::postfix_expression & _parse;
-                scope * _scope;
+                scope * _scope = nullptr;
                 std::unique_ptr<expression> _base_expr;
                 optional<lexer::token_type> _brace;
                 std::vector<std::unique_ptr<expression>> _arguments;

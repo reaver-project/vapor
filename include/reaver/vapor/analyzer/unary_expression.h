@@ -50,6 +50,11 @@ namespace reaver
                     assert(0);
                 }
 
+                virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+                {
+                    assert(0);
+                }
+
                 virtual future<expression *> _simplify_expr(optimization_context &) override
                 {
                     assert(0);

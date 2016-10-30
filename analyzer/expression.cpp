@@ -142,3 +142,13 @@ void reaver::vapor::analyzer::_v1::variable_ref_expression::print(std::ostream &
     os << in << "type: " << get_variable()->get_type()->explain() << '\n';
 }
 
+std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyzer::expression_list::_clone_expr_with_replacement(reaver::vapor::analyzer::_v1::replacements & repl) const
+{
+    auto ret = std::make_unique<expression_list>();
+    ret->range = range;
+
+    ret->value = fmap(value, [&](auto && expr) { return expr->clone_expr_with_replacement(repl); });
+
+    return ret;
+}
+

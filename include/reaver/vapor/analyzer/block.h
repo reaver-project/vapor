@@ -83,7 +83,12 @@ namespace reaver
                 codegen::ir::value codegen_return(ir_generation_context &) const;
 
             private:
+                block(const block & other) : _parse{ other._parse }, _original_scope{ other._original_scope }, _is_top_level{ other._is_top_level }
+                {
+                }
+
                 virtual future<> _analyze() override;
+                virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override;
                 virtual future<statement *> _simplify(optimization_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 

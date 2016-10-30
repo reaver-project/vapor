@@ -90,6 +90,7 @@ namespace reaver
                 }
 
             private:
+                virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override;
                 virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
                 std::vector<function_declaration *> _overloads;
@@ -127,6 +128,12 @@ namespace reaver
 
             private:
                 virtual future<> _analyze() override;
+
+                virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override
+                {
+                    return make_null_statement();
+                }
+
                 virtual future<statement *> _simplify(optimization_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 

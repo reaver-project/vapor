@@ -57,6 +57,16 @@ namespace reaver
                 }
 
             private:
+                virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override
+                {
+                    auto ret = std::make_unique<unresolved_variable>(_name);
+                    if (_type)
+                    {
+                        ret->set_type(_type);
+                    }
+                    return ret;
+                }
+
                 // TODO: there's a chance this should be an assert
                 // and that this all should be replaced during simplification
                 // but for now, this also has to work

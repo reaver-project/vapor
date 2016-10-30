@@ -107,6 +107,16 @@ reaver::future<> reaver::vapor::analyzer::_v1::block::_analyze()
     return fut;
 }
 
+std::unique_ptr<reaver::vapor::analyzer::_v1::statement> reaver::vapor::analyzer::_v1::block::_clone_with_replacement(reaver::vapor::analyzer::_v1::replacements & repl) const
+{
+    auto ret = std::unique_ptr<block>(new block(*this));
+
+    ret->_statements = fmap(_statements, [&](auto && stmt){ return stmt->clone_with_replacement(repl); });
+    ret->_value_expr = fmap(_value_expr, [&](auto && expr){ return expr->clone_expr_with_replacement(repl); });
+
+    return ret;
+}
+
 reaver::future<reaver::vapor::analyzer::_v1::statement *> reaver::vapor::analyzer::_v1::block::_simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
     auto fut = when_all(

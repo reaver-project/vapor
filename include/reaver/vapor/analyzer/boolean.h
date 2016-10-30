@@ -103,6 +103,11 @@ namespace reaver
                 }
 
             private:
+                virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override
+                {
+                    return std::make_unique<boolean_constant>(_value);
+                }
+
                 virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
                 bool _value;
@@ -128,6 +133,11 @@ namespace reaver
                 virtual future<> _analyze() override
                 {
                     return make_ready_future();
+                }
+
+                virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
+                {
+                    return make_variable_expression(_value->clone_with_replacement(repl));
                 }
 
                 virtual future<expression *> _simplify_expr(optimization_context &) override

@@ -94,6 +94,16 @@ reaver::future<> reaver::vapor::analyzer::_v1::postfix_expression::_analyze()
         });
 }
 
+std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyzer::_v1::postfix_expression::_clone_expr_with_replacement(reaver::vapor::analyzer::_v1::replacements & repl) const
+{
+    auto ret = std::unique_ptr<postfix_expression>(new postfix_expression(*this));
+
+    ret->_base_expr = _base_expr->clone_expr_with_replacement(repl);
+    ret->_arguments = fmap(_arguments, [&](auto && arg){ return arg->clone_expr_with_replacement(repl); });
+
+    return ret;
+}
+
 reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::postfix_expression::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
     return when_all(fmap(_arguments, [&](auto && expr) {
@@ -106,13 +116,13 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
 
             if (!_parse.bracket_type)
             {
+                ctx.something_happened();
                 return make_ready_future(_base_expr.release());
             }
 
             return _overload->simplify(ctx)
                 .then([&](){
                     auto args = fmap(_arguments, [&](auto && expr){ return expr->get_variable(); });
-                    args.insert(args.begin(), _base_expr->get_variable());
                     return _overload->simplify(ctx, std::move(args));
                 }).then([&](auto && simplified) -> expression * {
                     if (simplified)

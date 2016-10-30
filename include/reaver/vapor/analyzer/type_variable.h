@@ -54,6 +54,11 @@ namespace reaver
                 }
 
             private:
+                virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override
+                {
+                    return std::make_unique<type_variable>(_type);
+                }
+
                 virtual variable_ir _codegen_ir(ir_generation_context &) const override
                 {
                     return none;

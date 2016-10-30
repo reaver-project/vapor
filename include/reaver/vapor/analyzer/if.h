@@ -56,7 +56,12 @@ namespace reaver
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
+                if_statement(const if_statement & other) : _parse{ other._parse }
+                {
+                }
+
                 virtual future<> _analyze() override;
+                virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override;
                 virtual future<statement *> _simplify(optimization_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 

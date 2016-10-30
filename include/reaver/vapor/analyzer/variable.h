@@ -29,6 +29,7 @@
 #include "type.h"
 #include "../codegen/ir/variable.h"
 #include "../codegen/ir/function.h"
+#include "statement.h"
 #include "ir_context.h"
 #include "optimization_context.h"
 
@@ -56,6 +57,13 @@ namespace reaver
                 virtual ~variable() = default;
 
                 virtual type * get_type() const = 0;
+
+                std::unique_ptr<variable> clone_with_replacement(replacements & repl) const
+                {
+                    auto ret = _clone_with_replacement(repl);
+                    repl.variables[this] = ret.get();
+                    return ret;
+                }
 
                 future<variable *> simplify(optimization_context & ctx)
                 {
@@ -87,6 +95,8 @@ namespace reaver
                 }
 
             private:
+                virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const = 0;
+
                 virtual future<variable *> _simplify(optimization_context &)
                 {
                     return make_ready_future(this);
@@ -113,6 +123,7 @@ namespace reaver
                 virtual bool is_equal(const variable *) const override;
 
             private:
+                virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override;
                 virtual future<variable *> _simplify(optimization_context & ctx) override;
                 virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
@@ -138,6 +149,11 @@ namespace reaver
                 }
 
             private:
+                virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override
+                {
+                    return std::make_unique<blank_variable>(_type);
+                }
+
                 virtual variable_ir _codegen_ir(ir_generation_context & ctx) const override
                 {
                     return codegen::ir::make_variable(
