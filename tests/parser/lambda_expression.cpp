@@ -36,6 +36,7 @@ MAYFLY_ADD_TESTCASE("no arguments, deduced type, simple body", test(
         { 0, 13 },
         {},
         {},
+        {},
         block{
             { 2, 13 },
             {},
@@ -67,6 +68,7 @@ MAYFLY_ADD_TESTCASE("no arguments, deduced type, regular body", test(
     UR"(λ { => constant })",
     lambda_expression{
         { 0, 17 },
+        {},
         {},
         {},
         block{
@@ -124,6 +126,7 @@ MAYFLY_ADD_TESTCASE("one argument, deduced type, simple body", test(
                 }
             }
         }),
+        {},
         block{
             { 11, 22 },
             {},
@@ -197,6 +200,7 @@ MAYFLY_ADD_TESTCASE("two arguments, deduced type, simple body", test(
                 }
             }
         }),
+        {},
         block{
             { 21, 32 },
             {},

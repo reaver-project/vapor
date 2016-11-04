@@ -42,7 +42,9 @@ MAYFLY_ADD_TESTCASE("basic postfix-expression", test(UR"(foo;)",
         {},
         {}
     },
-    &parse_postfix_expression
+    [](auto && ctx) {
+        return parse_postfix_expression(ctx);
+    }
 ));
 
 MAYFLY_ADD_TESTCASE("argumentless", test(UR"(foo();)",
@@ -57,7 +59,9 @@ MAYFLY_ADD_TESTCASE("argumentless", test(UR"(foo();)",
         lexer::token_type::round_bracket_open,
         {}
     },
-    &parse_postfix_expression
+    [](auto && ctx) {
+        return parse_postfix_expression(ctx);
+    }
 ));
 
 MAYFLY_ADD_TESTCASE("one argument", test(UR"(foo[1];)",
@@ -81,7 +85,9 @@ MAYFLY_ADD_TESTCASE("one argument", test(UR"(foo[1];)",
             }
         }
     },
-    &parse_postfix_expression
+    [](auto && ctx) {
+        return parse_postfix_expression(ctx);
+    }
 ));
 
 MAYFLY_ADD_TESTCASE("more arguments", test(UR"(foo{ a, b, c };)",
@@ -130,7 +136,9 @@ MAYFLY_ADD_TESTCASE("more arguments", test(UR"(foo{ a, b, c };)",
             }
         }
     },
-    &parse_postfix_expression
+    [](auto && ctx) {
+        return parse_postfix_expression(ctx);
+    }
 ));
 
 MAYFLY_END_SUITE;
