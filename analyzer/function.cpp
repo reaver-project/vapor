@@ -44,63 +44,62 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
 {
     if (_body)
     {
-        return _body->simplify(ctx)
-            .then([&](auto && simplified) {
-                _body = dynamic_cast<block *>(simplified);
-                assert(_body);
+        if (!std::all_of(args.begin(), args.end(), [](auto && arg){ return arg->is_constant(); }))
+        {
+            return make_ready_future<expression *>(nullptr);
+        }
 
-                return [&]{
-                    if (args.size())
-                    {
-                        auto body = _body->clone_with_replacement(
-                            _arguments,
-                            args
-                        );
+        return [&]{
+            if (args.size())
+            {
+                auto body = _body->clone_with_replacement(
+                    _arguments,
+                    args
+                );
 
-                        auto simplify = [ctx = std::make_shared<optimization_context>()](auto self, auto body)
-                        {
-                            return body->simplify(*ctx)
-                                .then([&, old_body = body, ctx, self](auto && body) -> future<block *> {
-                                    if (!ctx->did_something_happen())
-                                    {
-                                        return make_ready_future<block *>(dynamic_cast<block *>(body));
-                                    }
+                auto simplify = [ctx = std::make_shared<optimization_context>()](auto self, auto body)
+                {
+                    return body->simplify(*ctx)
+                        .then([&, old_body = body, ctx, self](auto && body) -> future<block *> {
+                            if (!ctx->did_something_happen())
+                            {
+                                return make_ready_future<block *>(dynamic_cast<block *>(body));
+                            }
 
-                                    // ugh
-                                    // but I don't know how else to write this
-                                    // without creating a long overload for optctx
-                                    ctx->~optimization_context();
-                                    new (&*ctx) optimization_context();
-                                    return self(self, body);
-                                });
-                        };
+                            // ugh
+                            // but I don't know how else to write this
+                            // without creating a long overload for optctx
+                            ctx->~optimization_context();
+                            new (&*ctx) optimization_context();
+                            return self(self, body);
+                        });
+                };
 
-                        // this is a leak
-                        return simplify(simplify, body.release());
-                    }
+                // this is a leak
+                return simplify(simplify, body.release());
+            }
 
-                    return make_ready_future(_body);
-                }().then([&](auto && body) {
-                    auto returns = body->get_returns();
+            return make_ready_future(_body);
+        }().then([&](auto && body) {
+            auto returns = body->get_returns();
 
-                    assert(body->has_return_expression() || returns.size());
-                    auto var = body->has_return_expression() ? body->get_return_expression()->get_variable() : returns.front()->get_returned_variable();
-                    auto begin = body->has_return_expression() ? returns.begin() : returns.begin() + 1;
+            assert(body->has_return_expression() || returns.size());
+            auto var = body->has_return_expression() ? body->get_return_expression()->get_variable() : returns.front()->get_returned_variable();
+            auto begin = body->has_return_expression() ? returns.begin() : returns.begin() + 1;
 
-                    if (!var->is_constant())
-                    {
-                        return make_ready_future<expression *>(nullptr);
-                    }
+            if (!var->is_constant())
+            {
+                return make_ready_future<expression *>(nullptr);
+            }
 
-                    if (std::all_of(begin, returns.end(), [](auto && ret) { return ret->get_returned_variable()->is_constant(); })
-                        && std::all_of(begin, returns.end(), [&](auto && ret) { return ret->get_returned_variable()->is_equal(var); }))
-                    {
-                        return make_ready_future(make_variable_ref_expression(var).release());
-                    }
+            if (std::all_of(begin, returns.end(), [](auto && ret) { return ret->get_returned_variable()->is_constant(); })
+                && std::all_of(begin, returns.end(), [&](auto && ret) { return ret->get_returned_variable()->is_equal(var); }))
+            {
+                return make_ready_future(make_variable_ref_expression(var).release());
+            }
 
-                    return make_ready_future<expression *>(nullptr);
-                });
-            });
+            return make_ready_future<expression *>(nullptr);
+        });
     }
 
     if (_compile_time_eval)

@@ -111,7 +111,8 @@ namespace reaver
 
                 codegen::ir::value call_operand_ir(ir_generation_context & ctx) const
                 {
-                    return { codegen::ir::label{ codegen_ir(ctx).name, {} } };
+                    assert(_name);
+                    return { codegen::ir::label{ *_name, {} } };
                 }
 
                 void set_return_type(type * ret)
@@ -121,9 +122,19 @@ namespace reaver
                     fmap(_return_type_promise, [ret](auto && promise) { promise.set(ret); return unit{}; });
                 }
 
+                void set_name(std::u32string name)
+                {
+                    _name = name;
+                }
+
                 void set_body(block * body)
                 {
                     _body = body;
+                }
+
+                block * get_body() const
+                {
+                    return _body;
                 }
 
                 void set_eval(function_eval eval)
@@ -147,6 +158,7 @@ namespace reaver
                 optional<manual_promise<type *>> _return_type_promise;
 
                 std::vector<variable *> _arguments;
+                optional<std::u32string> _name;
                 function_codegen _codegen;
                 mutable optional<codegen::ir::function> _ir;
 

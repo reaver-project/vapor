@@ -37,20 +37,23 @@ std::u32string program = UR"program(module hello_world
             return 0;
         }
 
-        if (n == 1)
+        else { if (n == 1)
         {
             return 1;
         }
 
-        if (n == 2)
+        else { if (n == 2)
         {
             return 1;
         }
 
-        return fibonacci(n - 1) + fibonacci(n - 2);
+        else
+        {
+            return fibonacci(n - 1) + fibonacci(n - 2);
+        }}}
     }
 
-    let entry = λ(arg : int)
+    let entry = λ(arg : int) -> int
     {
         let constant_foldable = fibonacci(7);
         let non_constant_foldable = fibonacci(arg);
@@ -90,8 +93,12 @@ int main() try
     auto ir = analyzed_ast.codegen_ir();
     reaver::vapor::codegen::result generated_code{ ir, reaver::vapor::codegen::make_cxx() };
 
-    reaver::logger::dlog() << "Codegen IR:";
-    reaver::logger::dlog() << ir;
+    // TODO: printing this actually needs a print_context
+    // to avoid endless repetitions of things
+    // and to fix the format
+    // actually this could be a generator... that'd make a lot of sense
+    // reaver::logger::dlog() << "Codegen IR:";
+    // reaver::logger::dlog() << ir;
 
     reaver::logger::dlog() << "Generated code:";
     reaver::logger::dlog() << generated_code;

@@ -80,13 +80,10 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
         ).then([&](auto && simplified) {
             replace_uptr(_lhs, get<0>(simplified), ctx);
             replace_uptr(_rhs, get<1>(simplified), ctx);
-            return _overload->simplify(ctx);
-        }).then([&]() {
             return _overload->simplify(ctx, { _lhs->get_variable(), _rhs->get_variable() });
         }).then([&](auto && simplified) -> expression * {
             if (simplified)
             {
-                ctx.something_happened();
                 return simplified;
             }
 

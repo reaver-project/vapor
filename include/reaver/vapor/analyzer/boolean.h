@@ -57,7 +57,7 @@ namespace reaver
                 }
 
             private:
-                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const override;
+                virtual void _codegen_type(ir_generation_context &) const override;
 
                 template<typename Instruction, typename Eval>
                 static auto _generate_function(const char32_t * name, const char * desc, Eval eval, type * return_type);

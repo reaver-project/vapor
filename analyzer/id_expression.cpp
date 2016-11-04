@@ -67,7 +67,6 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
             if (simplified && simplified != _referenced)
             {
                 _referenced = simplified;
-                ctx.something_happened();
             }
             return this;
         });

@@ -101,6 +101,7 @@ std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate(const reaver
         ir::integer_multiplication_instruction,
         ir::integer_equal_comparison_instruction,
         ir::integer_less_comparison_instruction,
+        ir::integer_less_equal_comparison_instruction,
 
         ir::boolean_equal_comparison_instruction,
         ir::boolean_negation_instruction

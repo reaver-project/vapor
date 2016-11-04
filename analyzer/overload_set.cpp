@@ -73,9 +73,11 @@ reaver::future<reaver::vapor::analyzer::_v1::function *> reaver::vapor::analyzer
     return make_ready_future(static_cast<function *>(nullptr));
 }
 
-std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::overload_set_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
+void reaver::vapor::analyzer::_v1::overload_set_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
-    auto type = codegen::ir::make_type(
+    auto actual_type = *_codegen_t;
+
+    auto type = codegen::ir::variable_type{
         U"__overload_set_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.overload_set_index++)),
         get_scope()->codegen_ir(ctx),
         0,
@@ -83,16 +85,16 @@ std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::a
             ctx.add_generated_function(fn);
             return codegen::ir::member{ fn->codegen_ir(ctx) };
         })
-    );
+    };
 
     auto scopes = get_scope()->codegen_ir(ctx);
-    scopes.emplace_back(type->name, codegen::ir::scope_type::type);
+    scopes.emplace_back(type.name, codegen::ir::scope_type::type);
 
-    fmap(type->members, [&](auto && member) {
+    fmap(type.members, [&](auto && member) {
         fmap(member, make_overload_set(
             [&](codegen::ir::function & fn) {
                 fn.scopes = scopes;
-                fn.parent_type = type;
+                fn.parent_type = actual_type;
 
                 return unit{};
             },
@@ -104,7 +106,7 @@ std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::a
         return unit{};
     });
 
-    return type;
+    *actual_type = std::move(type);
 }
 
 std::unique_ptr<reaver::vapor::analyzer::_v1::variable> reaver::vapor::analyzer::_v1::overload_set::_clone_with_replacement(reaver::vapor::analyzer::_v1::replacements & repl) const
@@ -162,11 +164,31 @@ reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
         },
         _parse.range
     );
+    _function->set_name(U"operator()");
     _overload_set->add_function(this);
 
-    return when_all(fmap(_argument_list, [&](auto && arg) {
-        return arg.type_expression->analyze();
-    })).then([&]{
+    auto initial_future = [&]{
+        if (_return_type)
+        {
+            return (*_return_type)->analyze()
+                .then([&]{
+                    auto var = (*_return_type)->get_variable();
+
+                    assert(var->get_type() == builtin_types().type.get());
+                    assert(var->is_constant());
+
+                    _function->set_return_type(dynamic_cast<type_variable *>(var)->get_value());
+                });
+        }
+
+        return make_ready_future();
+    }();
+
+    return initial_future.then([&]{
+        return when_all(fmap(_argument_list, [&](auto && arg) {
+            return arg.type_expression->analyze();
+        }));
+    }).then([&]{
         auto arg_variables = fmap(_argument_list, [&](auto && arg) -> variable * {
             arg.variable->set_type(arg.type_expression->get_variable());
             return arg.variable.get();
@@ -176,8 +198,21 @@ reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
 
         return _body->analyze();
     }).then([&]{
+        fmap(_return_type, [&](auto && ret_type) {
+            auto explicit_type = ret_type->get_variable();
+            auto type_var = static_cast<type_variable *>(explicit_type);
+
+            assert(type_var->get_value() == _body->return_type());
+
+            return unit{};
+        });
+
         _function->set_body(_body.get());
-        _function->set_return_type(_body->return_type());
+
+        if (!_function->return_type().try_get())
+        {
+            _function->set_return_type(_body->return_type());
+        }
     });
 }
 

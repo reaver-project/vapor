@@ -78,7 +78,14 @@ namespace reaver
                 {
                     if (!_ir)
                     {
-                        _ir = _codegen_ir(ctx);
+                        auto ir = _codegen_ir(ctx);
+                        // this if guards from inconsistencies arising from reentry into this function
+                        // this way of solving this can sometimes cause additional work to be done
+                        // TODO: figure out how to stop that from happening
+                        if (!_ir)
+                        {
+                            _ir = std::move(ir);
+                        }
                     }
 
                     return *_ir;

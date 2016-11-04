@@ -29,6 +29,7 @@
 #include "../lexer/token.h"
 #include "scope.h"
 #include "ir_context.h"
+#include "../codegen/ir/type.h"
 
 namespace reaver
 {
@@ -80,16 +81,19 @@ namespace reaver
                 {
                     if (!_codegen_t)
                     {
-                        _codegen_t = _codegen_type(ctx);
+                        _codegen_t = std::make_shared<codegen::ir::variable_type>();
+                        _codegen_type(ctx);
                     }
 
                     return *_codegen_t;
                 }
 
             private:
-                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const = 0;
+                virtual void _codegen_type(ir_generation_context &) const = 0;
 
                 std::unique_ptr<scope> _lex_scope;
+
+            protected:
                 mutable optional<std::shared_ptr<codegen::ir::variable_type>> _codegen_t;
             };
 
@@ -102,7 +106,7 @@ namespace reaver
                 }
 
             private:
-                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const override;
+                virtual void _codegen_type(ir_generation_context &) const override;
             };
 
             // these here are currently kinda silly

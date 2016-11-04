@@ -116,18 +116,14 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
 
             if (!_parse.bracket_type)
             {
-                ctx.something_happened();
                 return make_ready_future(_base_expr.release());
             }
 
-            return _overload->simplify(ctx)
-                .then([&](){
-                    auto args = fmap(_arguments, [&](auto && expr){ return expr->get_variable(); });
-                    return _overload->simplify(ctx, std::move(args));
-                }).then([&](auto && simplified) -> expression * {
+            auto args = fmap(_arguments, [&](auto && expr){ return expr->get_variable(); });
+            return _overload->simplify(ctx, std::move(args))
+                .then([&](auto && simplified) -> expression * {
                     if (simplified)
                     {
-                        ctx.something_happened();
                         return simplified;
                     }
 
@@ -145,15 +141,14 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::postfix
         return base_expr_instructions;
     }
 
-    auto base_variable_value = base_expr_instructions.back().result;
-    assert(base_variable_value.index() == 0);
+    auto base_variable_value = get<codegen::ir::value>(_base_expr->get_variable()->codegen_ir(ctx));
     auto base_variable = get<std::shared_ptr<codegen::ir::variable>>(base_variable_value);
     auto arguments_instructions = fmap(_arguments, [&](auto && arg){ return arg->codegen_ir(ctx); });
 
     auto base_expr_variable = base_expr_instructions.back().result;
     auto arguments_values = fmap(arguments_instructions, [](auto && insts){ return insts.back().result; });
     arguments_values.insert(arguments_values.begin(), _overload->call_operand_ir(ctx));
-    arguments_values.insert(arguments_values.begin(), std::move(base_variable_value));
+    arguments_values.insert(arguments_values.begin(), std::move(base_variable));
 
     auto postfix_expr_instruction = codegen::ir::instruction{
         none, none,

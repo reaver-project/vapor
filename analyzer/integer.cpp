@@ -26,9 +26,9 @@
 #include "vapor/codegen/ir/variable.h"
 #include "vapor/codegen/ir/type.h"
 
-std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::integer_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context &) const
+void reaver::vapor::analyzer::_v1::integer_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context &) const
 {
-    return codegen::ir::builtin_types().integer;
+    _codegen_t = codegen::ir::builtin_types().integer;
 }
 
 reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::integer_constant::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context &) const
@@ -95,6 +95,7 @@ auto reaver::vapor::analyzer::_v1::integer_type::_generate_function(const char32
             };
         }
     );
+    fun->set_name(name);
     fun->set_eval(eval);
     return fun;
 }

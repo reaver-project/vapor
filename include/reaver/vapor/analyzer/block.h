@@ -98,6 +98,12 @@ namespace reaver
                 std::vector<std::unique_ptr<statement>> _statements;
                 optional<std::unique_ptr<expression>> _value_expr;
                 const bool _is_top_level = false;
+
+                void _ensure_cache() const;
+
+                mutable std::mutex _clone_cache_lock;
+                bool _is_clone_cache = false;
+                mutable optional<std::unique_ptr<block>> _clone;
             };
 
             inline std::unique_ptr<block> preanalyze_block(const parser::block & parse, scope * lex_scope, bool is_top_level)

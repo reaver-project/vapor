@@ -68,7 +68,7 @@ namespace reaver
                 }
 
             private:
-                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const override;
+                virtual void _codegen_type(ir_generation_context &) const override;
 
                 expression * _closure;
                 std::unique_ptr<function> _function;
@@ -85,6 +85,9 @@ namespace reaver
                     });
                     _scope->close();
 
+                    _return_type = fmap(_parse.return_type, [&](auto && ret_type) {
+                        return preanalyze_expression(ret_type, _scope.get());
+                    });
                     _body = preanalyze_block(parse.body, _scope.get(), true);
                 }
 
@@ -102,11 +105,12 @@ namespace reaver
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::lambda_expression & _parse;
+                argument_list _argument_list;
+
+                optional<std::unique_ptr<expression>> _return_type;
                 std::unique_ptr<scope> _scope;
                 std::unique_ptr<block> _body;
                 std::unique_ptr<type> _type;
-
-                argument_list _argument_list;
             };
 
             inline std::unique_ptr<closure> preanalyze_closure(const parser::lambda_expression & parse, scope * lex_scope)

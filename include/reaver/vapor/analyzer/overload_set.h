@@ -27,6 +27,7 @@
 #include "../parser/function.h"
 #include "variable.h"
 #include "statement.h"
+#include "expression.h"
 #include "block.h"
 #include "symbol.h"
 #include "argument_list.h"
@@ -67,7 +68,7 @@ namespace reaver
                 virtual future<function *> get_overload(lexer::token_type bracket, std::vector<const type *> args) const override;
 
             private:
-                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const override;
+                virtual void _codegen_type(ir_generation_context &) const override;
 
                 mutable std::mutex _functions_lock;
                 std::vector<function *> _functions;
@@ -109,6 +110,9 @@ namespace reaver
                     });
                     _scope->close();
 
+                    _return_type = fmap(_parse.return_type, [&](auto && ret_type) {
+                        return preanalyze_expression(ret_type, _scope.get());
+                    });
                     _body = preanalyze_block(*_parse.body, _scope.get(), true);
                     std::shared_ptr<overload_set> keep_count;
                     auto symbol = parent_scope->get_or_init(_parse.name.string, [&]{
@@ -140,6 +144,7 @@ namespace reaver
                 const parser::function & _parse;
                 argument_list _argument_list;
 
+                optional<std::unique_ptr<expression>> _return_type;
                 std::unique_ptr<block> _body;
                 std::unique_ptr<scope> _scope;
                 std::unique_ptr<function> _function;
