@@ -37,12 +37,12 @@ std::u32string program = UR"program(module hello_world
             return 0;
         }
 
-        else { if (n == 1)
+        else if (n == 1)
         {
             return 1;
         }
 
-        else { if (n == 2)
+        else if (n == 2)
         {
             return 1;
         }
@@ -50,7 +50,7 @@ std::u32string program = UR"program(module hello_world
         else
         {
             return fibonacci(n - 1) + fibonacci(n - 2);
-        }}}
+        }
     }
 
     let entry = λ(arg : int) -> int
