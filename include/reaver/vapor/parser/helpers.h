@@ -69,6 +69,13 @@ namespace reaver
                 operator_type type;
             };
 
+            enum class expression_special_modes
+            {
+                none,
+                assignment,
+                brace
+            };
+
             struct context
             {
                 lexer::iterator begin, end;

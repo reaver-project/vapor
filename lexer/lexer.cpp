@@ -60,6 +60,7 @@ static auto token_types_init = []() -> reaver::unit
     token_types[+token_type::colon] = ":";
     token_types[+token_type::semicolon] = ";";
     token_types[+token_type::map] = "->>";
+    token_types[+token_type::indirection] = "->";
     token_types[+token_type::assign] = "=";
     token_types[+token_type::block_value] = "=>";
 
@@ -190,6 +191,7 @@ const std::unordered_map<char32_t, std::unordered_map<char32_t, token_type>> rea
     } },
 
     { '-', {
+        { '>', token_type::indirection },
         { '=', token_type::minus_assignment }
     } },
 

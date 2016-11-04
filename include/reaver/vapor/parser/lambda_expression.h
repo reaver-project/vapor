@@ -41,6 +41,7 @@ namespace reaver
                 range_type range;
                 optional<capture_list> captures;
                 optional<argument_list> arguments;
+                optional<expression> return_type;
                 block body;
             };
 
@@ -49,6 +50,7 @@ namespace reaver
                 return lhs.range == rhs.range
                     && lhs.captures == rhs.captures
                     && lhs.arguments == rhs.arguments
+                    && lhs.return_type == rhs.return_type
                     && lhs.body == rhs.body;
             }
 

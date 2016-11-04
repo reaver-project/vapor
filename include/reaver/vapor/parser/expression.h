@@ -77,7 +77,7 @@ namespace reaver
                     && lhs.expression_value == rhs.expression_value;
             }
 
-            expression parse_expression(context & ctx, bool special_assignment = false);
+            expression parse_expression(context & ctx, expression_special_modes = expression_special_modes::none);
 
             void print(const expression & expr, std::ostream & os, std::size_t indent = 0);
         }}

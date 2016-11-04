@@ -25,7 +25,7 @@
 #include "vapor/parser/expression_list.h"
 #include "vapor/parser/lambda_expression.h"
 
-reaver::vapor::parser::_v1::postfix_expression reaver::vapor::parser::_v1::parse_postfix_expression(reaver::vapor::parser::context & ctx)
+reaver::vapor::parser::_v1::postfix_expression reaver::vapor::parser::_v1::parse_postfix_expression(reaver::vapor::parser::context & ctx, reaver::vapor::parser::_v1::expression_special_modes mode)
 {
     auto closing = [](lexer::token_type type)
     {
@@ -60,6 +60,11 @@ reaver::vapor::parser::_v1::postfix_expression reaver::vapor::parser::_v1::parse
 
     for (auto && type : { lexer::token_type::round_bracket_open, lexer::token_type::square_bracket_open, lexer::token_type::curly_bracket_open })
     {
+        if (type == lexer::token_type::curly_bracket_open && mode == expression_special_modes::brace)
+        {
+            continue;
+        }
+
         if (peek(ctx, type))
         {
             ret.bracket_type = type;
