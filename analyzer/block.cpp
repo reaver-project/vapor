@@ -20,6 +20,8 @@
  *
  **/
 
+#include <numeric>
+
 #include "vapor/parser.h"
 #include "vapor/analyzer/block.h"
 #include "vapor/analyzer/return.h"
@@ -151,22 +153,47 @@ reaver::future<reaver::vapor::analyzer::_v1::statement *> reaver::vapor::analyze
 {
     _ensure_cache();
 
-    auto fut = when_all(
-        fmap(_statements, [&](auto && stmt) { return stmt->simplify(ctx); })
-    ).then([&](auto && simplified) {
-        replace_uptrs(_statements, simplified, ctx);
-    });
+    auto fut = std::accumulate(_statements.begin(), _statements.end(), make_ready_future(true),
+        [&](auto future, auto && statement) {
+            return future.then([&](bool do_continue) {
+                if (!do_continue)
+                {
+                    return make_ready_future(false);
+                }
+
+                return statement->simplify(ctx).then([&](auto && simplified) {
+                    replace_uptr(statement, simplified, ctx);
+                    return !statement->always_returns();
+                });
+            });
+        }
+    );
 
     fmap(_value_expr, [&](auto && expr) {
-        fut = fut.then([&, expr = expr.get()]{
-            return expr->simplify_expr(ctx);
-        }).then([&](auto && simplified) {
-            replace_uptr(*_value_expr, simplified, ctx);
+        fut = fut.then([&, expr = expr.get()](bool do_continue) {
+            if (!do_continue)
+            {
+                return make_ready_future(false);
+            }
+
+            return expr->simplify_expr(ctx).then([&](auto && simplified) {
+                replace_uptr(*_value_expr, simplified, ctx);
+                return true;
+            });
         });
         return unit{};
     });
 
-    return fut.then([&]() -> statement * {
+    return fut.then([&](bool reached_end) -> statement * {
+        if (!reached_end)
+        {
+            auto always_returning = std::find_if(_statements.begin(), _statements.end(),
+                [](auto && stmt){ return stmt->always_returns(); });
+
+            assert(always_returning != _statements.end());
+            _statements.erase(always_returning + 1, _statements.end());
+        }
+
         return this;
     });
 }

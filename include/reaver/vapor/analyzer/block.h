@@ -78,6 +78,11 @@ namespace reaver
                     return _value_expr->get();
                 }
 
+                virtual bool always_returns() const override
+                {
+                    return !_statements.empty() && _statements.back()->always_returns();
+                }
+
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
                 codegen::ir::value codegen_return(ir_generation_context &) const;

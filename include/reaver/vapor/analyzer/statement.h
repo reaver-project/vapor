@@ -118,6 +118,11 @@ namespace reaver
                     return {};
                 }
 
+                virtual bool always_returns() const
+                {
+                    return false;
+                }
+
                 virtual void print(std::ostream &, std::size_t indent) const = 0;
 
                 statement_ir codegen_ir(ir_generation_context & ctx) const

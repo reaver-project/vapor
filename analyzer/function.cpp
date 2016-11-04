@@ -44,7 +44,7 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
 {
     if (_body)
     {
-        if (!std::all_of(args.begin(), args.end(), [](auto && arg){ return arg->is_constant(); }))
+        if (!std::any_of(args.begin(), args.end(), [](auto && arg){ return arg->is_constant(); }))
         {
             return make_ready_future<expression *>(nullptr);
         }

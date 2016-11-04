@@ -56,6 +56,11 @@ namespace reaver
                     return _value_expr->get_variable();
                 }
 
+                virtual bool always_returns() const override
+                {
+                    return true;
+                }
+
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
