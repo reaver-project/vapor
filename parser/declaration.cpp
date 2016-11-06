@@ -34,11 +34,11 @@ reaver::vapor::parser::_v1::declaration reaver::vapor::parser::_v1::parse_declar
     {
         expect(ctx, lexer::token_type::colon);
 
-        ret.type_expression = parse_expression(ctx, true);
+        ret.type_expression = parse_expression(ctx, expression_special_modes::assignment);
     }
 
     expect(ctx, lexer::token_type::assign);
-    ret.rhs = parse_expression(ctx, true);
+    ret.rhs = parse_expression(ctx);
     ret.range = { start, ret.rhs.range.end() };
 
     return ret;
@@ -55,3 +55,4 @@ void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::declara
     print(decl.rhs, os, indent + 4);
     os << in << "}\n";
 }
+

@@ -57,7 +57,7 @@ namespace reaver
                 }
 
             private:
-                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const override;
+                virtual void _codegen_type(ir_generation_context &) const override;
 
                 template<typename Instruction, typename Eval>
                 static auto _generate_function(const char32_t * name, const char * desc, Eval eval, type * return_type);
@@ -103,6 +103,11 @@ namespace reaver
                 }
 
             private:
+                virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override
+                {
+                    return std::make_unique<boolean_constant>(_value);
+                }
+
                 virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
                 bool _value;
@@ -130,6 +135,11 @@ namespace reaver
                     return make_ready_future();
                 }
 
+                virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
+                {
+                    return make_variable_expression(_value->clone_with_replacement(repl));
+                }
+
                 virtual future<expression *> _simplify_expr(optimization_context &) override
                 {
                     return make_ready_future<expression *>(this);
@@ -141,10 +151,7 @@ namespace reaver
                 boolean_constant * _value;
             };
 
-            inline std::unique_ptr<type> make_boolean_type()
-            {
-                return std::make_unique<boolean_type>();
-            }
+            std::unique_ptr<type> make_boolean_type();
         }}
     }
 }

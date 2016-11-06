@@ -48,9 +48,9 @@ namespace reaver
             class function
             {
             public:
-                function(std::string explanation, type * ret, std::vector<type *> args, function_codegen codegen, optional<range_type> range = none)
+                function(std::string explanation, type * ret, std::vector<variable *> args, function_codegen codegen, optional<range_type> range = none)
                     : _explanation{ std::move(explanation) }, _range{ std::move(range) },
-                    _return_type{ ret }, _argument_types{ std::move(args) }, _codegen{ std::move(codegen) }
+                    _return_type{ ret }, _arguments{ std::move(args) }, _codegen{ std::move(codegen) }
                 {
                     if (ret)
                     {
@@ -68,9 +68,9 @@ namespace reaver
                     return *_return_type_future;
                 }
 
-                std::vector<type *> arguments() const
+                std::vector<variable *> arguments() const
                 {
-                    return _argument_types;
+                    return _arguments;
                 }
 
                 std::string explain() const
@@ -111,7 +111,8 @@ namespace reaver
 
                 codegen::ir::value call_operand_ir(ir_generation_context & ctx) const
                 {
-                    return { codegen::ir::label{ codegen_ir(ctx).name, {} } };
+                    assert(_name);
+                    return { codegen::ir::label{ *_name, {} } };
                 }
 
                 void set_return_type(type * ret)
@@ -121,14 +122,29 @@ namespace reaver
                     fmap(_return_type_promise, [ret](auto && promise) { promise.set(ret); return unit{}; });
                 }
 
+                void set_name(std::u32string name)
+                {
+                    _name = name;
+                }
+
                 void set_body(block * body)
                 {
                     _body = body;
                 }
 
+                block * get_body() const
+                {
+                    return _body;
+                }
+
                 void set_eval(function_eval eval)
                 {
                     _compile_time_eval = std::move(eval);
+                }
+
+                void set_arguments(std::vector<variable *> args)
+                {
+                    _arguments = std::move(args);
                 }
 
             private:
@@ -141,14 +157,15 @@ namespace reaver
                 optional<future<type *>> _return_type_future;
                 optional<manual_promise<type *>> _return_type_promise;
 
-                std::vector<type *> _argument_types;
+                std::vector<variable *> _arguments;
+                optional<std::u32string> _name;
                 function_codegen _codegen;
                 mutable optional<codegen::ir::function> _ir;
 
                 optional<function_eval> _compile_time_eval;
             };
 
-            inline std::unique_ptr<function> make_function(std::string expl, type * return_type, std::vector<type *> arguments, function_codegen codegen, optional<range_type> range = none)
+            inline std::unique_ptr<function> make_function(std::string expl, type * return_type, std::vector<variable *> arguments, function_codegen codegen, optional<range_type> range = none)
             {
                 return std::make_unique<function>(std::move(expl), std::move(return_type), std::move(arguments), std::move(codegen), std::move(range));
             }

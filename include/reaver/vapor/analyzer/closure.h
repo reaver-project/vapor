@@ -30,6 +30,7 @@
 #include "statement.h"
 #include "block.h"
 #include "function.h"
+#include "argument_list.h"
 
 namespace reaver
 {
@@ -51,22 +52,23 @@ namespace reaver
 
                 virtual future<function *> get_overload(lexer::token_type bracket, std::vector<const type *> args) const override
                 {
-                    if (std::inner_product(
-                            args.begin(), args.end(),
-                            _function->arguments().begin(),
-                            true,
-                            std::logical_and<>(),
-                            std::equal_to<>()
-                        ))
+                    if (args.size() == _function->arguments().size()
+                            && std::inner_product(
+                                args.begin(), args.end(),
+                                _function->arguments().begin(),
+                                true,
+                                std::logical_and<>(),
+                                [](auto && type, auto && var) { return type == var->get_type(); }
+                            ))
                     {
                         return make_ready_future(_function.get());
                     }
 
-                    return make_ready_future<function *>(nullptr);
+                    return make_ready_future(static_cast<function *>(nullptr));
                 }
 
             private:
-                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const override;
+                virtual void _codegen_type(ir_generation_context &) const override;
 
                 expression * _closure;
                 std::unique_ptr<function> _function;
@@ -77,7 +79,15 @@ namespace reaver
             public:
                 closure(const parser::lambda_expression & parse, scope * lex_scope) : _parse{ parse }, _scope{ lex_scope->clone_local() }
                 {
+                    fmap(parse.arguments, [&](auto && arglist) {
+                        _argument_list = preanalyze_argument_list(arglist, _scope.get());
+                        return unit{};
+                    });
                     _scope->close();
+
+                    _return_type = fmap(_parse.return_type, [&](auto && ret_type) {
+                        return preanalyze_expression(ret_type, _scope.get());
+                    });
                     _body = preanalyze_block(parse.body, _scope.get(), true);
                 }
 
@@ -90,10 +100,14 @@ namespace reaver
 
             private:
                 virtual future<> _analyze() override;
+                virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
                 virtual future<expression *> _simplify_expr(optimization_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::lambda_expression & _parse;
+                argument_list _argument_list;
+
+                optional<std::unique_ptr<expression>> _return_type;
                 std::unique_ptr<scope> _scope;
                 std::unique_ptr<block> _body;
                 std::unique_ptr<type> _type;

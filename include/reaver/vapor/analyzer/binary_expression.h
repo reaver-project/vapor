@@ -45,12 +45,17 @@ namespace reaver
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
+                binary_expression(const binary_expression & other) : _parse{ other._parse }, _op{ other._op }, _overload{ other._overload }
+                {
+                }
+
                 virtual future<> _analyze() override;
+                virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
                 virtual future<expression *> _simplify_expr(optimization_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::binary_expression & _parse;
-                scope * _scope;
+                scope * _scope = nullptr;
                 lexer::token _op;
                 std::unique_ptr<expression> _lhs;
                 std::unique_ptr<expression> _rhs;

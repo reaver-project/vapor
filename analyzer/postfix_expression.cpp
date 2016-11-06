@@ -77,7 +77,6 @@ reaver::future<> reaver::vapor::analyzer::_v1::postfix_expression::_analyze()
         }).then([&]{
             if (!_parse.bracket_type)
             {
-                _set_variable(make_expression_variable(_base_expr.get(), _base_expr->get_type()));
                 return make_ready_future();
             }
 
@@ -95,6 +94,16 @@ reaver::future<> reaver::vapor::analyzer::_v1::postfix_expression::_analyze()
         });
 }
 
+std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyzer::_v1::postfix_expression::_clone_expr_with_replacement(reaver::vapor::analyzer::_v1::replacements & repl) const
+{
+    auto ret = std::unique_ptr<postfix_expression>(new postfix_expression(*this));
+
+    ret->_base_expr = _base_expr->clone_expr_with_replacement(repl);
+    ret->_arguments = fmap(_arguments, [&](auto && arg){ return arg->clone_expr_with_replacement(repl); });
+
+    return ret;
+}
+
 reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::postfix_expression::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
     return when_all(fmap(_arguments, [&](auto && expr) {
@@ -110,15 +119,11 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
                 return make_ready_future(_base_expr.release());
             }
 
-            return _overload->simplify(ctx)
-                .then([&](){
-                    auto args = fmap(_arguments, [&](auto && expr){ return expr->get_variable(); });
-                    args.insert(args.begin(), _base_expr->get_variable());
-                    return _overload->simplify(ctx, std::move(args));
-                }).then([&](auto && simplified) -> expression * {
+            auto args = fmap(_arguments, [&](auto && expr){ return expr->get_variable(); });
+            return _overload->simplify(ctx, std::move(args))
+                .then([&](auto && simplified) -> expression * {
                     if (simplified)
                     {
-                        ctx.something_happened();
                         return simplified;
                     }
 
@@ -136,15 +141,14 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::postfix
         return base_expr_instructions;
     }
 
-    auto base_variable_value = base_expr_instructions.back().result;
-    assert(base_variable_value.index() == 0);
+    auto base_variable_value = get<codegen::ir::value>(_base_expr->get_variable()->codegen_ir(ctx));
     auto base_variable = get<std::shared_ptr<codegen::ir::variable>>(base_variable_value);
     auto arguments_instructions = fmap(_arguments, [&](auto && arg){ return arg->codegen_ir(ctx); });
 
     auto base_expr_variable = base_expr_instructions.back().result;
     auto arguments_values = fmap(arguments_instructions, [](auto && insts){ return insts.back().result; });
     arguments_values.insert(arguments_values.begin(), _overload->call_operand_ir(ctx));
-    arguments_values.insert(arguments_values.begin(), std::move(base_variable_value));
+    arguments_values.insert(arguments_values.begin(), std::move(base_variable));
 
     auto postfix_expr_instruction = codegen::ir::instruction{
         none, none,
@@ -167,5 +171,15 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::postfix
     ret.push_back(std::move(postfix_expr_instruction));
 
     return ret;
+}
+
+reaver::vapor::analyzer::_v1::variable * reaver::vapor::analyzer::_v1::postfix_expression::get_variable() const
+{
+    if (!_parse.bracket_type)
+    {
+        return _base_expr->get_variable();
+    }
+
+    return expression::get_variable();
 }
 

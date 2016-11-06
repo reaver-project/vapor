@@ -53,6 +53,8 @@ namespace reaver
 
             class symbol;
 
+            const std::unordered_map<std::u32string, std::unique_ptr<symbol>> & non_overridable();
+
             class scope
             {
                 struct _key {};
@@ -127,6 +129,11 @@ namespace reaver
                 template<typename F>
                 auto get_or_init(const std::u32string & name, F init)
                 {
+                    if (non_overridable().find(name) != non_overridable().end())
+                    {
+                        assert(0);
+                    }
+
                     assert(!_is_closed);
 
                     {

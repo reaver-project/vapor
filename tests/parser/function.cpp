@@ -64,6 +64,53 @@ MAYFLY_ADD_TESTCASE("no arguments, deduced type, simple body", test(
     &parse_function
 ));
 
+MAYFLY_ADD_TESTCASE("no arguments, explicit type, simple body", test(
+    UR"(function foo() -> int => constant;)",
+    function{
+        { 0, 33 },
+        { lexer::token_type::identifier, UR"(foo)", { 9, 12 } },
+        {},
+        reaver::make_optional(expression{
+            { 18, 21 },
+            postfix_expression{
+                { 18, 21 },
+                { id_expression {
+                    { 18, 21 },
+                    {
+                        { lexer::token_type::identifier, UR"(int)", { 18, 21 } }
+                    },
+                } },
+                {},
+                {}
+            }
+        }),
+        block{
+            { 22, 33 },
+            {},
+            { expression_list{
+                { 25, 33 },
+                {
+                    {
+                        { 25, 33 },
+                        postfix_expression{
+                            { 25, 33 },
+                            { id_expression{
+                                { 25, 33 },
+                                {
+                                    { lexer::token_type::identifier, UR"(constant)", { 25, 33 } }
+                                }
+                            } },
+                            {},
+                            {}
+                        }
+                    }
+                }
+            } }
+        }
+    },
+    &parse_function
+));
+
 MAYFLY_ADD_TESTCASE("no arguments, deduced type, regular body", test(
     UR"(function foo() { => constant })",
     function{
@@ -85,6 +132,339 @@ MAYFLY_ADD_TESTCASE("no arguments, deduced type, regular body", test(
                                 { 20, 28 },
                                 {
                                     { lexer::token_type::identifier, UR"(constant)", { 20, 28 } }
+                                }
+                            } },
+                            {},
+                            {}
+                        }
+                    }
+                }
+            } }
+        }
+    },
+    &parse_function
+));
+
+MAYFLY_ADD_TESTCASE("no arguments, explicit type, regular body", test(
+    UR"(function foo() -> int { => constant })",
+    function{
+        { 0, 37 },
+        { lexer::token_type::identifier, UR"(foo)", { 9, 12 } },
+        {},
+        reaver::make_optional(expression{
+            { 18, 21 },
+            postfix_expression{
+                { 18, 21 },
+                { id_expression {
+                    { 18, 21 },
+                    {
+                        { lexer::token_type::identifier, UR"(int)", { 18, 21 } }
+                    },
+                } },
+                {},
+                {}
+            }
+        }),
+        block{
+            { 22, 37 },
+            {},
+            { expression_list{
+                { 27, 35 },
+                {
+                    {
+                        { 27, 35 },
+                        postfix_expression{
+                            { 27, 35 },
+                            { id_expression{
+                                { 27, 35 },
+                                {
+                                    { lexer::token_type::identifier, UR"(constant)", { 27, 35 } }
+                                }
+                            } },
+                            {},
+                            {}
+                        }
+                    }
+                }
+            } }
+        }
+    },
+    &parse_function
+));
+
+MAYFLY_ADD_TESTCASE("one argument, deduced type, simple body", test(
+    UR"(function foo(x : int) => constant;)",
+    function{
+        { 0, 33 },
+        { lexer::token_type::identifier, UR"(foo)", { 9, 12 } },
+        reaver::make_optional(argument_list{
+            { 13, 20 },
+            {
+                argument{
+                    { 13, 20 },
+                    { lexer::token_type::identifier, UR"(x)", { 13, 14 } },
+                    {
+                        { 17, 20 },
+                        postfix_expression{
+                            { 17, 20 },
+                            id_expression{
+                                { 17, 20 },
+                                {
+                                    { lexer::token_type::identifier, UR"(int)", { 17, 20 } }
+                                }
+                            },
+                            {},
+                            {}
+                        }
+                    }
+                }
+            }
+        }),
+        {},
+        block{
+            { 22, 33 },
+            {},
+            { expression_list{
+                { 25, 33 },
+                {
+                    {
+                        { 25, 33 },
+                        postfix_expression{
+                            { 25, 33 },
+                            { id_expression{
+                                { 25, 33 },
+                                {
+                                    { lexer::token_type::identifier, UR"(constant)", { 25, 33 } }
+                                }
+                            } },
+                            {},
+                            {}
+                        }
+                    }
+                }
+            } }
+        }
+    },
+    &parse_function
+));
+
+MAYFLY_ADD_TESTCASE("one argument, explicit type, simple body", test(
+    UR"(function foo(x : int) -> int => constant;)",
+    function{
+        { 0, 40 },
+        { lexer::token_type::identifier, UR"(foo)", { 9, 12 } },
+        reaver::make_optional(argument_list{
+            { 13, 20 },
+            {
+                argument{
+                    { 13, 20 },
+                    { lexer::token_type::identifier, UR"(x)", { 13, 14 } },
+                    {
+                        { 17, 20 },
+                        postfix_expression{
+                            { 17, 20 },
+                            id_expression{
+                                { 17, 20 },
+                                {
+                                    { lexer::token_type::identifier, UR"(int)", { 17, 20 } }
+                                }
+                            },
+                            {},
+                            {}
+                        }
+                    }
+                }
+            }
+        }),
+        reaver::make_optional(expression{
+            { 25, 28 },
+            postfix_expression{
+                { 25, 28 },
+                { id_expression {
+                    { 25, 28 },
+                    {
+                        { lexer::token_type::identifier, UR"(int)", { 25, 28 } }
+                    },
+                } },
+                {},
+                {}
+            }
+        }),
+        block{
+            { 29, 40 },
+            {},
+            { expression_list{
+                { 32, 40 },
+                {
+                    {
+                        { 32, 40 },
+                        postfix_expression{
+                            { 32, 40 },
+                            { id_expression{
+                                { 32, 40 },
+                                {
+                                    { lexer::token_type::identifier, UR"(constant)", { 32, 40 } }
+                                }
+                            } },
+                            {},
+                            {}
+                        }
+                    }
+                }
+            } }
+        }
+    },
+    &parse_function
+));
+
+MAYFLY_ADD_TESTCASE("two arguments, deduced type, simple body", test(
+    UR"(function foo(x : int, y : bool) => constant;)",
+    function{
+        { 0, 43 },
+        { lexer::token_type::identifier, UR"(foo)", { 9, 12 } },
+        reaver::make_optional(argument_list{
+            { 13, 30 },
+            {
+                argument{
+                    { 13, 20 },
+                    { lexer::token_type::identifier, UR"(x)", { 13, 14 } },
+                    {
+                        { 17, 20 },
+                        postfix_expression{
+                            { 17, 20 },
+                            id_expression{
+                                { 17, 20 },
+                                {
+                                    { lexer::token_type::identifier, UR"(int)", { 17, 20 } }
+                                }
+                            },
+                            {},
+                            {}
+                        }
+                    }
+                },
+                argument{
+                    { 22, 30 },
+                    { lexer::token_type::identifier, UR"(y)", { 22, 23 } },
+                    {
+                        { 26, 30 },
+                        postfix_expression{
+                            { 26, 30 },
+                            id_expression{
+                                { 26, 30 },
+                                {
+                                    { lexer::token_type::identifier, UR"(bool)", { 26, 30 } }
+                                }
+                            },
+                            {},
+                            {}
+                        }
+                    }
+                }
+            }
+        }),
+        {},
+        block{
+            { 32, 43 },
+            {},
+            { expression_list{
+                { 35, 43 },
+                {
+                    {
+                        { 35, 43 },
+                        postfix_expression{
+                            { 35, 43 },
+                            { id_expression{
+                                { 35, 43 },
+                                {
+                                    { lexer::token_type::identifier, UR"(constant)", { 35, 43 } }
+                                }
+                            } },
+                            {},
+                            {}
+                        }
+                    }
+                }
+            } }
+        }
+    },
+    &parse_function
+));
+
+MAYFLY_ADD_TESTCASE("two arguments, explicit type, simple body", test(
+    UR"(function foo(x : int, y : bool) -> int => constant;)",
+    function{
+        { 0, 50 },
+        { lexer::token_type::identifier, UR"(foo)", { 9, 12 } },
+        reaver::make_optional(argument_list{
+            { 13, 30 },
+            {
+                argument{
+                    { 13, 20 },
+                    { lexer::token_type::identifier, UR"(x)", { 13, 14 } },
+                    {
+                        { 17, 20 },
+                        postfix_expression{
+                            { 17, 20 },
+                            id_expression{
+                                { 17, 20 },
+                                {
+                                    { lexer::token_type::identifier, UR"(int)", { 17, 20 } }
+                                }
+                            },
+                            {},
+                            {}
+                        }
+                    }
+                },
+                argument{
+                    { 22, 30 },
+                    { lexer::token_type::identifier, UR"(y)", { 22, 23 } },
+                    {
+                        { 26, 30 },
+                        postfix_expression{
+                            { 26, 30 },
+                            id_expression{
+                                { 26, 30 },
+                                {
+                                    { lexer::token_type::identifier, UR"(bool)", { 26, 30 } }
+                                }
+                            },
+                            {},
+                            {}
+                        }
+                    }
+                }
+            }
+        }),
+        reaver::make_optional(expression{
+            { 35, 38 },
+            postfix_expression{
+                { 35, 38 },
+                { id_expression {
+                    { 35, 38 },
+                    {
+                        { lexer::token_type::identifier, UR"(int)", { 35, 38 } }
+                    },
+                } },
+                {},
+                {}
+            }
+        }),
+        block{
+            { 39, 50 },
+            {},
+            { expression_list{
+                { 42, 50 },
+                {
+                    {
+                        { 42, 50 },
+                        postfix_expression{
+                            { 42, 50 },
+                            { id_expression{
+                                { 42, 50 },
+                                {
+                                    { lexer::token_type::identifier, UR"(constant)", { 42, 50 } }
                                 }
                             } },
                             {},

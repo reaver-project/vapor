@@ -95,6 +95,11 @@ namespace reaver
                     });
                 }
 
+                virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const override
+                {
+                    return _init_expr->clone_expr_with_replacement(repl);
+                }
+
                 virtual future<statement *> _simplify(optimization_context & ctx) override
                 {
                     return _init_expr->simplify_expr(ctx)

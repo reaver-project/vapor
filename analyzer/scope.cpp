@@ -22,6 +22,7 @@
 
 #include "vapor/analyzer/scope.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/type_variable.h"
 
 reaver::vapor::analyzer::_v1::scope::~scope()
 {
@@ -67,6 +68,11 @@ void reaver::vapor::analyzer::_v1::scope::close()
 
 bool reaver::vapor::analyzer::_v1::scope::init(const std::u32string & name, std::unique_ptr<reaver::vapor::analyzer::_v1::symbol> symb)
 {
+    if (non_overridable().find(name) != non_overridable().end())
+    {
+        assert(0);
+    }
+
     assert(!_is_closed);
 
     _ulock lock{ _lock };
@@ -130,6 +136,14 @@ reaver::future<reaver::vapor::analyzer::_v1::symbol *> reaver::vapor::analyzer::
 reaver::future<reaver::vapor::analyzer::_v1::symbol *> reaver::vapor::analyzer::_v1::scope::resolve(const std::u32string & name)
 {
     {
+        auto it = non_overridable().find(name);
+        if (it != non_overridable().end())
+        {
+            return make_ready_future(it->second.get());
+        }
+    }
+
+    {
         _shlock lock{ _lock };
 
         auto it = _symbol_futures.find(name);
@@ -173,5 +187,26 @@ reaver::future<reaver::vapor::analyzer::_v1::symbol *> reaver::vapor::analyzer::
     _ulock lock{ _lock };
     _symbol_futures.emplace(name, pair.future);
     return std::move(pair.future);
+}
+
+const std::unordered_map<std::u32string, std::unique_ptr<reaver::vapor::analyzer::_v1::symbol>> & reaver::vapor::analyzer::_v1::non_overridable()
+{
+    static auto integer_type_var = make_type_variable(builtin_types().integer.get());
+    static auto boolean_type_var = make_type_variable(builtin_types().boolean.get());
+
+    static auto symbols = [&]{
+        std::unordered_map<std::u32string, std::unique_ptr<symbol>> symbols;
+
+        auto add_symbol = [&](auto name, auto && variable) {
+            symbols.emplace(name, make_symbol(name, variable.get()));
+        };
+
+        add_symbol(U"int", integer_type_var);
+        add_symbol(U"bool", boolean_type_var);
+
+        return symbols;
+    }();
+
+    return symbols;
 }
 

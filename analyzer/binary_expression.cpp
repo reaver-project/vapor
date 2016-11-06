@@ -62,6 +62,16 @@ reaver::future<> reaver::vapor::analyzer::_v1::binary_expression::_analyze()
         });
 }
 
+std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyzer::_v1::binary_expression::_clone_expr_with_replacement(reaver::vapor::analyzer::_v1::replacements & repl) const
+{
+    auto ret = std::unique_ptr<binary_expression>(new binary_expression(*this));
+
+    ret->_lhs = _lhs->clone_expr_with_replacement(repl);
+    ret->_rhs = _rhs->clone_expr_with_replacement(repl);
+
+    return ret;
+}
+
 reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::binary_expression::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
     return when_all(
@@ -70,13 +80,10 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
         ).then([&](auto && simplified) {
             replace_uptr(_lhs, get<0>(simplified), ctx);
             replace_uptr(_rhs, get<1>(simplified), ctx);
-            return _overload->simplify(ctx);
-        }).then([&]() {
             return _overload->simplify(ctx, { _lhs->get_variable(), _rhs->get_variable() });
         }).then([&](auto && simplified) -> expression * {
             if (simplified)
             {
-                ctx.something_happened();
                 return simplified;
             }
 

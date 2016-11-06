@@ -20,6 +20,8 @@
  *
  **/
 
+#include <numeric>
+
 #include "vapor/parser.h"
 #include "vapor/analyzer/block.h"
 #include "vapor/analyzer/return.h"
@@ -107,24 +109,91 @@ reaver::future<> reaver::vapor::analyzer::_v1::block::_analyze()
     return fut;
 }
 
+void reaver::vapor::analyzer::_v1::block::_ensure_cache() const
+{
+    if (_is_clone_cache)
+    {
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock{ _clone_cache_lock };
+    if (_clone)
+    {
+        return;
+    }
+
+    auto clone = std::unique_ptr<block>(new block(*this));
+    auto repl = replacements{};
+
+    clone->_statements = fmap(_statements, [&](auto && stmt){ return stmt->clone_with_replacement(repl); });
+    clone->_value_expr = fmap(_value_expr, [&](auto && expr){ return expr->clone_expr_with_replacement(repl); });
+    clone->_is_clone_cache = true;
+
+    _clone = std::move(clone);
+}
+
+std::unique_ptr<reaver::vapor::analyzer::_v1::statement> reaver::vapor::analyzer::_v1::block::_clone_with_replacement(reaver::vapor::analyzer::_v1::replacements & repl) const
+{
+    _ensure_cache();
+
+    if (!_is_clone_cache)
+    {
+        return _clone.get()->clone_with_replacement(repl);
+    }
+
+    auto ret = std::unique_ptr<block>(new block(*this));
+
+    ret->_statements = fmap(_statements, [&](auto && stmt){ return stmt->clone_with_replacement(repl); });
+    ret->_value_expr = fmap(_value_expr, [&](auto && expr){ return expr->clone_expr_with_replacement(repl); });
+
+    return ret;
+}
+
 reaver::future<reaver::vapor::analyzer::_v1::statement *> reaver::vapor::analyzer::_v1::block::_simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
-    auto fut = when_all(
-        fmap(_statements, [&](auto && stmt) { return stmt->simplify(ctx); })
-    ).then([&](auto && simplified) {
-        replace_uptrs(_statements, simplified, ctx);
-    });
+    _ensure_cache();
+
+    auto fut = std::accumulate(_statements.begin(), _statements.end(), make_ready_future(true),
+        [&](auto future, auto && statement) {
+            return future.then([&](bool do_continue) {
+                if (!do_continue)
+                {
+                    return make_ready_future(false);
+                }
+
+                return statement->simplify(ctx).then([&](auto && simplified) {
+                    replace_uptr(statement, simplified, ctx);
+                    return !statement->always_returns();
+                });
+            });
+        }
+    );
 
     fmap(_value_expr, [&](auto && expr) {
-        fut = fut.then([&, expr = expr.get()]{
-            return expr->simplify_expr(ctx);
-        }).then([&](auto && simplified) {
-            replace_uptr(*_value_expr, simplified, ctx);
+        fut = fut.then([&, expr = expr.get()](bool do_continue) {
+            if (!do_continue)
+            {
+                return make_ready_future(false);
+            }
+
+            return expr->simplify_expr(ctx).then([&](auto && simplified) {
+                replace_uptr(*_value_expr, simplified, ctx);
+                return true;
+            });
         });
         return unit{};
     });
 
-    return fut.then([&]() -> statement * {
+    return fut.then([&](bool reached_end) -> statement * {
+        if (!reached_end)
+        {
+            auto always_returning = std::find_if(_statements.begin(), _statements.end(),
+                [](auto && stmt){ return stmt->always_returns(); });
+
+            assert(always_returning != _statements.end());
+            _statements.erase(always_returning + 1, _statements.end());
+        }
+
         return this;
     });
 }
@@ -154,7 +223,7 @@ std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyze
             std::back_inserter(scope_cleanup),
             [&ctx](auto && symbol) {
                 auto variable_ir = symbol->get_variable()->codegen_ir(ctx);
-                auto variable = get<codegen::ir::value>(variable_ir.back());
+                auto variable = get<codegen::ir::value>(variable_ir);
                 return codegen::ir::instruction{
                     {}, {},
                     { boost::typeindex::type_id<codegen::ir::destruction_instruction>() },

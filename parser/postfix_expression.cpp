@@ -25,14 +25,13 @@
 #include "vapor/parser/expression_list.h"
 #include "vapor/parser/lambda_expression.h"
 
-reaver::vapor::parser::_v1::postfix_expression reaver::vapor::parser::_v1::parse_postfix_expression(reaver::vapor::parser::context & ctx)
+reaver::vapor::parser::_v1::postfix_expression reaver::vapor::parser::_v1::parse_postfix_expression(reaver::vapor::parser::context & ctx, reaver::vapor::parser::_v1::expression_special_modes mode)
 {
     auto closing = [](lexer::token_type type)
     {
         using namespace lexer;
         switch (type)
         {
-            case token_type::angle_bracket_open: return token_type::angle_bracket_close;
             case token_type::round_bracket_open: return token_type::round_bracket_close;
             case token_type::square_bracket_open: return token_type::square_bracket_close;
             case token_type::curly_bracket_open: return token_type::curly_bracket_close;
@@ -59,9 +58,13 @@ reaver::vapor::parser::_v1::postfix_expression reaver::vapor::parser::_v1::parse
         end = range.end();
     }
 
-    for (auto && type : { lexer::token_type::round_bracket_open, lexer::token_type::square_bracket_open, lexer::token_type::curly_bracket_open,
-        lexer::token_type::angle_bracket_open })
+    for (auto && type : { lexer::token_type::round_bracket_open, lexer::token_type::square_bracket_open, lexer::token_type::curly_bracket_open })
     {
+        if (type == lexer::token_type::curly_bracket_open && mode == expression_special_modes::brace)
+        {
+            continue;
+        }
+
         if (peek(ctx, type))
         {
             ret.bracket_type = type;
@@ -75,12 +78,16 @@ reaver::vapor::parser::_v1::postfix_expression reaver::vapor::parser::_v1::parse
     {
         if (!peek(ctx, closing(*ret.bracket_type)))
         {
+            auto old_stack = std::move(ctx.operator_stack);
+
             ret.arguments.push_back(parse_expression(ctx));
             while (peek(ctx, lexer::token_type::comma))
             {
                 expect(ctx, lexer::token_type::comma);
                 ret.arguments.push_back(parse_expression(ctx));
             }
+
+            ctx.operator_stack = std::move(old_stack);
         }
         end = expect(ctx, closing(*ret.bracket_type)).range.end();
     }

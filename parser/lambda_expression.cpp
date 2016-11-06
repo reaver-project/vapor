@@ -48,6 +48,12 @@ reaver::vapor::parser::_v1::lambda_expression reaver::vapor::parser::_v1::parse_
         expect(ctx, lexer::token_type::round_bracket_close);
     }
 
+    if (peek(ctx, lexer::token_type::indirection))
+    {
+        expect(ctx, lexer::token_type::indirection);
+        ret.return_type = parse_expression(ctx, expression_special_modes::brace);
+    }
+
     if (peek(ctx, lexer::token_type::block_value))
     {
         ret.body = parse_single_statement_block(ctx);
@@ -68,9 +74,10 @@ void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::lambda_
 
     os << in << "`lambda-expression` at " << expr.range << '\n';
 
-    assert(!expr.captures && !expr.arguments);
+    assert(!expr.captures);
 
     os << in << "{\n";
+    fmap(expr.arguments, [&](auto && arguments){ print(arguments, os, indent + 4); return unit{}; });
     print(expr.body, os, indent + 4);
     os << in << "}\n";
 }

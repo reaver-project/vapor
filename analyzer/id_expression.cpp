@@ -32,7 +32,8 @@ void reaver::vapor::analyzer::_v1::id_expression::print(std::ostream & os, std::
 
 reaver::future<> reaver::vapor::analyzer::_v1::id_expression::_analyze()
 {
-    return std::accumulate(_parse.id_expression_value.begin() + 1, _parse.id_expression_value.end(), _lex_scope->resolve(_parse.id_expression_value.front().string),
+    return std::accumulate(_parse.id_expression_value.begin() + 1, _parse.id_expression_value.end(),
+        _lex_scope->resolve(_parse.id_expression_value.front().string),
         [&](auto fut, auto && ident) {
             return fut.then([&ident](auto && symbol) {
                 return symbol->get_variable_future();
@@ -46,14 +47,26 @@ reaver::future<> reaver::vapor::analyzer::_v1::id_expression::_analyze()
         });
 }
 
+std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyzer::_v1::id_expression::_clone_expr_with_replacement(reaver::vapor::analyzer::_v1::replacements & repl) const
+{
+    auto referenced = _referenced;
+
+    auto it = repl.variables.find(referenced);
+    if (it != repl.variables.end())
+    {
+        referenced = it->second;
+    }
+
+    return make_variable_ref_expression(referenced);
+}
+
 reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::id_expression::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
     return _referenced->simplify(ctx)
         .then([&](auto && simplified) -> expression * {
-            if (simplified)
+            if (simplified && simplified != _referenced)
             {
                 _referenced = simplified;
-                ctx.something_happened();
             }
             return this;
         });
@@ -65,7 +78,7 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::id_expr
         none, none,
         { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
         {},
-        { get<codegen::ir::value>(_referenced->codegen_ir(ctx).back()) }
+        { get<codegen::ir::value>(_referenced->codegen_ir(ctx)) }
     } };
 }
 

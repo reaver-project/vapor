@@ -26,9 +26,9 @@
 #include "vapor/codegen/ir/variable.h"
 #include "vapor/codegen/ir/type.h"
 
-std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::integer_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context &) const
+void reaver::vapor::analyzer::_v1::integer_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context &) const
 {
-    return codegen::ir::builtin_types().integer;
+    _codegen_t = codegen::ir::builtin_types().integer;
 }
 
 reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::integer_constant::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context &) const
@@ -56,17 +56,19 @@ std::unique_ptr<reaver::vapor::analyzer::_v1::type> reaver::vapor::analyzer::_v1
 template<typename Instruction, typename Eval>
 auto reaver::vapor::analyzer::_v1::integer_type::_generate_function(const char32_t * name, const char * desc, Eval eval, reaver::vapor::analyzer::_v1::type * return_type)
 {
+    auto lhs = make_blank_variable(builtin_types().integer.get());
+    auto rhs = make_blank_variable(builtin_types().integer.get());
+
+    auto lhs_arg = lhs.get();
+    auto rhs_arg = rhs.get();
+
     auto fun = make_function(
         desc,
         return_type,
-        { builtin_types().integer.get(), builtin_types().integer.get() },
-        [name, return_type](ir_generation_context & ctx) {
-            auto lhs = codegen::ir::make_variable(
-                builtin_types().integer->codegen_type(ctx)
-            );
-            auto rhs = codegen::ir::make_variable(
-                builtin_types().integer->codegen_type(ctx)
-            );
+        { lhs_arg, rhs_arg },
+        [name, return_type, lhs = std::move(lhs), rhs = std::move(rhs)](ir_generation_context & ctx) {
+            auto lhs_ir = get_ir_variable(lhs->codegen_ir(ctx));
+            auto rhs_ir = get_ir_variable(rhs->codegen_ir(ctx));
 
             auto retval = codegen::ir::make_variable(
                 return_type->codegen_type(ctx)
@@ -74,13 +76,13 @@ auto reaver::vapor::analyzer::_v1::integer_type::_generate_function(const char32
 
             return codegen::ir::function{
                 name,
-                {}, { lhs, rhs },
+                {}, { lhs_ir, rhs_ir },
                 retval,
                 {
                     codegen::ir::instruction{
                         none, none,
                         { boost::typeindex::type_id<Instruction>() },
-                        { lhs, rhs },
+                        { lhs_ir, rhs_ir },
                         retval
                     },
                     codegen::ir::instruction{
@@ -93,6 +95,7 @@ auto reaver::vapor::analyzer::_v1::integer_type::_generate_function(const char32
             };
         }
     );
+    fun->set_name(name);
     fun->set_eval(eval);
     return fun;
 }
@@ -121,6 +124,9 @@ auto reaver::vapor::analyzer::_v1::integer_type::_generate_function(const char32
     }
 
 ADD_OPERATION(addition, U"__builtin_integer_operator_plus", +, integer);
+ADD_OPERATION(subtraction, U"__builtin_integer_operator_minus", -, integer);
 ADD_OPERATION(multiplication, U"__builtin_integer_operator_star", *, integer);
 ADD_OPERATION(equal_comparison, U"__builtin_integer_operator_equals", ==, boolean);
+ADD_OPERATION(less_comparison, U"__builtin_integer_operator_less", <, boolean);
+ADD_OPERATION(less_equal_comparison, U"__builtin_integer_operator_less_equal", <, boolean);
 

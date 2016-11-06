@@ -67,6 +67,24 @@ reaver::future<> reaver::vapor::analyzer::_v1::if_statement::_analyze()
     return fut;
 }
 
+std::unique_ptr<reaver::vapor::analyzer::_v1::statement> reaver::vapor::analyzer::if_statement::_clone_with_replacement(reaver::vapor::analyzer::_v1::replacements & repl) const
+{
+    auto ret = std::unique_ptr<if_statement>(new if_statement(*this));
+
+    ret->_condition = _condition->clone_expr_with_replacement(repl);
+
+    auto then = _then_block->clone_with_replacement(repl).release();
+    ret->_then_block.reset(static_cast<block *>(then));
+
+    fmap(_else_block, [&](auto && block) {
+        auto else_ = block->clone_with_replacement(repl).release();
+        ret->_else_block = std::unique_ptr<class block>(static_cast<class block *>(else_));
+        return unit{};
+    });
+
+    return ret;
+}
+
 reaver::future<reaver::vapor::analyzer::_v1::statement *> reaver::vapor::analyzer::_v1::if_statement::_simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
 {
     return _condition->simplify_expr(ctx)

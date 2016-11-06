@@ -78,12 +78,22 @@ namespace reaver
                     return _value_expr->get();
                 }
 
+                virtual bool always_returns() const override
+                {
+                    return !_statements.empty() && _statements.back()->always_returns();
+                }
+
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
                 codegen::ir::value codegen_return(ir_generation_context &) const;
 
             private:
+                block(const block & other) : _parse{ other._parse }, _original_scope{ other._original_scope }, _is_top_level{ other._is_top_level }
+                {
+                }
+
                 virtual future<> _analyze() override;
+                virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override;
                 virtual future<statement *> _simplify(optimization_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
@@ -93,6 +103,12 @@ namespace reaver
                 std::vector<std::unique_ptr<statement>> _statements;
                 optional<std::unique_ptr<expression>> _value_expr;
                 const bool _is_top_level = false;
+
+                void _ensure_cache() const;
+
+                mutable std::mutex _clone_cache_lock;
+                bool _is_clone_cache = false;
+                mutable optional<std::unique_ptr<block>> _clone;
             };
 
             inline std::unique_ptr<block> preanalyze_block(const parser::block & parse, scope * lex_scope, bool is_top_level)

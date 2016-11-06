@@ -56,12 +56,30 @@ namespace reaver
                     return _value_expr->get_variable();
                 }
 
+                virtual bool always_returns() const override
+                {
+                    return true;
+                }
+
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
                 virtual future<> _analyze() override
                 {
                     return _value_expr->analyze();
+                }
+
+                return_statement(const return_statement & other) : _parse{ other._parse }
+                {
+                }
+
+                virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const override
+                {
+                    auto ret = std::unique_ptr<return_statement>(new return_statement(*this));
+
+                    ret->_value_expr = _value_expr->clone_expr_with_replacement(repl);
+
+                    return ret;
                 }
 
                 virtual future<statement *> _simplify(optimization_context & ctx) override

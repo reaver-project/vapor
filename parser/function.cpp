@@ -38,18 +38,19 @@ reaver::vapor::parser::_v1::function reaver::vapor::parser::_v1::parse_function(
     }
     expect(ctx, lexer::token_type::round_bracket_close);
 
-    if (peek(ctx) && peek(ctx)->type == lexer::token_type::indirection)
+    if (peek(ctx, lexer::token_type::indirection))
     {
-        ret.return_type = parse_expression(ctx);
+        expect(ctx, lexer::token_type::indirection);
+        ret.return_type = parse_expression(ctx, expression_special_modes::brace);
     }
 
-    if (peek(ctx, lexer::token_type::curly_bracket_open))
+    if (peek(ctx, lexer::token_type::block_value))
     {
-        ret.body = parse_block(ctx);
+        ret.body = parse_single_statement_block(ctx);
     }
     else
     {
-        ret.body = parse_single_statement_block(ctx);
+        ret.body = parse_block(ctx);
     }
 
     ret.range = { start, ret.body->range.end() };
@@ -61,11 +62,17 @@ void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::functio
 {
     auto in = std::string(indent, ' ');
 
-    assert(!f.arguments && !f.return_type);
-
     os << in << "`function` at " << f.range << '\n';
     os << in << "{\n";
     os << std::string(indent + 4, ' ') << f.name << '\n';
+    fmap(f.arguments, [&](auto && arguments){ print(arguments, os, indent + 4); return unit{}; });
+    fmap(f.return_type, [&](auto && ret_type) {
+        os << in << "return type:\n";
+        os << in << "{\n";
+        print(ret_type, os, indent + 4);
+        os << in << "}\n";
+        return unit{};
+    });
     print(*f.body, os, indent + 4);
     os << in << "}\n";
 }

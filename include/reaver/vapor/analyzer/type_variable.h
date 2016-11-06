@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include "../parser/unary_expression.h"
-#include "expression.h"
+#include "type.h"
+#include "variable.h"
 
 namespace reaver
 {
@@ -31,46 +31,45 @@ namespace reaver
     {
         namespace analyzer { inline namespace _v1
         {
-            class unary_expression : public expression
+            class type_variable : public variable
             {
             public:
-                unary_expression(const parser::unary_expression & parse, scope * lex_scope) : _parse{ parse }
+                type_variable(type * t) : _type{ t }
                 {
-                    assert(0);
                 }
 
-                virtual void print(std::ostream &, std::size_t) const override
+                virtual type * get_type() const override
                 {
-                    assert(0);
+                    return builtin_types().type.get();
+                }
+
+                type * get_value() const
+                {
+                    return _type;
+                }
+
+                virtual bool is_constant() const override
+                {
+                    return _type;
                 }
 
             private:
-                virtual future<> _analyze() override
+                virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override
                 {
-                    assert(0);
+                    return std::make_unique<type_variable>(_type);
                 }
 
-                virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+                virtual variable_ir _codegen_ir(ir_generation_context &) const override
                 {
-                    assert(0);
+                    return none;
                 }
 
-                virtual future<expression *> _simplify_expr(optimization_context &) override
-                {
-                    assert(0);
-                }
-
-                virtual statement_ir _codegen_ir(ir_generation_context &) const override
-                {
-                    assert(0);
-                }
-
-                const parser::unary_expression & _parse;
+                type * _type;
             };
 
-            std::unique_ptr<unary_expression> preanalyze_unary_expression(const parser::unary_expression & parse, scope * lex_scope)
+            inline auto make_type_variable(type * t)
             {
-                return std::make_unique<unary_expression>(parse, lex_scope);
+                return std::make_unique<type_variable>(t);
             }
         }}
     }

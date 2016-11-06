@@ -48,11 +48,20 @@ namespace reaver
                         case lexer::token_type::plus:
                             return make_ready_future(_addition());
 
+                        case lexer::token_type::minus:
+                            return make_ready_future(_subtraction());
+
                         case lexer::token_type::star:
                             return make_ready_future(_multiplication());
 
                         case lexer::token_type::equals:
                             return make_ready_future(_equal_comparison());
+
+                        case lexer::token_type::less:
+                            return make_ready_future(_less_comparison());
+
+                        case lexer::token_type::less_equal:
+                            return make_ready_future(_less_equal_comparison());
 
                         default:
                             assert(!"unimplemented int op");
@@ -65,13 +74,16 @@ namespace reaver
                 }
 
             private:
-                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const override;
+                virtual void _codegen_type(ir_generation_context &) const override;
 
                 template<typename Instruction, typename Eval>
                 static auto _generate_function(const char32_t * name, const char * desc, Eval eval, type * return_type);
                 static function * _addition();
+                static function * _subtraction();
                 static function * _multiplication();
                 static function * _equal_comparison();
+                static function * _less_comparison();
+                static function * _less_equal_comparison();
             };
 
             class integer_constant : public literal
@@ -113,6 +125,11 @@ namespace reaver
                 }
 
             private:
+                virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override
+                {
+                    return std::make_unique<integer_constant>(_value);
+                }
+
                 virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
                 boost::multiprecision::cpp_int _value;
@@ -138,6 +155,11 @@ namespace reaver
                 virtual future<> _analyze() override
                 {
                     return make_ready_future();
+                }
+
+                virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
+                {
+                    return make_variable_expression(_value->clone_with_replacement(repl));
                 }
 
                 virtual future<expression *> _simplify_expr(optimization_context &) override

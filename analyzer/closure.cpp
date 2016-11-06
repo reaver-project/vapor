@@ -25,21 +25,28 @@
 #include "vapor/analyzer/symbol.h"
 #include "vapor/codegen/ir/type.h"
 
-std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::analyzer::_v1::closure_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
+void reaver::vapor::analyzer::_v1::closure_type::_codegen_type(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
 {
-    auto type = codegen::ir::make_type(U"__closure_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.closure_index++)), get_scope()->codegen_ir(ctx), 0, {});
+    auto actual_type = *_codegen_t;
+
+    auto type = codegen::ir::variable_type{
+        U"__closure_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.closure_index++)),
+        get_scope()->codegen_ir(ctx),
+        0,
+        {}
+    };
 
     auto scopes = get_scope()->codegen_ir(ctx);
-    scopes.emplace_back(type->name, codegen::ir::scope_type::type);
+    scopes.emplace_back(type.name, codegen::ir::scope_type::type);
 
     auto fn = _function->codegen_ir(ctx);
     fn.scopes = scopes;
-    fn.parent_type = type;
-    type->members = { codegen::ir::member{ fn } };
+    fn.parent_type = actual_type;
+    type.members = { codegen::ir::member{ fn } };
 
     ctx.add_generated_function(_function.get());
 
-    return type;
+    *actual_type = std::move(type);
 }
 
 void reaver::vapor::analyzer::_v1::closure::print(std::ostream & os, std::size_t indent) const
@@ -47,7 +54,10 @@ void reaver::vapor::analyzer::_v1::closure::print(std::ostream & os, std::size_t
     auto in = std::string(indent, ' ');
     os << in << "closure at " << _parse.range << '\n';
     assert(!_parse.captures);
-    assert(!_parse.arguments);
+    fmap(_argument_list, [&, in = std::string(indent + 4, ' ')](auto && argument) {
+        os << in << "argument `" << utf8(argument.name) << "` of type `" << argument.variable->get_type()->explain() << "`\n";
+        return unit{};
+    });
     os << in << "return type: " << _body->return_type()->explain() << '\n';
     os << in << "{\n";
     _body->print(os, indent + 4);
@@ -56,27 +66,77 @@ void reaver::vapor::analyzer::_v1::closure::print(std::ostream & os, std::size_t
 
 reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
 {
-    return _body->analyze().then([&]
-    {
+    auto initial_future = [&]{
+        if (_return_type)
+        {
+            return (*_return_type)->analyze()
+                .then([&]{
+                    auto var = (*_return_type)->get_variable();
+
+                    assert(var->get_type() == builtin_types().type.get());
+                    assert(var->is_constant());
+                });
+        }
+
+        return make_ready_future();
+    }();
+
+    return initial_future.then([&]{
+        return when_all(fmap(_argument_list, [&](auto && arg) {
+            return arg.type_expression->analyze();
+        }));
+    }).then([&]{
+        fmap(_argument_list, [&](auto && arg) {
+            arg.variable->set_type(arg.type_expression->get_variable());
+            return unit{};
+        });
+
+        return _body->analyze();
+    }).then([&] {
+        fmap(_return_type, [&](auto && ret_type) {
+            auto explicit_type = ret_type->get_variable();
+            auto type_var = dynamic_cast<type_variable *>(explicit_type);
+
+            assert(type_var->get_value() == _body->return_type());
+
+            return unit{};
+        });
+
+        auto arg_variables = fmap(_argument_list, [&](auto && arg) -> variable * {
+            return arg.variable.get();
+        });
+
         auto function = make_function(
             "closure",
             _body->return_type(),
-            {},
+            std::move(arg_variables),
             [this](ir_generation_context & ctx) {
                 return codegen::ir::function{
                     U"operator()",
-                    {}, {},
+                    {},
+                    fmap(_argument_list, [&](auto && arg) {
+                        return get<std::shared_ptr<codegen::ir::variable>>(
+                            get<codegen::ir::value>(arg.variable->codegen_ir(ctx))
+                        );
+                    }),
                     _body->codegen_return(ctx),
                     _body->codegen_ir(ctx),
                 };
             },
             _parse.range
         );
+
+        function->set_name(U"operator()");
         function->set_body(_body.get());
 
         _type = std::make_unique<closure_type>(_scope.get(), this, std::move(function));
         _set_variable(make_expression_variable(this, _type.get()));
     });
+}
+
+std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyzer::_v1::closure::_clone_expr_with_replacement(reaver::vapor::analyzer::_v1::replacements & repl) const
+{
+    assert(!"this shouldn't be called, or, when called, should return an empty expression...");
 }
 
 reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::closure::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)

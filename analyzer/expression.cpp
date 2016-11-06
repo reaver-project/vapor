@@ -84,8 +84,7 @@ std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyze
 
 reaver::future<> reaver::vapor::analyzer::_v1::expression_list::_analyze()
 {
-    return when_all(fmap(value, [&](auto && expr) { return expr->analyze(); }))
-        .then([&]{ _set_variable(make_expression_variable(this, value.back()->get_variable()->get_type())); });
+    return when_all(fmap(value, [&](auto && expr) { return expr->analyze(); }));
 }
 
 reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::expression_list::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
@@ -141,5 +140,15 @@ void reaver::vapor::analyzer::_v1::variable_ref_expression::print(std::ostream &
     auto in = std::string(indent, ' ');
     os << in << "variable ref expression:\n";
     os << in << "type: " << get_variable()->get_type()->explain() << '\n';
+}
+
+std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyzer::expression_list::_clone_expr_with_replacement(reaver::vapor::analyzer::_v1::replacements & repl) const
+{
+    auto ret = std::make_unique<expression_list>();
+    ret->range = range;
+
+    ret->value = fmap(value, [&](auto && expr) { return expr->clone_expr_with_replacement(repl); });
+
+    return ret;
 }
 

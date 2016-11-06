@@ -27,8 +27,10 @@
 #include "../parser/function.h"
 #include "variable.h"
 #include "statement.h"
+#include "expression.h"
 #include "block.h"
 #include "symbol.h"
+#include "argument_list.h"
 
 namespace reaver
 {
@@ -66,7 +68,7 @@ namespace reaver
                 virtual future<function *> get_overload(lexer::token_type bracket, std::vector<const type *> args) const override;
 
             private:
-                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const override;
+                virtual void _codegen_type(ir_generation_context &) const override;
 
                 mutable std::mutex _functions_lock;
                 std::vector<function *> _functions;
@@ -89,6 +91,7 @@ namespace reaver
                 }
 
             private:
+                virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override;
                 virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
                 std::vector<function_declaration *> _overloads;
@@ -98,15 +101,22 @@ namespace reaver
             class function_declaration : public statement
             {
             public:
-                function_declaration(const parser::function & parse, scope * scope)
-                    : _parse{ parse }, _scope{ scope }
+                function_declaration(const parser::function & parse, scope * parent_scope)
+                    : _parse{ parse }, _scope{ parent_scope->clone_local() }
                 {
-                    assert(!_parse.arguments);
+                    fmap(parse.arguments, [&](auto && arglist) {
+                        _argument_list = preanalyze_argument_list(arglist, _scope.get());
+                        return unit{};
+                    });
+                    _scope->close();
 
-                    _body = preanalyze_block(*_parse.body, scope, true);
+                    _return_type = fmap(_parse.return_type, [&](auto && ret_type) {
+                        return preanalyze_expression(ret_type, _scope.get());
+                    });
+                    _body = preanalyze_block(*_parse.body, _scope.get(), true);
                     std::shared_ptr<overload_set> keep_count;
-                    auto symbol = _scope->get_or_init(_parse.name.string, [&]{
-                        keep_count = std::make_shared<overload_set>(scope);
+                    auto symbol = parent_scope->get_or_init(_parse.name.string, [&]{
+                        keep_count = std::make_shared<overload_set>(_scope.get());
                         return make_symbol(_parse.name.string, keep_count.get());
                     });
 
@@ -122,13 +132,21 @@ namespace reaver
 
             private:
                 virtual future<> _analyze() override;
+
+                virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override
+                {
+                    return make_null_statement();
+                }
+
                 virtual future<statement *> _simplify(optimization_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::function & _parse;
+                argument_list _argument_list;
 
+                optional<std::unique_ptr<expression>> _return_type;
                 std::unique_ptr<block> _body;
-                scope * _scope;
+                std::unique_ptr<scope> _scope;
                 std::unique_ptr<function> _function;
                 std::shared_ptr<overload_set> _overload_set;
             };

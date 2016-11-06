@@ -39,6 +39,14 @@ reaver::future<reaver::vapor::analyzer::_v1::variable *> reaver::vapor::analyzer
         });
 }
 
+std::unique_ptr<reaver::vapor::analyzer::_v1::variable> reaver::vapor::analyzer::_v1::expression_variable::_clone_with_replacement(reaver::vapor::analyzer::_v1::replacements & repl) const
+{
+    auto it = repl.expressions.find(_expression);
+    assert(it != repl.expressions.end());
+
+    return make_expression_variable(it->second, _type);
+}
+
 bool reaver::vapor::analyzer::_v1::expression_variable::is_constant() const
 {
     return false;

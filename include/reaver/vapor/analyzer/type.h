@@ -29,6 +29,7 @@
 #include "../lexer/token.h"
 #include "scope.h"
 #include "ir_context.h"
+#include "../codegen/ir/type.h"
 
 namespace reaver
 {
@@ -61,12 +62,12 @@ namespace reaver
 
                 virtual future<function *> get_overload(lexer::token_type, const type *) const
                 {
-                    return make_ready_future<function *>(nullptr);
+                    return make_ready_future(static_cast<function *>(nullptr));
                 }
 
                 virtual future<function *> get_overload(lexer::token_type, std::vector<const type *>) const
                 {
-                    return make_ready_future<function *>(nullptr);
+                    return make_ready_future(static_cast<function *>(nullptr));
                 }
 
                 virtual std::string explain() const = 0;
@@ -80,16 +81,19 @@ namespace reaver
                 {
                     if (!_codegen_t)
                     {
-                        _codegen_t = _codegen_type(ctx);
+                        _codegen_t = std::make_shared<codegen::ir::variable_type>();
+                        _codegen_type(ctx);
                     }
 
                     return *_codegen_t;
                 }
 
             private:
-                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const = 0;
+                virtual void _codegen_type(ir_generation_context &) const = 0;
 
                 std::unique_ptr<scope> _lex_scope;
+
+            protected:
                 mutable optional<std::shared_ptr<codegen::ir::variable_type>> _codegen_t;
             };
 
@@ -102,7 +106,7 @@ namespace reaver
                 }
 
             private:
-                virtual std::shared_ptr<codegen::ir::variable_type> _codegen_type(ir_generation_context &) const override;
+                virtual void _codegen_type(ir_generation_context &) const override;
             };
 
             // these here are currently kinda silly

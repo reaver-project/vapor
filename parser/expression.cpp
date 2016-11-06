@@ -32,7 +32,7 @@ namespace reaver
     template struct recursive_wrapper<vapor::parser::_v1::binary_expression>;
 }
 
-reaver::vapor::parser::_v1::expression reaver::vapor::parser::_v1::parse_expression(reaver::vapor::parser::_v1::context & ctx, bool special_assignment)
+reaver::vapor::parser::_v1::expression reaver::vapor::parser::_v1::parse_expression(reaver::vapor::parser::_v1::context & ctx, reaver::vapor::parser::_v1::expression_special_modes mode)
 {
     expression ret;
     auto type = peek(ctx)->type;
@@ -54,7 +54,7 @@ reaver::vapor::parser::_v1::expression reaver::vapor::parser::_v1::parse_express
 
     else if (peek(ctx, lexer::token_type::identifier))
     {
-        ret.expression_value = parse_postfix_expression(ctx);
+        ret.expression_value = parse_postfix_expression(ctx, mode);
     }
 
     else if (peek(ctx, lexer::token_type::import))
@@ -78,7 +78,7 @@ reaver::vapor::parser::_v1::expression reaver::vapor::parser::_v1::parse_express
     }
 
     type = peek(ctx)->type;
-    if (is_binary_operator(type) && !(special_assignment && type == lexer::token_type::assign))
+    if (is_binary_operator(type) && !(mode == expression_special_modes::assignment && type == lexer::token_type::assign))
     {
         auto p1 = precedence({ type, operator_type::binary });
         auto p2 = ctx.operator_stack.size() ? make_optional(precedence(ctx.operator_stack.back())) : none;
