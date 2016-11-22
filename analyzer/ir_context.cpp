@@ -22,37 +22,40 @@
 
 #include "vapor/analyzer/ir_context.h"
 
-void reaver::vapor::analyzer::_v1::ir_generation_context::add_function_to_generate(const reaver::vapor::analyzer::_v1::function * fn)
+namespace reaver::vapor::analyzer { inline namespace _v1
 {
-    if (_generated_functions.find(fn) != _generated_functions.end())
+    void ir_generation_context::add_function_to_generate(const function * fn)
     {
-        return;
+        if (_generated_functions.find(fn) != _generated_functions.end())
+        {
+            return;
+        }
+
+        if (std::find(_functions_to_generate.begin(), _functions_to_generate.end(), fn) == _functions_to_generate.end())
+        {
+            _functions_to_generate.push_back(fn);
+        }
     }
 
-    if (std::find(_functions_to_generate.begin(), _functions_to_generate.end(), fn) == _functions_to_generate.end())
+    void ir_generation_context::add_generated_function(const function * fn)
     {
-        _functions_to_generate.push_back(fn);
-    }
-}
+        _generated_functions.insert(fn);
 
-void reaver::vapor::analyzer::_v1::ir_generation_context::add_generated_function(const reaver::vapor::analyzer::_v1::function * fn)
-{
-    _generated_functions.insert(fn);
-
-    auto known_it = std::find(_functions_to_generate.begin(), _functions_to_generate.end(), fn);
-    if (known_it != _functions_to_generate.end())
-    {
-        _functions_to_generate.erase(known_it);
-    }
-}
-
-const reaver::vapor::analyzer::_v1::function * reaver::vapor::analyzer::_v1::ir_generation_context::function_to_generate()
-{
-    if (_functions_to_generate.size())
-    {
-        return _functions_to_generate.back();
+        auto known_it = std::find(_functions_to_generate.begin(), _functions_to_generate.end(), fn);
+        if (known_it != _functions_to_generate.end())
+        {
+            _functions_to_generate.erase(known_it);
+        }
     }
 
-    return nullptr;
-}
+    const function * ir_generation_context::function_to_generate()
+    {
+        if (_functions_to_generate.size())
+        {
+            return _functions_to_generate.back();
+        }
+
+        return nullptr;
+    }
+}}
 

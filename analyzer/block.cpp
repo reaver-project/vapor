@@ -27,236 +27,218 @@
 #include "vapor/analyzer/return.h"
 #include "vapor/analyzer/symbol.h"
 
-reaver::vapor::analyzer::_v1::block::block(const reaver::vapor::parser::block & parse, reaver::vapor::analyzer::_v1::scope * lex_scope, bool is_top_level) : _parse{ parse }, _scope{ lex_scope->clone_local() }, _original_scope{ _scope.get() }, _is_top_level{ is_top_level }
+namespace reaver::vapor::analyzer { inline namespace _v1
 {
-    _statements = fmap(_parse.block_value, [&](auto && row) {
-        return get<0>(fmap(row, make_overload_set(
-            [&](const parser::block & block) -> std::unique_ptr<statement>
-            {
-                return preanalyze_block(block, _scope.get(), false);
-            },
-            [&](const parser::statement & statement)
-            {
-                auto scope_ptr = _scope.get();
-                auto ret = preanalyze_statement(statement, scope_ptr);
-                if (scope_ptr != _scope.get())
+    block::block(const parser::block & parse, scope * lex_scope, bool is_top_level)
+        : _parse{ parse }, _scope{ lex_scope->clone_local() }, _original_scope{ _scope.get() },
+        _is_top_level{ is_top_level }
+    {
+        _statements = fmap(_parse.block_value, [&](auto && row) {
+            return get<0>(fmap(row, make_overload_set(
+                [&](const parser::block & block) -> std::unique_ptr<statement>
                 {
-                    _scope.release()->keep_alive();
-                    _scope.reset(scope_ptr);
+                    return preanalyze_block(block, _scope.get(), false);
+                },
+                [&](const parser::statement & statement)
+                {
+                    auto scope_ptr = _scope.get();
+                    auto ret = preanalyze_statement(statement, scope_ptr);
+                    if (scope_ptr != _scope.get())
+                    {
+                        _scope.release()->keep_alive();
+                        _scope.reset(scope_ptr);
+                    }
+                    return ret;
                 }
-                return ret;
-            }
-        )));
-    });
-
-    _scope->close();
-
-    _value_expr = fmap(_parse.value_expression, [&](auto && val_expr) {
-        auto expr = preanalyze_expression(val_expr, _scope.get());
-        return expr;
-    });
-}
-
-reaver::vapor::analyzer::_v1::type * reaver::vapor::analyzer::_v1::block::return_type() const
-{
-    auto return_types = fmap(get_returns(), [](auto && stmt){ return stmt->get_returned_type(); });
-
-    auto val = value_type();
-    if (val)
-    {
-        return_types.push_back(val);
-    }
-
-    std::sort(return_types.begin(), return_types.end());
-    return_types.erase(std::unique(return_types.begin(), return_types.end()), return_types.end());
-    assert(return_types.size() == 1);
-    return return_types.front();
-}
-
-void reaver::vapor::analyzer::_v1::block::print(std::ostream & os, std::size_t indent) const
-{
-    auto in = std::string(indent, ' ');
-    os << in << "block at " << _parse.range << '\n';
-    os << in << "statements:\n";
-    fmap(_statements, [&](auto && stmt) {
-        os << in << "{\n";
-        stmt->print(os, indent + 4);
-        os << in << "}\n";
-
-        return unit{};
-    });
-    fmap(_value_expr, [&](auto && expr) {
-        os << in << "value expression:\n";
-        os << in << "{\n";
-        expr->print(os, indent + 4);
-        os << in << "}\n";
-
-        return unit{};
-    });
-}
-
-reaver::future<> reaver::vapor::analyzer::_v1::block::_analyze(reaver::vapor::analyzer::_v1::analysis_context & ctx)
-{
-    auto fut = foldl(_statements, make_ready_future(), [&ctx](auto && prev, auto && stmt) {
-        return prev.then([&]() {
-            return stmt->analyze(ctx);
+            )));
         });
-    });
 
-    fmap(_value_expr, [&](auto && expr) {
-        fut = fut.then([&ctx, expr = expr.get()]{ return expr->analyze(ctx); });
-        return unit{};
-    });
+        _scope->close();
 
-    return fut;
-}
-
-void reaver::vapor::analyzer::_v1::block::_ensure_cache() const
-{
-    if (_is_clone_cache)
-    {
-        return;
+        _value_expr = fmap(_parse.value_expression, [&](auto && val_expr) {
+            auto expr = preanalyze_expression(val_expr, _scope.get());
+            return expr;
+        });
     }
 
-    std::lock_guard<std::mutex> lock{ _clone_cache_lock };
-    if (_clone)
+    type * block::return_type() const
     {
-        return;
+        auto return_types = fmap(get_returns(), [](auto && stmt){ return stmt->get_returned_type(); });
+
+        auto val = value_type();
+        if (val)
+        {
+            return_types.push_back(val);
+        }
+
+        std::sort(return_types.begin(), return_types.end());
+        return_types.erase(std::unique(return_types.begin(), return_types.end()), return_types.end());
+        assert(return_types.size() == 1);
+        return return_types.front();
     }
 
-    auto clone = std::unique_ptr<block>(new block(*this));
-    auto repl = replacements{};
-
-    clone->_statements = fmap(_statements, [&](auto && stmt){ return stmt->clone_with_replacement(repl); });
-    clone->_value_expr = fmap(_value_expr, [&](auto && expr){ return expr->clone_expr_with_replacement(repl); });
-    clone->_is_clone_cache = true;
-
-    _clone = std::move(clone);
-}
-
-std::unique_ptr<reaver::vapor::analyzer::_v1::statement> reaver::vapor::analyzer::_v1::block::_clone_with_replacement(reaver::vapor::analyzer::_v1::replacements & repl) const
-{
-    _ensure_cache();
-
-    if (!_is_clone_cache)
+    void block::print(std::ostream & os, std::size_t indent) const
     {
-        return _clone.get()->clone_with_replacement(repl);
+        auto in = std::string(indent, ' ');
+        os << in << "block at " << _parse.range << '\n';
+        os << in << "statements:\n";
+        fmap(_statements, [&](auto && stmt) {
+            os << in << "{\n";
+            stmt->print(os, indent + 4);
+            os << in << "}\n";
+
+            return unit{};
+        });
+        fmap(_value_expr, [&](auto && expr) {
+            os << in << "value expression:\n";
+            os << in << "{\n";
+            expr->print(os, indent + 4);
+            os << in << "}\n";
+
+            return unit{};
+        });
     }
 
-    auto ret = std::unique_ptr<block>(new block(*this));
+    future<> block::_analyze(analysis_context & ctx)
+    {
+        auto fut = foldl(_statements, make_ready_future(), [&ctx](auto && prev, auto && stmt) {
+            return prev.then([&]() {
+                return stmt->analyze(ctx);
+            });
+        });
 
-    ret->_statements = fmap(_statements, [&](auto && stmt){ return stmt->clone_with_replacement(repl); });
-    ret->_value_expr = fmap(_value_expr, [&](auto && expr){ return expr->clone_expr_with_replacement(repl); });
+        fmap(_value_expr, [&](auto && expr) {
+            fut = fut.then([&ctx, expr = expr.get()]{ return expr->analyze(ctx); });
+            return unit{};
+        });
 
-    return ret;
-}
+        return fut;
+    }
 
-reaver::future<reaver::vapor::analyzer::_v1::statement *> reaver::vapor::analyzer::_v1::block::_simplify(reaver::vapor::analyzer::_v1::simplification_context & ctx)
-{
-    _ensure_cache();
+    void block::_ensure_cache() const
+    {
+        if (_is_clone_cache)
+        {
+            return;
+        }
 
-    auto fut = foldl(_statements, make_ready_future(true),
-        [&](auto future, auto && statement) {
-            return future.then([&](bool do_continue) {
+        std::lock_guard<std::mutex> lock{ _clone_cache_lock };
+        if (_clone)
+        {
+            return;
+        }
+
+        auto clone = std::unique_ptr<block>(new block(*this));
+        auto repl = replacements{};
+
+        clone->_statements = fmap(_statements, [&](auto && stmt){ return stmt->clone_with_replacement(repl); });
+        clone->_value_expr = fmap(_value_expr, [&](auto && expr){ return expr->clone_expr_with_replacement(repl); });
+        clone->_is_clone_cache = true;
+
+        _clone = std::move(clone);
+    }
+
+    std::unique_ptr<statement> block::_clone_with_replacement(replacements & repl) const
+    {
+        _ensure_cache();
+
+        if (!_is_clone_cache)
+        {
+            return _clone.get()->clone_with_replacement(repl);
+        }
+
+        auto ret = std::unique_ptr<block>(new block(*this));
+
+        ret->_statements = fmap(_statements, [&](auto && stmt){ return stmt->clone_with_replacement(repl); });
+        ret->_value_expr = fmap(_value_expr, [&](auto && expr){ return expr->clone_expr_with_replacement(repl); });
+
+        return ret;
+    }
+
+    future<statement *> block::_simplify(simplification_context & ctx)
+    {
+        _ensure_cache();
+
+        auto fut = foldl(_statements, make_ready_future(true),
+            [&](auto future, auto && statement) {
+                return future.then([&](bool do_continue) {
+                    if (!do_continue)
+                    {
+                        return make_ready_future(false);
+                    }
+
+                    return statement->simplify(ctx).then([&](auto && simplified) {
+                        replace_uptr(statement, simplified, ctx);
+                        return !statement->always_returns();
+                    });
+                });
+            }
+        );
+
+        fmap(_value_expr, [&](auto && expr) {
+            fut = fut.then([&, expr = expr.get()](bool do_continue) {
                 if (!do_continue)
                 {
                     return make_ready_future(false);
                 }
 
-                return statement->simplify(ctx).then([&](auto && simplified) {
-                    replace_uptr(statement, simplified, ctx);
-                    return !statement->always_returns();
+                return expr->simplify_expr(ctx).then([&](auto && simplified) {
+                    replace_uptr(*_value_expr, simplified, ctx);
+                    return true;
                 });
             });
-        }
-    );
+            return unit{};
+        });
 
-    fmap(_value_expr, [&](auto && expr) {
-        fut = fut.then([&, expr = expr.get()](bool do_continue) {
-            if (!do_continue)
+        return fut.then([&](bool reached_end) -> statement * {
+            if (!reached_end)
             {
-                return make_ready_future(false);
+                auto always_returning = std::find_if(_statements.begin(), _statements.end(),
+                    [](auto && stmt){ return stmt->always_returns(); });
+
+                assert(always_returning != _statements.end());
+                _statements.erase(always_returning + 1, _statements.end());
             }
 
-            return expr->simplify_expr(ctx).then([&](auto && simplified) {
-                replace_uptr(*_value_expr, simplified, ctx);
-                return true;
+            return this;
+        });
+    }
+
+    std::vector<codegen::_v1::ir::instruction> block::_codegen_ir(ir_generation_context & ctx) const
+    {
+        auto statements = mbind(_statements, [&](auto && stmt) {
+            return stmt->codegen_ir(ctx);
+        });
+        fmap(_value_expr, [&](auto && expr) {
+            auto instructions = expr->codegen_ir(ctx);
+            instructions.emplace_back(codegen::ir::instruction{
+                none, none,
+                { boost::typeindex::type_id<codegen::ir::return_instruction>() },
+                {},
+                instructions.back().result
             });
+            std::move(instructions.begin(), instructions.end(), std::back_inserter(statements));
+            return unit{};
         });
-        return unit{};
-    });
 
-    return fut.then([&](bool reached_end) -> statement * {
-        if (!reached_end)
+        statement_ir scope_cleanup;
+        for (auto scope = _scope.get(); scope != _original_scope->parent(); scope = scope->parent())
         {
-            auto always_returning = std::find_if(_statements.begin(), _statements.end(),
-                [](auto && stmt){ return stmt->always_returns(); });
-
-            assert(always_returning != _statements.end());
-            _statements.erase(always_returning + 1, _statements.end());
+            std::transform(
+                scope->symbols_in_order().rbegin(), scope->symbols_in_order().rend(),
+                std::back_inserter(scope_cleanup),
+                [&ctx](auto && symbol) {
+                    auto variable_ir = symbol->get_variable()->codegen_ir(ctx);
+                    auto variable = get<codegen::ir::value>(variable_ir);
+                    return codegen::ir::instruction{
+                        {}, {},
+                        { boost::typeindex::type_id<codegen::ir::destruction_instruction>() },
+                        { variable },
+                        variable
+                    };
+                }
+            );
         }
-
-        return this;
-    });
-}
-
-std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyzer::_v1::block::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
-{
-    auto statements = mbind(_statements, [&](auto && stmt) {
-        return stmt->codegen_ir(ctx);
-    });
-    fmap(_value_expr, [&](auto && expr) {
-        auto instructions = expr->codegen_ir(ctx);
-        instructions.emplace_back(codegen::ir::instruction{
-            none, none,
-            { boost::typeindex::type_id<codegen::ir::return_instruction>() },
-            {},
-            instructions.back().result
-        });
-        std::move(instructions.begin(), instructions.end(), std::back_inserter(statements));
-        return unit{};
-    });
-
-    statement_ir scope_cleanup;
-    for (auto scope = _scope.get(); scope != _original_scope->parent(); scope = scope->parent())
-    {
-        std::transform(
-            scope->symbols_in_order().rbegin(), scope->symbols_in_order().rend(),
-            std::back_inserter(scope_cleanup),
-            [&ctx](auto && symbol) {
-                auto variable_ir = symbol->get_variable()->codegen_ir(ctx);
-                auto variable = get<codegen::ir::value>(variable_ir);
-                return codegen::ir::instruction{
-                    {}, {},
-                    { boost::typeindex::type_id<codegen::ir::destruction_instruction>() },
-                    { variable },
-                    variable
-                };
-            }
-        );
-    }
-
-    for (std::size_t i = 0; i < statements.size(); ++i)
-    {
-        auto & stmt = statements[i];
-        if (!stmt.instruction.template is<codegen::ir::return_instruction>())
-        {
-            continue;
-        }
-
-        statements.insert(statements.begin() + i, scope_cleanup.begin(), scope_cleanup.end());
-        i += scope_cleanup.size();
-    }
-
-    if (_is_top_level)
-    {
-        auto to_u32string = [](auto && v) {
-            std::stringstream stream;
-            stream << v;
-            return boost::locale::conv::utf_to_utf<char32_t>(stream.str());
-        };
-
-        std::vector<codegen::ir::value> labeled_return_values;
 
         for (std::size_t i = 0; i < statements.size(); ++i)
         {
@@ -266,77 +248,100 @@ std::vector<reaver::vapor::codegen::_v1::ir::instruction> reaver::vapor::analyze
                 continue;
             }
 
-            std::u32string label;
-            if (!stmt.label)
-            {
-                label = U"__return_label_" + to_u32string(ctx.label_index++);
-                stmt.label = label;
-            }
-            else
-            {
-                label = stmt.label;
-            }
-
-            labeled_return_values.emplace_back(codegen::ir::label{ std::move(label), {} });
-            labeled_return_values.emplace_back(stmt.result);
+            statements.insert(statements.begin() + i, scope_cleanup.begin(), scope_cleanup.end());
+            i += scope_cleanup.size();
         }
 
-        if (labeled_return_values.size() > 2)
+        if (_is_top_level)
         {
-            std::size_t return_value_index = 0;
+            auto to_u32string = [](auto && v) {
+                std::stringstream stream;
+                stream << v;
+                return boost::locale::conv::utf_to_utf<char32_t>(stream.str());
+            };
+
+            std::vector<codegen::ir::value> labeled_return_values;
 
             for (std::size_t i = 0; i < statements.size(); ++i)
             {
                 auto & stmt = statements[i];
-
                 if (!stmt.instruction.template is<codegen::ir::return_instruction>())
                 {
                     continue;
                 }
 
-                stmt.instruction = boost::typeindex::type_id<codegen::ir::jump_instruction>();
-                stmt.operands = { codegen::ir::boolean_value{ true }, codegen::ir::label{ U"__return_phi", {} } };
-
-                // create a variable for the constant return value
-                if (stmt.result.index() != 0)
+                std::u32string label;
+                if (!stmt.label)
                 {
-                    auto old_result = stmt.result;
-                    auto var = make_variable(get_type(old_result));
-                    stmt.result = var;
-                    statements.insert(statements.begin() + i++, {
-                        {}, {},
-                        { boost::typeindex::type_id<codegen::ir::materialization_instruction>() },
-                        { old_result },
-                        var
-                    });
-                    labeled_return_values[2 * return_value_index + 1] = var;
+                    label = U"__return_label_" + to_u32string(ctx.label_index++);
+                    stmt.label = label;
+                }
+                else
+                {
+                    label = stmt.label;
                 }
 
-                ++return_value_index;
+                labeled_return_values.emplace_back(codegen::ir::label{ std::move(label), {} });
+                labeled_return_values.emplace_back(stmt.result);
             }
 
-            statements.emplace_back(codegen::ir::instruction{
-                optional<std::u32string>{ U"__return_phi" }, none,
-                { boost::typeindex::type_id<codegen::ir::phi_instruction>() },
-                std::move(labeled_return_values),
-                codegen::ir::make_variable(return_type()->codegen_type(ctx))
-            });
+            if (labeled_return_values.size() > 2)
+            {
+                std::size_t return_value_index = 0;
 
-            statements.emplace_back(codegen::ir::instruction{
-                none, none,
-                { boost::typeindex::type_id<codegen::ir::return_instruction>() },
-                {},
-                statements.back().result
-            });
+                for (std::size_t i = 0; i < statements.size(); ++i)
+                {
+                    auto & stmt = statements[i];
+
+                    if (!stmt.instruction.template is<codegen::ir::return_instruction>())
+                    {
+                        continue;
+                    }
+
+                    stmt.instruction = boost::typeindex::type_id<codegen::ir::jump_instruction>();
+                    stmt.operands = { codegen::ir::boolean_value{ true }, codegen::ir::label{ U"__return_phi", {} } };
+
+                    // create a variable for the constant return value
+                    if (stmt.result.index() != 0)
+                    {
+                        auto old_result = stmt.result;
+                        auto var = make_variable(get_type(old_result));
+                        stmt.result = var;
+                        statements.insert(statements.begin() + i++, {
+                            {}, {},
+                            { boost::typeindex::type_id<codegen::ir::materialization_instruction>() },
+                            { old_result },
+                            var
+                        });
+                        labeled_return_values[2 * return_value_index + 1] = var;
+                    }
+
+                    ++return_value_index;
+                }
+
+                statements.emplace_back(codegen::ir::instruction{
+                    optional<std::u32string>{ U"__return_phi" }, none,
+                    { boost::typeindex::type_id<codegen::ir::phi_instruction>() },
+                    std::move(labeled_return_values),
+                    codegen::ir::make_variable(return_type()->codegen_type(ctx))
+                });
+
+                statements.emplace_back(codegen::ir::instruction{
+                    none, none,
+                    { boost::typeindex::type_id<codegen::ir::return_instruction>() },
+                    {},
+                    statements.back().result
+                });
+            }
         }
+
+        return statements;
     }
 
-    return statements;
-}
-
-reaver::vapor::codegen::_v1::ir::value reaver::vapor::analyzer::_v1::block::codegen_return(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
-{
-    assert(_is_top_level);
-    return codegen_ir(ctx).back().result;
-}
+    codegen::_v1::ir::value block::codegen_return(ir_generation_context & ctx) const
+    {
+        assert(_is_top_level);
+        return codegen_ir(ctx).back().result;
+    }
+}}
 

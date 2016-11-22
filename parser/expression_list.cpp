@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015 Michał "Griwes" Dominiak
+ * Copyright © 2015-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,43 +23,47 @@
 #include "vapor/parser/expression_list.h"
 #include "vapor/parser/lambda_expression.h"
 
-reaver::vapor::parser::_v1::expression_list reaver::vapor::parser::_v1::parse_expression_list(reaver::vapor::parser::_v1::context & ctx)
+namespace reaver::vapor::parser { inline namespace _v1
 {
-    expression_list ret;
-
-    // TODO: verify that this actually works as intended
-    // the way I originally used the operator stack can't possibly work when the expression context changes
-    // and I failed to notice that originally
-
-    auto stack = std::move(ctx.operator_stack);
-    ctx.operator_stack.clear();
-
-    ret.expressions.push_back(parse_expression(ctx));
-
-    if (peek(ctx, lexer::token_type::comma))
+    expression_list parse_expression_list(context & ctx)
     {
-        expect(ctx, lexer::token_type::comma);
+        expression_list ret;
+
+        // TODO: verify that this actually works as intended
+        // the way I originally used the operator stack can't possibly work when the expression context changes
+        // and I failed to notice that originally
+
+        auto stack = std::move(ctx.operator_stack);
+        ctx.operator_stack.clear();
+
         ret.expressions.push_back(parse_expression(ctx));
+
+        if (peek(ctx, lexer::token_type::comma))
+        {
+            expect(ctx, lexer::token_type::comma);
+            ret.expressions.push_back(parse_expression(ctx));
+        }
+
+        ret.range = { ret.expressions.front().range.start(), ret.expressions.back().range.end() };
+
+        assert(ctx.operator_stack.empty());
+        ctx.operator_stack = std::move(stack);
+
+        return ret;
     }
 
-    ret.range = { ret.expressions.front().range.start(), ret.expressions.back().range.end() };
-
-    assert(ctx.operator_stack.empty());
-    ctx.operator_stack = std::move(stack);
-
-    return ret;
-}
-
-void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::expression_list & list, std::ostream & os, std::size_t indent)
-{
-    auto in = std::string(indent, ' ');
-
-    os << in << "`expression-list` at " << list.range << '\n';
-
-    for (auto && expression : list.expressions)
+    void print(const expression_list & list, std::ostream & os, std::size_t indent)
     {
-        os << in << "{\n";
-        print(expression, os, indent + 4);
-        os << in << "}\n";
+        auto in = std::string(indent, ' ');
+
+        os << in << "`expression-list` at " << list.range << '\n';
+
+        for (auto && expression : list.expressions)
+        {
+            os << in << "{\n";
+            print(expression, os, indent + 4);
+            os << in << "}\n";
+        }
     }
-}
+}}
+

@@ -28,93 +28,96 @@
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
 
-void reaver::vapor::analyzer::_v1::binary_expression::print(std::ostream & os, std::size_t indent) const
+namespace reaver::vapor::analyzer { inline namespace _v1
 {
-    auto in = std::string(indent, ' ');
-    os << in << "binary expression at " << _parse.range << '\n';
-    os << in << "type: " << get_variable()->get_type()->explain() << '\n';
-    os << in << "selected overload: " << _overload->explain() << '\n';
-    os << in << "lhs:\n";
-    os << in << "{\n";
-    _lhs->print(os, indent + 4);
-    os << in << "}\n";
+    void binary_expression::print(std::ostream & os, std::size_t indent) const
+    {
+        auto in = std::string(indent, ' ');
+        os << in << "binary expression at " << _parse.range << '\n';
+        os << in << "type: " << get_variable()->get_type()->explain() << '\n';
+        os << in << "selected overload: " << _overload->explain() << '\n';
+        os << in << "lhs:\n";
+        os << in << "{\n";
+        _lhs->print(os, indent + 4);
+        os << in << "}\n";
 
-    os << in << "operator: " << lexer::token_types[+_op.type] << '\n';
+        os << in << "operator: " << lexer::token_types[+_op.type] << '\n';
 
-    os << in << "rhs:\n";
-    os << in << "{\n";
-    _rhs->print(os, indent + 4);
-    os << in << "}\n";
-}
+        os << in << "rhs:\n";
+        os << in << "{\n";
+        _rhs->print(os, indent + 4);
+        os << in << "}\n";
+    }
 
-reaver::future<> reaver::vapor::analyzer::_v1::binary_expression::_analyze(reaver::vapor::analyzer::_v1::analysis_context & ctx)
-{
-    return _lhs->analyze(ctx).then([&]() {
-            return _rhs->analyze(ctx);
-        }).then([&] {
-            return resolve_overload(_lhs->get_type(), _rhs->get_type(), _op.type, _scope);
-        }).then([&](auto && overload) {
-            _overload = overload;
-            return _overload->return_type();
-        }).then([&](auto && ret_type) {
-            this->_set_variable(make_expression_variable(this, ret_type));
-        });
-}
+    future<> binary_expression::_analyze(analysis_context & ctx)
+    {
+        return _lhs->analyze(ctx).then([&]() {
+                return _rhs->analyze(ctx);
+            }).then([&] {
+                return resolve_overload(_lhs->get_type(), _rhs->get_type(), _op.type, _scope);
+            }).then([&](auto && overload) {
+                _overload = overload;
+                return _overload->return_type();
+            }).then([&](auto && ret_type) {
+                this->_set_variable(make_expression_variable(this, ret_type));
+            });
+    }
 
-std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyzer::_v1::binary_expression::_clone_expr_with_replacement(reaver::vapor::analyzer::_v1::replacements & repl) const
-{
-    auto ret = std::unique_ptr<binary_expression>(new binary_expression(*this));
+    std::unique_ptr<expression> binary_expression::_clone_expr_with_replacement(replacements & repl) const
+    {
+        auto ret = std::unique_ptr<binary_expression>(new binary_expression(*this));
 
-    ret->_lhs = _lhs->clone_expr_with_replacement(repl);
-    ret->_rhs = _rhs->clone_expr_with_replacement(repl);
+        ret->_lhs = _lhs->clone_expr_with_replacement(repl);
+        ret->_rhs = _rhs->clone_expr_with_replacement(repl);
 
-    return ret;
-}
+        return ret;
+    }
 
-reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::binary_expression::_simplify_expr(reaver::vapor::analyzer::_v1::simplification_context & ctx)
-{
-    return when_all(
-            _lhs->simplify_expr(ctx),
-            _rhs->simplify_expr(ctx)
-        ).then([&](auto && simplified) {
-            replace_uptr(_lhs, get<0>(simplified), ctx);
-            replace_uptr(_rhs, get<1>(simplified), ctx);
-            return _overload->simplify(ctx, { _lhs->get_variable(), _rhs->get_variable() });
-        }).then([&](auto && simplified) -> expression * {
-            if (simplified)
-            {
-                return simplified;
-            }
+    future<expression *> binary_expression::_simplify_expr(simplification_context & ctx)
+    {
+        return when_all(
+                _lhs->simplify_expr(ctx),
+                _rhs->simplify_expr(ctx)
+            ).then([&](auto && simplified) {
+                replace_uptr(_lhs, get<0>(simplified), ctx);
+                replace_uptr(_rhs, get<1>(simplified), ctx);
+                return _overload->simplify(ctx, { _lhs->get_variable(), _rhs->get_variable() });
+            }).then([&](auto && simplified) -> expression * {
+                if (simplified)
+                {
+                    return simplified;
+                }
 
-            return this;
-        });
-}
+                return this;
+            });
+    }
 
-reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::binary_expression::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
-{
-    auto lhs_instructions = _lhs->codegen_ir(ctx);
-    auto rhs_instructions = _rhs->codegen_ir(ctx);
+    statement_ir binary_expression::_codegen_ir(ir_generation_context & ctx) const
+    {
+        auto lhs_instructions = _lhs->codegen_ir(ctx);
+        auto rhs_instructions = _rhs->codegen_ir(ctx);
 
-    auto lhs_variable = lhs_instructions.back().result;
-    auto rhs_variable = rhs_instructions.back().result;
+        auto lhs_variable = lhs_instructions.back().result;
+        auto rhs_variable = rhs_instructions.back().result;
 
-    auto bin_expr_instruction = codegen::ir::instruction{
-        none, none,
-        { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
-        { _overload->call_operand_ir(ctx), lhs_variable, rhs_variable },
-        codegen::ir::make_variable((*_overload->return_type().try_get())->codegen_type(ctx))
-    };
+        auto bin_expr_instruction = codegen::ir::instruction{
+            none, none,
+            { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
+            { _overload->call_operand_ir(ctx), lhs_variable, rhs_variable },
+            codegen::ir::make_variable((*_overload->return_type().try_get())->codegen_type(ctx))
+        };
 
-    ctx.add_function_to_generate(_overload);
+        ctx.add_function_to_generate(_overload);
 
-    // TODO: oops, there should be a different order of evaluation for right-associative and left-associative
-    // (...probably)
-    statement_ir ret;
-    ret.reserve(lhs_instructions.size() + rhs_instructions.size() + 1);
-    std::move(lhs_instructions.begin(), lhs_instructions.end(), std::back_inserter(ret));
-    std::move(rhs_instructions.begin(), rhs_instructions.end(), std::back_inserter(ret));
-    ret.push_back(std::move(bin_expr_instruction));
+        // TODO: oops, there should be a different order of evaluation for right-associative and left-associative
+        // (...probably)
+        statement_ir ret;
+        ret.reserve(lhs_instructions.size() + rhs_instructions.size() + 1);
+        std::move(lhs_instructions.begin(), lhs_instructions.end(), std::back_inserter(ret));
+        std::move(rhs_instructions.begin(), rhs_instructions.end(), std::back_inserter(ret));
+        ret.push_back(std::move(bin_expr_instruction));
 
-    return ret;
-}
+        return ret;
+    }
+}}
 

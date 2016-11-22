@@ -24,81 +24,100 @@
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/type_variable.h"
 
-reaver::vapor::analyzer::_v1::scope::~scope()
+namespace reaver::vapor::analyzer { inline namespace _v1
 {
-    close();
-}
-
-void reaver::vapor::analyzer::_v1::scope::close()
-{
+    scope::~scope()
     {
-        _ulock lock{ _lock };
+        close();
+    }
 
-        if (_is_closed)
+    void scope::close()
+    {
         {
-            return;
-        }
+            _ulock lock{ _lock };
 
-        _is_closed = true;
-
-        for (auto && promise : _symbol_promises)
-        {
-            auto it = _symbols.find(promise.first);
-            if (it != _symbols.end())
+            if (_is_closed)
             {
-                promise.second.set(it->second.get());
-                continue;
+                return;
             }
 
-            promise.second.set(std::make_exception_ptr(
-                failed_lookup{ promise.first }
-            ));
+            _is_closed = true;
+
+            for (auto && promise : _symbol_promises)
+            {
+                auto it = _symbols.find(promise.first);
+                if (it != _symbols.end())
+                {
+                    promise.second.set(it->second.get());
+                    continue;
+                }
+
+                promise.second.set(std::make_exception_ptr(
+                    failed_lookup{ promise.first }
+                ));
+            }
+
+            _symbol_promises.clear();
+
+            _close_promise->set();
         }
 
-        _symbol_promises.clear();
-
-        _close_promise->set();
-    }
-
-    if (!_is_shadowing_boundary && _parent)
-    {
-        _parent->close();
-    }
-}
-
-bool reaver::vapor::analyzer::_v1::scope::init(const std::u32string & name, std::unique_ptr<reaver::vapor::analyzer::_v1::symbol> symb)
-{
-    if (non_overridable().find(name) != non_overridable().end())
-    {
-        assert(0);
-    }
-
-    assert(!_is_closed);
-
-    _ulock lock{ _lock };
-
-    for (auto scope = this; scope; scope = scope->_parent)
-    {
-        if (scope->_symbols.find(name) != scope->_symbols.end())
+        if (!_is_shadowing_boundary && _parent)
         {
-            return false;
-        }
-
-        if (scope->_is_shadowing_boundary)
-        {
-            break;
+            _parent->close();
         }
     }
 
-    _symbols_in_order.push_back(symb.get());
-    _symbols.emplace(name, std::move(symb));
-    return true;
-}
-
-reaver::future<reaver::vapor::analyzer::_v1::symbol *> reaver::vapor::analyzer::_v1::scope::get_future(const std::u32string & name)
-{
+    bool scope::init(const std::u32string & name, std::unique_ptr<symbol> symb)
     {
-        _shlock lock{ _lock };
+        if (non_overridable().find(name) != non_overridable().end())
+        {
+            assert(0);
+        }
+
+        assert(!_is_closed);
+
+        _ulock lock{ _lock };
+
+        for (auto scope = this; scope; scope = scope->_parent)
+        {
+            if (scope->_symbols.find(name) != scope->_symbols.end())
+            {
+                return false;
+            }
+
+            if (scope->_is_shadowing_boundary)
+            {
+                break;
+            }
+        }
+
+        _symbols_in_order.push_back(symb.get());
+        _symbols.emplace(name, std::move(symb));
+        return true;
+    }
+
+    future<symbol *> scope::get_future(const std::u32string & name)
+    {
+        {
+            _shlock lock{ _lock };
+            auto it = _symbol_futures.find(name);
+            if (it != _symbol_futures.end())
+            {
+                return it->second;
+            }
+
+            auto value_it = _symbols.find(name);
+            if (_is_closed && value_it == _symbols.end())
+            {
+                return make_exceptional_future<symbol *>(failed_lookup{ name });
+            }
+        }
+
+        _ulock lock{ _lock };
+
+        // need to repeat due to a logical race between the check before
+        // and re-locking the lock
         auto it = _symbol_futures.find(name);
         if (it != _symbol_futures.end())
         {
@@ -106,107 +125,91 @@ reaver::future<reaver::vapor::analyzer::_v1::symbol *> reaver::vapor::analyzer::
         }
 
         auto value_it = _symbols.find(name);
-        if (_is_closed && value_it == _symbols.end())
+        if (_is_closed && value_it != _symbols.end())
         {
-            return make_exceptional_future<symbol *>(failed_lookup{ name });
-        }
-    }
-
-    _ulock lock{ _lock };
-
-    // need to repeat due to a logical race between the check before
-    // and re-locking the lock
-    auto it = _symbol_futures.find(name);
-    if (it != _symbol_futures.end())
-    {
-        return it->second;
-    }
-
-    auto value_it = _symbols.find(name);
-    if (_is_closed && value_it != _symbols.end())
-    {
-        return _symbol_futures.emplace(name, make_ready_future(value_it->second.get())).first->second;
-    }
-
-    auto pair = make_promise<symbol *>();
-    _symbol_promises.emplace(name, std::move(pair.promise));
-    return _symbol_futures.emplace(name, std::move(pair.future)).first->second;
-}
-
-reaver::future<reaver::vapor::analyzer::_v1::symbol *> reaver::vapor::analyzer::_v1::scope::resolve(const std::u32string & name)
-{
-    {
-        auto it = non_overridable().find(name);
-        if (it != non_overridable().end())
-        {
-            return make_ready_future(it->second.get());
-        }
-    }
-
-    {
-        _shlock lock{ _lock };
-
-        auto it = _symbol_futures.find(name);
-        if (it != _symbol_futures.end())
-        {
-            return it->second;
-        }
-    }
-
-    auto pair = make_promise<symbol *>();
-
-    get_future(name).then([promise = pair.promise](auto && symb) {
-        promise.set(symb);
-    }).on_error([&name, promise = pair.promise, parent = _parent](auto exptr) {
-        try
-        {
-            std::rethrow_exception(exptr);
+            return _symbol_futures.emplace(name, make_ready_future(value_it->second.get())).first->second;
         }
 
-        catch (failed_lookup & ex)
+        auto pair = make_promise<symbol *>();
+        _symbol_promises.emplace(name, std::move(pair.promise));
+        return _symbol_futures.emplace(name, std::move(pair.future)).first->second;
+    }
+
+    future<symbol *> scope::resolve(const std::u32string & name)
+    {
         {
-            if (!parent)
+            auto it = non_overridable().find(name);
+            if (it != non_overridable().end())
             {
-                promise.set(exptr);
-                return;
+                return make_ready_future(it->second.get());
+            }
+        }
+
+        {
+            _shlock lock{ _lock };
+
+            auto it = _symbol_futures.find(name);
+            if (it != _symbol_futures.end())
+            {
+                return it->second;
+            }
+        }
+
+        auto pair = make_promise<symbol *>();
+
+        get_future(name).then([promise = pair.promise](auto && symb) {
+            promise.set(symb);
+        }).on_error([&name, promise = pair.promise, parent = _parent](auto exptr) {
+            try
+            {
+                std::rethrow_exception(exptr);
             }
 
-            parent->resolve(name).then([promise = promise](auto && symb){
-                promise.set(symb);
-            }).on_error([promise = promise](auto && ex){
-                promise.set(ex);
-            }).detach();
-        }
+            catch (failed_lookup & ex)
+            {
+                if (!parent)
+                {
+                    promise.set(exptr);
+                    return;
+                }
 
-        catch (...)
-        {
-            promise.set(exptr);
-        }
-    }).detach();
+                parent->resolve(name).then([promise = promise](auto && symb){
+                    promise.set(symb);
+                }).on_error([promise = promise](auto && ex){
+                    promise.set(ex);
+                }).detach();
+            }
 
-    _ulock lock{ _lock };
-    _symbol_futures.emplace(name, pair.future);
-    return std::move(pair.future);
-}
+            catch (...)
+            {
+                promise.set(exptr);
+            }
+        }).detach();
 
-const std::unordered_map<std::u32string, std::unique_ptr<reaver::vapor::analyzer::_v1::symbol>> & reaver::vapor::analyzer::_v1::non_overridable()
-{
-    static auto integer_type_var = make_type_variable(builtin_types().integer.get());
-    static auto boolean_type_var = make_type_variable(builtin_types().boolean.get());
+        _ulock lock{ _lock };
+        _symbol_futures.emplace(name, pair.future);
+        return std::move(pair.future);
+    }
 
-    static auto symbols = [&]{
-        std::unordered_map<std::u32string, std::unique_ptr<symbol>> symbols;
+    const std::unordered_map<std::u32string, std::unique_ptr<symbol>> & non_overridable()
+    {
+        static auto integer_type_var = make_type_variable(builtin_types().integer.get());
+        static auto boolean_type_var = make_type_variable(builtin_types().boolean.get());
 
-        auto add_symbol = [&](auto name, auto && variable) {
-            symbols.emplace(name, make_symbol(name, variable.get()));
-        };
+        static auto symbols = [&]{
+            std::unordered_map<std::u32string, std::unique_ptr<symbol>> symbols;
 
-        add_symbol(U"int", integer_type_var);
-        add_symbol(U"bool", boolean_type_var);
+            auto add_symbol = [&](auto name, auto && variable) {
+                symbols.emplace(name, make_symbol(name, variable.get()));
+            };
+
+            add_symbol(U"int", integer_type_var);
+            add_symbol(U"bool", boolean_type_var);
+
+            return symbols;
+        }();
 
         return symbols;
-    }();
-
-    return symbols;
-}
+    }
+}}
 

@@ -24,35 +24,39 @@
 #include "vapor/codegen/ir/instruction.h"
 #include "vapor/codegen/cxx/names.h"
 
-namespace reaver { namespace vapor { namespace codegen { inline namespace _v1 { namespace cxx {
-template<>
-std::u32string generate<ir::destruction_instruction>(const ir::instruction & inst, codegen_context & ctx)
+namespace reaver::vapor::codegen { inline namespace _v1
 {
-    if (inst.result.index() != 0)
+    namespace cxx
     {
-        return {};
+        template<>
+        std::u32string generate<ir::destruction_instruction>(const ir::instruction & inst, codegen_context & ctx)
+        {
+            if (inst.result.index() != 0)
+            {
+                return {};
+            }
+
+            mark_destroyed(inst.result, ctx);
+            return value_of(inst.result, ctx, true) + U".destroy();\n";
+        }
+
+        template<>
+        std::u32string generate<ir::temporary_destruction_instruction>(const ir::instruction & inst, codegen_context & ctx)
+        {
+            if (inst.result.index() != 0)
+            {
+                return {};
+            }
+
+            auto && var = get<std::shared_ptr<ir::variable>>(inst.result);
+            if (!var->temporary)
+            {
+                return {};
+            }
+
+            mark_destroyed(inst.result, ctx);
+            return value_of(inst.result, ctx, true) + U".destroy();\n";
+        }
     }
-
-    mark_destroyed(inst.result, ctx);
-    return value_of(inst.result, ctx, true) + U".destroy();\n";
-}
-
-template<>
-std::u32string generate<ir::temporary_destruction_instruction>(const ir::instruction & inst, codegen_context & ctx)
-{
-    if (inst.result.index() != 0)
-    {
-        return {};
-    }
-
-    auto && var = get<std::shared_ptr<ir::variable>>(inst.result);
-    if (!var->temporary)
-    {
-        return {};
-    }
-
-    mark_destroyed(inst.result, ctx);
-    return value_of(inst.result, ctx, true) + U".destroy();\n";
-}
-}}}}}
+}}
 

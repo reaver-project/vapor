@@ -26,52 +26,55 @@
 
 #include <cassert>
 
-std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_declaration(const std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> & type, reaver::vapor::codegen::_v1::codegen_context & ctx) const
+namespace reaver::vapor::codegen { inline namespace _v1
 {
-    if (type == ir::builtin_types().integer)
+    std::u32string cxx_generator::generate_declaration(const std::shared_ptr<ir::variable_type> & type, codegen_context & ctx) const
     {
-        ctx.put_into_global_before += UR"code(#include <boost/multiprecision/cpp_int.hpp>
-)code";
-        return {};
+        if (type == ir::builtin_types().integer)
+        {
+            ctx.put_into_global_before += UR"code(#include <boost/multiprecision/cpp_int.hpp>
+    )code";
+            return {};
+        }
+
+        if (type == ir::builtin_types().boolean)
+        {
+            return {};
+        }
+
+        return U"struct " + cxx::declaration_type_name(type, ctx) + U";\n";
     }
 
-    if (type == ir::builtin_types().boolean)
+    std::u32string cxx_generator::generate_definition(const std::shared_ptr<ir::variable_type> & type, codegen_context & ctx) const
     {
-        return {};
+        if (type == ir::builtin_types().integer)
+        {
+            return {};
+        }
+
+        if (type == ir::builtin_types().boolean)
+        {
+            return {};
+        }
+
+        std::u32string members;
+
+        fmap(type->members, [&](auto && member) {
+            fmap(member, make_overload_set(
+                [&](codegen::ir::function & fn) {
+                    members += this->generate_declaration(fn, ctx);
+                    ctx.put_into_global += this->generate_definition(fn, ctx);
+                    return unit{};
+                },
+                [&](auto &&) {
+                    assert(0);
+                    return unit{};
+                }
+            ));
+            return unit{};
+        });
+
+        return U"struct " + cxx::type_name(type, ctx) + U" {\n" + members + U"};\n";
     }
-
-    return U"struct " + cxx::declaration_type_name(type, ctx) + U";\n";
-}
-
-std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_definition(const std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> & type, reaver::vapor::codegen::_v1::codegen_context & ctx) const
-{
-    if (type == ir::builtin_types().integer)
-    {
-        return {};
-    }
-
-    if (type == ir::builtin_types().boolean)
-    {
-        return {};
-    }
-
-    std::u32string members;
-
-    fmap(type->members, [&](auto && member) {
-        fmap(member, make_overload_set(
-            [&](codegen::ir::function & fn) {
-                members += this->generate_declaration(fn, ctx);
-                ctx.put_into_global += this->generate_definition(fn, ctx);
-                return unit{};
-            },
-            [&](auto &&) {
-                assert(0);
-                return unit{};
-            }
-        ));
-        return unit{};
-    });
-
-    return U"struct " + cxx::type_name(type, ctx) + U" {\n" + members + U"};\n";
-}
+}}
 

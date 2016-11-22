@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015 Michał "Griwes" Dominiak
+ * Copyright © 2015-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,33 +22,36 @@
 
 #include "vapor/parser/id_expression.h"
 
-reaver::vapor::parser::_v1::id_expression reaver::vapor::parser::_v1::parse_id_expression(reaver::vapor::parser::_v1::context & ctx)
+namespace reaver::vapor::parser { inline namespace _v1
 {
-    id_expression ret;
-
-    ret.id_expression_value.push_back(expect(ctx, lexer::token_type::identifier));
-
-    while (peek(ctx, lexer::token_type::dot))
+    id_expression parse_id_expression(context & ctx)
     {
-        expect(ctx, lexer::token_type::dot);
+        id_expression ret;
+
         ret.id_expression_value.push_back(expect(ctx, lexer::token_type::identifier));
+
+        while (peek(ctx, lexer::token_type::dot))
+        {
+            expect(ctx, lexer::token_type::dot);
+            ret.id_expression_value.push_back(expect(ctx, lexer::token_type::identifier));
+        }
+
+        ret.range = { ret.id_expression_value.front().range.start(), ret.id_expression_value.back().range.end() };
+
+        return ret;
     }
 
-    ret.range = { ret.id_expression_value.front().range.start(), ret.id_expression_value.back().range.end() };
-
-    return ret;
-}
-
-void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::id_expression & ide, std::ostream & os, std::size_t indent)
-{
-    auto in = std::string(indent, ' ');
-
-    os << in << "`id-expression` at " << ide.range << '\n';
-    os << in << "{\n";
-    for (auto && identifier : ide.id_expression_value)
+    void print(const id_expression & ide, std::ostream & os, std::size_t indent)
     {
-        os << std::string(indent + 4, ' ') << identifier << '\n';
+        auto in = std::string(indent, ' ');
+
+        os << in << "`id-expression` at " << ide.range << '\n';
+        os << in << "{\n";
+        for (auto && identifier : ide.id_expression_value)
+        {
+            os << std::string(indent + 4, ' ') << identifier << '\n';
+        }
+        os << in << "}\n";
     }
-    os << in << "}\n";
-}
+}}
 

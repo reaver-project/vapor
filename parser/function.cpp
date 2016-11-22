@@ -24,56 +24,59 @@
 #include "vapor/parser/lambda_expression.h"
 #include "vapor/parser/block.h"
 
-reaver::vapor::parser::_v1::function reaver::vapor::parser::_v1::parse_function(context & ctx)
+namespace reaver::vapor::parser { inline namespace _v1
 {
-    function ret;
-
-    auto start = expect(ctx, lexer::token_type::function).range.start();
-
-    ret.name = expect(ctx, lexer::token_type::identifier);
-    expect(ctx, lexer::token_type::round_bracket_open);
-    if (peek(ctx) && peek(ctx)->type != lexer::token_type::round_bracket_close)
+    function parse_function(context & ctx)
     {
-        ret.arguments = parse_argument_list(ctx);
-    }
-    expect(ctx, lexer::token_type::round_bracket_close);
+        function ret;
 
-    if (peek(ctx, lexer::token_type::indirection))
+        auto start = expect(ctx, lexer::token_type::function).range.start();
+
+        ret.name = expect(ctx, lexer::token_type::identifier);
+        expect(ctx, lexer::token_type::round_bracket_open);
+        if (peek(ctx) && peek(ctx)->type != lexer::token_type::round_bracket_close)
+        {
+            ret.arguments = parse_argument_list(ctx);
+        }
+        expect(ctx, lexer::token_type::round_bracket_close);
+
+        if (peek(ctx, lexer::token_type::indirection))
+        {
+            expect(ctx, lexer::token_type::indirection);
+            ret.return_type = parse_expression(ctx, expression_special_modes::brace);
+        }
+
+        if (peek(ctx, lexer::token_type::block_value))
+        {
+            ret.body = parse_single_statement_block(ctx);
+        }
+        else
+        {
+            ret.body = parse_block(ctx);
+        }
+
+        ret.range = { start, ret.body->range.end() };
+
+        return ret;
+    }
+
+    void print(const function & f, std::ostream & os, std::size_t indent)
     {
-        expect(ctx, lexer::token_type::indirection);
-        ret.return_type = parse_expression(ctx, expression_special_modes::brace);
-    }
+        auto in = std::string(indent, ' ');
 
-    if (peek(ctx, lexer::token_type::block_value))
-    {
-        ret.body = parse_single_statement_block(ctx);
-    }
-    else
-    {
-        ret.body = parse_block(ctx);
-    }
-
-    ret.range = { start, ret.body->range.end() };
-
-    return ret;
-}
-
-void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::function & f, std::ostream & os, std::size_t indent)
-{
-    auto in = std::string(indent, ' ');
-
-    os << in << "`function` at " << f.range << '\n';
-    os << in << "{\n";
-    os << std::string(indent + 4, ' ') << f.name << '\n';
-    fmap(f.arguments, [&](auto && arguments){ print(arguments, os, indent + 4); return unit{}; });
-    fmap(f.return_type, [&](auto && ret_type) {
-        os << in << "return type:\n";
+        os << in << "`function` at " << f.range << '\n';
         os << in << "{\n";
-        print(ret_type, os, indent + 4);
+        os << std::string(indent + 4, ' ') << f.name << '\n';
+        fmap(f.arguments, [&](auto && arguments){ print(arguments, os, indent + 4); return unit{}; });
+        fmap(f.return_type, [&](auto && ret_type) {
+            os << in << "return type:\n";
+            os << in << "{\n";
+            print(ret_type, os, indent + 4);
+            os << in << "}\n";
+            return unit{};
+        });
+        print(*f.body, os, indent + 4);
         os << in << "}\n";
-        return unit{};
-    });
-    print(*f.body, os, indent + 4);
-    os << in << "}\n";
-}
+    }
+}}
 

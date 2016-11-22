@@ -45,10 +45,6 @@ namespace reaver
         }}
     }
 
-    extern template struct recursive_wrapper<vapor::parser::_v1::lambda_expression>;
-    extern template struct recursive_wrapper<vapor::parser::_v1::unary_expression>;
-    extern template struct recursive_wrapper<vapor::parser::_v1::binary_expression>;
-
     namespace vapor
     {
         namespace parser { inline namespace _v1

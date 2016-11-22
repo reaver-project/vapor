@@ -22,25 +22,28 @@
 
 #include "vapor/codegen/ir/function.h"
 
-std::ostream & reaver::vapor::codegen::_v1::ir::operator<<(std::ostream & os, const reaver::vapor::codegen::_v1::ir::function & fn)
+namespace reaver::vapor::codegen { inline namespace _v1
 {
-    os << "function `" << utf8(fn.name) << "`\n";
-    os << "{\n";
+    std::ostream & ir::operator<<(std::ostream & os, const ir::function & fn)
+    {
+        os << "function `" << utf8(fn.name) << "`\n";
+        os << "{\n";
 
-    os << "arguments:\n";
-    fmap(fn.arguments, [&](auto && val) {
-        os << *val << "\n";
-        return unit{};
-    });
+        os << "arguments:\n";
+        fmap(fn.arguments, [&](auto && val) {
+            os << *val << "\n";
+            return unit{};
+        });
 
-    os << "return value: " << fn.return_value << '\n';
+        os << "return value: " << fn.return_value << '\n';
 
-    os << "instructions:\n";
-    fmap(fn.instructions, [&](auto && inst) {
-        os << inst << '\n';
-        return unit{};
-    });
-    os << "}\n";
-    return os;
-}
+        os << "instructions:\n";
+        fmap(fn.instructions, [&](auto && inst) {
+            os << inst << '\n';
+            return unit{};
+        });
+        os << "}\n";
+        return os;
+    }
+}}
 

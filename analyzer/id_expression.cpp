@@ -23,62 +23,65 @@
 #include "vapor/parser.h"
 #include "vapor/analyzer/id_expression.h"
 
-void reaver::vapor::analyzer::_v1::id_expression::print(std::ostream & os, std::size_t indent) const
+namespace reaver::vapor::analyzer { inline namespace _v1
 {
-    auto in = std::string(indent, ' ');
-    os << in << "id expression `" << utf8(name()) << "` at " << _parse.range << '\n';
-    os << in << "referenced variable type: " << get_variable()->get_type()->explain() << '\n';
-}
-
-reaver::future<> reaver::vapor::analyzer::_v1::id_expression::_analyze(reaver::vapor::analyzer::_v1::analysis_context & ctx)
-{
-    return std::accumulate(_parse.id_expression_value.begin() + 1, _parse.id_expression_value.end(),
-        _lex_scope->resolve(_parse.id_expression_value.front().string),
-        [&](auto fut, auto && ident) {
-            return fut.then([&ident](auto && symbol) {
-                return symbol->get_variable_future();
-            }).then([this, &ident, &ctx](auto && var) {
-                return var->get_type()->get_scope()->get_future(ident.string);
-            });
-        }).then([](auto && symbol) {
-            return symbol->get_variable_future();
-        }).then([this, &ctx](auto && variable) {
-            _referenced = variable;
-        });
-}
-
-std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyzer::_v1::id_expression::_clone_expr_with_replacement(reaver::vapor::analyzer::_v1::replacements & repl) const
-{
-    auto referenced = _referenced;
-
-    auto it = repl.variables.find(referenced);
-    if (it != repl.variables.end())
+    void id_expression::print(std::ostream & os, std::size_t indent) const
     {
-        referenced = it->second;
+        auto in = std::string(indent, ' ');
+        os << in << "id expression `" << utf8(name()) << "` at " << _parse.range << '\n';
+        os << in << "referenced variable type: " << get_variable()->get_type()->explain() << '\n';
     }
 
-    return make_variable_ref_expression(referenced);
-}
+    reaver::future<> id_expression::_analyze(analysis_context & ctx)
+    {
+        return std::accumulate(_parse.id_expression_value.begin() + 1, _parse.id_expression_value.end(),
+            _lex_scope->resolve(_parse.id_expression_value.front().string),
+            [&](auto fut, auto && ident) {
+                return fut.then([&ident](auto && symbol) {
+                    return symbol->get_variable_future();
+                }).then([this, &ident, &ctx](auto && var) {
+                    return var->get_type()->get_scope()->get_future(ident.string);
+                });
+            }).then([](auto && symbol) {
+                return symbol->get_variable_future();
+            }).then([this, &ctx](auto && variable) {
+                _referenced = variable;
+            });
+    }
 
-reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::id_expression::_simplify_expr(reaver::vapor::analyzer::_v1::simplification_context & ctx)
-{
-    return _referenced->simplify(ctx)
-        .then([&](auto && simplified) -> expression * {
-            if (simplified && simplified != _referenced)
-            {
-                _referenced = simplified;
-            }
-            return this;
-        });
-}
+    std::unique_ptr<expression> id_expression::_clone_expr_with_replacement(replacements & repl) const
+    {
+        auto referenced = _referenced;
 
-reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::id_expression::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
-{
-    return { codegen::ir::instruction{
-        none, none,
-        { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
-        {},
-        { get<codegen::ir::value>(_referenced->codegen_ir(ctx)) }
-    } };
-}
+        auto it = repl.variables.find(referenced);
+        if (it != repl.variables.end())
+        {
+            referenced = it->second;
+        }
+
+        return make_variable_ref_expression(referenced);
+    }
+
+    reaver::future<expression *> id_expression::_simplify_expr(simplification_context & ctx)
+    {
+        return _referenced->simplify(ctx)
+            .then([&](auto && simplified) -> expression * {
+                if (simplified && simplified != _referenced)
+                {
+                    _referenced = simplified;
+                }
+                return this;
+            });
+    }
+
+    statement_ir id_expression::_codegen_ir(ir_generation_context & ctx) const
+    {
+        return { codegen::ir::instruction{
+            none, none,
+            { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
+            {},
+            { get<codegen::ir::value>(_referenced->codegen_ir(ctx)) }
+        } };
+    }
+}}
 

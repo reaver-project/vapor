@@ -24,31 +24,34 @@
 #include "vapor/analyzer/expression.h"
 #include "vapor/analyzer/symbol.h"
 
-reaver::vapor::analyzer::_v1::simplification_context::~simplification_context() = default;
-
-void reaver::vapor::analyzer::_v1::simplification_context::_handle_expressions(reaver::vapor::analyzer::_v1::expression * ptr, reaver::future<reaver::vapor::analyzer::_v1::expression *> & fut)
+namespace reaver::vapor::analyzer { inline namespace _v1
 {
-    if (_statement_futures.find(ptr) != _statement_futures.end())
+    simplification_context::~simplification_context() = default;
+
+    void simplification_context::_handle_expressions(expression * ptr, future<expression *> & fut)
     {
-        return;
+        if (_statement_futures.find(ptr) != _statement_futures.end())
+        {
+            return;
+        }
+
+        _statement_futures.emplace(ptr, fut.then([](auto && expr) {
+            return static_cast<statement *>(expr);
+        }));
     }
 
-    _statement_futures.emplace(ptr, fut.then([](auto && expr) {
-        return static_cast<statement *>(expr);
-    }));
-}
+    void simplification_context::keep_alive(statement * ptr)
+    {
+        std::lock_guard<std::mutex> lock{ _keep_alive_lock };
+        auto inserted = _keep_alive_stmt.emplace(ptr).second;
+        assert(inserted);
+    }
 
-void reaver::vapor::analyzer::_v1::simplification_context::keep_alive(reaver::vapor::analyzer::_v1::statement * ptr)
-{
-    std::lock_guard<std::mutex> lock{ _keep_alive_lock };
-    auto inserted = _keep_alive_stmt.emplace(ptr).second;
-    assert(inserted);
-}
-
-void reaver::vapor::analyzer::_v1::simplification_context::keep_alive(reaver::vapor::analyzer::_v1::variable * ptr)
-{
-    std::lock_guard<std::mutex> lock{ _keep_alive_lock };
-    auto inserted = _keep_alive_var.emplace(ptr).second;
-    assert(inserted);
-}
+    void simplification_context::keep_alive(variable * ptr)
+    {
+        std::lock_guard<std::mutex> lock{ _keep_alive_lock };
+        auto inserted = _keep_alive_var.emplace(ptr).second;
+        assert(inserted);
+    }
+}}
 

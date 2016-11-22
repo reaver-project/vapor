@@ -28,65 +28,68 @@
 #include "vapor/codegen/ir/module.h"
 #include "vapor/codegen/generator.h"
 
-reaver::vapor::codegen::_v1::result::result(std::vector<reaver::vapor::codegen::_v1::ir::module> ir, std::shared_ptr<code_generator> gen)
+namespace reaver::vapor::codegen { inline namespace _v1
 {
-    auto ctx = codegen_context{gen};
+    result::result(std::vector<ir::module> ir, std::shared_ptr<code_generator> gen)
+    {
+        auto ctx = codegen_context{gen};
 
-    _generated_code = UR"code(#include <type_traits>
+        _generated_code = UR"code(#include <type_traits>
 #include <utility>
 #include <reaver/manual.h>
-)code";
+    )code";
 
 
-    fmap(ir, [&](auto && module) {
-        fmap(module.name, [&](auto && token) {
-            _generated_code += U"namespace " + token + U"\n{\n";
+        fmap(ir, [&](auto && module) {
+            fmap(module.name, [&](auto && token) {
+                _generated_code += U"namespace " + token + U"\n{\n";
+                return unit{};
+            });
+
+            fmap(module.symbols, [&](auto && symbol) {
+                return fmap(symbol, make_overload_set(
+                    [&](std::shared_ptr<ir::variable> & var) {
+                        _generated_code += gen->generate_declaration(*var, ctx);
+                        return unit{};
+                    },
+                    [&](ir::function & fn) {
+                        _generated_code += gen->generate_declaration(fn, ctx);
+                        return unit{};
+                    }
+                ));
+            });
+
+            fmap(module.name, [&](auto &&) {
+                _generated_code += U"}\n";
+                return unit{};
+            });
+
             return unit{};
         });
 
-        fmap(module.symbols, [&](auto && symbol) {
-            return fmap(symbol, make_overload_set(
-                [&](std::shared_ptr<ir::variable> & var) {
-                    _generated_code += gen->generate_declaration(*var, ctx);
-                    return unit{};
-                },
-                [&](ir::function & fn) {
-                    _generated_code += gen->generate_declaration(fn, ctx);
-                    return unit{};
-                }
-            ));
-        });
+        auto declarations = ctx.put_into_global_before + _generated_code + ctx.put_into_global;
+        _generated_code = U"";
+        ctx.put_into_global_before = U"";
+        ctx.put_into_global = U"";
 
-        fmap(module.name, [&](auto &&) {
-            _generated_code += U"}\n";
+        fmap(ir, [&](auto && module) {
+            fmap(module.symbols, [&](auto && symbol) {
+                return fmap(symbol, make_overload_set(
+                    [&](std::shared_ptr<ir::variable> & var) {
+                        _generated_code += gen->generate_definition(*var, ctx);
+                        return unit{};
+                    },
+                    [&](ir::function & fn) {
+                        _generated_code += gen->generate_definition(fn, ctx);
+                        return unit{};
+                    }
+                ));
+            });
+
             return unit{};
         });
 
-        return unit{};
-    });
-
-    auto declarations = ctx.put_into_global_before + _generated_code + ctx.put_into_global;
-    _generated_code = U"";
-    ctx.put_into_global_before = U"";
-    ctx.put_into_global = U"";
-
-    fmap(ir, [&](auto && module) {
-        fmap(module.symbols, [&](auto && symbol) {
-            return fmap(symbol, make_overload_set(
-                [&](std::shared_ptr<ir::variable> & var) {
-                    _generated_code += gen->generate_definition(*var, ctx);
-                    return unit{};
-                },
-                [&](ir::function & fn) {
-                    _generated_code += gen->generate_definition(fn, ctx);
-                    return unit{};
-                }
-            ));
-        });
-
-        return unit{};
-    });
-
-    _generated_code = declarations + ctx.put_into_global_before + _generated_code + ctx.put_into_global;
-}
+        _generated_code = declarations + ctx.put_into_global_before + _generated_code + ctx.put_into_global;
+    }
+}}
 

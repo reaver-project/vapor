@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015 Michał "Griwes" Dominiak
+ * Copyright © 2015-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,11 +22,15 @@
 
 #include "vapor/parser/capture_list.h"
 
-reaver::vapor::parser::_v1::capture_list reaver::vapor::parser::_v1::parse_capture_list(reaver::vapor::parser::_v1::context & ctx)
+namespace reaver::vapor::parser { inline namespace _v1
 {
-    capture_list ret;
+    capture_list parse_capture_list(context & ctx)
+    {
+        capture_list ret;
 
-    assert(0);
+        assert(0);
 
-    return ret;
-}
+        return ret;
+    }
+}}
+

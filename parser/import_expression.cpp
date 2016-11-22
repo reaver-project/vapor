@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015 Michał "Griwes" Dominiak
+ * Copyright © 2015-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,30 +22,34 @@
 
 #include "vapor/parser/import_expression.h"
 
-reaver::vapor::parser::_v1::import_expression reaver::vapor::parser::_v1::parse_import_expression(reaver::vapor::parser::_v1::context & ctx)
+namespace reaver::vapor::parser { inline namespace _v1
 {
-    import_expression ret;
-
-    auto start = expect(ctx, lexer::token_type::import).range.start();
-    if (peek(ctx, lexer::token_type::string))
+    import_expression parse_import_expression(context & ctx)
     {
-        ret.module_name = parse_literal<lexer::token_type::string>(ctx);
+        import_expression ret;
+
+        auto start = expect(ctx, lexer::token_type::import).range.start();
+        if (peek(ctx, lexer::token_type::string))
+        {
+            ret.module_name = parse_literal<lexer::token_type::string>(ctx);
+        }
+        else
+        {
+            ret.module_name = parse_id_expression(ctx);
+        }
+        visit([&](const auto & elem) { ret.range = { start, elem.range.end() }; return unit{}; }, ret.module_name);
+
+        return ret;
     }
-    else
+
+    void print(const import_expression & expr, std::ostream & os, std::size_t indent)
     {
-        ret.module_name = parse_id_expression(ctx);
+        auto in = std::string(indent, ' ');
+
+        os << in << "`import-expression` at " << expr.range << '\n';
+        os << in << "{\n";
+        visit([&](const auto & elem) { print(elem, os, indent + 4); return unit{}; }, expr.module_name);
+        os << in << "}\n";
     }
-    visit([&](const auto & elem) { ret.range = { start, elem.range.end() }; return unit{}; }, ret.module_name);
+}}
 
-    return ret;
-}
-
-void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::import_expression & expr, std::ostream & os, std::size_t indent)
-{
-    auto in = std::string(indent, ' ');
-
-    os << in << "`import-expression` at " << expr.range << '\n';
-    os << in << "{\n";
-    visit([&](const auto & elem) { print(elem, os, indent + 4); return unit{}; }, expr.module_name);
-    os << in << "}\n";
-}

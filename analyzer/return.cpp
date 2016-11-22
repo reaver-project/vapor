@@ -25,26 +25,29 @@
 #include "vapor/analyzer/return.h"
 #include "vapor/analyzer/symbol.h"
 
-void reaver::vapor::analyzer::_v1::return_statement::print(std::ostream & os, std::size_t indent) const
+namespace reaver::vapor::analyzer { inline namespace _v1
 {
-    auto in = std::string(indent, ' ');
-    os << in << "return statement at " << _parse.range << '\n';
-    os << in << "return value expression:\n";
-    os << in << "{\n";
-    _value_expr->print(os, indent + 4);
-    os << in << "}\n";
-}
+    void return_statement::print(std::ostream & os, std::size_t indent) const
+    {
+        auto in = std::string(indent, ' ');
+        os << in << "return statement at " << _parse.range << '\n';
+        os << in << "return value expression:\n";
+        os << in << "{\n";
+        _value_expr->print(os, indent + 4);
+        os << in << "}\n";
+    }
 
-reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::return_statement::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
-{
-    auto ret = _value_expr->codegen_ir(ctx);
-    ret.push_back({
-        none, none,
-        { boost::typeindex::type_id<codegen::ir::return_instruction>() },
-        { ret.back().result },
-        ret.back().result
-    });
+    statement_ir return_statement::_codegen_ir(ir_generation_context & ctx) const
+    {
+        auto ret = _value_expr->codegen_ir(ctx);
+        ret.push_back({
+            none, none,
+            { boost::typeindex::type_id<codegen::ir::return_instruction>() },
+            { ret.back().result },
+            ret.back().result
+        });
 
-    return ret;
-}
+        return ret;
+    }
+}}
 

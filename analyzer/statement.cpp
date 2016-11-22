@@ -31,40 +31,43 @@
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/if.h"
 
-std::unique_ptr<reaver::vapor::analyzer::_v1::statement> reaver::vapor::analyzer::_v1::preanalyze_statement(const reaver::vapor::parser::statement & parse, reaver::vapor::analyzer::_v1::scope * & lex_scope)
+namespace reaver::vapor::analyzer { inline namespace _v1
 {
-    return get<0>(fmap(parse.statement_value, make_overload_set(
-        [&](const parser::declaration & decl) -> std::unique_ptr<statement>
-        {
-            auto ret = preanalyze_declaration(decl, lex_scope);
-            return ret;
-        },
+    std::unique_ptr<statement> preanalyze_statement(const parser::statement & parse, scope * & lex_scope)
+    {
+        return get<0>(fmap(parse.statement_value, make_overload_set(
+            [&](const parser::declaration & decl) -> std::unique_ptr<statement>
+            {
+                auto ret = preanalyze_declaration(decl, lex_scope);
+                return ret;
+            },
 
-        [&](const parser::return_expression & ret_expr) -> std::unique_ptr<statement>
-        {
-            auto ret = preanalyze_return(ret_expr, lex_scope);
-            return ret;
-        },
+            [&](const parser::return_expression & ret_expr) -> std::unique_ptr<statement>
+            {
+                auto ret = preanalyze_return(ret_expr, lex_scope);
+                return ret;
+            },
 
-        [](const parser::expression_list & expr_list) -> std::unique_ptr<statement>
-        {
-            assert(0);
-            return std::unique_ptr<expression>();
-        },
+            [](const parser::expression_list & expr_list) -> std::unique_ptr<statement>
+            {
+                assert(0);
+                return std::unique_ptr<expression>();
+            },
 
-        [&](const parser::function & func) -> std::unique_ptr<statement>
-        {
-            auto ret = preanalyze_function(func, lex_scope);
-            return ret;
-        },
+            [&](const parser::function & func) -> std::unique_ptr<statement>
+            {
+                auto ret = preanalyze_function(func, lex_scope);
+                return ret;
+            },
 
-        [&](const parser::if_statement & if_stmt) -> std::unique_ptr<statement>
-        {
-            auto ret = preanalyze_if_statement(if_stmt, lex_scope);
-            return ret;
-        },
+            [&](const parser::if_statement & if_stmt) -> std::unique_ptr<statement>
+            {
+                auto ret = preanalyze_if_statement(if_stmt, lex_scope);
+                return ret;
+            },
 
-        [](auto &&) -> std::unique_ptr<statement> { assert(0); }
-    )));
-}
+            [](auto &&) -> std::unique_ptr<statement> { assert(0); }
+        )));
+    }
+}}
 

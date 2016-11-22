@@ -23,69 +23,72 @@
 #include "vapor/parser/if_statement.h"
 #include "vapor/parser/lambda_expression.h"
 
-reaver::vapor::parser::_v1::if_statement reaver::vapor::parser::_v1::parse_if_statement(reaver::vapor::parser::_v1::context & ctx)
+namespace reaver::vapor::parser { inline namespace _v1
 {
-    if_statement ret;
-
-    auto start = expect(ctx, lexer::token_type::if_).range.start();
-
-    expect(ctx, lexer::token_type::round_bracket_open);
-    ret.condition = parse_expression(ctx);
-    expect(ctx, lexer::token_type::round_bracket_close);
-
-    ret.then_block = parse_block(ctx);
-
-    if (peek(ctx, lexer::token_type::else_))
+    if_statement parse_if_statement(context & ctx)
     {
-        expect(ctx, lexer::token_type::else_);
+        if_statement ret;
 
-        if (peek(ctx, lexer::token_type::if_))
+        auto start = expect(ctx, lexer::token_type::if_).range.start();
+
+        expect(ctx, lexer::token_type::round_bracket_open);
+        ret.condition = parse_expression(ctx);
+        expect(ctx, lexer::token_type::round_bracket_close);
+
+        ret.then_block = parse_block(ctx);
+
+        if (peek(ctx, lexer::token_type::else_))
         {
-            auto alternative = parse_if_statement(ctx);
-            block else_block;
-            else_block.range = alternative.range;
-            else_block.block_value.push_back(statement{ alternative.range, std::move(alternative) });
-            ret.else_block = std::move(else_block);
+            expect(ctx, lexer::token_type::else_);
+
+            if (peek(ctx, lexer::token_type::if_))
+            {
+                auto alternative = parse_if_statement(ctx);
+                block else_block;
+                else_block.range = alternative.range;
+                else_block.block_value.push_back(statement{ alternative.range, std::move(alternative) });
+                ret.else_block = std::move(else_block);
+            }
+
+            else
+            {
+                ret.else_block = parse_block(ctx);
+            }
+
+            ret.range = { start, ret.else_block->range.end() };
         }
 
         else
         {
-            ret.else_block = parse_block(ctx);
+            ret.range = { start, ret.then_block->range.end() };
         }
 
-        ret.range = { start, ret.else_block->range.end() };
+        return ret;
     }
 
-    else
+    void print(const if_statement & stmt, std::ostream & os, std::size_t indent)
     {
-        ret.range = { start, ret.then_block->range.end() };
-    }
+        auto in = std::string(indent, ' ');
 
-    return ret;
-}
+        os << in << "`if-statement`  at " << stmt.range << '\n';
 
-void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::if_statement & stmt, std::ostream & os, std::size_t indent)
-{
-    auto in = std::string(indent, ' ');
-
-    os << in << "`if-statement`  at " << stmt.range << '\n';
-
-    os << in << "`condition`:\n";
-    os << in << "{\n";
-    print(stmt.condition, os, indent + 4);
-    os << in << "}\n";
-
-    os << in << "`then` block:\n";
-    os << in << "{\n";
-    print(stmt.then_block, os, indent + 4);
-    os << in << "}\n";
-
-    if (stmt.else_block)
-    {
-        os << in << "`else` block:\n";
+        os << in << "`condition`:\n";
         os << in << "{\n";
-        print(*stmt.else_block, os, indent + 4);
+        print(stmt.condition, os, indent + 4);
         os << in << "}\n";
+
+        os << in << "`then` block:\n";
+        os << in << "{\n";
+        print(stmt.then_block, os, indent + 4);
+        os << in << "}\n";
+
+        if (stmt.else_block)
+        {
+            os << in << "`else` block:\n";
+            os << in << "{\n";
+            print(*stmt.else_block, os, indent + 4);
+            os << in << "}\n";
+        }
     }
-}
+}}
 

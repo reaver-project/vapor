@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015 Michał "Griwes" Dominiak
+ * Copyright © 2015-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,54 +23,58 @@
 #include "vapor/parser/statement.h"
 #include "vapor/parser/lambda_expression.h"
 
-reaver::vapor::parser::_v1::statement reaver::vapor::parser::_v1::parse_statement(reaver::vapor::parser::_v1::context & ctx)
+namespace reaver::vapor::parser { inline namespace _v1
 {
-    statement ret;
-
-    if (peek(ctx, lexer::token_type::function))
+    statement parse_statement(context & ctx)
     {
-        auto func = parse_function(ctx);
-        ret.range = func.range;
-        ret.statement_value = std::move(func);
-    }
+        statement ret;
 
-    else if (peek(ctx, lexer::token_type::if_))
-    {
-        auto if_ = parse_if_statement(ctx);
-        ret.range = if_.range;
-        ret.statement_value = std::move(if_);
-    }
-
-    else
-    {
-        if (peek(ctx, lexer::token_type::let))
+        if (peek(ctx, lexer::token_type::function))
         {
-            ret.statement_value = parse_declaration(ctx);
+            auto func = parse_function(ctx);
+            ret.range = func.range;
+            ret.statement_value = std::move(func);
         }
 
-        else if (peek(ctx, lexer::token_type::return_))
+        else if (peek(ctx, lexer::token_type::if_))
         {
-            ret.statement_value = parse_return_expression(ctx);
+            auto if_ = parse_if_statement(ctx);
+            ret.range = if_.range;
+            ret.statement_value = std::move(if_);
         }
 
         else
         {
-            ret.statement_value = parse_expression_list(ctx);
+            if (peek(ctx, lexer::token_type::let))
+            {
+                ret.statement_value = parse_declaration(ctx);
+            }
+
+            else if (peek(ctx, lexer::token_type::return_))
+            {
+                ret.statement_value = parse_return_expression(ctx);
+            }
+
+            else
+            {
+                ret.statement_value = parse_expression_list(ctx);
+            }
+
+            auto end = expect(ctx, lexer::token_type::semicolon).range.end();
+            visit([&](const auto & value) -> unit { ret.range = { value.range.start(), end }; return {}; }, ret.statement_value);
         }
 
-        auto end = expect(ctx, lexer::token_type::semicolon).range.end();
-        visit([&](const auto & value) -> unit { ret.range = { value.range.start(), end }; return {}; }, ret.statement_value);
+        return ret;
     }
 
-    return ret;
-}
+    void print(const statement & stmt, std::ostream & os, std::size_t indent)
+    {
+        auto in = std::string(indent, ' ');
 
-void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::statement & stmt, std::ostream & os, std::size_t indent)
-{
-    auto in = std::string(indent, ' ');
+        os << in << "`statement` at " << stmt.range << '\n';
+        os << in << "{\n";
+        visit([&](const auto & value) -> unit { print(value, os, indent + 4); return {}; }, stmt.statement_value);
+        os << in << "}\n";
+    }
+}}
 
-    os << in << "`statement` at " << stmt.range << '\n';
-    os << in << "{\n";
-    visit([&](const auto & value) -> unit { print(value, os, indent + 4); return {}; }, stmt.statement_value);
-    os << in << "}\n";
-}

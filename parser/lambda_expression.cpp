@@ -23,62 +23,65 @@
 #include "vapor/parser/lambda_expression.h"
 #include "vapor/parser/block.h"
 
-reaver::vapor::parser::_v1::lambda_expression reaver::vapor::parser::_v1::parse_lambda_expression(reaver::vapor::parser::_v1::context & ctx)
+namespace reaver::vapor::parser { inline namespace _v1
 {
-    lambda_expression ret;
-
-    auto start = expect(ctx, lexer::token_type::lambda).range.start();
-    if (peek(ctx, lexer::token_type::square_bracket_open))
+    lambda_expression parse_lambda_expression(context & ctx)
     {
-        expect(ctx, lexer::token_type::square_bracket_close);
-        if (!peek(ctx, lexer::token_type::square_bracket_close))
+        lambda_expression ret;
+
+        auto start = expect(ctx, lexer::token_type::lambda).range.start();
+        if (peek(ctx, lexer::token_type::square_bracket_open))
         {
-            ret.captures = parse_capture_list(ctx);
+            expect(ctx, lexer::token_type::square_bracket_close);
+            if (!peek(ctx, lexer::token_type::square_bracket_close))
+            {
+                ret.captures = parse_capture_list(ctx);
+            }
+            expect(ctx, lexer::token_type::square_bracket_close);
         }
-        expect(ctx, lexer::token_type::square_bracket_close);
-    }
 
-    if (peek(ctx, lexer::token_type::round_bracket_open))
-    {
-        expect(ctx, lexer::token_type::round_bracket_open);
-        if (!peek(ctx, lexer::token_type::round_bracket_close))
+        if (peek(ctx, lexer::token_type::round_bracket_open))
         {
-            ret.arguments = parse_argument_list(ctx);
+            expect(ctx, lexer::token_type::round_bracket_open);
+            if (!peek(ctx, lexer::token_type::round_bracket_close))
+            {
+                ret.arguments = parse_argument_list(ctx);
+            }
+            expect(ctx, lexer::token_type::round_bracket_close);
         }
-        expect(ctx, lexer::token_type::round_bracket_close);
+
+        if (peek(ctx, lexer::token_type::indirection))
+        {
+            expect(ctx, lexer::token_type::indirection);
+            ret.return_type = parse_expression(ctx, expression_special_modes::brace);
+        }
+
+        if (peek(ctx, lexer::token_type::block_value))
+        {
+            ret.body = parse_single_statement_block(ctx);
+        }
+        else
+        {
+            ret.body = parse_block(ctx);
+        }
+
+        ret.range = { start, ret.body.range.end() };
+
+        return ret;
     }
 
-    if (peek(ctx, lexer::token_type::indirection))
+    void print(const lambda_expression & expr, std::ostream & os, std::size_t indent)
     {
-        expect(ctx, lexer::token_type::indirection);
-        ret.return_type = parse_expression(ctx, expression_special_modes::brace);
+        auto in = std::string(indent, ' ');
+
+        os << in << "`lambda-expression` at " << expr.range << '\n';
+
+        assert(!expr.captures);
+
+        os << in << "{\n";
+        fmap(expr.arguments, [&](auto && arguments){ print(arguments, os, indent + 4); return unit{}; });
+        print(expr.body, os, indent + 4);
+        os << in << "}\n";
     }
-
-    if (peek(ctx, lexer::token_type::block_value))
-    {
-        ret.body = parse_single_statement_block(ctx);
-    }
-    else
-    {
-        ret.body = parse_block(ctx);
-    }
-
-    ret.range = { start, ret.body.range.end() };
-
-    return ret;
-}
-
-void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::lambda_expression & expr, std::ostream & os, std::size_t indent)
-{
-    auto in = std::string(indent, ' ');
-
-    os << in << "`lambda-expression` at " << expr.range << '\n';
-
-    assert(!expr.captures);
-
-    os << in << "{\n";
-    fmap(expr.arguments, [&](auto && arguments){ print(arguments, os, indent + 4); return unit{}; });
-    print(expr.body, os, indent + 4);
-    os << in << "}\n";
-}
+}}
 

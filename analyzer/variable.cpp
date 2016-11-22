@@ -24,36 +24,39 @@
 #include "vapor/analyzer/expression.h"
 #include "vapor/analyzer/symbol.h"
 
-reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::expression_variable::_codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
+namespace reaver::vapor::analyzer { inline namespace _v1
 {
-    return {
-        _expression->codegen_ir(ctx).back().result
-    };
-}
+    variable_ir expression_variable::_codegen_ir(ir_generation_context & ctx) const
+    {
+        return {
+            _expression->codegen_ir(ctx).back().result
+        };
+    }
 
-reaver::future<reaver::vapor::analyzer::_v1::variable *> reaver::vapor::analyzer::_v1::expression_variable::_simplify(reaver::vapor::analyzer::_v1::simplification_context & ctx)
-{
-    return _expression->simplify_expr(ctx)
-        .then([&](auto && simplified) -> variable * {
-            return simplified->get_variable();
-        });
-}
+    future<variable *> expression_variable::_simplify(simplification_context & ctx)
+    {
+        return _expression->simplify_expr(ctx)
+            .then([&](auto && simplified) -> variable * {
+                return simplified->get_variable();
+            });
+    }
 
-std::unique_ptr<reaver::vapor::analyzer::_v1::variable> reaver::vapor::analyzer::_v1::expression_variable::_clone_with_replacement(reaver::vapor::analyzer::_v1::replacements & repl) const
-{
-    auto it = repl.expressions.find(_expression);
-    assert(it != repl.expressions.end());
+    std::unique_ptr<variable> expression_variable::_clone_with_replacement(replacements & repl) const
+    {
+        auto it = repl.expressions.find(_expression);
+        assert(it != repl.expressions.end());
 
-    return make_expression_variable(it->second, _type);
-}
+        return make_expression_variable(it->second, _type);
+    }
 
-bool reaver::vapor::analyzer::_v1::expression_variable::is_constant() const
-{
-    return false;
-}
+    bool expression_variable::is_constant() const
+    {
+        return false;
+    }
 
-bool reaver::vapor::analyzer::_v1::expression_variable::is_equal(const reaver::vapor::analyzer::_v1::variable * ptr) const
-{
-    return false;
-}
+    bool expression_variable::is_equal(const variable * ptr) const
+    {
+        return false;
+    }
+}}
 
