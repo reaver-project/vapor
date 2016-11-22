@@ -22,6 +22,5 @@
 
 #pragma once
 
-#include "codegen/result.h"
 #include "codegen/cxx.h"
-
+#include "codegen/result.h"

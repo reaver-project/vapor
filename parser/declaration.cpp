@@ -23,7 +23,9 @@
 #include "vapor/parser/declaration.h"
 #include "vapor/parser/lambda_expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     declaration parse_declaration(context & ctx)
     {
@@ -57,5 +59,5 @@ namespace reaver::vapor::parser { inline namespace _v1
         print(decl.rhs, os, indent + 4);
         os << in << "}\n";
     }
-}}
-
+}
+}

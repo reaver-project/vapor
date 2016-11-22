@@ -22,26 +22,28 @@
 
 #pragma once
 
-#include <vector>
-#include <string>
 #include <map>
+#include <string>
+#include <vector>
 
 #include <boost/algorithm/string.hpp>
 
-#include "../range.h"
-#include "../parser/module.h"
-#include "../parser/id_expression.h"
-#include "declaration.h"
-#include "scope.h"
-#include "import.h"
-#include "symbol.h"
-#include "helpers.h"
-#include "statement.h"
-#include "function.h"
 #include "../codegen/ir/module.h"
+#include "../parser/id_expression.h"
+#include "../parser/module.h"
+#include "../range.h"
+#include "declaration.h"
+#include "function.h"
+#include "helpers.h"
+#include "import.h"
 #include "ir_context.h"
+#include "scope.h"
+#include "statement.h"
+#include "symbol.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class module
     {
@@ -65,5 +67,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         std::vector<std::unique_ptr<statement>> _statements;
         std::vector<future<>> _analysis_futures;
     };
-}}
-
+}
+}

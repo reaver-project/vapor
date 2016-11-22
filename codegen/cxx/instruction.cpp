@@ -27,10 +27,12 @@
 #include <reaver/id.h>
 
 #include "vapor/codegen/cxx.h"
-#include "vapor/codegen/ir/instruction.h"
 #include "vapor/codegen/cxx/names.h"
+#include "vapor/codegen/ir/instruction.h"
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     namespace
     {
@@ -63,18 +65,16 @@ namespace reaver::vapor::codegen { inline namespace _v1
         // make all pieces of storage that are moved-from during this instruction
         // available for storage of the result of this instruction
         fmap(inst.operands, [&](auto && operand) {
-            return fmap(operand, make_overload_set(
-                [&](const std::shared_ptr<ir::variable> & var) {
-                    if (!var->argument && var->is_move())
-                    {
-                        cxx::mark_destroyed(var, ctx);
-                    }
-                    return unit{};
-                },
-                [&](auto &&) {
-                    return unit{};
-                }
-            ));
+            return fmap(operand,
+                make_overload_set(
+                    [&](const std::shared_ptr<ir::variable> & var) {
+                        if (!var->argument && var->is_move())
+                        {
+                            cxx::mark_destroyed(var, ctx);
+                        }
+                        return unit{};
+                    },
+                    [&](auto &&) { return unit{}; }));
         });
 
         if (inst.result.index() == 0)
@@ -87,30 +87,29 @@ namespace reaver::vapor::codegen { inline namespace _v1
             }
         }
 
-        return base + generate_helper<
-            ir::function_call_instruction,
-            ir::materialization_instruction,
-            ir::destruction_instruction,
-            ir::temporary_destruction_instruction,
-            ir::pass_value_instruction,
-            ir::return_instruction,
-            ir::jump_instruction,
-            ir::phi_instruction,
-            ir::noop_instruction,
+        return base + generate_helper<ir::function_call_instruction,
+                          ir::materialization_instruction,
+                          ir::destruction_instruction,
+                          ir::temporary_destruction_instruction,
+                          ir::pass_value_instruction,
+                          ir::return_instruction,
+                          ir::jump_instruction,
+                          ir::phi_instruction,
+                          ir::noop_instruction,
 
-            ir::integer_addition_instruction,
-            ir::integer_subtraction_instruction,
-            ir::integer_multiplication_instruction,
-            ir::integer_equal_comparison_instruction,
-            ir::integer_less_comparison_instruction,
-            ir::integer_less_equal_comparison_instruction,
+                          ir::integer_addition_instruction,
+                          ir::integer_subtraction_instruction,
+                          ir::integer_multiplication_instruction,
+                          ir::integer_equal_comparison_instruction,
+                          ir::integer_less_comparison_instruction,
+                          ir::integer_less_equal_comparison_instruction,
 
-            ir::boolean_equal_comparison_instruction,
-            ir::boolean_negation_instruction
-        >(inst, ctx);
+                          ir::boolean_equal_comparison_instruction,
+                          ir::boolean_negation_instruction>(inst, ctx);
     }
 
-    namespace cxx {
+    namespace cxx
+    {
         template<>
         std::u32string generate<ir::pass_value_instruction>(const ir::instruction &, codegen_context &)
         {
@@ -118,12 +117,13 @@ namespace reaver::vapor::codegen { inline namespace _v1
         }
     }
 
-    namespace cxx {
+    namespace cxx
+    {
         template<>
         std::u32string generate<ir::noop_instruction>(const ir::instruction &, codegen_context &)
         {
             return {};
         }
     }
-}}
-
+}
+}

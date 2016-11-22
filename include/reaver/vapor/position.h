@@ -24,11 +24,15 @@
 
 #include <string>
 
-namespace reaver::vapor { inline namespace _v1
+namespace reaver::vapor
+{
+inline namespace _v1
 {
     struct position
     {
-        position() {}
+        position()
+        {
+        }
         position(const position &) = default;
         position(position &&) = default;
         position & operator=(const position &) = default;
@@ -73,5 +77,5 @@ namespace reaver::vapor { inline namespace _v1
     {
         return !(lhs != rhs);
     }
-}}
-
+}
+}

@@ -22,10 +22,12 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     namespace ir
     {
@@ -45,5 +47,5 @@ namespace reaver::vapor::codegen { inline namespace _v1
         std::u32string variable_name(const ir::variable &, codegen_context &);
         std::u32string declaration_variable_name(ir::variable &, codegen_context &);
     }
-}}
-
+}
+}

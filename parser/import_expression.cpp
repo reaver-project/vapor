@@ -22,7 +22,9 @@
 
 #include "vapor/parser/import_expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     import_expression parse_import_expression(context & ctx)
     {
@@ -37,7 +39,12 @@ namespace reaver::vapor::parser { inline namespace _v1
         {
             ret.module_name = parse_id_expression(ctx);
         }
-        visit([&](const auto & elem) { ret.range = { start, elem.range.end() }; return unit{}; }, ret.module_name);
+        visit(
+            [&](const auto & elem) {
+                ret.range = { start, elem.range.end() };
+                return unit{};
+            },
+            ret.module_name);
 
         return ret;
     }
@@ -48,8 +55,13 @@ namespace reaver::vapor::parser { inline namespace _v1
 
         os << in << "`import-expression` at " << expr.range << '\n';
         os << in << "{\n";
-        visit([&](const auto & elem) { print(elem, os, indent + 4); return unit{}; }, expr.module_name);
+        visit(
+            [&](const auto & elem) {
+                print(elem, os, indent + 4);
+                return unit{};
+            },
+            expr.module_name);
         os << in << "}\n";
     }
-}}
-
+}
+}

@@ -23,7 +23,9 @@
 #include "vapor/parser/statement.h"
 #include "vapor/parser/lambda_expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     statement parse_statement(context & ctx)
     {
@@ -61,7 +63,12 @@ namespace reaver::vapor::parser { inline namespace _v1
             }
 
             auto end = expect(ctx, lexer::token_type::semicolon).range.end();
-            visit([&](const auto & value) -> unit { ret.range = { value.range.start(), end }; return {}; }, ret.statement_value);
+            visit(
+                [&](const auto & value) -> unit {
+                    ret.range = { value.range.start(), end };
+                    return {};
+                },
+                ret.statement_value);
         }
 
         return ret;
@@ -73,8 +80,13 @@ namespace reaver::vapor::parser { inline namespace _v1
 
         os << in << "`statement` at " << stmt.range << '\n';
         os << in << "{\n";
-        visit([&](const auto & value) -> unit { print(value, os, indent + 4); return {}; }, stmt.statement_value);
+        visit(
+            [&](const auto & value) -> unit {
+                print(value, os, indent + 4);
+                return {};
+            },
+            stmt.statement_value);
         os << in << "}\n";
     }
-}}
-
+}
+}

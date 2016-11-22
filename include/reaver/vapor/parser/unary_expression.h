@@ -22,11 +22,13 @@
 
 #pragma once
 
-#include "../range.h"
 #include "../lexer/token.h"
+#include "../range.h"
 #include "expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     struct unary_expression
     {
@@ -37,9 +39,7 @@ namespace reaver::vapor::parser { inline namespace _v1
 
     inline bool operator==(const unary_expression & lhs, const unary_expression & rhs)
     {
-        return lhs.range == rhs.range
-            && lhs.op == rhs.op
-            && lhs.operand == rhs.operand;
+        return lhs.range == rhs.range && lhs.op == rhs.op && lhs.operand == rhs.operand;
     }
 
     const std::vector<lexer::token_type> & unary_operators();
@@ -52,5 +52,5 @@ namespace reaver::vapor::parser { inline namespace _v1
     unary_expression parse_unary_expression(context & ctx);
 
     void print(const unary_expression & expr, std::ostream & os, std::size_t indent = 0);
-}}
-
+}
+}

@@ -27,7 +27,9 @@
 
 #include "variable.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class symbol
     {
@@ -35,8 +37,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         using _shlock = std::shared_lock<std::shared_mutex>;
 
     public:
-        symbol(std::u32string name, variable * variable)
-            : _name{ std::move(name) }, _variable{ variable }
+        symbol(std::u32string name, variable * variable) : _name{ std::move(name) }, _variable{ variable }
         {
         }
 
@@ -94,11 +95,10 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         future<> simplify(simplification_context & ctx)
         {
-            return get_variable()->simplify(ctx)
-                .then([&](auto && simplified) {
-                    _ulock lock{ _lock };
-                    _variable = simplified;
-                });
+            return get_variable()->simplify(ctx).then([&](auto && simplified) {
+                _ulock lock{ _lock };
+                _variable = simplified;
+            });
         }
 
         variant<std::shared_ptr<codegen::ir::variable>, std::vector<codegen::ir::function>> codegen_ir(ir_generation_context &) const;
@@ -117,5 +117,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         return std::make_unique<symbol>(std::move(name), variable);
     }
-}}
-
+}
+}

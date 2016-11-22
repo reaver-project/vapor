@@ -27,7 +27,9 @@
 #include "generator.h"
 #include "ir/variable.h"
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     class cxx_generator : public code_generator
     {
@@ -56,5 +58,5 @@ namespace reaver::vapor::codegen { inline namespace _v1
     {
         return std::make_shared<cxx_generator>();
     }
-}}
-
+}
+}

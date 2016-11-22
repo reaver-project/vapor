@@ -30,7 +30,9 @@
 #include "expression.h"
 #include "symbol.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class id_expression : public expression
     {
@@ -66,5 +68,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         return std::make_unique<id_expression>(parse, lex_scope);
     }
-}}
-
+}
+}

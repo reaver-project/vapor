@@ -27,7 +27,9 @@
 
 #include "../utf8.h"
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     class code_generator;
 
@@ -50,5 +52,5 @@ namespace reaver::vapor::codegen { inline namespace _v1
     private:
         std::u32string _generated_code;
     };
-}}
-
+}
+}

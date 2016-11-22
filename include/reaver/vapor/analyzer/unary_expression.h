@@ -25,7 +25,9 @@
 #include "../parser/unary_expression.h"
 #include "expression.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class unary_expression : public expression
     {
@@ -68,5 +70,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         return std::make_unique<unary_expression>(parse, lex_scope);
     }
-}}
-
+}
+}

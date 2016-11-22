@@ -25,7 +25,9 @@
 #include "type.h"
 #include "variable.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class type_variable : public variable
     {
@@ -67,5 +69,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         return std::make_unique<type_variable>(t);
     }
-}}
-
+}
+}

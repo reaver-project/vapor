@@ -28,7 +28,9 @@
 
 #include "../token.h"
 
-namespace reaver::vapor::lexer { inline namespace _v1
+namespace reaver::vapor::lexer
+{
+inline namespace _v1
 {
     class iterator;
 
@@ -74,5 +76,5 @@ namespace reaver::vapor::lexer { inline namespace _v1
             std::atomic<bool> _done{ false };
         };
     }
-}}
-
+}
+}

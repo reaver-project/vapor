@@ -21,20 +21,22 @@
  **/
 
 #include "vapor/codegen/cxx.h"
-#include "vapor/codegen/ir/instruction.h"
 #include "vapor/codegen/cxx/names.h"
+#include "vapor/codegen/ir/instruction.h"
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     namespace cxx
     {
-#define ADD_INSTRUCTION(NAME, OPERATOR) \
-        template<> \
-        std::u32string generate<ir::integer_ ## NAME ## _instruction>(const ir::instruction & inst, codegen_context & ctx) \
-        { \
-            assert(inst.operands.size() == 2); \
-            return variable_of(inst.result, ctx) + U".emplace(" + value_of(inst.operands[0], ctx) + OPERATOR + value_of(inst.operands[1], ctx) + U");\n"; \
-        }
+#define ADD_INSTRUCTION(NAME, OPERATOR)                                                                                                                        \
+    template<>                                                                                                                                                 \
+    std::u32string generate<ir::integer_##NAME##_instruction>(const ir::instruction & inst, codegen_context & ctx)                                             \
+    {                                                                                                                                                          \
+        assert(inst.operands.size() == 2);                                                                                                                     \
+        return variable_of(inst.result, ctx) + U".emplace(" + value_of(inst.operands[0], ctx) + OPERATOR + value_of(inst.operands[1], ctx) + U");\n";          \
+    }
 
         ADD_INSTRUCTION(addition, U" + ");
         ADD_INSTRUCTION(subtraction, U" - ");
@@ -43,5 +45,5 @@ namespace reaver::vapor::codegen { inline namespace _v1
         ADD_INSTRUCTION(less_comparison, U" < ");
         ADD_INSTRUCTION(less_equal_comparison, U" <= ");
     }
-}}
-
+}
+}

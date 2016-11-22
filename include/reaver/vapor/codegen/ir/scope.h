@@ -24,7 +24,9 @@
 
 #include <string>
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     namespace ir
     {
@@ -45,5 +47,5 @@ namespace reaver::vapor::codegen { inline namespace _v1
             scope_type type;
         };
     }
-}}
-
+}
+}

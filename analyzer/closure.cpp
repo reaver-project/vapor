@@ -25,17 +25,16 @@
 #include "vapor/analyzer/symbol.h"
 #include "vapor/codegen/ir/type.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     void closure_type::_codegen_type(ir_generation_context & ctx) const
     {
         auto actual_type = *_codegen_t;
 
         auto type = codegen::ir::variable_type{
-            U"__closure_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.closure_index++)),
-            get_scope()->codegen_ir(ctx),
-            0,
-            {}
+            U"__closure_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.closure_index++)), get_scope()->codegen_ir(ctx), 0, {}
         };
 
         auto scopes = get_scope()->codegen_ir(ctx);
@@ -68,72 +67,64 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
     future<> closure::_analyze(analysis_context & ctx)
     {
-        auto initial_future = [&]{
+        auto initial_future = [&] {
             if (_return_type)
             {
-                return (*_return_type)->analyze(ctx)
-                    .then([&]{
-                        auto var = (*_return_type)->get_variable();
+                return (*_return_type)->analyze(ctx).then([&] {
+                    auto var = (*_return_type)->get_variable();
 
-                        assert(var->get_type() == builtin_types().type.get());
-                        assert(var->is_constant());
-                    });
+                    assert(var->get_type() == builtin_types().type.get());
+                    assert(var->is_constant());
+                });
             }
 
             return make_ready_future();
         }();
 
-        return initial_future.then([&]{
-            return when_all(fmap(_argument_list, [&](auto && arg) {
-                return arg.type_expression->analyze(ctx);
-            }));
-        }).then([&]{
-            fmap(_argument_list, [&](auto && arg) {
-                arg.variable->set_type(arg.type_expression->get_variable());
-                return unit{};
+        return initial_future.then([&] { return when_all(fmap(_argument_list, [&](auto && arg) { return arg.type_expression->analyze(ctx); })); })
+            .then([&] {
+                fmap(_argument_list, [&](auto && arg) {
+                    arg.variable->set_type(arg.type_expression->get_variable());
+                    return unit{};
+                });
+
+                return _body->analyze(ctx);
+            })
+            .then([&] {
+                fmap(_return_type, [&](auto && ret_type) {
+                    auto explicit_type = ret_type->get_variable();
+                    auto type_var = dynamic_cast<type_variable *>(explicit_type);
+
+                    assert(type_var->get_value() == _body->return_type());
+
+                    return unit{};
+                });
+
+                auto arg_variables = fmap(_argument_list, [&](auto && arg) -> variable * { return arg.variable.get(); });
+
+                auto function = make_function("closure",
+                    _body->return_type(),
+                    std::move(arg_variables),
+                    [this](ir_generation_context & ctx) {
+                        return codegen::ir::function{
+                            U"operator()",
+                            {},
+                            fmap(_argument_list,
+                                [&](auto && arg) {
+                                    return get<std::shared_ptr<codegen::ir::variable>>(get<codegen::ir::value>(arg.variable->codegen_ir(ctx)));
+                                }),
+                            _body->codegen_return(ctx),
+                            _body->codegen_ir(ctx),
+                        };
+                    },
+                    _parse.range);
+
+                function->set_name(U"operator()");
+                function->set_body(_body.get());
+
+                _type = std::make_unique<closure_type>(_scope.get(), this, std::move(function));
+                _set_variable(make_expression_variable(this, _type.get()));
             });
-
-            return _body->analyze(ctx);
-        }).then([&] {
-            fmap(_return_type, [&](auto && ret_type) {
-                auto explicit_type = ret_type->get_variable();
-                auto type_var = dynamic_cast<type_variable *>(explicit_type);
-
-                assert(type_var->get_value() == _body->return_type());
-
-                return unit{};
-            });
-
-            auto arg_variables = fmap(_argument_list, [&](auto && arg) -> variable * {
-                return arg.variable.get();
-            });
-
-            auto function = make_function(
-                "closure",
-                _body->return_type(),
-                std::move(arg_variables),
-                [this](ir_generation_context & ctx) {
-                    return codegen::ir::function{
-                        U"operator()",
-                        {},
-                        fmap(_argument_list, [&](auto && arg) {
-                            return get<std::shared_ptr<codegen::ir::variable>>(
-                                get<codegen::ir::value>(arg.variable->codegen_ir(ctx))
-                            );
-                        }),
-                        _body->codegen_return(ctx),
-                        _body->codegen_ir(ctx),
-                    };
-                },
-                _parse.range
-            );
-
-            function->set_name(U"operator()");
-            function->set_body(_body.get());
-
-            _type = std::make_unique<closure_type>(_scope.get(), this, std::move(function));
-            _set_variable(make_expression_variable(this, _type.get()));
-        });
     }
 
     std::unique_ptr<expression> closure::_clone_expr_with_replacement(replacements & repl) const
@@ -143,25 +134,17 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
     future<expression *> closure::_simplify_expr(simplification_context & ctx)
     {
-        return _body->simplify(ctx)
-            .then([&](auto && simplified) -> expression * {
-                replace_uptr(_body, dynamic_cast<block *>(simplified), ctx);
-                return this;
-            });
+        return _body->simplify(ctx).then([&](auto && simplified) -> expression * {
+            replace_uptr(_body, dynamic_cast<block *>(simplified), ctx);
+            return this;
+        });
     }
 
     statement_ir closure::_codegen_ir(ir_generation_context & ctx) const
     {
         auto var = codegen::ir::make_variable(get_variable()->get_type()->codegen_type(ctx));
         var->scopes = _type->get_scope()->codegen_ir(ctx);
-        return {
-            codegen::ir::instruction{
-                none, none,
-                { boost::typeindex::type_id<codegen::ir::materialization_instruction>() },
-                {},
-                { std::move(var) }
-            }
-        };
+        return { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::materialization_instruction>() }, {}, { std::move(var) } } };
     }
-}}
-
+}
+}

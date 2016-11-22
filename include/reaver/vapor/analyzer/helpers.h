@@ -29,7 +29,9 @@
 
 #include "simplification_context.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     inline error_engine & default_error_engine()
     {
@@ -70,5 +72,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
             replace_uptr(*it, *it_ptrs, ctx);
         }
     }
-}}
-
+}
+}

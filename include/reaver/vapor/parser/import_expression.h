@@ -29,7 +29,9 @@
 #include "id_expression.h"
 #include "literal.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     struct import_expression
     {
@@ -39,12 +41,11 @@ namespace reaver::vapor::parser { inline namespace _v1
 
     inline bool operator==(const import_expression & lhs, const import_expression & rhs)
     {
-        return lhs.range == rhs.range
-            && lhs.module_name == rhs.module_name;
+        return lhs.range == rhs.range && lhs.module_name == rhs.module_name;
     }
 
     import_expression parse_import_expression(context & ctx);
 
     void print(const import_expression & expr, std::ostream & os, std::size_t indent = 0);
-}}
-
+}
+}

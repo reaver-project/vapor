@@ -22,13 +22,15 @@
 
 #pragma once
 
-#include <vector>
 #include <memory>
 #include <unordered_set>
+#include <vector>
 
 #include <reaver/logger.h>
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class function;
 
@@ -48,5 +50,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         std::vector<const function *> _functions_to_generate;
         std::unordered_set<const function *> _generated_functions;
     };
-}}
-
+}
+}

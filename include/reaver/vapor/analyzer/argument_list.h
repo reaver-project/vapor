@@ -27,7 +27,9 @@
 #include "symbol.h"
 #include "unresolved_variable.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     struct argument
     {
@@ -51,5 +53,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
             return argument{ arg.name.string, std::move(expr), std::move(var) };
         });
     }
-}}
-
+}
+}

@@ -26,7 +26,9 @@
 
 #include "position.h"
 
-namespace reaver::vapor { inline namespace _v1
+namespace reaver::vapor
+{
+inline namespace _v1
 {
     class range_type
     {
@@ -66,10 +68,11 @@ namespace reaver::vapor { inline namespace _v1
     {
         if (r.end() - r.start() > 1)
         {
-            return os << r.start().line << ":" << r.start().column << " (" << r.start().offset << ") - " << r.end().line << ":" << r.end().column << " (" <<  r.end().offset << ")";
+            return os << r.start().line << ":" << r.start().column << " (" << r.start().offset << ") - " << r.end().line << ":" << r.end().column << " ("
+                      << r.end().offset << ")";
         }
 
         return os << r.start().line << ":" << r.start().column << " (" << r.start().offset << ")";
     }
-}}
-
+}
+}

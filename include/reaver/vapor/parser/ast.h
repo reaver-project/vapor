@@ -28,11 +28,13 @@
 #include <reaver/error.h>
 
 #include "../lexer/token.h"
+#include "helpers.h"
 #include "module.h"
 #include "statement.h"
-#include "helpers.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     class ast
     {
@@ -83,10 +85,10 @@ namespace reaver::vapor::parser { inline namespace _v1
         {
             os << "{\n";
             print(module, os, 4);
-            os <<  "}\n";
+            os << "}\n";
         }
 
         return os;
     }
-}}
-
+}
+}

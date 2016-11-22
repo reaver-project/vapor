@@ -20,24 +20,29 @@
  *
  **/
 
-#include "vapor/parser/helpers.h"
 #include "vapor/parser/postfix_expression.h"
 #include "vapor/parser/expression_list.h"
+#include "vapor/parser/helpers.h"
 #include "vapor/parser/lambda_expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     postfix_expression parse_postfix_expression(context & ctx, expression_special_modes mode)
     {
-        auto closing = [](lexer::token_type type)
-        {
+        auto closing = [](lexer::token_type type) {
             using namespace lexer;
             switch (type)
             {
-                case token_type::round_bracket_open: return token_type::round_bracket_close;
-                case token_type::square_bracket_open: return token_type::square_bracket_close;
-                case token_type::curly_bracket_open: return token_type::curly_bracket_close;
-                default: throw exception(logger::crash) << "invalid opening bracket type";
+                case token_type::round_bracket_open:
+                    return token_type::round_bracket_close;
+                case token_type::square_bracket_open:
+                    return token_type::square_bracket_close;
+                case token_type::curly_bracket_open:
+                    return token_type::curly_bracket_close;
+                default:
+                    throw exception(logger::crash) << "invalid opening bracket type";
             }
         };
 
@@ -49,7 +54,8 @@ namespace reaver::vapor::parser { inline namespace _v1
         {
             start = expect(ctx, lexer::token_type::round_bracket_open).range.start();
             ret.base_expression = parse_expression_list(ctx);
-            end = expect(ctx, lexer::token_type::round_bracket_close).range.end();;
+            end = expect(ctx, lexer::token_type::round_bracket_close).range.end();
+            ;
         }
 
         else
@@ -111,16 +117,22 @@ namespace reaver::vapor::parser { inline namespace _v1
 
         os << in << "{\n";
 
-        fmap(expr.base_expression, [&](const auto & value) -> unit { print(value, os, indent + 4); return {}; });
+        fmap(expr.base_expression, [&](const auto & value) -> unit {
+            print(value, os, indent + 4);
+            return {};
+        });
         if (expr.arguments.size())
         {
             auto in = std::string(indent + 4, ' ');
             os << in << "{\n";
-            fmap(expr.arguments, [&](auto && arg) -> unit { print(arg, os, indent + 8); return {}; });
+            fmap(expr.arguments, [&](auto && arg) -> unit {
+                print(arg, os, indent + 8);
+                return {};
+            });
             os << in << "}\n";
         }
 
         os << in << "}\n";
     }
-}}
-
+}
+}

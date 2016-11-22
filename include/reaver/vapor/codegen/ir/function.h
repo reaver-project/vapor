@@ -25,11 +25,13 @@
 #include <string>
 #include <vector>
 
-#include "variable.h"
 #include "instruction.h"
 #include "scope.h"
+#include "variable.h"
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     namespace ir
     {
@@ -45,5 +47,5 @@ namespace reaver::vapor::codegen { inline namespace _v1
 
         std::ostream & operator<<(std::ostream & os, const function & fn);
     }
-}}
-
+}
+}

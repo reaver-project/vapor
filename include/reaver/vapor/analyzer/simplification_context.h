@@ -22,12 +22,14 @@
 
 #pragma once
 
-#include <unordered_map>
 #include <shared_mutex>
+#include <unordered_map>
 
 #include <reaver/future.h>
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class statement;
     class expression;
@@ -124,5 +126,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         return _variable_futures;
     }
-}}
-
+}
+}

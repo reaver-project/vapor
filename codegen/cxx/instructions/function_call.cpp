@@ -21,10 +21,12 @@
  **/
 
 #include "vapor/codegen/cxx.h"
-#include "vapor/codegen/ir/instruction.h"
 #include "vapor/codegen/cxx/names.h"
+#include "vapor/codegen/ir/instruction.h"
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     namespace cxx
     {
@@ -50,8 +52,9 @@ namespace reaver::vapor::codegen { inline namespace _v1
                 base_variable = variable_of(inst.operands.front(), ctx) + U".";
             }
 
-            return variable_of(inst.result, ctx) + U".emplace(" + base_variable + get<codegen::ir::label>(inst.operands[actual_argument_offset - 1]).name + U"(" + arguments + U"));\n";
+            return variable_of(inst.result, ctx) + U".emplace(" + base_variable + get<codegen::ir::label>(inst.operands[actual_argument_offset - 1]).name + U"("
+                + arguments + U"));\n";
         }
     }
-}}
-
+}
+}

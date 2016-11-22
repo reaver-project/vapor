@@ -25,7 +25,9 @@
 #include "../range.h"
 #include "helpers.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     struct capture_list
     {
@@ -38,5 +40,5 @@ namespace reaver::vapor::parser { inline namespace _v1
     }
 
     capture_list parse_capture_list(context & ctx);
-}}
-
+}
+}

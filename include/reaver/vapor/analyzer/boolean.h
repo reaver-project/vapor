@@ -24,13 +24,15 @@
 
 #include <memory>
 
-#include "literal.h"
+#include "../codegen/ir/boolean.h"
 #include "../parser/literal.h"
 #include "expression.h"
 #include "function.h"
-#include "../codegen/ir/boolean.h"
+#include "literal.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class boolean_type : public type
     {
@@ -148,5 +150,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     };
 
     std::unique_ptr<type> make_boolean_type();
-}}
-
+}
+}

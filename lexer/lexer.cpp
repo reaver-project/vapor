@@ -24,12 +24,13 @@
 
 #include "vapor/lexer.h"
 
-namespace reaver::vapor::lexer { inline namespace _v1
+namespace reaver::vapor::lexer
+{
+inline namespace _v1
 {
     std::array<std::string, +token_type::count> token_types;
 
-    static auto token_types_init = []() -> reaver::unit
-    {
+    static auto token_types_init = []() -> reaver::unit {
         token_types[+token_type::identifier] = "identifier";
         token_types[+token_type::string] = "string";
         token_types[+token_type::integer] = "integer";
@@ -152,79 +153,39 @@ namespace reaver::vapor::lexer { inline namespace _v1
     };
 
     const std::unordered_map<char32_t, std::unordered_map<char32_t, token_type>> symbols2 = {
-        { '<', {
-            { '<', token_type::left_shift },
-            { '=', token_type::less_equal }
-        } },
+        { '<', { { '<', token_type::left_shift }, { '=', token_type::less_equal } } },
 
-        { '>', {
-            { '>', token_type::right_shift },
-            { '=', token_type::greater_equal }
-        } },
+        { '>', { { '>', token_type::right_shift }, { '=', token_type::greater_equal } } },
 
-        { '=', {
-            { '>', token_type::block_value },
-            { '=', token_type::equals }
-        } },
+        { '=', { { '>', token_type::block_value }, { '=', token_type::equals } } },
 
-        { '&', {
-            { '&', token_type::logical_and },
-            { '=', token_type::bitwise_and_assignment }
-        } },
+        { '&', { { '&', token_type::logical_and }, { '=', token_type::bitwise_and_assignment } } },
 
-        { '|', {
-            { '|', token_type::logical_or },
-            { '=', token_type::bitwise_and_assignment }
-        } },
+        { '|', { { '|', token_type::logical_or }, { '=', token_type::bitwise_and_assignment } } },
 
-        { '!', {
-            { '=', token_type::not_equals }
-        } },
+        { '!', { { '=', token_type::not_equals } } },
 
-        { '~', {
-            { '=', token_type::bitwise_not_assignment }
-        } },
+        { '~', { { '=', token_type::bitwise_not_assignment } } },
 
-        { '+', {
-            { '=', token_type::plus_assignment }
-        } },
+        { '+', { { '=', token_type::plus_assignment } } },
 
-        { '-', {
-            { '>', token_type::indirection },
-            { '=', token_type::minus_assignment }
-        } },
+        { '-', { { '>', token_type::indirection }, { '=', token_type::minus_assignment } } },
 
-        { '*', {
-            { '=', token_type::star_assignment }
-        } },
+        { '*', { { '=', token_type::star_assignment } } },
 
-        { '/', {
-            { '=', token_type::slash_assignment }
-        } },
+        { '/', { { '=', token_type::slash_assignment } } },
 
-        { '%', {
-            { '=', token_type::modulo_assignment }
-        } },
+        { '%', { { '=', token_type::modulo_assignment } } },
 
-        { '&', {
-            { '=', token_type::bitwise_and_assignment }
-        } },
+        { '&', { { '=', token_type::bitwise_and_assignment } } },
 
-        { '|', {
-            { '=', token_type::bitwise_or_assignment }
-        } },
+        { '|', { { '=', token_type::bitwise_or_assignment } } },
 
-        { '^', {
-            { '=', token_type::bitwise_xor_assignment }
-        } }
+        { '^', { { '=', token_type::bitwise_xor_assignment } } }
     };
 
     const std::unordered_map<char32_t, std::unordered_map<char32_t, std::unordered_map<char32_t, token_type>>> symbols3 = {
-        { '-', {
-            { '>', {
-                { '>', token_type::map }
-            } }
-        } },
+        { '-', { { '>', { { '>', token_type::map } } } } },
     };
-}}
-
+}
+}

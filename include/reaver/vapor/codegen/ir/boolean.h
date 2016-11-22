@@ -24,7 +24,9 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     namespace ir
     {
@@ -33,8 +35,12 @@ namespace reaver::vapor::codegen { inline namespace _v1
             bool value;
         };
 
-        struct boolean_equal_comparison_instruction {};
-        struct boolean_negation_instruction {};
+        struct boolean_equal_comparison_instruction
+        {
+        };
+        struct boolean_negation_instruction
+        {
+        };
     }
-}}
-
+}
+}

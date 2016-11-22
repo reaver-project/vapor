@@ -20,12 +20,14 @@
  *
  **/
 
-#include "vapor/parser/expression_list.h"
-#include "vapor/parser/lambda_expression.h"
 #include "vapor/analyzer/return.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/parser/expression_list.h"
+#include "vapor/parser/lambda_expression.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     void return_statement::print(std::ostream & os, std::size_t indent) const
     {
@@ -40,14 +42,9 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     statement_ir return_statement::_codegen_ir(ir_generation_context & ctx) const
     {
         auto ret = _value_expr->codegen_ir(ctx);
-        ret.push_back({
-            none, none,
-            { boost::typeindex::type_id<codegen::ir::return_instruction>() },
-            { ret.back().result },
-            ret.back().result
-        });
+        ret.push_back({ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { ret.back().result }, ret.back().result });
 
         return ret;
     }
-}}
-
+}
+}

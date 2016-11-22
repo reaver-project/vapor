@@ -23,7 +23,9 @@
 #include "vapor/parser/lambda_expression.h"
 #include "vapor/parser/block.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     lambda_expression parse_lambda_expression(context & ctx)
     {
@@ -79,9 +81,12 @@ namespace reaver::vapor::parser { inline namespace _v1
         assert(!expr.captures);
 
         os << in << "{\n";
-        fmap(expr.arguments, [&](auto && arguments){ print(arguments, os, indent + 4); return unit{}; });
+        fmap(expr.arguments, [&](auto && arguments) {
+            print(arguments, os, indent + 4);
+            return unit{};
+        });
         print(expr.body, os, indent + 4);
         os << in << "}\n";
     }
-}}
-
+}
+}

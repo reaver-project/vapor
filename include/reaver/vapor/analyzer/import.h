@@ -26,7 +26,9 @@
 
 #include "expression.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class import_expression : public expression
     {
@@ -36,5 +38,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
     private:
     };
-}}
-
+}
+}

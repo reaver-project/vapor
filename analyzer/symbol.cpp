@@ -23,17 +23,16 @@
 #include "vapor/analyzer/symbol.h"
 #include "vapor/codegen/ir/variable.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     variant<std::shared_ptr<codegen::_v1::ir::variable>, std::vector<codegen::_v1::ir::function>> symbol::codegen_ir(ir_generation_context & ctx) const
     {
-        return fmap(_variable->codegen_ir(ctx), make_overload_set(
-            [](none_t) { return std::vector<codegen::ir::function>{}; },
-            [](std::vector<codegen::ir::function> fs) { return fs; },
-            [](codegen::ir::value val) {
-                return get<std::shared_ptr<codegen::ir::variable>>(val);
-            }
-        ));
+        return fmap(_variable->codegen_ir(ctx),
+            make_overload_set([](none_t) { return std::vector<codegen::ir::function>{}; },
+                [](std::vector<codegen::ir::function> fs) { return fs; },
+                [](codegen::ir::value val) { return get<std::shared_ptr<codegen::ir::variable>>(val); }));
     }
-}}
-
+}
+}

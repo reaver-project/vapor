@@ -23,11 +23,13 @@
 #include "vapor/analyzer/type.h"
 #include "vapor/analyzer/symbol.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     void type_type::_codegen_type(ir_generation_context &) const
     {
         assert(0);
     }
-}}
-
+}
+}

@@ -26,37 +26,32 @@
 
 #include <reaver/variant.h>
 
-#include "helpers.h"
-#include "expression_list.h"
+#include "binary_expression.h"
 #include "declaration.h"
+#include "expression_list.h"
+#include "function.h"
+#include "helpers.h"
+#include "if_statement.h"
 #include "return_expression.h"
 #include "unary_expression.h"
-#include "binary_expression.h"
-#include "function.h"
-#include "if_statement.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     struct statement
     {
         range_type range;
-        variant<
-            declaration,
-            return_expression,
-            expression_list,
-            function,
-            if_statement
-        > statement_value = expression_list();
+        variant<declaration, return_expression, expression_list, function, if_statement> statement_value = expression_list();
     };
 
     inline bool operator==(const statement & lhs, const statement & rhs)
     {
-        return lhs.range == rhs.range
-            && lhs.statement_value == rhs.statement_value;
+        return lhs.range == rhs.range && lhs.statement_value == rhs.statement_value;
     }
 
     statement parse_statement(context & ctx);
 
     void print(const statement & stmt, std::ostream & os, std::size_t indent = 0);
-}}
-
+}
+}

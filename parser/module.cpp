@@ -22,7 +22,9 @@
 
 #include "vapor/parser.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     module parse_module(context & ctx)
     {
@@ -66,5 +68,5 @@ namespace reaver::vapor::parser { inline namespace _v1
         }
         os << in << "}\n";
     }
-}}
-
+}
+}

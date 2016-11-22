@@ -24,7 +24,9 @@
 #include "vapor/parser/expression_list.h"
 #include "vapor/parser/lambda_expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     return_expression parse_return_expression(context & ctx)
     {
@@ -47,5 +49,5 @@ namespace reaver::vapor::parser { inline namespace _v1
         print(ret.return_value, os, indent + 4);
         os << in << "}\n";
     }
-}}
-
+}
+}

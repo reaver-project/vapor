@@ -22,13 +22,15 @@
 
 #pragma once
 
-#include <string>
-#include <unordered_set>
 #include <memory>
+#include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     namespace ir
     {
@@ -86,5 +88,5 @@ namespace reaver::vapor::codegen { inline namespace _v1
 
         virtual std::u32string generate(const ir::instruction &, codegen_context &) const = 0;
     };
-}}
-
+}
+}

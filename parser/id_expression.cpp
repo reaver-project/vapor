@@ -22,7 +22,9 @@
 
 #include "vapor/parser/id_expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     id_expression parse_id_expression(context & ctx)
     {
@@ -53,5 +55,5 @@ namespace reaver::vapor::parser { inline namespace _v1
         }
         os << in << "}\n";
     }
-}}
-
+}
+}

@@ -26,20 +26,25 @@
 
 #include <reaver/variant.h>
 
-#include "../lexer/token.h"
-#include "scope.h"
-#include "ir_context.h"
 #include "../codegen/ir/type.h"
+#include "../lexer/token.h"
+#include "ir_context.h"
+#include "scope.h"
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     namespace ir
     {
         struct variable_type;
     }
-}}
+}
+}
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class function;
 
@@ -110,20 +115,18 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
     inline future<function *> resolve_overload(const type * lhs, const type * rhs, lexer::token_type op, scope * in_scope)
     {
-        return lhs->get_overload(op, rhs)
-            .then([](auto && overload) {
-                assert(overload);
-                return overload;
-            });
+        return lhs->get_overload(op, rhs).then([](auto && overload) {
+            assert(overload);
+            return overload;
+        });
     }
 
     inline future<function *> resolve_overload(const type * base_expr, lexer::token_type bracket_type, std::vector<const type *> arguments, scope * in_scope)
     {
-        return base_expr->get_overload(bracket_type, std::move(arguments))
-            .then([](auto && overload) {
-                assert(overload);
-                return overload;
-            });
+        return base_expr->get_overload(bracket_type, std::move(arguments)).then([](auto && overload) {
+            assert(overload);
+            return overload;
+        });
     }
 
     std::unique_ptr<type> make_integer_type();
@@ -140,7 +143,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
             member_t boolean;
         };
 
-        static auto builtins = []{
+        static auto builtins = [] {
             builtin_types_t builtins;
 
             builtins.type = std::make_unique<type_type>();
@@ -152,5 +155,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         return builtins;
     }
-}}
-
+}
+}

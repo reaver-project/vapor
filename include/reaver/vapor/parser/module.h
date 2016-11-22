@@ -25,11 +25,13 @@
 #include <string>
 
 #include "../range.h"
-#include "statement.h"
 #include "helpers.h"
 #include "id_expression.h"
+#include "statement.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     struct module
     {
@@ -40,5 +42,5 @@ namespace reaver::vapor::parser { inline namespace _v1
 
     module parse_module(context & ctx);
     void print(const module & mod, std::ostream & os, std::size_t indent = 0);
-}}
-
+}
+}

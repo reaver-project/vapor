@@ -28,9 +28,11 @@
 
 namespace reaver
 {
-    namespace vapor
+namespace vapor
+{
+    namespace lexer
     {
-        namespace lexer { inline namespace _v1
+        inline namespace _v1
         {
             auto test(std::u32string program, std::vector<token> expected)
             {
@@ -42,6 +44,7 @@ namespace reaver
                     MAYFLY_REQUIRE(expected == generated);
                 };
             }
-        }}
+        }
     }
+}
 }

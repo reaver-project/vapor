@@ -20,14 +20,16 @@
  *
  **/
 
-#include "vapor/codegen/cxx.h"
 #include "vapor/codegen/ir/variable.h"
-#include "vapor/codegen/ir/type.h"
+#include "vapor/codegen/cxx.h"
 #include "vapor/codegen/cxx/names.h"
+#include "vapor/codegen/ir/type.h"
 
 #include <cassert>
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     std::u32string cxx_generator::generate_declaration(ir::variable & var, codegen_context & ctx) const
     {
@@ -53,32 +55,25 @@ namespace reaver::vapor::codegen { inline namespace _v1
 
     std::u32string cxx::value_of(const ir::value & val, codegen_context & ctx, bool dont_unref)
     {
-        return get<std::u32string>(fmap(val, make_overload_set(
-            [&](const codegen::ir::integer_value & val) {
-                std::ostringstream os;
-                os << val;
-                return boost::locale::conv::utf_to_utf<char32_t>(os.str());
-            },
-            [&](const codegen::ir::boolean_value & val) -> std::u32string {
-                return val.value ? U"true" : U"false";
-            },
-            [&](const std::shared_ptr<ir::variable> & var) {
-                return variable_name(*var, ctx) + (
-                    var->argument || dont_unref
-                    ? U""
-                    : var->is_move()
-                        ? U".move()"
-                        : U".reference()");
-            },
-            [&](const codegen::ir::label & label) {
-                assert(label.scopes.empty());
-                return label.name;
-            },
-            [&](auto &&) {
-                assert(0);
-                return unit{};
-            }
-        )));
+        return get<std::u32string>(fmap(val,
+            make_overload_set(
+                [&](const codegen::ir::integer_value & val) {
+                    std::ostringstream os;
+                    os << val;
+                    return boost::locale::conv::utf_to_utf<char32_t>(os.str());
+                },
+                [&](const codegen::ir::boolean_value & val) -> std::u32string { return val.value ? U"true" : U"false"; },
+                [&](const std::shared_ptr<ir::variable> & var) {
+                    return variable_name(*var, ctx) + (var->argument || dont_unref ? U"" : var->is_move() ? U".move()" : U".reference()");
+                },
+                [&](const codegen::ir::label & label) {
+                    assert(label.scopes.empty());
+                    return label.name;
+                },
+                [&](auto &&) {
+                    assert(0);
+                    return unit{};
+                })));
     }
 
     std::u32string cxx::variable_of(const ir::value & val, codegen_context & ctx)
@@ -101,5 +96,5 @@ namespace reaver::vapor::codegen { inline namespace _v1
             ctx.free_storage_for(*var.name, var.type);
         }
     }
-}}
-
+}
+}

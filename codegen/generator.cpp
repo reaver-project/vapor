@@ -21,12 +21,14 @@
  **/
 
 #include "vapor/codegen/generator.h"
-#include "vapor/codegen/ir/type.h"
 #include "vapor/codegen/cxx/names.h" // baaaaad, need to sort this nonsense out
+#include "vapor/codegen/ir/type.h"
 
 #include <cassert>
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     std::u32string codegen_context::declare_if_necessary(std::shared_ptr<ir::variable_type> type)
     {
@@ -72,5 +74,5 @@ namespace reaver::vapor::codegen { inline namespace _v1
     {
         _unallocated_variables[std::move(type)].push_back(std::move(name));
     }
-}}
-
+}
+}

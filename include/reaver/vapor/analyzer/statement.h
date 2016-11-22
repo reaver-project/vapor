@@ -24,18 +24,23 @@
 
 #include <reaver/future.h>
 
-#include "../codegen/ir/variable.h"
 #include "../codegen/ir/instruction.h"
-#include "ir_context.h"
+#include "../codegen/ir/variable.h"
 #include "analysis_context.h"
+#include "ir_context.h"
 #include "simplification_context.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     struct statement;
-}}
+}
+}
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     struct replacements
     {
@@ -63,17 +68,19 @@ namespace reaver::vapor::analyzer { inline namespace _v1
                 if (!_is_future_assigned)
                 {
                     _analysis_future = _analyze(ctx);
-                    _analysis_future->on_error([](std::exception_ptr ptr){
-                        try
-                        {
-                            std::rethrow_exception(ptr);
-                        }
+                    _analysis_future
+                        ->on_error([](std::exception_ptr ptr) {
+                            try
+                            {
+                                std::rethrow_exception(ptr);
+                            }
 
-                        catch (...)
-                        {
-                            std::terminate();
-                        }
-                    }).detach(); // this is wrooong
+                            catch (...)
+                            {
+                                std::terminate();
+                            }
+                        })
+                        .detach(); // this is wrooong
                     _is_future_assigned = true;
                 }
             }
@@ -97,17 +104,16 @@ namespace reaver::vapor::analyzer { inline namespace _v1
                 replacement_map.emplace(to_replace[i], replacements[i]);
             }
 
-            struct replacements repl{ std::move(replacement_map) };
+            struct replacements repl
+            {
+                std::move(replacement_map)
+            };
             return _clone_with_replacement(repl);
         }
 
         future<statement *> simplify(simplification_context & ctx)
         {
-            return ctx.get_future_or_init(this, [&]() {
-                return make_ready_future().then([this, &ctx]() {
-                    return _simplify(ctx);
-                });
-            });
+            return ctx.get_future_or_init(this, [&]() { return make_ready_future().then([this, &ctx]() { return _simplify(ctx); }); });
         }
 
         virtual std::vector<const return_statement *> get_returns() const
@@ -179,5 +185,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         return std::make_unique<null_statement>();
     }
-}}
-
+}
+}

@@ -23,9 +23,9 @@
 #pragma once
 
 #include <array>
-#include <unordered_map>
 #include <ostream>
 #include <type_traits>
+#include <unordered_map>
 
 #include <reaver/exception.h>
 #include <reaver/relaxed_constexpr.h>
@@ -33,7 +33,9 @@
 #include "../range.h"
 #include "../utf8.h"
 
-namespace reaver::vapor::lexer { inline namespace _v1
+namespace reaver::vapor::lexer
+{
+inline namespace _v1
 {
     enum class token_type : std::size_t
     {
@@ -114,7 +116,7 @@ namespace reaver::vapor::lexer { inline namespace _v1
 
         lambda,
 
-        count,                                      // always the last, except for duplicates
+        count, // always the last, except for duplicates
 
         less = angle_bracket_open,
         greater = angle_bracket_close
@@ -138,9 +140,12 @@ namespace reaver::vapor::lexer { inline namespace _v1
     {
         switch (t)
         {
-            case token_type::integer: return token_type::integer_suffix;
-            case token_type::boolean: return token_type::none;
-            default: throw invalid_suffix_requested{};
+            case token_type::integer:
+                return token_type::integer_suffix;
+            case token_type::boolean:
+                return token_type::none;
+            default:
+                throw invalid_suffix_requested{};
         }
     }
 
@@ -155,7 +160,9 @@ namespace reaver::vapor::lexer { inline namespace _v1
 
     struct token
     {
-        token() {}
+        token()
+        {
+        }
         token(const token &) = default;
         token(token &&) = default;
         token & operator=(const token &) = default;
@@ -179,21 +186,21 @@ namespace reaver::vapor::lexer { inline namespace _v1
     {
         return os << "token type: `" << token_types[+tok.type] << "` token value: `" << utf8(tok.string) << "` token range: " << tok.range;
     };
-}}
+}
+}
 
 namespace std
 {
-    template<>
-    struct hash<::reaver::vapor::lexer::token_type>
+template<>
+struct hash<::reaver::vapor::lexer::token_type>
+{
+    using argument_type = ::reaver::vapor::lexer::token_type;
+    using underlying_type = std::underlying_type<argument_type>::type;
+    using result_type = std::hash<underlying_type>::result_type;
+    result_type operator()(const argument_type & arg) const
     {
-        using argument_type = ::reaver::vapor::lexer::token_type;
-        using underlying_type = std::underlying_type<argument_type>::type;
-        using result_type = std::hash<underlying_type>::result_type;
-        result_type operator()(const argument_type & arg) const
-        {
-            std::hash<underlying_type> hasher;
-            return hasher(static_cast<underlying_type>(arg));
-        }
-    };
+        std::hash<underlying_type> hasher;
+        return hasher(static_cast<underlying_type>(arg));
+    }
+};
 }
-

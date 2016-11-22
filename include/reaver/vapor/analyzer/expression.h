@@ -26,17 +26,22 @@
 
 #include <reaver/prelude/monad.h>
 
-#include "variable.h"
-#include "statement.h"
 #include "helpers.h"
+#include "statement.h"
+#include "variable.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     struct expression;
     struct expression_list;
-}}
+}
+}
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class scope;
 
@@ -82,11 +87,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         future<expression *> simplify_expr(simplification_context & ctx)
         {
-            return ctx.get_future_or_init(this, [&]() {
-                return make_ready_future().then([this, &ctx]() {
-                    return _simplify_expr(ctx);
-                });
-            });
+            return ctx.get_future_or_init(this, [&]() { return make_ready_future().then([this, &ctx]() { return _simplify_expr(ctx); }); });
         }
 
     protected:
@@ -99,9 +100,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         virtual future<statement *> _simplify(simplification_context & ctx) override final
         {
-            return simplify_expr(ctx).then([&](auto && simplified) -> statement * {
-                return simplified;
-            });
+            return simplify_expr(ctx).then([&](auto && simplified) -> statement * { return simplified; });
         }
 
         virtual future<expression *> _simplify_expr(simplification_context &) = 0;
@@ -131,9 +130,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
         {
-            return mbind(value, [&](auto && expr) {
-                return expr->codegen_ir(ctx);
-            });
+            return mbind(value, [&](auto && expr) { return expr->codegen_ir(ctx); });
         }
 
     public:
@@ -183,21 +180,16 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         virtual future<expression *> _simplify_expr(simplification_context & ctx) override
         {
-            return _referenced->simplify(ctx)
-                .then([&](auto && simplified) -> expression * {
-                    _referenced = simplified;
-                    return this;
-                });
+            return _referenced->simplify(ctx).then([&](auto && simplified) -> expression * {
+                _referenced = simplified;
+                return this;
+            });
         }
 
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
         {
-            return { codegen::ir::instruction {
-                none, none,
-                { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
-                {},
-                get<codegen::ir::value>(_referenced->codegen_ir(ctx))
-            } };
+            return { codegen::ir::instruction{
+                none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, get<codegen::ir::value>(_referenced->codegen_ir(ctx)) } };
         }
 
         variable * _referenced;
@@ -237,21 +229,19 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         virtual future<expression *> _simplify_expr(simplification_context & ctx) override
         {
-            return get_variable()->simplify(ctx)
-                .then([&](auto && simplified) -> expression * {
-                    this->_set_variable(simplified, ctx);
-                    return this;
-                });
+            return get_variable()->simplify(ctx).then([&](auto && simplified) -> expression * {
+                this->_set_variable(simplified, ctx);
+                return this;
+            });
         }
 
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
         {
-            return { codegen::ir::instruction {
-                none, none,
+            return { codegen::ir::instruction{ none,
+                none,
                 { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
                 {},
-                get<codegen::ir::value>(get_variable()->codegen_ir(ctx))
-            } };
+                get<codegen::ir::value>(get_variable()->codegen_ir(ctx)) } };
         }
     };
 
@@ -262,5 +252,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
     std::unique_ptr<expression> preanalyze_expression(const parser::expression & expr, scope * lex_scope);
     std::unique_ptr<expression> preanalyze_expression(const parser::expression_list & expr, scope * lex_scope);
-}}
-
+}
+}

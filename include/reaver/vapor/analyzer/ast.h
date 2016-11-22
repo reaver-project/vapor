@@ -22,12 +22,14 @@
 
 #pragma once
 
-#include "../parser/ast.h"
-#include "module.h"
-#include "helpers.h"
 #include "../codegen/ir/module.h"
+#include "../parser/ast.h"
+#include "helpers.h"
+#include "module.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class ast
     {
@@ -36,8 +38,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         {
             try
             {
-                _modules = fmap(_original_ast, [](auto && m)
-                {
+                _modules = fmap(_original_ast, [](auto && m) {
                     auto ret = std::make_unique<module>(m);
                     ret->analyze();
                     ret->simplify();
@@ -81,9 +82,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         std::vector<codegen::ir::module> codegen_ir() const
         {
-            return fmap(_modules, [](auto && mod) {
-                return mod->codegen_ir();
-            });
+            return fmap(_modules, [](auto && mod) { return mod->codegen_ir(); });
         }
 
     private:
@@ -102,5 +101,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         return os;
     }
-}}
-
+}
+}

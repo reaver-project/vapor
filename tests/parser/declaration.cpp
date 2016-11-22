@@ -30,23 +30,13 @@ using namespace reaver::vapor::parser;
 MAYFLY_BEGIN_SUITE("parser");
 MAYFLY_BEGIN_SUITE("declaration");
 
-MAYFLY_ADD_TESTCASE("with deduced type", test(UR"(let foo = 1;)",
-    declaration{
-        { 0, 11 },
-        { lexer::token_type::identifier, UR"(foo)", { 4, 7 } },
-        reaver::none,
-        {
-            { 10, 11 },
-            integer_literal{
-                { 10, 11 },
-                { lexer::token_type::integer, UR"(1)", {  10, 11 } },
-                {}
-            }
-        }
-    },
-    &parse_declaration
-));
+MAYFLY_ADD_TESTCASE("with deduced type",
+    test(UR"(let foo = 1;)",
+        declaration{ { 0, 11 },
+            { lexer::token_type::identifier, UR"(foo)", { 4, 7 } },
+            reaver::none,
+            { { 10, 11 }, integer_literal{ { 10, 11 }, { lexer::token_type::integer, UR"(1)", { 10, 11 } }, {} } } },
+        &parse_declaration));
 
 MAYFLY_END_SUITE;
 MAYFLY_END_SUITE;
-

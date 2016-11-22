@@ -21,11 +21,13 @@
  **/
 
 #include "vapor/parser/expression.h"
+#include "vapor/parser/binary_expression.h"
 #include "vapor/parser/lambda_expression.h"
 #include "vapor/parser/unary_expression.h"
-#include "vapor/parser/binary_expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     expression parse_expression(context & ctx, expression_special_modes mode)
     {
@@ -79,7 +81,12 @@ namespace reaver::vapor::parser { inline namespace _v1
             auto p2 = ctx.operator_stack.size() ? make_optional(precedence(ctx.operator_stack.back())) : none;
             while (ctx.operator_stack.empty() || p1 < *p2 || (p1 == *p2 && associativity(type) == assoc::right))
             {
-                visit([&](const auto & value) -> unit { ret.range = value.range; return {}; }, ret.expression_value);
+                visit(
+                    [&](const auto & value) -> unit {
+                        ret.range = value.range;
+                        return {};
+                    },
+                    ret.expression_value);
                 ret.expression_value = parse_binary_expression(ctx, std::move(ret));
 
                 if (!peek(ctx))
@@ -97,7 +104,12 @@ namespace reaver::vapor::parser { inline namespace _v1
             }
         }
 
-        visit([&](const auto & value) -> unit { ret.range = value.range; return {}; }, ret.expression_value);
+        visit(
+            [&](const auto & value) -> unit {
+                ret.range = value.range;
+                return {};
+            },
+            ret.expression_value);
 
         return ret;
     }
@@ -108,8 +120,13 @@ namespace reaver::vapor::parser { inline namespace _v1
 
         os << in << "`expression` at " << expr.range << '\n';
         os << in << "{\n";
-        visit([&](const auto & value) -> unit { print(value, os, indent + 4); return {}; }, expr.expression_value);
+        visit(
+            [&](const auto & value) -> unit {
+                print(value, os, indent + 4);
+                return {};
+            },
+            expr.expression_value);
         os << in << "}\n";
     }
-}}
-
+}
+}

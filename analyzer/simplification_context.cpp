@@ -24,7 +24,9 @@
 #include "vapor/analyzer/expression.h"
 #include "vapor/analyzer/symbol.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     simplification_context::~simplification_context() = default;
 
@@ -35,9 +37,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
             return;
         }
 
-        _statement_futures.emplace(ptr, fut.then([](auto && expr) {
-            return static_cast<statement *>(expr);
-        }));
+        _statement_futures.emplace(ptr, fut.then([](auto && expr) { return static_cast<statement *>(expr); }));
     }
 
     void simplification_context::keep_alive(statement * ptr)
@@ -53,5 +53,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         auto inserted = _keep_alive_var.emplace(ptr).second;
         assert(inserted);
     }
-}}
-
+}
+}

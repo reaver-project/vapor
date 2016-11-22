@@ -28,25 +28,27 @@
 #include <reaver/function.h>
 #include <reaver/optional.h>
 
-#include "../range.h"
 #include "../codegen/ir/function.h"
+#include "../range.h"
 #include "ir_context.h"
 #include "simplification_context.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class type;
     class block;
 
-    using function_codegen = reaver::function<codegen::ir::function (ir_generation_context &)>;
-    using function_eval = reaver::function<expression * (simplification_context &, std::vector<variable *>)>;
+    using function_codegen = reaver::function<codegen::ir::function(ir_generation_context &)>;
+    using function_eval = reaver::function<expression *(simplification_context &, std::vector<variable *>)>;
 
     class function
     {
     public:
         function(std::string explanation, type * ret, std::vector<variable *> args, function_codegen codegen, optional<range_type> range = none)
-            : _explanation{ std::move(explanation) }, _range{ std::move(range) },
-            _return_type{ ret }, _arguments{ std::move(args) }, _codegen{ std::move(codegen) }
+            : _explanation{ std::move(explanation) }, _range{ std::move(range) }, _return_type{ ret }, _arguments{ std::move(args) },
+              _codegen{ std::move(codegen) }
         {
             if (ret)
             {
@@ -115,7 +117,10 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         {
             std::unique_lock<std::mutex> lock{ _ret_lock };
             _return_type = ret;
-            fmap(_return_type_promise, [ret](auto && promise) { promise.set(ret); return unit{}; });
+            fmap(_return_type_promise, [ret](auto && promise) {
+                promise.set(ret);
+                return unit{};
+            });
         }
 
         void set_name(std::u32string name)
@@ -161,9 +166,13 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         optional<function_eval> _compile_time_eval;
     };
 
-    inline std::unique_ptr<function> make_function(std::string expl, type * return_type, std::vector<variable *> arguments, function_codegen codegen, optional<range_type> range = none)
+    inline std::unique_ptr<function> make_function(std::string expl,
+        type * return_type,
+        std::vector<variable *> arguments,
+        function_codegen codegen,
+        optional<range_type> range = none)
     {
         return std::make_unique<function>(std::move(expl), std::move(return_type), std::move(arguments), std::move(codegen), std::move(range));
     }
-}}
-
+}
+}

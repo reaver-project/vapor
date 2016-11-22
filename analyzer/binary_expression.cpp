@@ -22,13 +22,15 @@
 
 #include <boost/type_index.hpp>
 
-#include "vapor/parser.h"
 #include "vapor/analyzer/binary_expression.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/parser.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     void binary_expression::print(std::ostream & os, std::size_t indent) const
     {
@@ -51,16 +53,14 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
     future<> binary_expression::_analyze(analysis_context & ctx)
     {
-        return _lhs->analyze(ctx).then([&]() {
-                return _rhs->analyze(ctx);
-            }).then([&] {
-                return resolve_overload(_lhs->get_type(), _rhs->get_type(), _op.type, _scope);
-            }).then([&](auto && overload) {
+        return _lhs->analyze(ctx)
+            .then([&]() { return _rhs->analyze(ctx); })
+            .then([&] { return resolve_overload(_lhs->get_type(), _rhs->get_type(), _op.type, _scope); })
+            .then([&](auto && overload) {
                 _overload = overload;
                 return _overload->return_type();
-            }).then([&](auto && ret_type) {
-                this->_set_variable(make_expression_variable(this, ret_type));
-            });
+            })
+            .then([&](auto && ret_type) { this->_set_variable(make_expression_variable(this, ret_type)); });
     }
 
     std::unique_ptr<expression> binary_expression::_clone_expr_with_replacement(replacements & repl) const
@@ -75,14 +75,13 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
     future<expression *> binary_expression::_simplify_expr(simplification_context & ctx)
     {
-        return when_all(
-                _lhs->simplify_expr(ctx),
-                _rhs->simplify_expr(ctx)
-            ).then([&](auto && simplified) {
+        return when_all(_lhs->simplify_expr(ctx), _rhs->simplify_expr(ctx))
+            .then([&](auto && simplified) {
                 replace_uptr(_lhs, get<0>(simplified), ctx);
                 replace_uptr(_rhs, get<1>(simplified), ctx);
                 return _overload->simplify(ctx, { _lhs->get_variable(), _rhs->get_variable() });
-            }).then([&](auto && simplified) -> expression * {
+            })
+            .then([&](auto && simplified) -> expression * {
                 if (simplified)
                 {
                     return simplified;
@@ -100,12 +99,11 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         auto lhs_variable = lhs_instructions.back().result;
         auto rhs_variable = rhs_instructions.back().result;
 
-        auto bin_expr_instruction = codegen::ir::instruction{
-            none, none,
+        auto bin_expr_instruction = codegen::ir::instruction{ none,
+            none,
             { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
             { _overload->call_operand_ir(ctx), lhs_variable, rhs_variable },
-            codegen::ir::make_variable((*_overload->return_type().try_get())->codegen_type(ctx))
-        };
+            codegen::ir::make_variable((*_overload->return_type().try_get())->codegen_type(ctx)) };
 
         ctx.add_function_to_generate(_overload);
 
@@ -119,5 +117,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         return ret;
     }
-}}
-
+}
+}

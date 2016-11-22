@@ -25,16 +25,18 @@
 #include "../parser/binary_expression.h"
 #include "expression.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class function;
 
     class binary_expression : public expression
     {
     public:
-        binary_expression(const parser::binary_expression & parse, scope * lex_scope) : _parse{ parse }, _scope{ lex_scope }, _op{ _parse.op },
-            _lhs{ preanalyze_expression(_parse.lhs, lex_scope) },
-            _rhs{ preanalyze_expression(_parse.rhs, lex_scope) }
+        binary_expression(const parser::binary_expression & parse, scope * lex_scope)
+            : _parse{ parse }, _scope{ lex_scope }, _op{ _parse.op }, _lhs{ preanalyze_expression(_parse.lhs, lex_scope) },
+              _rhs{ preanalyze_expression(_parse.rhs, lex_scope) }
         {
         }
 
@@ -62,5 +64,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         return std::make_unique<binary_expression>(parse, lex_scope);
     }
-}}
-
+}
+}

@@ -24,10 +24,12 @@
 
 #include "variable.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class literal : public variable
     {
     };
-}}
-
+}
+}

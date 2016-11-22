@@ -22,7 +22,9 @@
 
 #include "vapor/analyzer/ir_context.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     void ir_generation_context::add_function_to_generate(const function * fn)
     {
@@ -57,5 +59,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         return nullptr;
     }
-}}
-
+}
+}

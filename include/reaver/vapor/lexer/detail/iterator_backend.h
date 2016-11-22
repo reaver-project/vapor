@@ -22,20 +22,22 @@
 
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <thread>
-#include <atomic>
 
 #include <reaver/optional.h>
 
 #include <reaver/semaphore.h>
 
 #include "../../position.h"
+#include "../errors.h"
 #include "../token.h"
 #include "lexer_node.h"
-#include "../errors.h"
 
-namespace reaver::vapor::lexer { inline namespace _v1
+namespace reaver::vapor::lexer
+{
+inline namespace _v1
 {
     namespace _detail
     {
@@ -45,7 +47,7 @@ namespace reaver::vapor::lexer { inline namespace _v1
             friend class lexer::iterator;
 
             template<typename Iter>
-            _iterator_backend(Iter begin, Iter end, std::shared_ptr<_lexer_node> & node) : _thread{ [&](){ _worker(begin, end); } }
+            _iterator_backend(Iter begin, Iter end, std::shared_ptr<_lexer_node> & node) : _thread{ [&]() { _worker(begin, end); } }
             {
                 _sem.wait();
                 node = std::move(_initial);
@@ -69,8 +71,7 @@ namespace reaver::vapor::lexer { inline namespace _v1
                 pos.line = 1;
                 pos.file = std::move(filename);
 
-                auto get = [&]() -> optional<char32_t>
-                {
+                auto get = [&]() -> optional<char32_t> {
                     if (begin == end)
                     {
                         return {};
@@ -90,8 +91,7 @@ namespace reaver::vapor::lexer { inline namespace _v1
                     return *begin++;
                 };
 
-                auto peek = [&](std::size_t x = 0) -> optional<char32_t>
-                {
+                auto peek = [&](std::size_t x = 0) -> optional<char32_t> {
                     for (std::size_t i = 0; i < x; ++i)
                     {
                         if (begin + i == end)
@@ -103,8 +103,7 @@ namespace reaver::vapor::lexer { inline namespace _v1
                     return *(begin + x);
                 };
 
-                auto generate_token = [&](token_type type, position begin, position end, std::u32string string)
-                {
+                auto generate_token = [&](token_type type, position begin, position end, std::u32string string) {
                     if (!node)
                     {
                         _initial = std::make_shared<_lexer_node>(token{ type, std::move(string), range_type(begin, end) }, _ex);
@@ -120,8 +119,7 @@ namespace reaver::vapor::lexer { inline namespace _v1
                     }
                 };
 
-                auto notify = [&]()
-                {
+                auto notify = [&]() {
                     if (!node)
                     {
                         _sem.notify();
@@ -131,25 +129,13 @@ namespace reaver::vapor::lexer { inline namespace _v1
                     node->_sem.notify();
                 };
 
-                auto is_white_space = [](char32_t c)
-                {
-                    return c == U' ' || c == U'\t' || c == U'\n' || c == U'\r';
-                };
+                auto is_white_space = [](char32_t c) { return c == U' ' || c == U'\t' || c == U'\n' || c == U'\r'; };
 
-                auto is_identifier_start = [](char32_t c)
-                {
-                    return (c >= U'a' && c <= U'z') || (c >= U'A' && c <= U'Z') || c == U'_';
-                };
+                auto is_identifier_start = [](char32_t c) { return (c >= U'a' && c <= U'z') || (c >= U'A' && c <= U'Z') || c == U'_'; };
 
-                auto is_decimal = [&](char32_t c)
-                {
-                    return c >= U'0' && c <= U'9';
-                };
+                auto is_decimal = [&](char32_t c) { return c >= U'0' && c <= U'9'; };
 
-                auto is_identifier_char = [&](char32_t c)
-                {
-                    return is_identifier_start(c) || is_decimal(c);
-                };
+                auto is_identifier_char = [&](char32_t c) { return is_identifier_start(c) || is_decimal(c); };
 
                 while (!_end_flag && begin != end)
                 {
@@ -209,7 +195,7 @@ namespace reaver::vapor::lexer { inline namespace _v1
                         else if (second && symbols2.find(*next) != symbols2.end() && symbols2.at(*next).find(*second) != symbols2.at(*next).end())
                         {
                             auto p = pos;
-                            generate_token(symbols2.at(*next).at(*second), p, p + 2, { *next, *get() })   ;
+                            generate_token(symbols2.at(*next).at(*second), p, p + 2, { *next, *get() });
                             continue;
                         }
 
@@ -315,5 +301,5 @@ namespace reaver::vapor::lexer { inline namespace _v1
             std::exception_ptr _ex = nullptr;
         };
     }
-}}
-
+}
+}

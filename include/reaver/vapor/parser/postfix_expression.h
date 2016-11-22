@@ -28,7 +28,9 @@
 #include "helpers.h"
 #include "id_expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     struct expression;
     struct expression_list;
@@ -43,14 +45,11 @@ namespace reaver::vapor::parser { inline namespace _v1
 
     inline bool operator==(const postfix_expression & lhs, const postfix_expression & rhs)
     {
-        return lhs.range == rhs.range
-            && lhs.base_expression == rhs.base_expression
-            && lhs.bracket_type == rhs.bracket_type
-            && lhs.arguments == rhs.arguments;
+        return lhs.range == rhs.range && lhs.base_expression == rhs.base_expression && lhs.bracket_type == rhs.bracket_type && lhs.arguments == rhs.arguments;
     }
 
     postfix_expression parse_postfix_expression(context & ctx, expression_special_modes = expression_special_modes::none);
 
     void print(const postfix_expression & expr, std::ostream & os, std::size_t indent = 0);
-}}
-
+}
+}

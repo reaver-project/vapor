@@ -21,15 +21,16 @@
  **/
 
 #include "vapor/parser/binary_expression.h"
-#include "vapor/parser/unary_expression.h"
 #include "vapor/parser/lambda_expression.h"
+#include "vapor/parser/unary_expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     const std::vector<reaver::vapor::lexer::_v1::token_type> & binary_operators()
     {
-        static std::vector<lexer::token_type> binary_ops = {
-            lexer::token_type::plus,
+        static std::vector<lexer::token_type> binary_ops = { lexer::token_type::plus,
             lexer::token_type::minus,
             lexer::token_type::star,
             lexer::token_type::slash,
@@ -65,16 +66,14 @@ namespace reaver::vapor::parser { inline namespace _v1
 
             lexer::token_type::indirection,
             lexer::token_type::map,
-            lexer::token_type::bind
-        };
+            lexer::token_type::bind };
 
         return binary_ops;
     }
 
     const std::unordered_map<reaver::vapor::lexer::_v1::token_type, std::size_t> & binary_operator_precedences()
     {
-        static std::unordered_map<lexer::token_type, std::size_t> precedences = []()
-        {
+        static std::unordered_map<lexer::token_type, std::size_t> precedences = []() {
             std::unordered_map<lexer::token_type, std::size_t> precedences;
 
             precedences[lexer::token_type::indirection] = 0;
@@ -103,20 +102,19 @@ namespace reaver::vapor::parser { inline namespace _v1
             precedences[lexer::token_type::logical_and] = 50;
             precedences[lexer::token_type::logical_or] = 55;
 
-            for (auto t : {
-                lexer::token_type::assign,
-                lexer::token_type::plus_assignment,
-                lexer::token_type::minus_assignment,
-                lexer::token_type::star_assignment,
-                lexer::token_type::slash_assignment,
-                lexer::token_type::left_shift_assignment,
-                lexer::token_type::right_shift_assignment,
-                lexer::token_type::bitwise_and_assignment,
-                lexer::token_type::bitwise_not_assignment,
-                lexer::token_type::bitwise_or_assignment,
-                lexer::token_type::bitwise_xor_assignment,
-                lexer::token_type::logical_and_assignment,
-                lexer::token_type::logical_or_assignment })
+            for (auto t : { lexer::token_type::assign,
+                     lexer::token_type::plus_assignment,
+                     lexer::token_type::minus_assignment,
+                     lexer::token_type::star_assignment,
+                     lexer::token_type::slash_assignment,
+                     lexer::token_type::left_shift_assignment,
+                     lexer::token_type::right_shift_assignment,
+                     lexer::token_type::bitwise_and_assignment,
+                     lexer::token_type::bitwise_not_assignment,
+                     lexer::token_type::bitwise_or_assignment,
+                     lexer::token_type::bitwise_xor_assignment,
+                     lexer::token_type::logical_and_assignment,
+                     lexer::token_type::logical_or_assignment })
             {
                 precedences[t] = 60;
             }
@@ -127,8 +125,7 @@ namespace reaver::vapor::parser { inline namespace _v1
         return precedences;
     }
 
-    binary_expression parse_binary_expression(context & ctx,
-        expression lhs)
+    binary_expression parse_binary_expression(context & ctx, expression lhs)
     {
         binary_expression ret;
 
@@ -153,5 +150,5 @@ namespace reaver::vapor::parser { inline namespace _v1
         print(expr.rhs, os, indent + 4);
         os << in << "}\n";
     }
-}}
-
+}
+}

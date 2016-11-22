@@ -20,23 +20,22 @@
  *
  **/
 
-#include "vapor/parser/expression_list.h"
-#include "vapor/parser/lambda_expression.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/block.h"
 #include "vapor/analyzer/return.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/parser/expression_list.h"
+#include "vapor/parser/lambda_expression.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     future<> function::simplify(simplification_context & ctx)
     {
         if (_body)
         {
-            return _body->simplify(ctx)
-                .then([&](auto && simplified) {
-                    _body = dynamic_cast<block *>(simplified);
-                });
+            return _body->simplify(ctx).then([&](auto && simplified) { _body = dynamic_cast<block *>(simplified); });
         }
 
         return make_ready_future();
@@ -46,35 +45,31 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         if (_body)
         {
-            if (!std::any_of(args.begin(), args.end(), [](auto && arg){ return arg->is_constant(); }))
+            if (!std::any_of(args.begin(), args.end(), [](auto && arg) { return arg->is_constant(); }))
             {
                 return make_ready_future<expression *>(nullptr);
             }
 
-            return [&]{
+            return [&] {
                 if (args.size())
                 {
-                    auto body = _body->clone_with_replacement(
-                        _arguments,
-                        args
-                    );
+                    auto body = _body->clone_with_replacement(_arguments, args);
 
                     auto simplify = [ctx = std::make_shared<simplification_context>()](auto self, auto body)
                     {
-                        return body->simplify(*ctx)
-                            .then([&, old_body = body, ctx, self](auto && body) -> future<block *> {
-                                if (!ctx->did_something_happen())
-                                {
-                                    return make_ready_future<block *>(dynamic_cast<block *>(body));
-                                }
+                        return body->simplify(*ctx).then([&, old_body = body, ctx, self](auto && body)->future<block *> {
+                            if (!ctx->did_something_happen())
+                            {
+                                return make_ready_future<block *>(dynamic_cast<block *>(body));
+                            }
 
-                                // ugh
-                                // but I don't know how else to write this
-                                // without creating a long overload for optctx
-                                ctx->~simplification_context();
-                                new (&*ctx) simplification_context();
-                                return self(self, body);
-                            });
+                            // ugh
+                            // but I don't know how else to write this
+                            // without creating a long overload for optctx
+                            ctx->~simplification_context();
+                            new (&*ctx) simplification_context();
+                            return self(self, body);
+                        });
                     };
 
                     // this is a leak
@@ -111,5 +106,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         assert(0);
     }
-}}
-
+}
+}

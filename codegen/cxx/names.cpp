@@ -21,14 +21,16 @@
  **/
 
 #include "vapor/codegen/cxx/names.h"
+#include "vapor/codegen/generator.h"
+#include "vapor/codegen/ir/function.h"
 #include "vapor/codegen/ir/type.h"
 #include "vapor/codegen/ir/variable.h"
-#include "vapor/codegen/ir/function.h"
-#include "vapor/codegen/generator.h"
 
 #include <cassert>
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     std::u32string cxx::type_name(const std::shared_ptr<const ir::variable_type> & type, codegen_context &)
     {
@@ -111,5 +113,5 @@ namespace reaver::vapor::codegen { inline namespace _v1
     {
         return fn.name;
     }
-}}
-
+}
+}

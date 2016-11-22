@@ -20,13 +20,15 @@
  *
  **/
 
-#include "vapor/codegen/cxx.h"
 #include "vapor/codegen/ir/type.h"
+#include "vapor/codegen/cxx.h"
 #include "vapor/codegen/cxx/names.h"
 
 #include <cassert>
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     std::u32string cxx_generator::generate_declaration(const std::shared_ptr<ir::variable_type> & type, codegen_context & ctx) const
     {
@@ -60,21 +62,21 @@ namespace reaver::vapor::codegen { inline namespace _v1
         std::u32string members;
 
         fmap(type->members, [&](auto && member) {
-            fmap(member, make_overload_set(
-                [&](codegen::ir::function & fn) {
-                    members += this->generate_declaration(fn, ctx);
-                    ctx.put_into_global += this->generate_definition(fn, ctx);
-                    return unit{};
-                },
-                [&](auto &&) {
-                    assert(0);
-                    return unit{};
-                }
-            ));
+            fmap(member,
+                make_overload_set(
+                    [&](codegen::ir::function & fn) {
+                        members += this->generate_declaration(fn, ctx);
+                        ctx.put_into_global += this->generate_definition(fn, ctx);
+                        return unit{};
+                    },
+                    [&](auto &&) {
+                        assert(0);
+                        return unit{};
+                    }));
             return unit{};
         });
 
         return U"struct " + cxx::type_name(type, ctx) + U" {\n" + members + U"};\n";
     }
-}}
-
+}
+}

@@ -24,7 +24,9 @@
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/type_variable.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     scope::~scope()
     {
@@ -52,9 +54,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
                     continue;
                 }
 
-                promise.second.set(std::make_exception_ptr(
-                    failed_lookup{ promise.first }
-                ));
+                promise.second.set(std::make_exception_ptr(failed_lookup{ promise.first }));
             }
 
             _symbol_promises.clear();
@@ -157,34 +157,34 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         auto pair = make_promise<symbol *>();
 
-        get_future(name).then([promise = pair.promise](auto && symb) {
-            promise.set(symb);
-        }).on_error([&name, promise = pair.promise, parent = _parent](auto exptr) {
-            try
-            {
-                std::rethrow_exception(exptr);
-            }
-
-            catch (failed_lookup & ex)
-            {
-                if (!parent)
+        get_future(name)
+            .then([promise = pair.promise](auto && symb) { promise.set(symb); })
+            .on_error([&name, promise = pair.promise, parent = _parent](auto exptr) {
+                try
                 {
-                    promise.set(exptr);
-                    return;
+                    std::rethrow_exception(exptr);
                 }
 
-                parent->resolve(name).then([promise = promise](auto && symb){
-                    promise.set(symb);
-                }).on_error([promise = promise](auto && ex){
-                    promise.set(ex);
-                }).detach();
-            }
+                catch (failed_lookup & ex)
+                {
+                    if (!parent)
+                    {
+                        promise.set(exptr);
+                        return;
+                    }
 
-            catch (...)
-            {
-                promise.set(exptr);
-            }
-        }).detach();
+                    parent->resolve(name)
+                        .then([promise = promise](auto && symb) { promise.set(symb); })
+                        .on_error([promise = promise](auto && ex) { promise.set(ex); })
+                        .detach();
+                }
+
+                catch (...)
+                {
+                    promise.set(exptr);
+                }
+            })
+            .detach();
 
         _ulock lock{ _lock };
         _symbol_futures.emplace(name, pair.future);
@@ -196,12 +196,10 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         static auto integer_type_var = make_type_variable(builtin_types().integer.get());
         static auto boolean_type_var = make_type_variable(builtin_types().boolean.get());
 
-        static auto symbols = [&]{
+        static auto symbols = [&] {
             std::unordered_map<std::u32string, std::unique_ptr<symbol>> symbols;
 
-            auto add_symbol = [&](auto name, auto && variable) {
-                symbols.emplace(name, make_symbol(name, variable.get()));
-            };
+            auto add_symbol = [&](auto name, auto && variable) { symbols.emplace(name, make_symbol(name, variable.get())); };
 
             add_symbol(U"int", integer_type_var);
             add_symbol(U"bool", boolean_type_var);
@@ -211,5 +209,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         return symbols;
     }
-}}
-
+}
+}

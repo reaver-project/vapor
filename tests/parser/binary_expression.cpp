@@ -30,230 +30,78 @@ using namespace reaver::vapor::parser;
 MAYFLY_BEGIN_SUITE("parser");
 MAYFLY_BEGIN_SUITE("binary_expression");
 
-MAYFLY_ADD_TESTCASE("simple binary-expression", test(UR"(1 + 2;)",
-    expression{
-        { 0, 5 },
-        binary_expression{
-            { 0, 5 },
-            { lexer::token_type::plus, UR"(+)", { 2, 3 } },
-            {
-                { 0, 1 },
-                integer_literal{
-                    { 0, 1 },
-                    { lexer::token_type::integer, UR"(1)", { 0, 1 } },
-                    {}
-                }
-            },
-            {
-                { 4, 5 },
-                integer_literal{
-                    { 4, 5 },
-                    { lexer::token_type::integer, UR"(2)", { 4, 5 } },
-                    {}
-                }
-            }
-        }
-    },
-    [](auto && ctx) {
-        return parse_expression(ctx);
-    }
-));
+MAYFLY_ADD_TESTCASE("simple binary-expression",
+    test(UR"(1 + 2;)",
+        expression{ { 0, 5 },
+            binary_expression{ { 0, 5 },
+                { lexer::token_type::plus, UR"(+)", { 2, 3 } },
+                { { 0, 1 }, integer_literal{ { 0, 1 }, { lexer::token_type::integer, UR"(1)", { 0, 1 } }, {} } },
+                { { 4, 5 }, integer_literal{ { 4, 5 }, { lexer::token_type::integer, UR"(2)", { 4, 5 } }, {} } } } },
+        [](auto && ctx) { return parse_expression(ctx); }));
 
-MAYFLY_ADD_TESTCASE("equal precedence, left associative", test(UR"(1 + 2 + 3;)",
-    expression{
-        { 0, 9 },
-        binary_expression{
-            { 0, 9 },
-            { lexer::token_type::plus, UR"(+)", { 6, 7 } },
-            {
-                { 0, 5 },
-                binary_expression{
-                    { 0, 5 },
-                    { lexer::token_type::plus, UR"(+)", { 2, 3 } },
-                    {
-                        { 0, 1 },
-                        integer_literal{
-                            { 0, 1 },
-                            { lexer::token_type::integer, UR"(1)", { 0, 1 } },
-                            {}
-                        }
-                    },
-                    {
-                        { 4, 5 },
-                        integer_literal{
-                            { 4, 5 },
-                            { lexer::token_type::integer, UR"(2)", { 4, 5 } },
-                            {}
-                        }
-                    }
-                }
-            },
-            {
-                { 8, 9 },
-                integer_literal{
-                    { 8, 9 },
-                    { lexer::token_type::integer, UR"(3)", { 8, 9 } },
-                    {}
-                }
-            }
-        }
+MAYFLY_ADD_TESTCASE("equal precedence, left associative",
+    test(UR"(1 + 2 + 3;)",
+        expression{ { 0, 9 },
+            binary_expression{ { 0, 9 },
+                { lexer::token_type::plus, UR"(+)", { 6, 7 } },
+                { { 0, 5 },
+                    binary_expression{ { 0, 5 },
+                        { lexer::token_type::plus, UR"(+)", { 2, 3 } },
+                        { { 0, 1 }, integer_literal{ { 0, 1 }, { lexer::token_type::integer, UR"(1)", { 0, 1 } }, {} } },
+                        { { 4, 5 }, integer_literal{ { 4, 5 }, { lexer::token_type::integer, UR"(2)", { 4, 5 } }, {} } } } },
+                { { 8, 9 }, integer_literal{ { 8, 9 }, { lexer::token_type::integer, UR"(3)", { 8, 9 } }, {} } } }
 
-    },
-    [](auto && ctx) {
-        return parse_expression(ctx);
-    }
-));
+        },
+        [](auto && ctx) { return parse_expression(ctx); }));
 
-MAYFLY_ADD_TESTCASE("equal precedence, right associative", test(UR"(1 = 2 = 3;)",
-    expression{
-        { 0, 9 },
-        binary_expression{
-            { 0, 9 },
-            { lexer::token_type::assign, UR"(=)", { 2, 3 } },
-            {
-                { 0, 1 },
-                integer_literal{
-                    { 0, 1 },
-                    { lexer::token_type::integer, UR"(1)", { 0, 1 } },
-                    {}
-                }
-            },
-            {
-                { 4, 9 },
-                binary_expression{
-                    { 4, 9 },
-                    { lexer::token_type::assign, UR"(=)", { 6, 7 } },
-                    {
-                        { 4, 5 },
-                        integer_literal{
-                            { 4, 5 },
-                            { lexer::token_type::integer, UR"(2)", { 4, 5 } },
-                            {}
-                        }
-                    },
-                    {
-                        { 8, 9 },
-                        integer_literal{
-                            { 8, 9 },
-                            { lexer::token_type::integer, UR"(3)", { 8, 9 } },
-                            {}
-                        }
-                    }
-                }
-            }
-        }
+MAYFLY_ADD_TESTCASE("equal precedence, right associative",
+    test(UR"(1 = 2 = 3;)",
+        expression{ { 0, 9 },
+            binary_expression{ { 0, 9 },
+                { lexer::token_type::assign, UR"(=)", { 2, 3 } },
+                { { 0, 1 }, integer_literal{ { 0, 1 }, { lexer::token_type::integer, UR"(1)", { 0, 1 } }, {} } },
+                { { 4, 9 },
+                    binary_expression{ { 4, 9 },
+                        { lexer::token_type::assign, UR"(=)", { 6, 7 } },
+                        { { 4, 5 }, integer_literal{ { 4, 5 }, { lexer::token_type::integer, UR"(2)", { 4, 5 } }, {} } },
+                        { { 8, 9 }, integer_literal{ { 8, 9 }, { lexer::token_type::integer, UR"(3)", { 8, 9 } }, {} } } } } }
 
-    },
-    [](auto && ctx) {
-        return parse_expression(ctx);
-    }
-));
+        },
+        [](auto && ctx) { return parse_expression(ctx); }));
 
-MAYFLY_ADD_TESTCASE("lower-higher precedence, left associative", test(UR"(1 + 2 * 3;)",
-    expression{
-        { 0, 9 },
-        binary_expression{
-            { 0, 9 },
-            { lexer::token_type::plus, UR"(+)", { 2, 3 } },
-            {
-                { 0, 1 },
-                integer_literal{
-                    { 0, 1 },
-                    { lexer::token_type::integer, UR"(1)", { 0, 1 } },
-                    {}
-                }
-            },
-            {
-                { 4, 9 },
-                binary_expression{
-                    { 4, 9 },
-                    { lexer::token_type::star, UR"(*)", { 6, 7 } },
-                    {
-                        { 4, 5 },
-                        integer_literal{
-                            { 4, 5 },
-                            { lexer::token_type::integer, UR"(2)", { 4, 5 } },
-                            {}
-                        }
-                    },
-                    {
-                        { 8, 9 },
-                        integer_literal{
-                            { 8, 9 },
-                            { lexer::token_type::integer, UR"(3)", { 8, 9 } },
-                            {}
-                        }
-                    }
-                }
-            }
-        }
+MAYFLY_ADD_TESTCASE("lower-higher precedence, left associative",
+    test(UR"(1 + 2 * 3;)",
+        expression{ { 0, 9 },
+            binary_expression{ { 0, 9 },
+                { lexer::token_type::plus, UR"(+)", { 2, 3 } },
+                { { 0, 1 }, integer_literal{ { 0, 1 }, { lexer::token_type::integer, UR"(1)", { 0, 1 } }, {} } },
+                { { 4, 9 },
+                    binary_expression{ { 4, 9 },
+                        { lexer::token_type::star, UR"(*)", { 6, 7 } },
+                        { { 4, 5 }, integer_literal{ { 4, 5 }, { lexer::token_type::integer, UR"(2)", { 4, 5 } }, {} } },
+                        { { 8, 9 }, integer_literal{ { 8, 9 }, { lexer::token_type::integer, UR"(3)", { 8, 9 } }, {} } } } } }
 
-    },
-    [](auto && ctx) {
-        return parse_expression(ctx);
-    }
-));
+        },
+        [](auto && ctx) { return parse_expression(ctx); }));
 
-MAYFLY_ADD_TESTCASE("lower-higher-lower precedence, left associative", test(UR"(1 + 2 * 3 + 4;)",
-    expression{
-        { 0, 13 },
-        binary_expression{
-            { 0, 13 },
-            { lexer::token_type::plus, UR"(+)", { 10, 11 } },
-            {
-                { 0, 9 },
-                binary_expression{
-                    { 0, 9 },
-                    { lexer::token_type::plus, UR"(+)", { 2, 3 } },
-                    {
-                        { 0, 1 },
-                        integer_literal{
-                            { 0, 1 },
-                            { lexer::token_type::integer, UR"(1)", { 0, 1 } },
-                            {}
-                        }
-                    },
-                    {
-                        { 4, 9 },
-                        binary_expression{
-                            { 4, 9 },
-                            { lexer::token_type::star, UR"(*)", { 6, 7 } },
-                            {
-                                { 4, 5 },
-                                integer_literal{
-                                    { 4, 5 },
-                                    { lexer::token_type::integer, UR"(2)", { 4, 5 } },
-                                    {}
-                                }
-                            },
-                            {
-                                { 8, 9 },
-                                integer_literal{
-                                    { 8, 9 },
-                                    { lexer::token_type::integer, UR"(3)", { 8, 9 } },
-                                    {}
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            {
-                { 12, 13 },
-                integer_literal{
-                    { 12, 13 },
-                    { lexer::token_type::integer, UR"(4)", { 12, 13 } },
-                    {}
-                }
-            }
-        }
+MAYFLY_ADD_TESTCASE("lower-higher-lower precedence, left associative",
+    test(UR"(1 + 2 * 3 + 4;)",
+        expression{ { 0, 13 },
+            binary_expression{ { 0, 13 },
+                { lexer::token_type::plus, UR"(+)", { 10, 11 } },
+                { { 0, 9 },
+                    binary_expression{ { 0, 9 },
+                        { lexer::token_type::plus, UR"(+)", { 2, 3 } },
+                        { { 0, 1 }, integer_literal{ { 0, 1 }, { lexer::token_type::integer, UR"(1)", { 0, 1 } }, {} } },
+                        { { 4, 9 },
+                            binary_expression{ { 4, 9 },
+                                { lexer::token_type::star, UR"(*)", { 6, 7 } },
+                                { { 4, 5 }, integer_literal{ { 4, 5 }, { lexer::token_type::integer, UR"(2)", { 4, 5 } }, {} } },
+                                { { 8, 9 }, integer_literal{ { 8, 9 }, { lexer::token_type::integer, UR"(3)", { 8, 9 } }, {} } } } } } },
+                { { 12, 13 }, integer_literal{ { 12, 13 }, { lexer::token_type::integer, UR"(4)", { 12, 13 } }, {} } } }
 
-    },
-    [](auto && ctx) {
-        return parse_expression(ctx);
-    }
-));
+        },
+        [](auto && ctx) { return parse_expression(ctx); }));
 
 MAYFLY_END_SUITE;
 MAYFLY_END_SUITE;
-

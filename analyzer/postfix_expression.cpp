@@ -20,29 +20,31 @@
  *
  **/
 
-#include "vapor/parser.h"
 #include "vapor/analyzer/postfix_expression.h"
 #include "vapor/analyzer/function.h"
-#include "vapor/analyzer/id_expression.h"
 #include "vapor/analyzer/helpers.h"
+#include "vapor/analyzer/id_expression.h"
+#include "vapor/parser.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     postfix_expression::postfix_expression(const parser::postfix_expression & parse, scope * lex_scope)
         : _parse{ parse }, _scope{ lex_scope }, _brace{ parse.bracket_type }
     {
-        fmap(_parse.base_expression, make_overload_set(
-            [&](const parser::expression_list & expr_list){
-                _base_expr = preanalyze_expression(expr_list, lex_scope);
-                return unit{};
-            },
-            [&](const parser::id_expression & id_expr){
-                _base_expr = preanalyze_id_expression(id_expr, lex_scope);
-                return unit{};
-            }
-        ));
+        fmap(_parse.base_expression,
+            make_overload_set(
+                [&](const parser::expression_list & expr_list) {
+                    _base_expr = preanalyze_expression(expr_list, lex_scope);
+                    return unit{};
+                },
+                [&](const parser::id_expression & id_expr) {
+                    _base_expr = preanalyze_id_expression(id_expr, lex_scope);
+                    return unit{};
+                }));
 
-        _arguments = fmap(_parse.arguments, [&](auto && expr){ return preanalyze_expression(expr, lex_scope); });
+        _arguments = fmap(_parse.arguments, [&](auto && expr) { return preanalyze_expression(expr, lex_scope); });
     }
 
     void postfix_expression::print(std::ostream & os, std::size_t indent) const
@@ -74,29 +76,23 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     future<> postfix_expression::_analyze(analysis_context & ctx)
     {
         return foldl(_arguments, make_ready_future(), [&](auto && prev, auto && expr) {
-                return prev.then([&] {
-                    return expr->analyze(ctx);
-                });
-            }).then([&]{
-                return _base_expr->analyze(ctx);
-            }).then([&]{
-                if (!_parse.bracket_type)
-                {
-                    return make_ready_future();
-                }
+            return prev.then([&] { return expr->analyze(ctx); });
+        }).then([&] {
+              return _base_expr->analyze(ctx);
+          }).then([&] {
+            if (!_parse.bracket_type)
+            {
+                return make_ready_future();
+            }
 
-                return resolve_overload(
-                    _base_expr->get_type(),
-                    *_parse.bracket_type,
-                        fmap(_arguments, [](auto && arg) -> const type * { return arg->get_type(); }),
-                    _scope
-                ).then([&](auto && overload) {
-                        _overload = overload;
-                        return _overload->return_type();
-                    }).then([&](auto && ret_type) {
-                        this->_set_variable(make_expression_variable(this, ret_type));
-                    });
-            });
+            return resolve_overload(
+                _base_expr->get_type(), *_parse.bracket_type, fmap(_arguments, [](auto && arg) -> const type * { return arg->get_type(); }), _scope)
+                .then([&](auto && overload) {
+                    _overload = overload;
+                    return _overload->return_type();
+                })
+                .then([&](auto && ret_type) { this->_set_variable(make_expression_variable(this, ret_type)); });
+        });
     }
 
     std::unique_ptr<expression> postfix_expression::_clone_expr_with_replacement(replacements & repl) const
@@ -104,19 +100,19 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         auto ret = std::unique_ptr<postfix_expression>(new postfix_expression(*this));
 
         ret->_base_expr = _base_expr->clone_expr_with_replacement(repl);
-        ret->_arguments = fmap(_arguments, [&](auto && arg){ return arg->clone_expr_with_replacement(repl); });
+        ret->_arguments = fmap(_arguments, [&](auto && arg) { return arg->clone_expr_with_replacement(repl); });
 
         return ret;
     }
 
     future<expression *> postfix_expression::_simplify_expr(simplification_context & ctx)
     {
-        return when_all(fmap(_arguments, [&](auto && expr) {
-                return expr->simplify_expr(ctx);
-            })).then([&](auto && simplified) {
+        return when_all(fmap(_arguments, [&](auto && expr) { return expr->simplify_expr(ctx); }))
+            .then([&](auto && simplified) {
                 replace_uptrs(_arguments, simplified, ctx);
                 return _base_expr->simplify_expr(ctx);
-            }).then([&](auto && simplified) {
+            })
+            .then([&](auto && simplified) {
                 replace_uptr(_base_expr, simplified, ctx);
 
                 if (!_parse.bracket_type)
@@ -124,16 +120,15 @@ namespace reaver::vapor::analyzer { inline namespace _v1
                     return make_ready_future(_base_expr.release());
                 }
 
-                auto args = fmap(_arguments, [&](auto && expr){ return expr->get_variable(); });
-                return _overload->simplify(ctx, std::move(args))
-                    .then([&](auto && simplified) -> expression * {
-                        if (simplified)
-                        {
-                            return simplified;
-                        }
+                auto args = fmap(_arguments, [&](auto && expr) { return expr->get_variable(); });
+                return _overload->simplify(ctx, std::move(args)).then([&](auto && simplified) -> expression * {
+                    if (simplified)
+                    {
+                        return simplified;
+                    }
 
-                        return this;
-                    });
+                    return this;
+                });
             });
     }
 
@@ -148,26 +143,24 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         auto base_variable_value = get<codegen::ir::value>(_base_expr->get_variable()->codegen_ir(ctx));
         auto base_variable = get<std::shared_ptr<codegen::ir::variable>>(base_variable_value);
-        auto arguments_instructions = fmap(_arguments, [&](auto && arg){ return arg->codegen_ir(ctx); });
+        auto arguments_instructions = fmap(_arguments, [&](auto && arg) { return arg->codegen_ir(ctx); });
 
         auto base_expr_variable = base_expr_instructions.back().result;
-        auto arguments_values = fmap(arguments_instructions, [](auto && insts){ return insts.back().result; });
+        auto arguments_values = fmap(arguments_instructions, [](auto && insts) { return insts.back().result; });
         arguments_values.insert(arguments_values.begin(), _overload->call_operand_ir(ctx));
         arguments_values.insert(arguments_values.begin(), std::move(base_variable));
 
-        auto postfix_expr_instruction = codegen::ir::instruction{
-            none, none,
+        auto postfix_expr_instruction = codegen::ir::instruction{ none,
+            none,
             { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
             std::move(arguments_values),
-            { codegen::ir::make_variable((*_overload->return_type().try_get())->codegen_type(ctx)) }
-        };
+            { codegen::ir::make_variable((*_overload->return_type().try_get())->codegen_type(ctx)) } };
 
         ctx.add_function_to_generate(_overload);
 
         statement_ir ret;
-        ret.reserve(base_expr_instructions.size() + std::accumulate(
-            arguments_instructions.begin(), arguments_instructions.end(),
-            1, [](std::size_t i, auto && insts){ return i + insts.size(); }));
+        ret.reserve(base_expr_instructions.size()
+            + std::accumulate(arguments_instructions.begin(), arguments_instructions.end(), 1, [](std::size_t i, auto && insts) { return i + insts.size(); }));
         std::move(base_expr_instructions.begin(), base_expr_instructions.end(), std::back_inserter(ret));
         fmap(arguments_instructions, [&](auto && insts) {
             std::move(insts.begin(), insts.end(), std::back_inserter(ret));
@@ -187,5 +180,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         return expression::get_variable();
     }
-}}
-
+}
+}

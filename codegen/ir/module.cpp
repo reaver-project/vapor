@@ -22,24 +22,26 @@
 
 #include "vapor/codegen/ir/module.h"
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     std::ostream & ir::operator<<(std::ostream & os, const ir::module & mod)
     {
         fmap(mod.symbols, [&](auto && symb) {
-            fmap(symb, make_overload_set(
-                [&](const std::shared_ptr<variable> & var) {
-                    os << *var << "\n\n";
-                    return unit{};
-                },
-                [&](const function & func) {
-                    os << func << "\n";
-                    return unit{};
-                }
-            ));
+            fmap(symb,
+                make_overload_set(
+                    [&](const std::shared_ptr<variable> & var) {
+                        os << *var << "\n\n";
+                        return unit{};
+                    },
+                    [&](const function & func) {
+                        os << func << "\n";
+                        return unit{};
+                    }));
             return unit{};
         });
         return os;
     }
-}}
-
+}
+}

@@ -20,13 +20,15 @@
  *
  **/
 
-#include "vapor/parser/lambda_expression.h"
-#include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/if.h"
-#include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/boolean.h"
+#include "vapor/analyzer/helpers.h"
+#include "vapor/analyzer/symbol.h"
+#include "vapor/parser/lambda_expression.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     void if_statement::print(std::ostream & os, std::size_t indent) const
     {
@@ -90,37 +92,36 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
     future<statement *> if_statement::_simplify(simplification_context & ctx)
     {
-        return _condition->simplify_expr(ctx)
-            .then([&](auto && simplified) {
-                replace_uptr(_condition, simplified, ctx);
+        return _condition->simplify_expr(ctx).then([&](auto && simplified) {
+            replace_uptr(_condition, simplified, ctx);
 
-                auto var = _condition->get_variable();
-                if (var->is_constant())
+            auto var = _condition->get_variable();
+            if (var->is_constant())
+            {
+                if (var->get_type() != builtin_types().boolean.get())
                 {
-                    if (var->get_type() != builtin_types().boolean.get())
-                    {
-                        assert(0);
-                    }
-
-                    auto condition = dynamic_cast<boolean_constant *>(var)->get_value();
-                    if (condition)
-                    {
-                        return _then_block.release()->simplify(ctx);
-                    }
-
-                    else
-                    {
-                        if (_else_block)
-                        {
-                            return _else_block.get().release()->simplify(ctx);
-                        }
-
-                        return make_null_statement().release()->simplify(ctx);
-                    }
+                    assert(0);
                 }
 
-                return make_ready_future<statement *>(this);
-            });
+                auto condition = dynamic_cast<boolean_constant *>(var)->get_value();
+                if (condition)
+                {
+                    return _then_block.release()->simplify(ctx);
+                }
+
+                else
+                {
+                    if (_else_block)
+                    {
+                        return _else_block.get().release()->simplify(ctx);
+                    }
+
+                    return make_null_statement().release()->simplify(ctx);
+                }
+            }
+
+            return make_ready_future<statement *>(this);
+        });
     }
 
     statement_ir if_statement::_codegen_ir(ir_generation_context & ctx) const
@@ -135,10 +136,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         auto negated_variable = codegen::ir::make_variable(builtin_types().boolean->codegen_type(ctx));
         auto negation = codegen::ir::instruction{
-            {}, {},
-            { boost::typeindex::type_id<codegen::ir::boolean_negation_instruction>() },
-            { condition_variable },
-            negated_variable
+            {}, {}, { boost::typeindex::type_id<codegen::ir::boolean_negation_instruction>() }, { condition_variable }, negated_variable
         };
 
         auto else_label = U"__else_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.label_index++));
@@ -153,37 +151,27 @@ namespace reaver::vapor::analyzer { inline namespace _v1
             }
             else
             {
-                ir = statement_ir{ {
-                    {}, {},
-                    { boost::typeindex::type_id<codegen::ir::noop_instruction>() },
-                    {},
-                    codegen::ir::label{ else_label, {} }
-                } };
+                ir = statement_ir{ { {}, {}, { boost::typeindex::type_id<codegen::ir::noop_instruction>() }, {}, codegen::ir::label{ else_label, {} } } };
             }
 
             ir.front().label = else_label;
             return ir;
         }();
 
-        auto jump = codegen::ir::instruction{
-            {}, {},
+        auto jump = codegen::ir::instruction{ {},
+            {},
             { boost::typeindex::type_id<codegen::ir::jump_instruction>() },
             { negated_variable, codegen::ir::label{ else_label, {} } },
-            codegen::ir::label{ else_label, {} }
-        };
+            codegen::ir::label{ else_label, {} } };
 
-        auto jump_over_else = codegen::ir::instruction{
-            {}, {},
+        auto jump_over_else = codegen::ir::instruction{ {},
+            {},
             { boost::typeindex::type_id<codegen::ir::jump_instruction>() },
             { codegen::ir::boolean_value{ true }, codegen::ir::label{ after_else_label, {} } },
-            codegen::ir::label{ after_else_label, {} }
-        };
+            codegen::ir::label{ after_else_label, {} } };
 
         auto after_else = codegen::ir::instruction{
-            after_else_label, {},
-            { boost::typeindex::type_id<codegen::ir::noop_instruction>() },
-            {},
-            codegen::ir::label{ after_else_label, {} }
+            after_else_label, {}, { boost::typeindex::type_id<codegen::ir::noop_instruction>() }, {}, codegen::ir::label{ after_else_label, {} }
         };
 
         statement_ir ret;
@@ -197,5 +185,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         ret.push_back(std::move(after_else));
         return ret;
     }
-}}
-
+}
+}

@@ -30,10 +30,12 @@
 #include "../range.h"
 #include "helpers.h"
 #include "import_expression.h"
-#include "postfix_expression.h"
 #include "literal.h"
+#include "postfix_expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     struct lambda_expression;
     struct unary_expression;
@@ -45,26 +47,24 @@ namespace reaver::vapor::parser { inline namespace _v1
     struct expression
     {
         range_type range;
-        variant<
-            literal<lexer::token_type::string>,
+        variant<literal<lexer::token_type::string>,
             literal<lexer::token_type::integer>,
             literal<lexer::token_type::boolean>,
             postfix_expression,
             import_expression,
             recursive_wrapper<lambda_expression>,
             recursive_wrapper<unary_expression>,
-            recursive_wrapper<binary_expression>
-        > expression_value = postfix_expression();
+            recursive_wrapper<binary_expression>>
+            expression_value = postfix_expression();
     };
 
     inline bool operator==(const expression & lhs, const expression & rhs)
     {
-        return lhs.range == rhs.range
-            && lhs.expression_value == rhs.expression_value;
+        return lhs.range == rhs.range && lhs.expression_value == rhs.expression_value;
     }
 
     expression parse_expression(context & ctx, expression_special_modes = expression_special_modes::none);
 
     void print(const expression & expr, std::ostream & os, std::size_t indent = 0);
-}}
-
+}
+}

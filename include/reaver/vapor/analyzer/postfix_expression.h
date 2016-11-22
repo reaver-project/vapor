@@ -24,12 +24,17 @@
 
 #include "expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     struct postfix_expression;
-}}
+}
+}
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class scope;
     class function;
@@ -64,5 +69,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         return std::make_unique<postfix_expression>(parse, lex_scope);
     }
-}}
-
+}
+}

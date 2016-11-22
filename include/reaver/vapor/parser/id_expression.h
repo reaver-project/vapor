@@ -22,14 +22,16 @@
 
 #pragma once
 
-#include <vector>
 #include <string>
+#include <vector>
 
-#include "../range.h"
 #include "../lexer/token.h"
+#include "../range.h"
 #include "helpers.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     struct id_expression
     {
@@ -45,6 +47,5 @@ namespace reaver::vapor::parser { inline namespace _v1
     id_expression parse_id_expression(context & ctx);
 
     void print(const id_expression & ide, std::ostream & os, std::size_t indent = 0);
-}}
-
-
+}
+}

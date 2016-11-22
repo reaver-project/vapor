@@ -26,11 +26,13 @@
 
 #include <boost/locale.hpp>
 
-namespace reaver::vapor { inline namespace _v1
+namespace reaver::vapor
+{
+inline namespace _v1
 {
     inline auto utf8(const std::u32string & utf32)
     {
         return boost::locale::conv::utf_to_utf<char>(utf32);
     }
-}}
-
+}
+}

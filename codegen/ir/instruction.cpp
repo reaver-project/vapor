@@ -22,7 +22,9 @@
 
 #include "vapor/codegen/ir/instruction.h"
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     std::ostream & ir::operator<<(std::ostream & os, const ir::instruction & inst)
     {
@@ -44,5 +46,5 @@ namespace reaver::vapor::codegen { inline namespace _v1
 
         return os;
     }
-}}
-
+}
+}

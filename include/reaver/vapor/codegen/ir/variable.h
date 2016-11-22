@@ -22,15 +22,17 @@
 
 #pragma once
 
-#include <reaver/variant.h>
 #include <reaver/optional.h>
+#include <reaver/variant.h>
 
-#include "integer.h"
-#include "boolean.h"
 #include "../../utf8.h"
+#include "boolean.h"
+#include "integer.h"
 #include "scope.h"
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     namespace ir
     {
@@ -79,15 +81,10 @@ namespace reaver::vapor::codegen { inline namespace _v1
 
         std::ostream & operator<<(std::ostream & os, const variable & var);
 
-        using value = variant<
-            std::shared_ptr<variable>,
-            integer_value,
-            boolean_value,
-            label
-        >;
+        using value = variant<std::shared_ptr<variable>, integer_value, boolean_value, label>;
 
         std::ostream & operator<<(std::ostream & os, const value & val);
         std::shared_ptr<variable_type> get_type(const value &);
     }
-}}
-
+}
+}

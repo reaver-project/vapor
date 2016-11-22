@@ -24,16 +24,21 @@
 
 #include <reaver/prelude/monad.h>
 
-#include "statement.h"
-#include "expression.h"
 #include "../codegen/ir/variable.h"
+#include "expression.h"
+#include "statement.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     struct block;
-}}
+}
+}
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class block;
     std::unique_ptr<block> preanalyze_block(const parser::block &, scope *, bool);
@@ -60,7 +65,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         virtual std::vector<const return_statement *> get_returns() const override
         {
-            return mbind(_statements, [](auto && stmt){ return stmt->get_returns(); });
+            return mbind(_statements, [](auto && stmt) { return stmt->get_returns(); });
         }
 
         bool has_return_expression() const
@@ -111,5 +116,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         return std::make_unique<block>(parse, std::move(lex_scope), is_top_level);
     }
-}}
-
+}
+}

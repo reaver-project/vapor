@@ -23,7 +23,9 @@
 #include "vapor/parser/argument_list.h"
 #include "vapor/parser/lambda_expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     argument_list parse_argument_list(context & ctx)
     {
@@ -65,5 +67,5 @@ namespace reaver::vapor::parser { inline namespace _v1
         });
         os << in << "}\n";
     }
-}}
-
+}
+}

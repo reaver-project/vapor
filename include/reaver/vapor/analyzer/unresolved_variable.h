@@ -22,12 +22,14 @@
 
 #pragma once
 
-#include "variable.h"
-#include "type.h"
 #include "expression.h"
+#include "type.h"
 #include "type_variable.h"
+#include "variable.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class unresolved_variable : public variable
     {
@@ -69,12 +71,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         virtual variable_ir _codegen_ir(ir_generation_context & ctx) const override
         {
             assert(_type && _type->get_value());
-            return {
-                codegen::ir::make_variable(
-                    _type->get_value()->codegen_type(ctx),
-                    _name
-                )
-            };
+            return { codegen::ir::make_variable(_type->get_value()->codegen_type(ctx), _name) };
         }
 
         type_variable * _type = nullptr;
@@ -85,5 +82,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         return std::make_unique<unresolved_variable>(std::move(name));
     }
-}}
-
+}
+}

@@ -23,18 +23,20 @@
 #pragma once
 
 #include <memory>
-#include <unordered_map>
-#include <string>
 #include <shared_mutex>
+#include <string>
+#include <unordered_map>
 
-#include <reaver/optional.h>
 #include <reaver/future.h>
+#include <reaver/optional.h>
 
-#include "../utf8.h"
 #include "../codegen/ir/scope.h"
+#include "../utf8.h"
 #include "ir_context.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class failed_lookup : public exception
     {
@@ -53,7 +55,9 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
     class scope
     {
-        struct _key {};
+        struct _key
+        {
+        };
 
         void _init_close()
         {
@@ -73,7 +77,8 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         using _shlock = std::shared_lock<std::shared_mutex>;
 
     public:
-        scope(_key, scope * parent_scope, bool is_local, bool is_shadowing_boundary) : _parent{ parent_scope }, _is_local_scope{ is_local }, _is_shadowing_boundary{ is_shadowing_boundary }
+        scope(_key, scope * parent_scope, bool is_local, bool is_shadowing_boundary)
+            : _parent{ parent_scope }, _is_local_scope{ is_local }, _is_shadowing_boundary{ is_shadowing_boundary }
         {
             _init_close();
         }
@@ -224,5 +229,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         optional<future<>> _close_future;
         optional<manual_promise<void>> _close_promise;
     };
-}}
-
+}
+}

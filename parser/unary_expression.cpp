@@ -24,19 +24,19 @@
 #include "vapor/parser/binary_expression.h"
 #include "vapor/parser/lambda_expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     const std::vector<reaver::vapor::lexer::_v1::token_type> & unary_operators()
     {
-        static std::vector<lexer::token_type> unary_ops = {
-            lexer::token_type::plus,
+        static std::vector<lexer::token_type> unary_ops = { lexer::token_type::plus,
             lexer::token_type::minus,
             lexer::token_type::logical_not,
             lexer::token_type::bitwise_not,
             lexer::token_type::star,
             lexer::token_type::increment,
-            lexer::token_type::decrement
-        };
+            lexer::token_type::decrement };
 
         return unary_ops;
     }
@@ -64,7 +64,7 @@ namespace reaver::vapor::parser { inline namespace _v1
         return ret;
     }
 
-    void print(const unary_expression& expr, std::ostream& os, std::size_t indent)
+    void print(const unary_expression & expr, std::ostream & os, std::size_t indent)
     {
         auto in = std::string(indent, ' ');
 
@@ -74,5 +74,5 @@ namespace reaver::vapor::parser { inline namespace _v1
         print(expr.operand, os, indent + 4);
         os << in << "}\n";
     }
-}}
-
+}
+}

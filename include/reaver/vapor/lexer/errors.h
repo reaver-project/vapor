@@ -26,7 +26,9 @@
 
 #include "../range.h"
 
-namespace reaver::vapor::lexer { inline namespace _v1
+namespace reaver::vapor::lexer
+{
+inline namespace _v1
 {
     class unterminated_comment : public reaver::exception
     {
@@ -45,5 +47,5 @@ namespace reaver::vapor::lexer { inline namespace _v1
             *this << "unterminated string at " << r;
         }
     };
-}}
-
+}
+}

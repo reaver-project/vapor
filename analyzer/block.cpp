@@ -22,35 +22,31 @@
 
 #include <numeric>
 
-#include "vapor/parser.h"
 #include "vapor/analyzer/block.h"
 #include "vapor/analyzer/return.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/parser.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     block::block(const parser::block & parse, scope * lex_scope, bool is_top_level)
-        : _parse{ parse }, _scope{ lex_scope->clone_local() }, _original_scope{ _scope.get() },
-        _is_top_level{ is_top_level }
+        : _parse{ parse }, _scope{ lex_scope->clone_local() }, _original_scope{ _scope.get() }, _is_top_level{ is_top_level }
     {
         _statements = fmap(_parse.block_value, [&](auto && row) {
-            return get<0>(fmap(row, make_overload_set(
-                [&](const parser::block & block) -> std::unique_ptr<statement>
-                {
-                    return preanalyze_block(block, _scope.get(), false);
-                },
-                [&](const parser::statement & statement)
-                {
-                    auto scope_ptr = _scope.get();
-                    auto ret = preanalyze_statement(statement, scope_ptr);
-                    if (scope_ptr != _scope.get())
-                    {
-                        _scope.release()->keep_alive();
-                        _scope.reset(scope_ptr);
-                    }
-                    return ret;
-                }
-            )));
+            return get<0>(fmap(row,
+                make_overload_set([&](const parser::block & block) -> std::unique_ptr<statement> { return preanalyze_block(block, _scope.get(), false); },
+                    [&](const parser::statement & statement) {
+                        auto scope_ptr = _scope.get();
+                        auto ret = preanalyze_statement(statement, scope_ptr);
+                        if (scope_ptr != _scope.get())
+                        {
+                            _scope.release()->keep_alive();
+                            _scope.reset(scope_ptr);
+                        }
+                        return ret;
+                    })));
         });
 
         _scope->close();
@@ -63,7 +59,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
     type * block::return_type() const
     {
-        auto return_types = fmap(get_returns(), [](auto && stmt){ return stmt->get_returned_type(); });
+        auto return_types = fmap(get_returns(), [](auto && stmt) { return stmt->get_returned_type(); });
 
         auto val = value_type();
         if (val)
@@ -101,14 +97,10 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
     future<> block::_analyze(analysis_context & ctx)
     {
-        auto fut = foldl(_statements, make_ready_future(), [&ctx](auto && prev, auto && stmt) {
-            return prev.then([&]() {
-                return stmt->analyze(ctx);
-            });
-        });
+        auto fut = foldl(_statements, make_ready_future(), [&ctx](auto && prev, auto && stmt) { return prev.then([&]() { return stmt->analyze(ctx); }); });
 
         fmap(_value_expr, [&](auto && expr) {
-            fut = fut.then([&ctx, expr = expr.get()]{ return expr->analyze(ctx); });
+            fut = fut.then([&ctx, expr = expr.get()] { return expr->analyze(ctx); });
             return unit{};
         });
 
@@ -131,8 +123,8 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         auto clone = std::unique_ptr<block>(new block(*this));
         auto repl = replacements{};
 
-        clone->_statements = fmap(_statements, [&](auto && stmt){ return stmt->clone_with_replacement(repl); });
-        clone->_value_expr = fmap(_value_expr, [&](auto && expr){ return expr->clone_expr_with_replacement(repl); });
+        clone->_statements = fmap(_statements, [&](auto && stmt) { return stmt->clone_with_replacement(repl); });
+        clone->_value_expr = fmap(_value_expr, [&](auto && expr) { return expr->clone_expr_with_replacement(repl); });
         clone->_is_clone_cache = true;
 
         _clone = std::move(clone);
@@ -149,8 +141,8 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         auto ret = std::unique_ptr<block>(new block(*this));
 
-        ret->_statements = fmap(_statements, [&](auto && stmt){ return stmt->clone_with_replacement(repl); });
-        ret->_value_expr = fmap(_value_expr, [&](auto && expr){ return expr->clone_expr_with_replacement(repl); });
+        ret->_statements = fmap(_statements, [&](auto && stmt) { return stmt->clone_with_replacement(repl); });
+        ret->_value_expr = fmap(_value_expr, [&](auto && expr) { return expr->clone_expr_with_replacement(repl); });
 
         return ret;
     }
@@ -159,21 +151,19 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         _ensure_cache();
 
-        auto fut = foldl(_statements, make_ready_future(true),
-            [&](auto future, auto && statement) {
-                return future.then([&](bool do_continue) {
-                    if (!do_continue)
-                    {
-                        return make_ready_future(false);
-                    }
+        auto fut = foldl(_statements, make_ready_future(true), [&](auto future, auto && statement) {
+            return future.then([&](bool do_continue) {
+                if (!do_continue)
+                {
+                    return make_ready_future(false);
+                }
 
-                    return statement->simplify(ctx).then([&](auto && simplified) {
-                        replace_uptr(statement, simplified, ctx);
-                        return !statement->always_returns();
-                    });
+                return statement->simplify(ctx).then([&](auto && simplified) {
+                    replace_uptr(statement, simplified, ctx);
+                    return !statement->always_returns();
                 });
-            }
-        );
+            });
+        });
 
         fmap(_value_expr, [&](auto && expr) {
             fut = fut.then([&, expr = expr.get()](bool do_continue) {
@@ -193,8 +183,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         return fut.then([&](bool reached_end) -> statement * {
             if (!reached_end)
             {
-                auto always_returning = std::find_if(_statements.begin(), _statements.end(),
-                    [](auto && stmt){ return stmt->always_returns(); });
+                auto always_returning = std::find_if(_statements.begin(), _statements.end(), [](auto && stmt) { return stmt->always_returns(); });
 
                 assert(always_returning != _statements.end());
                 _statements.erase(always_returning + 1, _statements.end());
@@ -206,17 +195,11 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
     std::vector<codegen::_v1::ir::instruction> block::_codegen_ir(ir_generation_context & ctx) const
     {
-        auto statements = mbind(_statements, [&](auto && stmt) {
-            return stmt->codegen_ir(ctx);
-        });
+        auto statements = mbind(_statements, [&](auto && stmt) { return stmt->codegen_ir(ctx); });
         fmap(_value_expr, [&](auto && expr) {
             auto instructions = expr->codegen_ir(ctx);
-            instructions.emplace_back(codegen::ir::instruction{
-                none, none,
-                { boost::typeindex::type_id<codegen::ir::return_instruction>() },
-                {},
-                instructions.back().result
-            });
+            instructions.emplace_back(
+                codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, {}, instructions.back().result });
             std::move(instructions.begin(), instructions.end(), std::back_inserter(statements));
             return unit{};
         });
@@ -224,20 +207,11 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         statement_ir scope_cleanup;
         for (auto scope = _scope.get(); scope != _original_scope->parent(); scope = scope->parent())
         {
-            std::transform(
-                scope->symbols_in_order().rbegin(), scope->symbols_in_order().rend(),
-                std::back_inserter(scope_cleanup),
-                [&ctx](auto && symbol) {
-                    auto variable_ir = symbol->get_variable()->codegen_ir(ctx);
-                    auto variable = get<codegen::ir::value>(variable_ir);
-                    return codegen::ir::instruction{
-                        {}, {},
-                        { boost::typeindex::type_id<codegen::ir::destruction_instruction>() },
-                        { variable },
-                        variable
-                    };
-                }
-            );
+            std::transform(scope->symbols_in_order().rbegin(), scope->symbols_in_order().rend(), std::back_inserter(scope_cleanup), [&ctx](auto && symbol) {
+                auto variable_ir = symbol->get_variable()->codegen_ir(ctx);
+                auto variable = get<codegen::ir::value>(variable_ir);
+                return codegen::ir::instruction{ {}, {}, { boost::typeindex::type_id<codegen::ir::destruction_instruction>() }, { variable }, variable };
+            });
         }
 
         for (std::size_t i = 0; i < statements.size(); ++i)
@@ -307,31 +281,22 @@ namespace reaver::vapor::analyzer { inline namespace _v1
                         auto old_result = stmt.result;
                         auto var = make_variable(get_type(old_result));
                         stmt.result = var;
-                        statements.insert(statements.begin() + i++, {
-                            {}, {},
-                            { boost::typeindex::type_id<codegen::ir::materialization_instruction>() },
-                            { old_result },
-                            var
-                        });
+                        statements.insert(statements.begin() + i++,
+                            { {}, {}, { boost::typeindex::type_id<codegen::ir::materialization_instruction>() }, { old_result }, var });
                         labeled_return_values[2 * return_value_index + 1] = var;
                     }
 
                     ++return_value_index;
                 }
 
-                statements.emplace_back(codegen::ir::instruction{
-                    optional<std::u32string>{ U"__return_phi" }, none,
+                statements.emplace_back(codegen::ir::instruction{ optional<std::u32string>{ U"__return_phi" },
+                    none,
                     { boost::typeindex::type_id<codegen::ir::phi_instruction>() },
                     std::move(labeled_return_values),
-                    codegen::ir::make_variable(return_type()->codegen_type(ctx))
-                });
+                    codegen::ir::make_variable(return_type()->codegen_type(ctx)) });
 
-                statements.emplace_back(codegen::ir::instruction{
-                    none, none,
-                    { boost::typeindex::type_id<codegen::ir::return_instruction>() },
-                    {},
-                    statements.back().result
-                });
+                statements.emplace_back(
+                    codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, {}, statements.back().result });
             }
         }
 
@@ -343,5 +308,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         assert(_is_top_level);
         return codegen_ir(ctx).back().result;
     }
-}}
-
+}
+}

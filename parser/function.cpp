@@ -21,10 +21,12 @@
  **/
 
 #include "vapor/parser/function.h"
-#include "vapor/parser/lambda_expression.h"
 #include "vapor/parser/block.h"
+#include "vapor/parser/lambda_expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     function parse_function(context & ctx)
     {
@@ -67,7 +69,10 @@ namespace reaver::vapor::parser { inline namespace _v1
         os << in << "`function` at " << f.range << '\n';
         os << in << "{\n";
         os << std::string(indent + 4, ' ') << f.name << '\n';
-        fmap(f.arguments, [&](auto && arguments){ print(arguments, os, indent + 4); return unit{}; });
+        fmap(f.arguments, [&](auto && arguments) {
+            print(arguments, os, indent + 4);
+            return unit{};
+        });
         fmap(f.return_type, [&](auto && ret_type) {
             os << in << "return type:\n";
             os << in << "{\n";
@@ -78,5 +83,5 @@ namespace reaver::vapor::parser { inline namespace _v1
         print(*f.body, os, indent + 4);
         os << in << "}\n";
     }
-}}
-
+}
+}

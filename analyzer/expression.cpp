@@ -21,86 +21,71 @@
  **/
 
 #include "vapor/analyzer/expression.h"
-#include "vapor/analyzer/closure.h"
 #include "vapor/analyzer/binary_expression.h"
-#include "vapor/analyzer/integer.h"
 #include "vapor/analyzer/boolean.h"
-#include "vapor/analyzer/postfix_expression.h"
-#include "vapor/analyzer/unary_expression.h"
-#include "vapor/analyzer/import.h"
+#include "vapor/analyzer/closure.h"
 #include "vapor/analyzer/helpers.h"
+#include "vapor/analyzer/import.h"
+#include "vapor/analyzer/integer.h"
+#include "vapor/analyzer/postfix_expression.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/unary_expression.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     std::unique_ptr<expression> preanalyze_expression(const parser::_v1::expression & expr, scope * lex_scope)
     {
-        return get<0>(fmap(expr.expression_value, make_overload_set(
-            [](const parser::string_literal & string) -> std::unique_ptr<expression>
-            {
-                assert(0);
-                return nullptr;
-            },
+        return get<0>(fmap(expr.expression_value,
+            make_overload_set(
+                [](const parser::string_literal & string) -> std::unique_ptr<expression> {
+                    assert(0);
+                    return nullptr;
+                },
 
-            [](const parser::integer_literal & integer) -> std::unique_ptr<expression>
-            {
-                return std::make_unique<integer_literal>(integer);
-            },
+                [](const parser::integer_literal & integer) -> std::unique_ptr<expression> { return std::make_unique<integer_literal>(integer); },
 
-            [](const parser::boolean_literal & boolean) -> std::unique_ptr<expression>
-            {
-                return std::make_unique<boolean_literal>(boolean);
-            },
+                [](const parser::boolean_literal & boolean) -> std::unique_ptr<expression> { return std::make_unique<boolean_literal>(boolean); },
 
-            [&](const parser::postfix_expression & postfix) -> std::unique_ptr<expression>
-            {
-                auto pexpr = preanalyze_postfix_expression(postfix, lex_scope);
-                return pexpr;
-            },
+                [&](const parser::postfix_expression & postfix) -> std::unique_ptr<expression> {
+                    auto pexpr = preanalyze_postfix_expression(postfix, lex_scope);
+                    return pexpr;
+                },
 
-            [](const parser::import_expression & import) -> std::unique_ptr<expression>
-            {
-                assert(0);
-                return std::unique_ptr<import_expression>();
-            },
+                [](const parser::import_expression & import) -> std::unique_ptr<expression> {
+                    assert(0);
+                    return std::unique_ptr<import_expression>();
+                },
 
-            [&](const parser::lambda_expression & lambda_expr) -> std::unique_ptr<expression>
-            {
-                auto lambda = preanalyze_closure(lambda_expr, lex_scope);
-                return lambda;
-            },
+                [&](const parser::lambda_expression & lambda_expr) -> std::unique_ptr<expression> {
+                    auto lambda = preanalyze_closure(lambda_expr, lex_scope);
+                    return lambda;
+                },
 
-            [](const parser::unary_expression & unary_expr) -> std::unique_ptr<expression>
-            {
-                assert(0);
-                return std::unique_ptr<unary_expression>();
-            },
+                [](const parser::unary_expression & unary_expr) -> std::unique_ptr<expression> {
+                    assert(0);
+                    return std::unique_ptr<unary_expression>();
+                },
 
-            [&](const parser::binary_expression & binary_expr) -> std::unique_ptr<expression>
-            {
-                auto binexpr = preanalyze_binary_expression(binary_expr, lex_scope);
-                return binexpr;
-            }
-        )));
+                [&](const parser::binary_expression & binary_expr) -> std::unique_ptr<expression> {
+                    auto binexpr = preanalyze_binary_expression(binary_expr, lex_scope);
+                    return binexpr;
+                })));
     }
 
     future<> expression_list::_analyze(analysis_context & ctx)
     {
-        return foldl(value, make_ready_future(), [&](auto && prev, auto && expr) {
-            return prev.then([&] {
-                return expr->analyze(ctx);
-            });
-        });
+        return foldl(value, make_ready_future(), [&](auto && prev, auto && expr) { return prev.then([&] { return expr->analyze(ctx); }); });
     }
 
     future<expression *> expression_list::_simplify_expr(simplification_context & ctx)
     {
-        return when_all(fmap(value, [&](auto && expr) { return expr->simplify_expr(ctx); }))
-            .then([&](auto && simplified) -> expression * {
-                replace_uptrs(value, simplified, ctx);
-                assert(0);
-                return this;
-            });
+        return when_all(fmap(value, [&](auto && expr) { return expr->simplify_expr(ctx); })).then([&](auto && simplified) -> expression * {
+            replace_uptrs(value, simplified, ctx);
+            assert(0);
+            return this;
+        });
     }
 
     void expression_list::print(std::ostream & os, std::size_t indent) const
@@ -126,8 +111,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         auto ret = std::make_unique<expression_list>();
         ret->value.reserve(expr.expressions.size());
-        std::transform(expr.expressions.begin(), expr.expressions.end(), std::back_inserter(ret->value), [&](auto && expr)
-        {
+        std::transform(expr.expressions.begin(), expr.expressions.end(), std::back_inserter(ret->value), [&](auto && expr) {
             return preanalyze_expression(expr, lex_scope);
         });
         ret->range = expr.range;
@@ -157,5 +141,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         return ret;
     }
-}}
-
+}
+}

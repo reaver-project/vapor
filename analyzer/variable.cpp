@@ -24,21 +24,18 @@
 #include "vapor/analyzer/expression.h"
 #include "vapor/analyzer/symbol.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     variable_ir expression_variable::_codegen_ir(ir_generation_context & ctx) const
     {
-        return {
-            _expression->codegen_ir(ctx).back().result
-        };
+        return { _expression->codegen_ir(ctx).back().result };
     }
 
     future<variable *> expression_variable::_simplify(simplification_context & ctx)
     {
-        return _expression->simplify_expr(ctx)
-            .then([&](auto && simplified) -> variable * {
-                return simplified->get_variable();
-            });
+        return _expression->simplify_expr(ctx).then([&](auto && simplified) -> variable * { return simplified->get_variable(); });
     }
 
     std::unique_ptr<variable> expression_variable::_clone_with_replacement(replacements & repl) const
@@ -58,5 +55,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         return false;
     }
-}}
-
+}
+}

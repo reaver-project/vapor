@@ -25,12 +25,14 @@
 #include <reaver/optional.h>
 
 #include "../range.h"
-#include "helpers.h"
 #include "argument_list.h"
-#include "capture_list.h"
 #include "block.h"
+#include "capture_list.h"
+#include "helpers.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     struct lambda_expression
     {
@@ -43,15 +45,12 @@ namespace reaver::vapor::parser { inline namespace _v1
 
     inline bool operator==(const lambda_expression & lhs, const lambda_expression & rhs)
     {
-        return lhs.range == rhs.range
-            && lhs.captures == rhs.captures
-            && lhs.arguments == rhs.arguments
-            && lhs.return_type == rhs.return_type
+        return lhs.range == rhs.range && lhs.captures == rhs.captures && lhs.arguments == rhs.arguments && lhs.return_type == rhs.return_type
             && lhs.body == rhs.body;
     }
 
     lambda_expression parse_lambda_expression(context & ctx);
 
     void print(const lambda_expression & expr, std::ostream & os, std::size_t indent = 0);
-}}
-
+}
+}

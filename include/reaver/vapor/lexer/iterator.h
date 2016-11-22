@@ -27,7 +27,9 @@
 
 #include "detail/iterator_backend.h"
 
-namespace reaver::vapor::lexer { inline namespace _v1
+namespace reaver::vapor::lexer
+{
+inline namespace _v1
 {
     class iterator
     {
@@ -101,15 +103,15 @@ namespace reaver::vapor::lexer { inline namespace _v1
         std::shared_ptr<_detail::_lexer_node> _node = nullptr;
         std::shared_ptr<_detail::_iterator_backend> _backend = nullptr;
     };
-}}
+}
+}
 
 namespace std
 {
-    template<>
-    struct iterator_traits<reaver::vapor::lexer::iterator>
-    {
-        using value_type = reaver::vapor::lexer::token;
-        using iterator_category = forward_iterator_tag;
-    };
+template<>
+struct iterator_traits<reaver::vapor::lexer::iterator>
+{
+    using value_type = reaver::vapor::lexer::token;
+    using iterator_category = forward_iterator_tag;
+};
 }
-

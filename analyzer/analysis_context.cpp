@@ -21,7 +21,6 @@
  **/
 
 #include "vapor/analyzer/analysis_context.h"
+#include "vapor/analyzer/statement.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/variable.h"
-#include "vapor/analyzer/statement.h"
-

@@ -23,11 +23,13 @@
 #pragma once
 
 #include "../parser/return_expression.h"
-#include "statement.h"
 #include "expression.h"
 #include "helpers.h"
+#include "statement.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class return_statement : public statement
     {
@@ -81,9 +83,9 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         virtual future<statement *> _simplify(simplification_context & ctx) override
         {
             return _value_expr->simplify_expr(ctx).then([&](auto && simplified) -> statement * {
-                    replace_uptr(_value_expr, simplified, ctx);
-                    return this;
-                });
+                replace_uptr(_value_expr, simplified, ctx);
+                return this;
+            });
         }
 
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
@@ -96,5 +98,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         return std::make_unique<return_statement>(parse, lex_scope);
     }
-}}
-
+}
+}

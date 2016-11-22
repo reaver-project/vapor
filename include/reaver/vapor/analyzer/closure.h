@@ -26,18 +26,21 @@
 #include <numeric>
 
 #include "../parser/lambda_expression.h"
-#include "scope.h"
-#include "statement.h"
+#include "argument_list.h"
 #include "block.h"
 #include "function.h"
-#include "argument_list.h"
+#include "scope.h"
+#include "statement.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class closure_type : public type
     {
     public:
-        closure_type(scope * lex_scope, expression * closure, std::unique_ptr<function> fn) : type{ lex_scope }, _closure{ std::move(closure) }, _function{ std::move(fn) }
+        closure_type(scope * lex_scope, expression * closure, std::unique_ptr<function> fn)
+            : type{ lex_scope }, _closure{ std::move(closure) }, _function{ std::move(fn) }
         {
         }
 
@@ -49,13 +52,9 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         virtual future<function *> get_overload(lexer::token_type bracket, std::vector<const type *> args) const override
         {
             if (args.size() == _function->arguments().size()
-                    && std::inner_product(
-                        args.begin(), args.end(),
-                        _function->arguments().begin(),
-                        true,
-                        std::logical_and<>(),
-                        [](auto && type, auto && var) { return type == var->get_type(); }
-                    ))
+                && std::inner_product(args.begin(), args.end(), _function->arguments().begin(), true, std::logical_and<>(), [](auto && type, auto && var) {
+                       return type == var->get_type();
+                   }))
             {
                 return make_ready_future(_function.get());
             }
@@ -81,9 +80,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
             });
             _scope->close();
 
-            _return_type = fmap(_parse.return_type, [&](auto && ret_type) {
-                return preanalyze_expression(ret_type, _scope.get());
-            });
+            _return_type = fmap(_parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, _scope.get()); });
             _body = preanalyze_block(parse.body, _scope.get(), true);
         }
 
@@ -113,5 +110,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         return std::make_unique<closure>(parse, lex_scope);
     }
-}}
-
+}
+}

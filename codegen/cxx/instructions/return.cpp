@@ -21,10 +21,12 @@
  **/
 
 #include "vapor/codegen/cxx.h"
-#include "vapor/codegen/ir/instruction.h"
 #include "vapor/codegen/cxx/names.h"
+#include "vapor/codegen/ir/instruction.h"
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     namespace cxx
     {
@@ -41,5 +43,5 @@ namespace reaver::vapor::codegen { inline namespace _v1
             return U"return " + value_of(inst.result, ctx, true) + suffix + U";\n";
         }
     }
-}}
-
+}
+}

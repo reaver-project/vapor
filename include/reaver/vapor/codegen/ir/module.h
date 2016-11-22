@@ -22,13 +22,15 @@
 
 #pragma once
 
-#include <vector>
 #include <ostream>
+#include <vector>
 
 #include "function.h"
 #include "variable.h"
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     namespace ir
     {
@@ -44,9 +46,12 @@ namespace reaver::vapor::codegen { inline namespace _v1
 
         inline std::ostream & operator<<(std::ostream & os, const std::vector<module> & modules)
         {
-            fmap(modules, [&](auto && mod){ os << mod; return unit{}; });
+            fmap(modules, [&](auto && mod) {
+                os << mod;
+                return unit{};
+            });
             return os;
         }
     }
-}}
-
+}
+}

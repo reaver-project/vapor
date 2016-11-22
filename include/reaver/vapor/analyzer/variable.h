@@ -26,14 +26,16 @@
 
 #include <reaver/optional.h>
 
-#include "type.h"
-#include "../codegen/ir/variable.h"
 #include "../codegen/ir/function.h"
-#include "statement.h"
+#include "../codegen/ir/variable.h"
 #include "ir_context.h"
 #include "simplification_context.h"
+#include "statement.h"
+#include "type.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class type;
     class expression;
@@ -42,9 +44,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
     inline auto get_ir_variable(const variable_ir & ir)
     {
-        return get<std::shared_ptr<codegen::ir::variable>>(
-            get<codegen::ir::value>(ir)
-        );
+        return get<std::shared_ptr<codegen::ir::variable>>(get<codegen::ir::value>(ir));
     }
 
     class variable
@@ -63,11 +63,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         future<variable *> simplify(simplification_context & ctx)
         {
-            return ctx.get_future_or_init(this, [&]() {
-                return make_ready_future().then([&]() {
-                    return _simplify(ctx);
-                });
-            });
+            return ctx.get_future_or_init(this, [&]() { return make_ready_future().then([&]() { return _simplify(ctx); }); });
         }
 
         variable_ir codegen_ir(ir_generation_context & ctx) const
@@ -170,9 +166,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         virtual variable_ir _codegen_ir(ir_generation_context & ctx) const override
         {
-            return codegen::ir::make_variable(
-                _type->codegen_type(ctx)
-            );
+            return codegen::ir::make_variable(_type->codegen_type(ctx));
         }
 
         type * _type;
@@ -182,5 +176,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         return std::make_unique<blank_variable>(type);
     }
-}}
-
+}
+}

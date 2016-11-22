@@ -22,22 +22,22 @@
 
 #include <numeric>
 
-#include "vapor/parser.h"
-#include "vapor/analyzer/overload_set.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
+#include "vapor/analyzer/overload_set.h"
 #include "vapor/codegen/ir/function.h"
 #include "vapor/codegen/ir/type.h"
+#include "vapor/parser.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     void overload_set_type::add_function(function * fn)
     {
         std::unique_lock<std::mutex> lock{ _functions_lock };
 
-        if (std::find_if(_functions.begin(), _functions.end(), [&](auto && f) {
-                return f->arguments() == fn->arguments();
-            }) != _functions.end())
+        if (std::find_if(_functions.begin(), _functions.end(), [&](auto && f) { return f->arguments() == fn->arguments(); }) != _functions.end())
         {
             assert(0);
         }
@@ -55,13 +55,9 @@ namespace reaver::vapor::analyzer { inline namespace _v1
                 // this is dumb
                 // but you apparently can't compare `vector<T>` and `vector<const T>`...
                 return args.size() == f->arguments().size()
-                    && std::inner_product(
-                        args.begin(), args.end(),
-                        f->arguments().begin(),
-                        true,
-                        std::logical_and<>(),
-                        [](auto && type, auto && var) { return type == var->get_type(); }
-                    );
+                    && std::inner_product(args.begin(), args.end(), f->arguments().begin(), true, std::logical_and<>(), [](auto && type, auto && var) {
+                           return type == var->get_type();
+                       });
             });
 
             if (it != _functions.end())
@@ -79,32 +75,30 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         auto actual_type = *_codegen_t;
 
-        auto type = codegen::ir::variable_type{
-            U"__overload_set_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.overload_set_index++)),
+        auto type = codegen::ir::variable_type{ U"__overload_set_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.overload_set_index++)),
             get_scope()->codegen_ir(ctx),
             0,
             fmap(_functions, [&](auto && fn) {
                 ctx.add_generated_function(fn);
                 return codegen::ir::member{ fn->codegen_ir(ctx) };
-            })
-        };
+            }) };
 
         auto scopes = get_scope()->codegen_ir(ctx);
         scopes.emplace_back(type.name, codegen::ir::scope_type::type);
 
         fmap(type.members, [&](auto && member) {
-            fmap(member, make_overload_set(
-                [&](codegen::ir::function & fn) {
-                    fn.scopes = scopes;
-                    fn.parent_type = actual_type;
+            fmap(member,
+                make_overload_set(
+                    [&](codegen::ir::function & fn) {
+                        fn.scopes = scopes;
+                        fn.parent_type = actual_type;
 
-                    return unit{};
-                },
-                [&](auto &&) {
-                    assert(0);
-                    return unit{};
-                }
-            ));
+                        return unit{};
+                    },
+                    [&](auto &&) {
+                        assert(0);
+                        return unit{};
+                    }));
             return unit{};
         });
 
@@ -147,75 +141,65 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
     future<> function_declaration::_analyze(analysis_context & ctx)
     {
-        _function = make_function(
-            "overloadable function",
+        _function = make_function("overloadable function",
             nullptr,
             {},
             [=, name = _parse.name.string](ir_generation_context & ctx) {
-                return codegen::ir::function{
-                    U"operator()",
+                return codegen::ir::function{ U"operator()",
                     {},
-                    fmap(_argument_list, [&](auto && arg) {
-                        return get<std::shared_ptr<codegen::ir::variable>>(
-                            get<codegen::ir::value>(arg.variable->codegen_ir(ctx))
-                        );
-                    }),
+                    fmap(_argument_list,
+                        [&](auto && arg) { return get<std::shared_ptr<codegen::ir::variable>>(get<codegen::ir::value>(arg.variable->codegen_ir(ctx))); }),
                     _body->codegen_return(ctx),
-                    _body->codegen_ir(ctx)
-                };
+                    _body->codegen_ir(ctx) };
             },
-            _parse.range
-        );
+            _parse.range);
         _function->set_name(U"operator()");
         _overload_set->add_function(this);
 
-        auto initial_future = [&]{
+        auto initial_future = [&] {
             if (_return_type)
             {
-                return (*_return_type)->analyze(ctx)
-                    .then([&]{
-                        auto var = (*_return_type)->get_variable();
+                return (*_return_type)->analyze(ctx).then([&] {
+                    auto var = (*_return_type)->get_variable();
 
-                        assert(var->get_type() == builtin_types().type.get());
-                        assert(var->is_constant());
+                    assert(var->get_type() == builtin_types().type.get());
+                    assert(var->is_constant());
 
-                        _function->set_return_type(dynamic_cast<type_variable *>(var)->get_value());
-                    });
+                    _function->set_return_type(dynamic_cast<type_variable *>(var)->get_value());
+                });
             }
 
             return make_ready_future();
         }();
 
-        return initial_future.then([&]{
-            return when_all(fmap(_argument_list, [&](auto && arg) {
-                return arg.type_expression->analyze(ctx);
-            }));
-        }).then([&]{
-            auto arg_variables = fmap(_argument_list, [&](auto && arg) -> variable * {
-                arg.variable->set_type(arg.type_expression->get_variable());
-                return arg.variable.get();
+        return initial_future.then([&] { return when_all(fmap(_argument_list, [&](auto && arg) { return arg.type_expression->analyze(ctx); })); })
+            .then([&] {
+                auto arg_variables = fmap(_argument_list, [&](auto && arg) -> variable * {
+                    arg.variable->set_type(arg.type_expression->get_variable());
+                    return arg.variable.get();
+                });
+
+                _function->set_arguments(std::move(arg_variables));
+
+                return _body->analyze(ctx);
+            })
+            .then([&] {
+                fmap(_return_type, [&](auto && ret_type) {
+                    auto explicit_type = ret_type->get_variable();
+                    auto type_var = static_cast<type_variable *>(explicit_type);
+
+                    assert(type_var->get_value() == _body->return_type());
+
+                    return unit{};
+                });
+
+                _function->set_body(_body.get());
+
+                if (!_function->return_type().try_get())
+                {
+                    _function->set_return_type(_body->return_type());
+                }
             });
-
-            _function->set_arguments(std::move(arg_variables));
-
-            return _body->analyze(ctx);
-        }).then([&]{
-            fmap(_return_type, [&](auto && ret_type) {
-                auto explicit_type = ret_type->get_variable();
-                auto type_var = static_cast<type_variable *>(explicit_type);
-
-                assert(type_var->get_value() == _body->return_type());
-
-                return unit{};
-            });
-
-            _function->set_body(_body.get());
-
-            if (!_function->return_type().try_get())
-            {
-                _function->set_return_type(_body->return_type());
-            }
-        });
     }
 
     future<statement *> function_declaration::_simplify(simplification_context & ctx)
@@ -225,5 +209,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
             return this;
         });
     }
-}}
-
+}
+}

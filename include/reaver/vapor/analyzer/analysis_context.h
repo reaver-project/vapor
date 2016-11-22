@@ -22,7 +22,9 @@
 
 #pragma once
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class variable;
     class statement;
@@ -30,5 +32,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     class analysis_context
     {
     };
-}}
-
+}
+}

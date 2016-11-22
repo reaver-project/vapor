@@ -22,7 +22,9 @@
 
 #include "vapor/parser/capture_list.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     capture_list parse_capture_list(context & ctx)
     {
@@ -32,5 +34,5 @@ namespace reaver::vapor::parser { inline namespace _v1
 
         return ret;
     }
-}}
-
+}
+}

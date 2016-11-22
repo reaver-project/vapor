@@ -22,12 +22,14 @@
 
 #pragma once
 
-#include "../range.h"
 #include "../lexer/token.h"
+#include "../range.h"
 #include "expression.h"
 #include "unary_expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     struct binary_expression
     {
@@ -39,10 +41,7 @@ namespace reaver::vapor::parser { inline namespace _v1
 
     inline bool operator==(const binary_expression & lhs, const binary_expression & rhs)
     {
-        return lhs.range == rhs.range
-            && lhs.op == rhs.op
-            && lhs.lhs == rhs.lhs
-            && lhs.rhs == rhs.rhs;
+        return lhs.range == rhs.range && lhs.op == rhs.op && lhs.lhs == rhs.lhs && lhs.rhs == rhs.rhs;
     }
 
     const std::vector<lexer::token_type> & binary_operators();
@@ -72,8 +71,7 @@ namespace reaver::vapor::parser { inline namespace _v1
 
     inline assoc associativity(lexer::token_type type)
     {
-        static std::vector<lexer::token_type> right_assoc = {
-            lexer::token_type::assign,
+        static std::vector<lexer::token_type> right_assoc = { lexer::token_type::assign,
             lexer::token_type::plus_assignment,
             lexer::token_type::minus_assignment,
             lexer::token_type::star_assignment,
@@ -85,8 +83,7 @@ namespace reaver::vapor::parser { inline namespace _v1
             lexer::token_type::bitwise_or_assignment,
             lexer::token_type::bitwise_xor_assignment,
             lexer::token_type::logical_and_assignment,
-            lexer::token_type::logical_or_assignment
-        };
+            lexer::token_type::logical_or_assignment };
 
         return std::find(right_assoc.begin(), right_assoc.end(), type) != right_assoc.end() ? assoc::right : assoc::left;
     };
@@ -94,5 +91,5 @@ namespace reaver::vapor::parser { inline namespace _v1
     binary_expression parse_binary_expression(context & ctx, expression lhs);
 
     void print(const binary_expression & expr, std::ostream & os, std::size_t indent = 0);
-}}
-
+}
+}

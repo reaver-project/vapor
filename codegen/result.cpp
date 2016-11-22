@@ -24,21 +24,22 @@
 
 #include <reaver/prelude/monad.h>
 
-#include "vapor/codegen/result.h"
-#include "vapor/codegen/ir/module.h"
 #include "vapor/codegen/generator.h"
+#include "vapor/codegen/ir/module.h"
+#include "vapor/codegen/result.h"
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     result::result(std::vector<ir::module> ir, std::shared_ptr<code_generator> gen)
     {
-        auto ctx = codegen_context{gen};
+        auto ctx = codegen_context{ gen };
 
         _generated_code = UR"code(#include <type_traits>
 #include <utility>
 #include <reaver/manual.h>
     )code";
-
 
         fmap(ir, [&](auto && module) {
             fmap(module.name, [&](auto && token) {
@@ -47,16 +48,16 @@ namespace reaver::vapor::codegen { inline namespace _v1
             });
 
             fmap(module.symbols, [&](auto && symbol) {
-                return fmap(symbol, make_overload_set(
-                    [&](std::shared_ptr<ir::variable> & var) {
-                        _generated_code += gen->generate_declaration(*var, ctx);
-                        return unit{};
-                    },
-                    [&](ir::function & fn) {
-                        _generated_code += gen->generate_declaration(fn, ctx);
-                        return unit{};
-                    }
-                ));
+                return fmap(symbol,
+                    make_overload_set(
+                        [&](std::shared_ptr<ir::variable> & var) {
+                            _generated_code += gen->generate_declaration(*var, ctx);
+                            return unit{};
+                        },
+                        [&](ir::function & fn) {
+                            _generated_code += gen->generate_declaration(fn, ctx);
+                            return unit{};
+                        }));
             });
 
             fmap(module.name, [&](auto &&) {
@@ -74,16 +75,16 @@ namespace reaver::vapor::codegen { inline namespace _v1
 
         fmap(ir, [&](auto && module) {
             fmap(module.symbols, [&](auto && symbol) {
-                return fmap(symbol, make_overload_set(
-                    [&](std::shared_ptr<ir::variable> & var) {
-                        _generated_code += gen->generate_definition(*var, ctx);
-                        return unit{};
-                    },
-                    [&](ir::function & fn) {
-                        _generated_code += gen->generate_definition(fn, ctx);
-                        return unit{};
-                    }
-                ));
+                return fmap(symbol,
+                    make_overload_set(
+                        [&](std::shared_ptr<ir::variable> & var) {
+                            _generated_code += gen->generate_definition(*var, ctx);
+                            return unit{};
+                        },
+                        [&](ir::function & fn) {
+                            _generated_code += gen->generate_definition(fn, ctx);
+                            return unit{};
+                        }));
             });
 
             return unit{};
@@ -91,5 +92,5 @@ namespace reaver::vapor::codegen { inline namespace _v1
 
         _generated_code = declarations + ctx.put_into_global_before + _generated_code + ctx.put_into_global;
     }
-}}
-
+}
+}

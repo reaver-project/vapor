@@ -23,11 +23,13 @@
 #pragma once
 
 #include "../range.h"
+#include "expression_list.h"
 #include "helpers.h"
 #include "statement.h"
-#include "expression_list.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     struct statement;
 
@@ -40,9 +42,7 @@ namespace reaver::vapor::parser { inline namespace _v1
 
     inline bool operator==(const block & lhs, const block & rhs)
     {
-        return lhs.range == rhs.range
-            && lhs.block_value == rhs.block_value
-            && lhs.value_expression == rhs.value_expression;
+        return lhs.range == rhs.range && lhs.block_value == rhs.block_value && lhs.value_expression == rhs.value_expression;
     }
 
     block parse_block(context & ctx);
@@ -50,5 +50,5 @@ namespace reaver::vapor::parser { inline namespace _v1
 
     void print(const expression_list & list, std::ostream & os, std::size_t indent);
     void print(const block & bl, std::ostream & os, std::size_t indent);
-}}
-
+}
+}

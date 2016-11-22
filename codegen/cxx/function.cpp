@@ -20,12 +20,14 @@
  *
  **/
 
-#include "vapor/codegen/cxx.h"
 #include "vapor/codegen/ir/function.h"
-#include "vapor/codegen/ir/variable.h"
+#include "vapor/codegen/cxx.h"
 #include "vapor/codegen/cxx/names.h"
+#include "vapor/codegen/ir/variable.h"
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     std::u32string cxx_generator::generate_declaration(ir::function & fn, codegen_context & ctx) const
     {
@@ -140,5 +142,5 @@ namespace reaver::vapor::codegen { inline namespace _v1
         ctx.clear_storage();
         return ret;
     }
-}}
-
+}
+}

@@ -28,10 +28,12 @@
 
 #include <reaver/variant.h>
 
-#include "scope.h"
 #include "function.h"
+#include "scope.h"
 
-namespace reaver::vapor::codegen { inline namespace _v1
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
 {
     namespace ir
     {
@@ -67,16 +69,16 @@ namespace reaver::vapor::codegen { inline namespace _v1
             os << "size: " << type.size << "\n";
 
             fmap(type.members, [&](auto && member) {
-                fmap(member, make_overload_set(
-                    [&](const function & fun) {
-                        os << fun << '\n';
-                        return unit{};
-                    },
-                    [&](auto &&) {
-                        assert(0);
-                        return unit{};
-                    }
-                ));
+                fmap(member,
+                    make_overload_set(
+                        [&](const function & fun) {
+                            os << fun << '\n';
+                            return unit{};
+                        },
+                        [&](auto &&) {
+                            assert(0);
+                            return unit{};
+                        }));
                 return unit{};
             });
 
@@ -92,7 +94,7 @@ namespace reaver::vapor::codegen { inline namespace _v1
                 std::shared_ptr<variable_type> boolean;
             };
 
-            static auto types = []{
+            static auto types = [] {
                 builtin_types_t types;
                 types.integer = std::make_shared<variable_type>();
                 types.integer->name = U"int";
@@ -104,5 +106,5 @@ namespace reaver::vapor::codegen { inline namespace _v1
             return types;
         }
     }
-}}
-
+}
+}

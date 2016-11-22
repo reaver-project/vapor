@@ -20,30 +20,28 @@
  *
  **/
 
-#include <reaver/traits.h>
 #include <reaver/prelude/monad.h>
+#include <reaver/traits.h>
 
-#include "vapor/parser.h"
 #include "vapor/analyzer/module.h"
+#include "vapor/parser.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
 {
-    module::module(const parser::module & parse)
-        : _parse{ parse }, _scope{ std::make_unique<scope>() }
+inline namespace _v1
+{
+    module::module(const parser::module & parse) : _parse{ parse }, _scope{ std::make_unique<scope>() }
     {
-        _statements = fmap(
-            _parse.statements,
-            [&](const auto & statement){
-                auto scope_ptr = _scope.get();
-                auto ret = preanalyze_statement(statement, scope_ptr);
-                if (scope_ptr != _scope.get())
-                {
-                    _scope.release()->keep_alive();
-                    _scope.reset(scope_ptr);
-                }
-                return ret;
+        _statements = fmap(_parse.statements, [&](const auto & statement) {
+            auto scope_ptr = _scope.get();
+            auto ret = preanalyze_statement(statement, scope_ptr);
+            if (scope_ptr != _scope.get())
+            {
+                _scope.release()->keep_alive();
+                _scope.reset(scope_ptr);
             }
-        );
+            return ret;
+        });
 
         _scope->set_name(name(), codegen::ir::scope_type::module);
         _scope->close();
@@ -53,9 +51,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         analysis_context ctx;
 
-        _analysis_futures = fmap(_statements, [&](auto && stmt) {
-            return stmt->analyze(ctx);
-        });
+        _analysis_futures = fmap(_statements, [&](auto && stmt) { return stmt->analyze(ctx); });
 
         auto all = when_all(_analysis_futures);
 
@@ -72,9 +68,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         {
             simplification_context ctx{};
 
-            auto all = when_all(fmap(_statements, [&](auto && stmt) {
-                return stmt->simplify(ctx);
-            }));
+            auto all = when_all(fmap(_statements, [&](auto && stmt) { return stmt->simplify(ctx); }));
 
             while (!all.try_get())
             {
@@ -105,9 +99,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         {
             std::vector<std::pair<std::u32string, reaver::vapor::analyzer::_v1::symbol *>> ret;
             ret.reserve(map.size());
-            std::transform(map.begin(), map.end(), std::back_inserter(ret), [](auto && pair) {
-                return std::make_pair(pair.first, pair.second.get());
-            });
+            std::transform(map.begin(), map.end(), std::back_inserter(ret), [](auto && pair) { return std::make_pair(pair.first, pair.second.get()); });
             return ret;
         }
     }
@@ -120,21 +112,18 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         mod.name = fmap(_parse.name.id_expression_value, [&](auto && token) { return token.string; });
         mod.symbols = mbind(as_vector(_scope->declared_symbols()), [&](auto && symbol) {
             auto ir = symbol.second->codegen_ir(ctx);
-            return get<0>(fmap(ir, make_overload_set(
-                [](none_t) -> codegen::ir::module_symbols_t {
-                    assert(0);
-                },
-                [&](std::shared_ptr<codegen::ir::variable> symb) {
-                    symb->name = symbol.second->get_name();
-                    return codegen::ir::module_symbols_t{ symb };
-                },
-                [&](auto && symb) {
-                    return fmap(symb, [&](auto && symb) -> typename codegen::ir::module_symbols_t::value_type {
-                        symb.name = symbol.second->get_name();
-                        return symb;
-                    });
-                }
-            )));
+            return get<0>(fmap(ir,
+                make_overload_set([](none_t) -> codegen::ir::module_symbols_t { assert(0); },
+                    [&](std::shared_ptr<codegen::ir::variable> symb) {
+                        symb->name = symbol.second->get_name();
+                        return codegen::ir::module_symbols_t{ symb };
+                    },
+                    [&](auto && symb) {
+                        return fmap(symb, [&](auto && symb) -> typename codegen::ir::module_symbols_t::value_type {
+                            symb.name = symbol.second->get_name();
+                            return symb;
+                        });
+                    })));
         });
 
         while (auto fn = ctx.function_to_generate())
@@ -144,5 +133,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
 
         return mod;
     }
-}}
-
+}
+}

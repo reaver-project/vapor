@@ -23,7 +23,9 @@
 #include "vapor/parser/if_statement.h"
 #include "vapor/parser/lambda_expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     if_statement parse_if_statement(context & ctx)
     {
@@ -90,5 +92,5 @@ namespace reaver::vapor::parser { inline namespace _v1
             os << in << "}\n";
         }
     }
-}}
-
+}
+}

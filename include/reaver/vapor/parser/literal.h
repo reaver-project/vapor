@@ -27,7 +27,9 @@
 #include "../range.h"
 #include "helpers.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     template<lexer::token_type TokenType>
     struct literal
@@ -40,9 +42,7 @@ namespace reaver::vapor::parser { inline namespace _v1
     template<lexer::token_type TokenType>
     bool operator==(const literal<TokenType> & lhs, const literal<TokenType> & rhs)
     {
-        return lhs.range == rhs.range
-            && lhs.value == rhs.value
-            && lhs.suffix == rhs.suffix;
+        return lhs.range == rhs.range && lhs.value == rhs.value && lhs.suffix == rhs.suffix;
     }
 
     using string_literal = literal<lexer::token_type::string>;
@@ -89,5 +89,5 @@ namespace reaver::vapor::parser { inline namespace _v1
         auto in = std::string(indent, ' ');
         os << in << tok << '\n';
     }
-}}
-
+}
+}

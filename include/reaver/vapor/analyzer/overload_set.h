@@ -25,14 +25,16 @@
 #include <memory>
 
 #include "../parser/function.h"
-#include "variable.h"
-#include "statement.h"
-#include "expression.h"
-#include "block.h"
-#include "symbol.h"
 #include "argument_list.h"
+#include "block.h"
+#include "expression.h"
+#include "statement.h"
+#include "symbol.h"
+#include "variable.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class function;
 
@@ -97,8 +99,7 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     class function_declaration : public statement
     {
     public:
-        function_declaration(const parser::function & parse, scope * parent_scope)
-            : _parse{ parse }, _scope{ parent_scope->clone_local() }
+        function_declaration(const parser::function & parse, scope * parent_scope) : _parse{ parse }, _scope{ parent_scope->clone_local() }
         {
             fmap(parse.arguments, [&](auto && arglist) {
                 _argument_list = preanalyze_argument_list(arglist, _scope.get());
@@ -106,12 +107,10 @@ namespace reaver::vapor::analyzer { inline namespace _v1
             });
             _scope->close();
 
-            _return_type = fmap(_parse.return_type, [&](auto && ret_type) {
-                return preanalyze_expression(ret_type, _scope.get());
-            });
+            _return_type = fmap(_parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, _scope.get()); });
             _body = preanalyze_block(*_parse.body, _scope.get(), true);
             std::shared_ptr<overload_set> keep_count;
-            auto symbol = parent_scope->get_or_init(_parse.name.string, [&]{
+            auto symbol = parent_scope->get_or_init(_parse.name.string, [&] {
                 keep_count = std::make_shared<overload_set>(_scope.get());
                 return make_symbol(_parse.name.string, keep_count.get());
             });
@@ -153,9 +152,9 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         _overloads.push_back(std::move(fn));
     }
 
-    inline std::unique_ptr<function_declaration> preanalyze_function(const parser::function & func, scope * & lex_scope)
+    inline std::unique_ptr<function_declaration> preanalyze_function(const parser::function & func, scope *& lex_scope)
     {
         return std::make_unique<function_declaration>(func, lex_scope);
     }
-}}
-
+}
+}

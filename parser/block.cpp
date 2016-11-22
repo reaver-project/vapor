@@ -23,7 +23,9 @@
 #include "vapor/parser/block.h"
 #include "vapor/parser/lambda_expression.h"
 
-namespace reaver::vapor::parser { inline namespace _v1
+namespace reaver::vapor::parser
+{
+inline namespace _v1
 {
     block parse_block(context & ctx)
     {
@@ -58,7 +60,7 @@ namespace reaver::vapor::parser { inline namespace _v1
         return ret;
     }
 
-    block parse_single_statement_block(context& ctx)
+    block parse_single_statement_block(context & ctx)
     {
         block ret;
 
@@ -82,7 +84,12 @@ namespace reaver::vapor::parser { inline namespace _v1
             for (auto && element : bl.block_value)
             {
                 os << in << "{\n";
-                visit([&](const auto & value) -> unit { print(value, os, indent + 8); return {}; }, element);
+                visit(
+                    [&](const auto & value) -> unit {
+                        print(value, os, indent + 8);
+                        return {};
+                    },
+                    element);
                 os << in << "}\n";
             }
 
@@ -97,5 +104,5 @@ namespace reaver::vapor::parser { inline namespace _v1
 
         os << in << "}\n";
     }
-}}
-
+}
+}

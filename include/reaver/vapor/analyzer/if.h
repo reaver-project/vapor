@@ -23,10 +23,12 @@
 #pragma once
 
 #include "../parser/if_statement.h"
-#include "statement.h"
 #include "block.h"
+#include "statement.h"
 
-namespace reaver::vapor::analyzer { inline namespace _v1
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
 {
     class if_statement : public statement
     {
@@ -35,18 +37,17 @@ namespace reaver::vapor::analyzer { inline namespace _v1
         {
             _condition = preanalyze_expression(parse.condition, lex_scope);
             _then_block = preanalyze_block(parse.then_block, lex_scope, false);
-            _else_block = fmap(parse.else_block, [&](auto && parse) {
-                return preanalyze_block(parse, lex_scope, false);
-            });
+            _else_block = fmap(parse.else_block, [&](auto && parse) { return preanalyze_block(parse, lex_scope, false); });
         }
 
         virtual std::vector<const return_statement *> get_returns() const override
         {
             std::vector<block *> blocks{ _then_block.get() };
-            fmap(_else_block, [&](auto && block) { blocks.push_back(block.get()); return unit{}; });
-            return mbind(blocks, [&](auto && block) {
-                return block->get_returns();
+            fmap(_else_block, [&](auto && block) {
+                blocks.push_back(block.get());
+                return unit{};
             });
+            return mbind(blocks, [&](auto && block) { return block->get_returns(); });
         }
 
         virtual void print(std::ostream & os, std::size_t indent) const override;
@@ -72,5 +73,5 @@ namespace reaver::vapor::analyzer { inline namespace _v1
     {
         return std::make_unique<if_statement>(parse, lex_scope);
     }
-}}
-
+}
+}
