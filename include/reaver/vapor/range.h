@@ -26,53 +26,50 @@
 
 #include "position.h"
 
-namespace reaver
+namespace reaver::vapor { inline namespace _v1
 {
-    namespace vapor { inline namespace _v1
+    class range_type
     {
-        class range_type
+    public:
+        range_type() = default;
+        range_type(const range_type &) = default;
+        range_type(range_type &&) = default;
+        range_type & operator=(const range_type &) = default;
+        range_type & operator=(range_type &&) = default;
+
+        range_type(position s, position e) : _start{ std::move(s) }, _end{ std::move(e) }
         {
-        public:
-            range_type() = default;
-            range_type(const range_type &) = default;
-            range_type(range_type &&) = default;
-            range_type & operator=(const range_type &) = default;
-            range_type & operator=(range_type &&) = default;
-
-            range_type(position s, position e) : _start{ std::move(s) }, _end{ std::move(e) }
-            {
-                // throw: assert(s.offset <= e.offset);
-            }
-
-            const position & start() const
-            {
-                return _start;
-            }
-
-            const position & end() const
-            {
-                return _end;
-            }
-
-        private:
-            position _start;
-            position _end;
-        };
-
-        inline bool operator==(const range_type & lhs, const range_type & rhs)
-        {
-            return lhs.start() == rhs.start() && lhs.end() == rhs.end();
+            // throw: assert(s.offset <= e.offset);
         }
 
-        inline std::ostream & operator<<(std::ostream & os, const range_type & r)
+        const position & start() const
         {
-            if (r.end() - r.start() > 1)
-            {
-                return os << r.start().line << ":" << r.start().column << " (" << r.start().offset << ") - " << r.end().line << ":" << r.end().column << " (" <<  r.end().offset << ")";
-            }
-
-            return os << r.start().line << ":" << r.start().column << " (" << r.start().offset << ")";
+            return _start;
         }
-    }}
-}
+
+        const position & end() const
+        {
+            return _end;
+        }
+
+    private:
+        position _start;
+        position _end;
+    };
+
+    inline bool operator==(const range_type & lhs, const range_type & rhs)
+    {
+        return lhs.start() == rhs.start() && lhs.end() == rhs.end();
+    }
+
+    inline std::ostream & operator<<(std::ostream & os, const range_type & r)
+    {
+        if (r.end() - r.start() > 1)
+        {
+            return os << r.start().line << ":" << r.start().column << " (" << r.start().offset << ") - " << r.end().line << ":" << r.end().column << " (" <<  r.end().offset << ")";
+        }
+
+        return os << r.start().line << ":" << r.start().column << " (" << r.start().offset << ")";
+    }
+}}
 

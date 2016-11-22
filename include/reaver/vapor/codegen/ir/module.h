@@ -28,31 +28,25 @@
 #include "function.h"
 #include "variable.h"
 
-namespace reaver
+namespace reaver::vapor::codegen { inline namespace _v1
 {
-    namespace vapor
+    namespace ir
     {
-        namespace codegen { inline namespace _v1
+        using module_symbols_t = std::vector<variant<std::shared_ptr<variable>, function>>;
+
+        struct module
         {
-            namespace ir
-            {
-                using module_symbols_t = std::vector<variant<std::shared_ptr<variable>, function>>;
+            std::vector<std::u32string> name;
+            module_symbols_t symbols;
+        };
 
-                struct module
-                {
-                    std::vector<std::u32string> name;
-                    module_symbols_t symbols;
-                };
+        std::ostream & operator<<(std::ostream & os, const module & mod);
 
-                std::ostream & operator<<(std::ostream & os, const module & mod);
-
-                inline std::ostream & operator<<(std::ostream & os, const std::vector<module> & modules)
-                {
-                    fmap(modules, [&](auto && mod){ os << mod; return unit{}; });
-                    return os;
-                }
-            }
-        }}
+        inline std::ostream & operator<<(std::ostream & os, const std::vector<module> & modules)
+        {
+            fmap(modules, [&](auto && mod){ os << mod; return unit{}; });
+            return os;
+        }
     }
-}
+}}
 

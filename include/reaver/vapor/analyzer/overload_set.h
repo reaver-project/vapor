@@ -32,136 +32,130 @@
 #include "symbol.h"
 #include "argument_list.h"
 
-namespace reaver
+namespace reaver::vapor::analyzer { inline namespace _v1
 {
-    namespace vapor
+    class function;
+
+    // TODO: combined_overload_set and combined_overload_set_type
+    // those need to be distinct from normal ones for code generation reasons (SCOPES!)
+    // this is not a crucial feature *right now*, but it will be, and rather soon
+    // this is just a note so that I remember why the hell I can't use the existing types
+    //
+    // random bikeshedding thoughts:
+    // actually I might be able to do this differently, on the function level
+    // i.e. create a proxy_function that generates a function in current scope that calls
+    // a function that's in a different scope
+    // but that's going to be funny
+
+    class overload_set_type : public type
     {
-        namespace analyzer { inline namespace _v1
+    public:
+        overload_set_type(scope * lex_scope) : type{ lex_scope }
         {
-            class function;
+        }
 
-            // TODO: combined_overload_set and combined_overload_set_type
-            // those need to be distinct from normal ones for code generation reasons (SCOPES!)
-            // this is not a crucial feature *right now*, but it will be, and rather soon
-            // this is just a note so that I remember why the hell I can't use the existing types
-            //
-            // random bikeshedding thoughts:
-            // actually I might be able to do this differently, on the function level
-            // i.e. create a proxy_function that generates a function in current scope that calls
-            // a function that's in a different scope
-            // but that's going to be funny
+        void add_function(function * fn);
 
-            class overload_set_type : public type
-            {
-            public:
-                overload_set_type(scope * lex_scope) : type{ lex_scope }
-                {
-                }
+        virtual std::string explain() const override
+        {
+            return "overload set (TODO: add location and member info)";
+        }
 
-                void add_function(function * fn);
+        virtual future<function *> get_overload(lexer::token_type bracket, std::vector<const type *> args) const override;
 
-                virtual std::string explain() const override
-                {
-                    return "overload set (TODO: add location and member info)";
-                }
+    private:
+        virtual void _codegen_type(ir_generation_context &) const override;
 
-                virtual future<function *> get_overload(lexer::token_type bracket, std::vector<const type *> args) const override;
+        mutable std::mutex _functions_lock;
+        std::vector<function *> _functions;
+    };
 
-            private:
-                virtual void _codegen_type(ir_generation_context &) const override;
+    class function_declaration;
 
-                mutable std::mutex _functions_lock;
-                std::vector<function *> _functions;
-            };
+    class overload_set : public variable, public std::enable_shared_from_this<overload_set>
+    {
+    public:
+        overload_set(scope * lex_scope) : _type{ std::make_unique<overload_set_type>(lex_scope) }
+        {
+        }
 
-            class function_declaration;
+        void add_function(function_declaration * fn);
 
-            class overload_set : public variable, public std::enable_shared_from_this<overload_set>
-            {
-            public:
-                overload_set(scope * lex_scope) : _type{ std::make_unique<overload_set_type>(lex_scope) }
-                {
-                }
+        virtual type * get_type() const override
+        {
+            return _type.get();
+        }
 
-                void add_function(function_declaration * fn);
+    private:
+        virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override;
+        virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
-                virtual type * get_type() const override
-                {
-                    return _type.get();
-                }
+        std::vector<function_declaration *> _overloads;
+        std::unique_ptr<overload_set_type> _type;
+    };
 
-            private:
-                virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override;
-                virtual variable_ir _codegen_ir(ir_generation_context &) const override;
+    class function_declaration : public statement
+    {
+    public:
+        function_declaration(const parser::function & parse, scope * parent_scope)
+            : _parse{ parse }, _scope{ parent_scope->clone_local() }
+        {
+            fmap(parse.arguments, [&](auto && arglist) {
+                _argument_list = preanalyze_argument_list(arglist, _scope.get());
+                return unit{};
+            });
+            _scope->close();
 
-                std::vector<function_declaration *> _overloads;
-                std::unique_ptr<overload_set_type> _type;
-            };
+            _return_type = fmap(_parse.return_type, [&](auto && ret_type) {
+                return preanalyze_expression(ret_type, _scope.get());
+            });
+            _body = preanalyze_block(*_parse.body, _scope.get(), true);
+            std::shared_ptr<overload_set> keep_count;
+            auto symbol = parent_scope->get_or_init(_parse.name.string, [&]{
+                keep_count = std::make_shared<overload_set>(_scope.get());
+                return make_symbol(_parse.name.string, keep_count.get());
+            });
 
-            class function_declaration : public statement
-            {
-            public:
-                function_declaration(const parser::function & parse, scope * parent_scope)
-                    : _parse{ parse }, _scope{ parent_scope->clone_local() }
-                {
-                    fmap(parse.arguments, [&](auto && arglist) {
-                        _argument_list = preanalyze_argument_list(arglist, _scope.get());
-                        return unit{};
-                    });
-                    _scope->close();
+            _overload_set = dynamic_cast<overload_set *>(symbol->get_variable())->shared_from_this();
+        }
 
-                    _return_type = fmap(_parse.return_type, [&](auto && ret_type) {
-                        return preanalyze_expression(ret_type, _scope.get());
-                    });
-                    _body = preanalyze_block(*_parse.body, _scope.get(), true);
-                    std::shared_ptr<overload_set> keep_count;
-                    auto symbol = parent_scope->get_or_init(_parse.name.string, [&]{
-                        keep_count = std::make_shared<overload_set>(_scope.get());
-                        return make_symbol(_parse.name.string, keep_count.get());
-                    });
+        function * get_function() const
+        {
+            return _function.get();
+        }
 
-                    _overload_set = dynamic_cast<overload_set *>(symbol->get_variable())->shared_from_this();
-                }
+        virtual void print(std::ostream & os, std::size_t indent) const override;
 
-                function * get_function() const
-                {
-                    return _function.get();
-                }
+    private:
+        virtual future<> _analyze(analysis_context &) override;
 
-                virtual void print(std::ostream & os, std::size_t indent) const override;
+        virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override
+        {
+            return make_null_statement();
+        }
 
-            private:
-                virtual future<> _analyze(analysis_context &) override;
+        virtual future<statement *> _simplify(simplification_context &) override;
+        virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-                virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override
-                {
-                    return make_null_statement();
-                }
+        const parser::function & _parse;
+        argument_list _argument_list;
 
-                virtual future<statement *> _simplify(simplification_context &) override;
-                virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        optional<std::unique_ptr<expression>> _return_type;
+        std::unique_ptr<block> _body;
+        std::unique_ptr<scope> _scope;
+        std::unique_ptr<function> _function;
+        std::shared_ptr<overload_set> _overload_set;
+    };
 
-                const parser::function & _parse;
-                argument_list _argument_list;
-
-                optional<std::unique_ptr<expression>> _return_type;
-                std::unique_ptr<block> _body;
-                std::unique_ptr<scope> _scope;
-                std::unique_ptr<function> _function;
-                std::shared_ptr<overload_set> _overload_set;
-            };
-
-            inline void overload_set::add_function(function_declaration * fn)
-            {
-                _type->add_function(fn->get_function());
-                _overloads.push_back(std::move(fn));
-            }
-
-            inline std::unique_ptr<function_declaration> preanalyze_function(const parser::function & func, scope * & lex_scope)
-            {
-                return std::make_unique<function_declaration>(func, lex_scope);
-            }
-        }}
+    inline void overload_set::add_function(function_declaration * fn)
+    {
+        _type->add_function(fn->get_function());
+        _overloads.push_back(std::move(fn));
     }
-}
+
+    inline std::unique_ptr<function_declaration> preanalyze_function(const parser::function & func, scope * & lex_scope)
+    {
+        return std::make_unique<function_declaration>(func, lex_scope);
+    }
+}}
 

@@ -25,31 +25,25 @@
 #include <string>
 #include <memory>
 
-namespace reaver
+namespace reaver::vapor::codegen { inline namespace _v1
 {
-    namespace vapor
+    namespace ir
     {
-        namespace codegen { inline namespace _v1
-        {
-            namespace ir
-            {
-                struct variable_type;
-                struct function;
-                struct variable;
-            }
-
-            class codegen_context;
-
-            namespace cxx
-            {
-                std::u32string type_name(const std::shared_ptr<const ir::variable_type> &, codegen_context &);
-                std::u32string declaration_type_name(const std::shared_ptr<ir::variable_type> &, codegen_context &);
-                std::u32string function_name(const ir::function &, codegen_context &);
-                std::u32string declaration_function_name(const ir::function &, codegen_context &);
-                std::u32string variable_name(const ir::variable &, codegen_context &);
-                std::u32string declaration_variable_name(ir::variable &, codegen_context &);
-            }
-        }}
+        struct variable_type;
+        struct function;
+        struct variable;
     }
-}
+
+    class codegen_context;
+
+    namespace cxx
+    {
+        std::u32string type_name(const std::shared_ptr<const ir::variable_type> &, codegen_context &);
+        std::u32string declaration_type_name(const std::shared_ptr<ir::variable_type> &, codegen_context &);
+        std::u32string function_name(const ir::function &, codegen_context &);
+        std::u32string declaration_function_name(const ir::function &, codegen_context &);
+        std::u32string variable_name(const ir::variable &, codegen_context &);
+        std::u32string declaration_variable_name(ir::variable &, codegen_context &);
+    }
+}}
 

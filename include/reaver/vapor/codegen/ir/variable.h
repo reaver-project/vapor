@@ -30,70 +30,64 @@
 #include "../../utf8.h"
 #include "scope.h"
 
-namespace reaver
+namespace reaver::vapor::codegen { inline namespace _v1
 {
-    namespace vapor
+    namespace ir
     {
-        namespace codegen { inline namespace _v1
+        struct variable_type;
+
+        struct variable
         {
-            namespace ir
+            virtual ~variable() = default;
+
+            variable(std::shared_ptr<variable_type> type, optional<std::u32string> name) : type{ std::move(type) }, name{ std::move(name) }
             {
-                struct variable_type;
-
-                struct variable
-                {
-                    virtual ~variable() = default;
-
-                    variable(std::shared_ptr<variable_type> type, optional<std::u32string> name) : type{ std::move(type) }, name{ std::move(name) }
-                    {
-                    }
-
-                    std::shared_ptr<variable_type> type;
-                    optional<std::u32string> name;
-                    bool declared = false;
-                    bool destroyed = false;
-                    bool argument = false;
-                    bool temporary = true;
-                    std::vector<scope> scopes = {};
-
-                    virtual bool is_move() const
-                    {
-                        return temporary;
-                    }
-                };
-
-                struct move_variable : variable
-                {
-                    virtual bool is_move() const override
-                    {
-                        return true;
-                    }
-                };
-
-                struct label
-                {
-                    std::u32string name;
-                    std::vector<scope> scopes;
-                };
-
-                inline std::shared_ptr<variable> make_variable(std::shared_ptr<variable_type> type, optional<std::u32string> name = none)
-                {
-                    return std::make_shared<variable>(variable{ std::move(type), std::move(name) });
-                }
-
-                std::ostream & operator<<(std::ostream & os, const variable & var);
-
-                using value = variant<
-                    std::shared_ptr<variable>,
-                    integer_value,
-                    boolean_value,
-                    label
-                >;
-
-                std::ostream & operator<<(std::ostream & os, const value & val);
-                std::shared_ptr<variable_type> get_type(const value &);
             }
-        }}
+
+            std::shared_ptr<variable_type> type;
+            optional<std::u32string> name;
+            bool declared = false;
+            bool destroyed = false;
+            bool argument = false;
+            bool temporary = true;
+            std::vector<scope> scopes = {};
+
+            virtual bool is_move() const
+            {
+                return temporary;
+            }
+        };
+
+        struct move_variable : variable
+        {
+            virtual bool is_move() const override
+            {
+                return true;
+            }
+        };
+
+        struct label
+        {
+            std::u32string name;
+            std::vector<scope> scopes;
+        };
+
+        inline std::shared_ptr<variable> make_variable(std::shared_ptr<variable_type> type, optional<std::u32string> name = none)
+        {
+            return std::make_shared<variable>(variable{ std::move(type), std::move(name) });
+        }
+
+        std::ostream & operator<<(std::ostream & os, const variable & var);
+
+        using value = variant<
+            std::shared_ptr<variable>,
+            integer_value,
+            boolean_value,
+            label
+        >;
+
+        std::ostream & operator<<(std::ostream & os, const value & val);
+        std::shared_ptr<variable_type> get_type(const value &);
     }
-}
+}}
 

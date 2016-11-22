@@ -26,57 +26,51 @@
 #include "statement.h"
 #include "block.h"
 
-namespace reaver
+namespace reaver::vapor::analyzer { inline namespace _v1
 {
-    namespace vapor
+    class if_statement : public statement
     {
-        namespace analyzer { inline namespace _v1
+    public:
+        if_statement(const parser::if_statement & parse, scope * lex_scope) : _parse{ parse }
         {
-            class if_statement : public statement
-            {
-            public:
-                if_statement(const parser::if_statement & parse, scope * lex_scope) : _parse{ parse }
-                {
-                    _condition = preanalyze_expression(parse.condition, lex_scope);
-                    _then_block = preanalyze_block(parse.then_block, lex_scope, false);
-                    _else_block = fmap(parse.else_block, [&](auto && parse) {
-                        return preanalyze_block(parse, lex_scope, false);
-                    });
-                }
+            _condition = preanalyze_expression(parse.condition, lex_scope);
+            _then_block = preanalyze_block(parse.then_block, lex_scope, false);
+            _else_block = fmap(parse.else_block, [&](auto && parse) {
+                return preanalyze_block(parse, lex_scope, false);
+            });
+        }
 
-                virtual std::vector<const return_statement *> get_returns() const override
-                {
-                    std::vector<block *> blocks{ _then_block.get() };
-                    fmap(_else_block, [&](auto && block) { blocks.push_back(block.get()); return unit{}; });
-                    return mbind(blocks, [&](auto && block) {
-                        return block->get_returns();
-                    });
-                }
+        virtual std::vector<const return_statement *> get_returns() const override
+        {
+            std::vector<block *> blocks{ _then_block.get() };
+            fmap(_else_block, [&](auto && block) { blocks.push_back(block.get()); return unit{}; });
+            return mbind(blocks, [&](auto && block) {
+                return block->get_returns();
+            });
+        }
 
-                virtual void print(std::ostream & os, std::size_t indent) const override;
+        virtual void print(std::ostream & os, std::size_t indent) const override;
 
-            private:
-                if_statement(const if_statement & other) : _parse{ other._parse }
-                {
-                }
+    private:
+        if_statement(const if_statement & other) : _parse{ other._parse }
+        {
+        }
 
-                virtual future<> _analyze(analysis_context &) override;
-                virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override;
-                virtual future<statement *> _simplify(simplification_context &) override;
-                virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        virtual future<> _analyze(analysis_context &) override;
+        virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override;
+        virtual future<statement *> _simplify(simplification_context &) override;
+        virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-                const parser::if_statement & _parse;
+        const parser::if_statement & _parse;
 
-                std::unique_ptr<expression> _condition;
-                std::unique_ptr<block> _then_block;
-                optional<std::unique_ptr<block>> _else_block;
-            };
+        std::unique_ptr<expression> _condition;
+        std::unique_ptr<block> _then_block;
+        optional<std::unique_ptr<block>> _else_block;
+    };
 
-            inline std::unique_ptr<if_statement> preanalyze_if_statement(const parser::if_statement & parse, scope * lex_scope)
-            {
-                return std::make_unique<if_statement>(parse, lex_scope);
-            }
-        }}
+    inline std::unique_ptr<if_statement> preanalyze_if_statement(const parser::if_statement & parse, scope * lex_scope)
+    {
+        return std::make_unique<if_statement>(parse, lex_scope);
     }
-}
+}}
 

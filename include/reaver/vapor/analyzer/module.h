@@ -41,35 +41,29 @@
 #include "../codegen/ir/module.h"
 #include "ir_context.h"
 
-namespace reaver
+namespace reaver::vapor::analyzer { inline namespace _v1
 {
-    namespace vapor
+    class module
     {
-        namespace analyzer { inline namespace _v1
+    public:
+        module(const parser::module & parse);
+
+        void analyze();
+        void simplify();
+
+        std::u32string name() const
         {
-            class module
-            {
-            public:
-                module(const parser::module & parse);
+            return boost::join(fmap(_parse.name.id_expression_value, [](auto && elem) -> decltype(auto) { return elem.string; }), ".");
+        }
 
-                void analyze();
-                void simplify();
+        void print(std::ostream & os, std::size_t indent = 0) const;
+        codegen::ir::module codegen_ir() const;
 
-                std::u32string name() const
-                {
-                    return boost::join(fmap(_parse.name.id_expression_value, [](auto && elem) -> decltype(auto) { return elem.string; }), ".");
-                }
-
-                void print(std::ostream & os, std::size_t indent = 0) const;
-                codegen::ir::module codegen_ir() const;
-
-            private:
-                const parser::module & _parse;
-                std::unique_ptr<scope> _scope;
-                std::vector<std::unique_ptr<statement>> _statements;
-                std::vector<future<>> _analysis_futures;
-            };
-        }}
-    }
-}
+    private:
+        const parser::module & _parse;
+        std::unique_ptr<scope> _scope;
+        std::vector<std::unique_ptr<statement>> _statements;
+        std::vector<future<>> _analysis_futures;
+    };
+}}
 

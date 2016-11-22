@@ -27,35 +27,29 @@
 #include "symbol.h"
 #include "unresolved_variable.h"
 
-namespace reaver
+namespace reaver::vapor::analyzer { inline namespace _v1
 {
-    namespace vapor
+    struct argument
     {
-        namespace analyzer { inline namespace _v1
-        {
-            struct argument
-            {
-                std::u32string name;
-                std::unique_ptr<expression> type_expression;
-                std::unique_ptr<unresolved_variable> variable;
-            };
+        std::u32string name;
+        std::unique_ptr<expression> type_expression;
+        std::unique_ptr<unresolved_variable> variable;
+    };
 
-            using argument_list = std::vector<argument>;
+    using argument_list = std::vector<argument>;
 
-            inline argument_list preanalyze_argument_list(const parser::argument_list & arglist, scope * lex_scope)
-            {
-                return fmap(arglist.arguments, [&](auto && arg) {
-                    auto expr = preanalyze_expression(arg.type, lex_scope);
-                    auto var = make_unresolved_variable(arg.name.string);
-                    var->mark_local();
+    inline argument_list preanalyze_argument_list(const parser::argument_list & arglist, scope * lex_scope)
+    {
+        return fmap(arglist.arguments, [&](auto && arg) {
+            auto expr = preanalyze_expression(arg.type, lex_scope);
+            auto var = make_unresolved_variable(arg.name.string);
+            var->mark_local();
 
-                    auto symb = make_symbol(arg.name.string, var.get());
-                    lex_scope->init(arg.name.string, std::move(symb));
+            auto symb = make_symbol(arg.name.string, var.get());
+            lex_scope->init(arg.name.string, std::move(symb));
 
-                    return argument{ arg.name.string, std::move(expr), std::move(var) };
-                });
-            }
-        }}
+            return argument{ arg.name.string, std::move(expr), std::move(var) };
+        });
     }
-}
+}}
 

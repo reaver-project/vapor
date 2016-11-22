@@ -29,27 +29,21 @@
 #include "instruction.h"
 #include "scope.h"
 
-namespace reaver
+namespace reaver::vapor::codegen { inline namespace _v1
 {
-    namespace vapor
+    namespace ir
     {
-        namespace codegen { inline namespace _v1
+        struct function
         {
-            namespace ir
-            {
-                struct function
-                {
-                    std::u32string name;
-                    std::vector<scope> scopes;
-                    std::vector<std::shared_ptr<variable>> arguments;
-                    value return_value;
-                    std::vector<instruction> instructions;
-                    std::weak_ptr<variable_type> parent_type = {};
-                };
+            std::u32string name;
+            std::vector<scope> scopes;
+            std::vector<std::shared_ptr<variable>> arguments;
+            value return_value;
+            std::vector<instruction> instructions;
+            std::weak_ptr<variable_type> parent_type = {};
+        };
 
-                std::ostream & operator<<(std::ostream & os, const function & fn);
-            }
-        }}
+        std::ostream & operator<<(std::ostream & os, const function & fn);
     }
-}
+}}
 

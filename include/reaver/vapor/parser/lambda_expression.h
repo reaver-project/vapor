@@ -30,34 +30,28 @@
 #include "capture_list.h"
 #include "block.h"
 
-namespace reaver
+namespace reaver::vapor::parser { inline namespace _v1
 {
-    namespace vapor
+    struct lambda_expression
     {
-        namespace parser { inline namespace _v1
-        {
-            struct lambda_expression
-            {
-                range_type range;
-                optional<capture_list> captures;
-                optional<argument_list> arguments;
-                optional<expression> return_type;
-                block body;
-            };
+        range_type range;
+        optional<capture_list> captures;
+        optional<argument_list> arguments;
+        optional<expression> return_type;
+        block body;
+    };
 
-            inline bool operator==(const lambda_expression & lhs, const lambda_expression & rhs)
-            {
-                return lhs.range == rhs.range
-                    && lhs.captures == rhs.captures
-                    && lhs.arguments == rhs.arguments
-                    && lhs.return_type == rhs.return_type
-                    && lhs.body == rhs.body;
-            }
-
-            lambda_expression parse_lambda_expression(context & ctx);
-
-            void print(const lambda_expression & expr, std::ostream & os, std::size_t indent = 0);
-        }}
+    inline bool operator==(const lambda_expression & lhs, const lambda_expression & rhs)
+    {
+        return lhs.range == rhs.range
+            && lhs.captures == rhs.captures
+            && lhs.arguments == rhs.arguments
+            && lhs.return_type == rhs.return_type
+            && lhs.body == rhs.body;
     }
-}
+
+    lambda_expression parse_lambda_expression(context & ctx);
+
+    void print(const lambda_expression & expr, std::ostream & os, std::size_t indent = 0);
+}}
 

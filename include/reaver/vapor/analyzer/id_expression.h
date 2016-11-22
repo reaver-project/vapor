@@ -30,47 +30,41 @@
 #include "expression.h"
 #include "symbol.h"
 
-namespace reaver
+namespace reaver::vapor::analyzer { inline namespace _v1
 {
-    namespace vapor
+    class id_expression : public expression
     {
-        namespace analyzer { inline namespace _v1
+    public:
+        id_expression(const parser::id_expression & parse, scope * lex_scope) : _parse{ parse }, _lex_scope{ lex_scope }
         {
-            class id_expression : public expression
-            {
-            public:
-                id_expression(const parser::id_expression & parse, scope * lex_scope) : _parse{ parse }, _lex_scope{ lex_scope }
-                {
-                }
+        }
 
-                std::u32string name() const
-                {
-                    return boost::join(fmap(_parse.id_expression_value, [](auto && elem) -> decltype(auto) { return elem.string; }), ".");
-                }
+        std::u32string name() const
+        {
+            return boost::join(fmap(_parse.id_expression_value, [](auto && elem) -> decltype(auto) { return elem.string; }), ".");
+        }
 
-                virtual void print(std::ostream & os, std::size_t indent) const override;
+        virtual void print(std::ostream & os, std::size_t indent) const override;
 
-                virtual variable * get_variable() const override
-                {
-                    return _referenced;
-                }
+        virtual variable * get_variable() const override
+        {
+            return _referenced;
+        }
 
-            private:
-                virtual future<> _analyze(analysis_context &) override;
-                std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
-                virtual future<expression *> _simplify_expr(simplification_context &) override;
-                virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+    private:
+        virtual future<> _analyze(analysis_context &) override;
+        std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
+        virtual future<expression *> _simplify_expr(simplification_context &) override;
+        virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-                const parser::id_expression & _parse;
-                scope * _lex_scope;
-                variable * _referenced;
-            };
+        const parser::id_expression & _parse;
+        scope * _lex_scope;
+        variable * _referenced;
+    };
 
-            inline std::unique_ptr<id_expression> preanalyze_id_expression(const parser::id_expression & parse, scope * lex_scope)
-            {
-                return std::make_unique<id_expression>(parse, lex_scope);
-            }
-        }}
+    inline std::unique_ptr<id_expression> preanalyze_id_expression(const parser::id_expression & parse, scope * lex_scope)
+    {
+        return std::make_unique<id_expression>(parse, lex_scope);
     }
-}
+}}
 

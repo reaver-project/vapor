@@ -25,28 +25,22 @@
 #include "../range.h"
 #include "expression.h"
 
-namespace reaver
+namespace reaver::vapor::parser { inline namespace _v1
 {
-    namespace vapor
+    struct return_expression
     {
-        namespace parser { inline namespace _v1
-        {
-            struct return_expression
-            {
-                range_type range;
-                expression return_value;
-            };
+        range_type range;
+        expression return_value;
+    };
 
-            inline bool operator==(const return_expression & lhs, const return_expression & rhs)
-            {
-                return lhs.range == rhs.range
-                    && lhs.return_value == rhs.return_value;
-            }
-
-            return_expression parse_return_expression(context & ctx);
-
-            void print(const return_expression & ret, std::ostream & os, std::size_t indent = 0);
-        }}
+    inline bool operator==(const return_expression & lhs, const return_expression & rhs)
+    {
+        return lhs.range == rhs.range
+            && lhs.return_value == rhs.return_value;
     }
-}
+
+    return_expression parse_return_expression(context & ctx);
+
+    void print(const return_expression & ret, std::ostream & os, std::size_t indent = 0);
+}}
 

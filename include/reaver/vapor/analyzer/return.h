@@ -27,80 +27,74 @@
 #include "expression.h"
 #include "helpers.h"
 
-namespace reaver
+namespace reaver::vapor::analyzer { inline namespace _v1
 {
-    namespace vapor
+    class return_statement : public statement
     {
-        namespace analyzer { inline namespace _v1
+    public:
+        return_statement(const parser::return_expression & parse, scope * lex_scope) : _parse{ parse }
         {
-            class return_statement : public statement
-            {
-            public:
-                return_statement(const parser::return_expression & parse, scope * lex_scope) : _parse{ parse }
-                {
-                    _value_expr = preanalyze_expression(parse.return_value, lex_scope);
-                }
+            _value_expr = preanalyze_expression(parse.return_value, lex_scope);
+        }
 
-                virtual std::vector<const return_statement *> get_returns() const override
-                {
-                    return { this };
-                }
+        virtual std::vector<const return_statement *> get_returns() const override
+        {
+            return { this };
+        }
 
-                type * get_returned_type() const
-                {
-                    return _value_expr->get_type();
-                }
+        type * get_returned_type() const
+        {
+            return _value_expr->get_type();
+        }
 
-                variable * get_returned_variable() const
-                {
-                    return _value_expr->get_variable();
-                }
+        variable * get_returned_variable() const
+        {
+            return _value_expr->get_variable();
+        }
 
-                virtual bool always_returns() const override
-                {
-                    return true;
-                }
+        virtual bool always_returns() const override
+        {
+            return true;
+        }
 
-                virtual void print(std::ostream & os, std::size_t indent) const override;
+        virtual void print(std::ostream & os, std::size_t indent) const override;
 
-            private:
-                virtual future<> _analyze(analysis_context & ctx) override
-                {
-                    return _value_expr->analyze(ctx);
-                }
+    private:
+        virtual future<> _analyze(analysis_context & ctx) override
+        {
+            return _value_expr->analyze(ctx);
+        }
 
-                return_statement(const return_statement & other) : _parse{ other._parse }
-                {
-                }
+        return_statement(const return_statement & other) : _parse{ other._parse }
+        {
+        }
 
-                virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const override
-                {
-                    auto ret = std::unique_ptr<return_statement>(new return_statement(*this));
+        virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const override
+        {
+            auto ret = std::unique_ptr<return_statement>(new return_statement(*this));
 
-                    ret->_value_expr = _value_expr->clone_expr_with_replacement(repl);
+            ret->_value_expr = _value_expr->clone_expr_with_replacement(repl);
 
-                    return ret;
-                }
+            return ret;
+        }
 
-                virtual future<statement *> _simplify(simplification_context & ctx) override
-                {
-                    return _value_expr->simplify_expr(ctx).then([&](auto && simplified) -> statement * {
-                            replace_uptr(_value_expr, simplified, ctx);
-                            return this;
-                        });
-                }
+        virtual future<statement *> _simplify(simplification_context & ctx) override
+        {
+            return _value_expr->simplify_expr(ctx).then([&](auto && simplified) -> statement * {
+                    replace_uptr(_value_expr, simplified, ctx);
+                    return this;
+                });
+        }
 
-                virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-                const parser::return_expression & _parse;
-                std::unique_ptr<expression> _value_expr;
-            };
+        const parser::return_expression & _parse;
+        std::unique_ptr<expression> _value_expr;
+    };
 
-            inline std::unique_ptr<return_statement> preanalyze_return(const parser::return_expression & parse, scope * lex_scope)
-            {
-                return std::make_unique<return_statement>(parse, lex_scope);
-            }
-        }}
+    inline std::unique_ptr<return_statement> preanalyze_return(const parser::return_expression & parse, scope * lex_scope)
+    {
+        return std::make_unique<return_statement>(parse, lex_scope);
     }
-}
+}}
 

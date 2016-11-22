@@ -31,84 +31,78 @@
 #include "scope.h"
 #include "function.h"
 
-namespace reaver
+namespace reaver::vapor::codegen { inline namespace _v1
 {
-    namespace vapor
+    namespace ir
     {
-        namespace codegen { inline namespace _v1
+        struct variable_type;
+
+        struct member_variable
         {
-            namespace ir
+            std::u32string name;
+            std::shared_ptr<variable_type> type;
+            std::size_t offset;
+        };
+
+        using member = variant<member_variable, codegen::ir::function>;
+
+        struct variable_type
+        {
+            std::u32string name;
+            std::vector<scope> scopes;
+            std::size_t size;
+            std::vector<member> members;
+        };
+
+        inline std::ostream & operator<<(std::ostream & os, const variable_type & type)
+        {
+            if (type.members.empty())
             {
-                struct variable_type;
-
-                struct member_variable
-                {
-                    std::u32string name;
-                    std::shared_ptr<variable_type> type;
-                    std::size_t offset;
-                };
-
-                using member = variant<member_variable, codegen::ir::function>;
-
-                struct variable_type
-                {
-                    std::u32string name;
-                    std::vector<scope> scopes;
-                    std::size_t size;
-                    std::vector<member> members;
-                };
-
-                inline std::ostream & operator<<(std::ostream & os, const variable_type & type)
-                {
-                    if (type.members.empty())
-                    {
-                        return os;
-                    }
-
-                    os << "type\n{\n";
-                    os << "name: " << utf8(type.name) << "\n";
-                    os << "<print scopes one day!>\n";
-                    os << "size: " << type.size << "\n";
-
-                    fmap(type.members, [&](auto && member) {
-                        fmap(member, make_overload_set(
-                            [&](const function & fun) {
-                                os << fun << '\n';
-                                return unit{};
-                            },
-                            [&](auto &&) {
-                                assert(0);
-                                return unit{};
-                            }
-                        ));
-                        return unit{};
-                    });
-
-                    os << "}\n";
-                    return os;
-                }
-
-                inline const auto & builtin_types()
-                {
-                    struct builtin_types_t
-                    {
-                        std::shared_ptr<variable_type> integer;
-                        std::shared_ptr<variable_type> boolean;
-                    };
-
-                    static auto types = []{
-                        builtin_types_t types;
-                        types.integer = std::make_shared<variable_type>();
-                        types.integer->name = U"int";
-                        types.boolean = std::make_shared<variable_type>();
-                        types.boolean->name = U"bool";
-                        return types;
-                    }();
-
-                    return types;
-                }
+                return os;
             }
-        }}
+
+            os << "type\n{\n";
+            os << "name: " << utf8(type.name) << "\n";
+            os << "<print scopes one day!>\n";
+            os << "size: " << type.size << "\n";
+
+            fmap(type.members, [&](auto && member) {
+                fmap(member, make_overload_set(
+                    [&](const function & fun) {
+                        os << fun << '\n';
+                        return unit{};
+                    },
+                    [&](auto &&) {
+                        assert(0);
+                        return unit{};
+                    }
+                ));
+                return unit{};
+            });
+
+            os << "}\n";
+            return os;
+        }
+
+        inline const auto & builtin_types()
+        {
+            struct builtin_types_t
+            {
+                std::shared_ptr<variable_type> integer;
+                std::shared_ptr<variable_type> boolean;
+            };
+
+            static auto types = []{
+                builtin_types_t types;
+                types.integer = std::make_shared<variable_type>();
+                types.integer->name = U"int";
+                types.boolean = std::make_shared<variable_type>();
+                types.boolean->name = U"bool";
+                return types;
+            }();
+
+            return types;
+        }
     }
-}
+}}
 

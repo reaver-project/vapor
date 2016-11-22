@@ -32,67 +32,61 @@
 #include "statement.h"
 #include "helpers.h"
 
-namespace reaver
+namespace reaver::vapor::parser { inline namespace _v1
 {
-    namespace vapor
+    class ast
     {
-        namespace parser { inline namespace _v1
+    public:
+        ast(lexer::iterator begin, lexer::iterator end = {})
         {
-            class ast
+            auto ctx = context{ begin, end, {} };
+
+            while (ctx.begin != ctx.end)
             {
-            public:
-                ast(lexer::iterator begin, lexer::iterator end = {})
-                {
-                    auto ctx = context{ begin, end, {} };
-
-                    while (ctx.begin != ctx.end)
-                    {
-                        _modules.push_back(parse_module(ctx));
-                    }
-                }
-
-                auto begin()
-                {
-                    return _modules.begin();
-                }
-
-                auto begin() const
-                {
-                    return _modules.begin();
-                }
-
-                auto end()
-                {
-                    return _modules.end();
-                }
-
-                auto end() const
-                {
-                    return _modules.end();
-                }
-
-                template<typename F>
-                friend auto fmap(const ast & ast, F && f)
-                {
-                    return fmap(ast._modules, std::forward<F>(f));
-                }
-
-            private:
-                std::vector<module> _modules;
-            };
-
-            inline std::ostream & operator<<(std::ostream & os, const ast & ast)
-            {
-                for (auto && module : ast)
-                {
-                    os << "{\n";
-                    print(module, os, 4);
-                    os <<  "}\n";
-                }
-
-                return os;
+                _modules.push_back(parse_module(ctx));
             }
-        }}
+        }
+
+        auto begin()
+        {
+            return _modules.begin();
+        }
+
+        auto begin() const
+        {
+            return _modules.begin();
+        }
+
+        auto end()
+        {
+            return _modules.end();
+        }
+
+        auto end() const
+        {
+            return _modules.end();
+        }
+
+        template<typename F>
+        friend auto fmap(const ast & ast, F && f)
+        {
+            return fmap(ast._modules, std::forward<F>(f));
+        }
+
+    private:
+        std::vector<module> _modules;
+    };
+
+    inline std::ostream & operator<<(std::ostream & os, const ast & ast)
+    {
+        for (auto && module : ast)
+        {
+            os << "{\n";
+            print(module, os, 4);
+            os <<  "}\n";
+        }
+
+        return os;
     }
-}
+}}
 

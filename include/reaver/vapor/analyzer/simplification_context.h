@@ -27,108 +27,102 @@
 
 #include <reaver/future.h>
 
-namespace reaver
+namespace reaver::vapor::analyzer { inline namespace _v1
 {
-    namespace vapor
+    class statement;
+    class expression;
+    class variable;
+
+    class simplification_context
     {
-        namespace analyzer { inline namespace _v1
+    public:
+        ~simplification_context();
+
+        template<typename T, typename F>
+        future<T *> get_future_or_init(T * ptr, F && f)
         {
-            class statement;
-            class expression;
-            class variable;
+            auto && futs = _get_futures<T>();
 
-            class simplification_context
             {
-            public:
-                ~simplification_context();
-
-                template<typename T, typename F>
-                future<T *> get_future_or_init(T * ptr, F && f)
+                _shlock lock{ _futures_lock };
+                auto it = futs.find(ptr);
+                if (it != futs.end())
                 {
-                    auto && futs = _get_futures<T>();
-
-                    {
-                        _shlock lock{ _futures_lock };
-                        auto it = futs.find(ptr);
-                        if (it != futs.end())
-                        {
-                            return it->second;
-                        }
-                    }
-
-                    _ulock lock{ _futures_lock };
-                    auto it = futs.find(ptr);
-                    if (it != futs.end())
-                    {
-                        return it->second;
-                    }
-
-                    auto fut = std::forward<F>(f)();
-                    futs.emplace(ptr, fut);
-
-                    _handle_expressions(ptr, fut);
-
-                    return fut;
+                    return it->second;
                 }
-
-                void something_happened()
-                {
-                    _something_happened = true;
-                }
-
-                bool did_something_happen() const
-                {
-                    return _something_happened;
-                }
-
-                void keep_alive(statement * ptr);
-                void keep_alive(variable * ptr);
-
-            private:
-                std::atomic<bool> _something_happened{ false };
-
-                using _ulock = std::unique_lock<std::shared_mutex>;
-                using _shlock = std::shared_lock<std::shared_mutex>;
-
-                mutable std::shared_mutex _futures_lock;
-                std::unordered_map<statement *, future<statement *>> _statement_futures;
-                std::unordered_map<expression *, future<expression *>> _expression_futures;
-                std::unordered_map<variable *, future<variable *>> _variable_futures;
-
-                std::mutex _keep_alive_lock;
-                std::unordered_set<std::unique_ptr<statement>> _keep_alive_stmt;
-                std::unordered_set<std::unique_ptr<variable>> _keep_alive_var;
-
-                template<typename T>
-                auto & _get_futures() = delete;
-
-                template<typename T, typename Future>
-                void _handle_expressions(T *, Future &&)
-                {
-                }
-
-                // sorry for this, but need a definition of expression for this one thing...
-                void _handle_expressions(expression * ptr, future<expression *> & fut);
-            };
-
-            template<>
-            inline auto & simplification_context::_get_futures<statement>()
-            {
-                return _statement_futures;
             }
 
-            template<>
-            inline auto & simplification_context::_get_futures<expression>()
+            _ulock lock{ _futures_lock };
+            auto it = futs.find(ptr);
+            if (it != futs.end())
             {
-                return _expression_futures;
+                return it->second;
             }
 
-            template<>
-            inline auto & simplification_context::_get_futures<variable>()
-            {
-                return _variable_futures;
-            }
-        }}
+            auto fut = std::forward<F>(f)();
+            futs.emplace(ptr, fut);
+
+            _handle_expressions(ptr, fut);
+
+            return fut;
+        }
+
+        void something_happened()
+        {
+            _something_happened = true;
+        }
+
+        bool did_something_happen() const
+        {
+            return _something_happened;
+        }
+
+        void keep_alive(statement * ptr);
+        void keep_alive(variable * ptr);
+
+    private:
+        std::atomic<bool> _something_happened{ false };
+
+        using _ulock = std::unique_lock<std::shared_mutex>;
+        using _shlock = std::shared_lock<std::shared_mutex>;
+
+        mutable std::shared_mutex _futures_lock;
+        std::unordered_map<statement *, future<statement *>> _statement_futures;
+        std::unordered_map<expression *, future<expression *>> _expression_futures;
+        std::unordered_map<variable *, future<variable *>> _variable_futures;
+
+        std::mutex _keep_alive_lock;
+        std::unordered_set<std::unique_ptr<statement>> _keep_alive_stmt;
+        std::unordered_set<std::unique_ptr<variable>> _keep_alive_var;
+
+        template<typename T>
+        auto & _get_futures() = delete;
+
+        template<typename T, typename Future>
+        void _handle_expressions(T *, Future &&)
+        {
+        }
+
+        // sorry for this, but need a definition of expression for this one thing...
+        void _handle_expressions(expression * ptr, future<expression *> & fut);
+    };
+
+    template<>
+    inline auto & simplification_context::_get_futures<statement>()
+    {
+        return _statement_futures;
     }
-}
+
+    template<>
+    inline auto & simplification_context::_get_futures<expression>()
+    {
+        return _expression_futures;
+    }
+
+    template<>
+    inline auto & simplification_context::_get_futures<variable>()
+    {
+        return _variable_futures;
+    }
+}}
 

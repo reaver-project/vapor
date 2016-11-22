@@ -32,90 +32,85 @@
 #include "../lexer/token.h"
 #include "../lexer/iterator.h"
 
-namespace reaver
+namespace reaver::vapor::parser { inline namespace _v1
 {
-    namespace vapor
+    class expectation_failure : public exception
     {
-        namespace parser { inline namespace _v1
+    public:
+        expectation_failure(lexer::token_type expected, const std::u32string & actual, range_type & r) : exception{ logger::fatal }
         {
-            class expectation_failure : public exception
-            {
-            public:
-                expectation_failure(lexer::token_type expected, const std::u32string & actual, range_type & r) : exception{ logger::fatal }
-                {
-                    *this << r << ": expected `" << lexer::token_types[+expected] << "`, got `" << utf8(actual) << "`";
-                }
+            *this << r << ": expected `" << lexer::token_types[+expected] << "`, got `" << utf8(actual) << "`";
+        }
 
-                expectation_failure(const std::string & str, const std::u32string & actual, range_type & r) : exception{ logger::fatal }
-                {
-                    *this <<  r << ": expected " << str << ", got `" << utf8(actual) << "`";
-                }
+        expectation_failure(const std::string & str, const std::u32string & actual, range_type & r) : exception{ logger::fatal }
+        {
+            *this <<  r << ": expected " << str << ", got `" << utf8(actual) << "`";
+        }
 
-                expectation_failure(lexer::token_type expected) : exception{ logger::fatal }
-                {
-                    *this << "expected `" << lexer::token_types[+expected] << "`, got end of file";
-                }
-            };
+        expectation_failure(lexer::token_type expected) : exception{ logger::fatal }
+        {
+            *this << "expected `" << lexer::token_types[+expected] << "`, got end of file";
+        }
+    };
 
-            enum class operator_type
-            {
-                unary,
-                binary
-            };
+    enum class operator_type
+    {
+        unary,
+        binary
+    };
 
-            struct operator_context
-            {
-                lexer::token_type op;
-                operator_type type;
-            };
+    struct operator_context
+    {
+        lexer::token_type op;
+        operator_type type;
+    };
 
-            enum class expression_special_modes
-            {
-                none,
-                assignment,
-                brace
-            };
+    enum class expression_special_modes
+    {
+        none,
+        assignment,
+        brace
+    };
 
-            struct context
-            {
-                lexer::iterator begin, end;
-                std::vector<operator_context> operator_stack;
-            };
+    struct context
+    {
+        lexer::iterator begin, end;
+        std::vector<operator_context> operator_stack;
+    };
 
-            inline lexer::token expect(context & ctx, lexer::token_type expected)
-            {
-                if (ctx.begin->type != expected)
-                {
-                    throw expectation_failure{ expected, ctx.begin->string, ctx.begin->range };
-                }
+    inline lexer::token expect(context & ctx, lexer::token_type expected)
+    {
+        if (ctx.begin->type != expected)
+        {
+            throw expectation_failure{ expected, ctx.begin->string, ctx.begin->range };
+        }
 
-                if (ctx.begin == ctx.end)
-                {
-                    throw expectation_failure{ expected };
-                }
+        if (ctx.begin == ctx.end)
+        {
+            throw expectation_failure{ expected };
+        }
 
-                return std::move(*ctx.begin++);
-            }
-
-            inline optional<lexer::token &> peek(context & ctx)
-            {
-                if (ctx.begin != ctx.end)
-                {
-                    return { *ctx.begin };
-                }
-
-                return {};
-            }
-
-            inline optional<lexer::token &> peek(context & ctx, lexer::token_type expected)
-            {
-                if (ctx.begin != ctx.end && ctx.begin->type == expected)
-                {
-                    return { *ctx.begin };
-                }
-
-                return {};
-            };
-        }}
+        return std::move(*ctx.begin++);
     }
-}
+
+    inline optional<lexer::token &> peek(context & ctx)
+    {
+        if (ctx.begin != ctx.end)
+        {
+            return { *ctx.begin };
+        }
+
+        return {};
+    }
+
+    inline optional<lexer::token &> peek(context & ctx, lexer::token_type expected)
+    {
+        if (ctx.begin != ctx.end && ctx.begin->type == expected)
+        {
+            return { *ctx.begin };
+        }
+
+        return {};
+    };
+}}
+

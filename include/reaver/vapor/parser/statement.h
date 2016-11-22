@@ -35,34 +35,28 @@
 #include "function.h"
 #include "if_statement.h"
 
-namespace reaver
+namespace reaver::vapor::parser { inline namespace _v1
 {
-    namespace vapor
+    struct statement
     {
-        namespace parser { inline namespace _v1
-        {
-            struct statement
-            {
-                range_type range;
-                variant<
-                    declaration,
-                    return_expression,
-                    expression_list,
-                    function,
-                    if_statement
-                > statement_value = expression_list();
-            };
+        range_type range;
+        variant<
+            declaration,
+            return_expression,
+            expression_list,
+            function,
+            if_statement
+        > statement_value = expression_list();
+    };
 
-            inline bool operator==(const statement & lhs, const statement & rhs)
-            {
-                return lhs.range == rhs.range
-                    && lhs.statement_value == rhs.statement_value;
-            }
-
-            statement parse_statement(context & ctx);
-
-            void print(const statement & stmt, std::ostream & os, std::size_t indent = 0);
-        }}
+    inline bool operator==(const statement & lhs, const statement & rhs)
+    {
+        return lhs.range == rhs.range
+            && lhs.statement_value == rhs.statement_value;
     }
-}
+
+    statement parse_statement(context & ctx);
+
+    void print(const statement & stmt, std::ostream & os, std::size_t indent = 0);
+}}
 

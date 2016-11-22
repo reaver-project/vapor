@@ -24,34 +24,28 @@
 
 #include "expression.h"
 
-namespace reaver
+namespace reaver::vapor::parser { inline namespace _v1
 {
-    namespace vapor
+    struct block;
+
+    struct if_statement
     {
-        namespace parser { inline namespace _v1
-        {
-            struct block;
+        range_type range;
+        expression condition;
+        recursive_wrapper<block> then_block;
+        optional<recursive_wrapper<block>> else_block;
+    };
 
-            struct if_statement
-            {
-                range_type range;
-                expression condition;
-                recursive_wrapper<block> then_block;
-                optional<recursive_wrapper<block>> else_block;
-            };
-
-            inline bool operator==(const if_statement & lhs, const if_statement & rhs)
-            {
-                return lhs.range == rhs.range
-                    && lhs.condition == rhs.condition
-                    && *lhs.then_block == rhs.then_block
-                    && lhs.else_block == rhs.else_block;
-            }
-
-            if_statement parse_if_statement(context & ctx);
-
-            void print(const if_statement & stmt, std::ostream & os, std::size_t indent = 0);
-        }}
+    inline bool operator==(const if_statement & lhs, const if_statement & rhs)
+    {
+        return lhs.range == rhs.range
+            && lhs.condition == rhs.condition
+            && *lhs.then_block == rhs.then_block
+            && lhs.else_block == rhs.else_block;
     }
-}
+
+    if_statement parse_if_statement(context & ctx);
+
+    void print(const if_statement & stmt, std::ostream & os, std::size_t indent = 0);
+}}
 

@@ -24,27 +24,21 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 
-namespace reaver
+namespace reaver::vapor::codegen { inline namespace _v1
 {
-    namespace vapor
+    namespace ir
     {
-        namespace codegen { inline namespace _v1
+        struct integer_value
         {
-            namespace ir
-            {
-                struct integer_value
-                {
-                    boost::multiprecision::cpp_int value;
-                };
+            boost::multiprecision::cpp_int value;
+        };
 
-                struct integer_addition_instruction {};
-                struct integer_subtraction_instruction {};
-                struct integer_multiplication_instruction {};
-                struct integer_equal_comparison_instruction {};
-                struct integer_less_comparison_instruction {};
-                struct integer_less_equal_comparison_instruction {};
-            }
-        }}
+        struct integer_addition_instruction {};
+        struct integer_subtraction_instruction {};
+        struct integer_multiplication_instruction {};
+        struct integer_equal_comparison_instruction {};
+        struct integer_less_comparison_instruction {};
+        struct integer_less_equal_comparison_instruction {};
     }
-}
+}}
 

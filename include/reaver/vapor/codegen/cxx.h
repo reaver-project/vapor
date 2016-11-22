@@ -27,40 +27,34 @@
 #include "generator.h"
 #include "ir/variable.h"
 
-namespace reaver
+namespace reaver::vapor::codegen { inline namespace _v1
 {
-    namespace vapor
+    class cxx_generator : public code_generator
     {
-        namespace codegen { inline namespace _v1
-        {
-            class cxx_generator : public code_generator
-            {
-            public:
-                virtual std::u32string generate_declaration(ir::variable &, codegen_context &) const override;
-                virtual std::u32string generate_declaration(ir::function &, codegen_context &) const override;
-                virtual std::u32string generate_declaration(const std::shared_ptr<ir::variable_type> &, codegen_context &) const override;
-                virtual std::u32string generate_definition(const ir::variable &, codegen_context &) const override;
-                virtual std::u32string generate_definition(const ir::function &, codegen_context &) const override;
-                virtual std::u32string generate_definition(const std::shared_ptr<ir::variable_type> &, codegen_context &) const override;
+    public:
+        virtual std::u32string generate_declaration(ir::variable &, codegen_context &) const override;
+        virtual std::u32string generate_declaration(ir::function &, codegen_context &) const override;
+        virtual std::u32string generate_declaration(const std::shared_ptr<ir::variable_type> &, codegen_context &) const override;
+        virtual std::u32string generate_definition(const ir::variable &, codegen_context &) const override;
+        virtual std::u32string generate_definition(const ir::function &, codegen_context &) const override;
+        virtual std::u32string generate_definition(const std::shared_ptr<ir::variable_type> &, codegen_context &) const override;
 
-                virtual std::u32string generate(const ir::instruction &, codegen_context &) const override;
-            };
+        virtual std::u32string generate(const ir::instruction &, codegen_context &) const override;
+    };
 
-            namespace cxx
-            {
-                template<typename T>
-                std::u32string generate(const ir::instruction &, codegen_context &);
+    namespace cxx
+    {
+        template<typename T>
+        std::u32string generate(const ir::instruction &, codegen_context &);
 
-                std::u32string value_of(const ir::value &, codegen_context &, bool = false);
-                std::u32string variable_of(const ir::value &, codegen_context &);
-                void mark_destroyed(const ir::value &, codegen_context &);
-            }
-
-            inline std::shared_ptr<code_generator> make_cxx()
-            {
-                return std::make_shared<cxx_generator>();
-            }
-        }}
+        std::u32string value_of(const ir::value &, codegen_context &, bool = false);
+        std::u32string variable_of(const ir::value &, codegen_context &);
+        void mark_destroyed(const ir::value &, codegen_context &);
     }
-}
+
+    inline std::shared_ptr<code_generator> make_cxx()
+    {
+        return std::make_shared<cxx_generator>();
+    }
+}}
 

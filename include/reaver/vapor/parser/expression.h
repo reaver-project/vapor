@@ -33,49 +33,38 @@
 #include "postfix_expression.h"
 #include "literal.h"
 
-namespace reaver
+namespace reaver::vapor::parser { inline namespace _v1
 {
-    namespace vapor
+    struct lambda_expression;
+    struct unary_expression;
+    struct binary_expression;
+
+    void print(const unary_expression & expr, std::ostream & os, std::size_t indent);
+    void print(const binary_expression & expr, std::ostream & os, std::size_t indent);
+
+    struct expression
     {
-        namespace parser { inline namespace _v1
-        {
-            struct lambda_expression;
-            struct unary_expression;
-            struct binary_expression;
-        }}
+        range_type range;
+        variant<
+            literal<lexer::token_type::string>,
+            literal<lexer::token_type::integer>,
+            literal<lexer::token_type::boolean>,
+            postfix_expression,
+            import_expression,
+            recursive_wrapper<lambda_expression>,
+            recursive_wrapper<unary_expression>,
+            recursive_wrapper<binary_expression>
+        > expression_value = postfix_expression();
+    };
+
+    inline bool operator==(const expression & lhs, const expression & rhs)
+    {
+        return lhs.range == rhs.range
+            && lhs.expression_value == rhs.expression_value;
     }
 
-    namespace vapor
-    {
-        namespace parser { inline namespace _v1
-        {
-            void print(const unary_expression & expr, std::ostream & os, std::size_t indent);
-            void print(const binary_expression & expr, std::ostream & os, std::size_t indent);
+    expression parse_expression(context & ctx, expression_special_modes = expression_special_modes::none);
 
-            struct expression
-            {
-                range_type range;
-                variant<
-                    literal<lexer::token_type::string>,
-                    literal<lexer::token_type::integer>,
-                    literal<lexer::token_type::boolean>,
-                    postfix_expression,
-                    import_expression,
-                    recursive_wrapper<lambda_expression>,
-                    recursive_wrapper<unary_expression>,
-                    recursive_wrapper<binary_expression>
-                > expression_value = postfix_expression();
-            };
+    void print(const expression & expr, std::ostream & os, std::size_t indent = 0);
+}}
 
-            inline bool operator==(const expression & lhs, const expression & rhs)
-            {
-                return lhs.range == rhs.range
-                    && lhs.expression_value == rhs.expression_value;
-            }
-
-            expression parse_expression(context & ctx, expression_special_modes = expression_special_modes::none);
-
-            void print(const expression & expr, std::ostream & os, std::size_t indent = 0);
-        }}
-    }
-}

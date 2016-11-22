@@ -25,53 +25,47 @@
 #include "type.h"
 #include "variable.h"
 
-namespace reaver
+namespace reaver::vapor::analyzer { inline namespace _v1
 {
-    namespace vapor
+    class type_variable : public variable
     {
-        namespace analyzer { inline namespace _v1
+    public:
+        type_variable(type * t) : _type{ t }
         {
-            class type_variable : public variable
-            {
-            public:
-                type_variable(type * t) : _type{ t }
-                {
-                }
+        }
 
-                virtual type * get_type() const override
-                {
-                    return builtin_types().type.get();
-                }
+        virtual type * get_type() const override
+        {
+            return builtin_types().type.get();
+        }
 
-                type * get_value() const
-                {
-                    return _type;
-                }
+        type * get_value() const
+        {
+            return _type;
+        }
 
-                virtual bool is_constant() const override
-                {
-                    return _type;
-                }
+        virtual bool is_constant() const override
+        {
+            return _type;
+        }
 
-            private:
-                virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override
-                {
-                    return std::make_unique<type_variable>(_type);
-                }
+    private:
+        virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override
+        {
+            return std::make_unique<type_variable>(_type);
+        }
 
-                virtual variable_ir _codegen_ir(ir_generation_context &) const override
-                {
-                    return none;
-                }
+        virtual variable_ir _codegen_ir(ir_generation_context &) const override
+        {
+            return none;
+        }
 
-                type * _type;
-            };
+        type * _type;
+    };
 
-            inline auto make_type_variable(type * t)
-            {
-                return std::make_unique<type_variable>(t);
-            }
-        }}
+    inline auto make_type_variable(type * t)
+    {
+        return std::make_unique<type_variable>(t);
     }
-}
+}}
 

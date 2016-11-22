@@ -25,24 +25,18 @@
 #include "../range.h"
 #include "helpers.h"
 
-namespace reaver
+namespace reaver::vapor::parser { inline namespace _v1
 {
-    namespace vapor
+    struct capture_list
     {
-        namespace parser { inline namespace _v1
-        {
-            struct capture_list
-            {
-                range_type range;
-            };
+        range_type range;
+    };
 
-            inline bool operator==(const capture_list & lhs, const capture_list & rhs)
-            {
-                return lhs.range == rhs.range;
-            }
-
-            capture_list parse_capture_list(context & ctx);
-        }}
+    inline bool operator==(const capture_list & lhs, const capture_list & rhs)
+    {
+        return lhs.range == rhs.range;
     }
-}
+
+    capture_list parse_capture_list(context & ctx);
+}}
 
