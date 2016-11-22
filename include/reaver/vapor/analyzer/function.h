@@ -31,7 +31,7 @@
 #include "../range.h"
 #include "../codegen/ir/function.h"
 #include "ir_context.h"
-#include "optimization_context.h"
+#include "simplification_context.h"
 
 namespace reaver
 {
@@ -43,7 +43,7 @@ namespace reaver
             class block;
 
             using function_codegen = reaver::function<codegen::ir::function (ir_generation_context &)>;
-            using function_eval = reaver::function<expression * (optimization_context &, std::vector<variable *>)>;
+            using function_eval = reaver::function<expression * (simplification_context &, std::vector<variable *>)>;
 
             class function
             {
@@ -86,8 +86,8 @@ namespace reaver
                     return ret;
                 }
 
-                future<> simplify(optimization_context &);
-                future<expression *> simplify(optimization_context &, std::vector<variable *>);
+                future<> simplify(simplification_context &);
+                future<expression *> simplify(simplification_context &, std::vector<variable *>);
 
                 codegen::ir::function codegen_ir(ir_generation_context & ctx) const
                 {

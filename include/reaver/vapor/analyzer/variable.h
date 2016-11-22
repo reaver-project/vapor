@@ -31,7 +31,7 @@
 #include "../codegen/ir/function.h"
 #include "statement.h"
 #include "ir_context.h"
-#include "optimization_context.h"
+#include "simplification_context.h"
 
 namespace reaver
 {
@@ -65,7 +65,7 @@ namespace reaver
                     return ret;
                 }
 
-                future<variable *> simplify(optimization_context & ctx)
+                future<variable *> simplify(simplification_context & ctx)
                 {
                     return ctx.get_future_or_init(this, [&]() {
                         return make_ready_future().then([&]() {
@@ -101,10 +101,20 @@ namespace reaver
                     return false;
                 }
 
+                bool is_local() const
+                {
+                    return _is_local;
+                }
+
+                void mark_local()
+                {
+                    _is_local = true;
+                }
+
             private:
                 virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const = 0;
 
-                virtual future<variable *> _simplify(optimization_context &)
+                virtual future<variable *> _simplify(simplification_context &)
                 {
                     return make_ready_future(this);
                 }
@@ -112,6 +122,7 @@ namespace reaver
                 virtual variable_ir _codegen_ir(ir_generation_context &) const = 0;
 
                 mutable optional<variable_ir> _ir;
+                bool _is_local = false;
             };
 
             class expression_variable : public variable
@@ -131,7 +142,7 @@ namespace reaver
 
             private:
                 virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override;
-                virtual future<variable *> _simplify(optimization_context & ctx) override;
+                virtual future<variable *> _simplify(simplification_context & ctx) override;
                 virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
                 expression * _expression;

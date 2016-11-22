@@ -130,7 +130,7 @@ namespace reaver
                 }
 
             private:
-                virtual future<> _analyze() override
+                virtual future<> _analyze(analysis_context &) override
                 {
                     return make_ready_future();
                 }
@@ -140,7 +140,7 @@ namespace reaver
                     return make_variable_expression(_value->clone_with_replacement(repl));
                 }
 
-                virtual future<expression *> _simplify_expr(optimization_context &) override
+                virtual future<expression *> _simplify_expr(simplification_context &) override
                 {
                     return make_ready_future<expression *>(this);
                 }

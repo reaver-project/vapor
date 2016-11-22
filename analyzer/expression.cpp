@@ -82,12 +82,16 @@ std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyze
     )));
 }
 
-reaver::future<> reaver::vapor::analyzer::_v1::expression_list::_analyze()
+reaver::future<> reaver::vapor::analyzer::_v1::expression_list::_analyze(reaver::vapor::analyzer::_v1::analysis_context & ctx)
 {
-    return when_all(fmap(value, [&](auto && expr) { return expr->analyze(); }));
+    return foldl(value, make_ready_future(), [&](auto && prev, auto && expr) {
+        return prev.then([&] {
+            return expr->analyze(ctx);
+        });
+    });
 }
 
-reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::expression_list::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::expression_list::_simplify_expr(reaver::vapor::analyzer::_v1::simplification_context & ctx)
 {
     return when_all(fmap(value, [&](auto && expr) { return expr->simplify_expr(ctx); }))
         .then([&](auto && simplified) -> expression * {

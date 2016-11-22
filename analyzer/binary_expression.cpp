@@ -47,12 +47,11 @@ void reaver::vapor::analyzer::_v1::binary_expression::print(std::ostream & os, s
     os << in << "}\n";
 }
 
-reaver::future<> reaver::vapor::analyzer::_v1::binary_expression::_analyze()
+reaver::future<> reaver::vapor::analyzer::_v1::binary_expression::_analyze(reaver::vapor::analyzer::_v1::analysis_context & ctx)
 {
-    return when_all(
-            _lhs->analyze(),
-            _rhs->analyze()
-        ).then([&](auto &&) {
+    return _lhs->analyze(ctx).then([&]() {
+            return _rhs->analyze(ctx);
+        }).then([&] {
             return resolve_overload(_lhs->get_type(), _rhs->get_type(), _op.type, _scope);
         }).then([&](auto && overload) {
             _overload = overload;
@@ -72,7 +71,7 @@ std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyze
     return ret;
 }
 
-reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::binary_expression::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::binary_expression::_simplify_expr(reaver::vapor::analyzer::_v1::simplification_context & ctx)
 {
     return when_all(
             _lhs->simplify_expr(ctx),

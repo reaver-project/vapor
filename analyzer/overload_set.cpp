@@ -143,7 +143,7 @@ reaver::vapor::analyzer::_v1::statement_ir reaver::vapor::analyzer::_v1::functio
     return {};
 }
 
-reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
+reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze(reaver::vapor::analyzer::_v1::analysis_context & ctx)
 {
     _function = make_function(
         "overloadable function",
@@ -170,7 +170,7 @@ reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
     auto initial_future = [&]{
         if (_return_type)
         {
-            return (*_return_type)->analyze()
+            return (*_return_type)->analyze(ctx)
                 .then([&]{
                     auto var = (*_return_type)->get_variable();
 
@@ -186,7 +186,7 @@ reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
 
     return initial_future.then([&]{
         return when_all(fmap(_argument_list, [&](auto && arg) {
-            return arg.type_expression->analyze();
+            return arg.type_expression->analyze(ctx);
         }));
     }).then([&]{
         auto arg_variables = fmap(_argument_list, [&](auto && arg) -> variable * {
@@ -196,7 +196,7 @@ reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
 
         _function->set_arguments(std::move(arg_variables));
 
-        return _body->analyze();
+        return _body->analyze(ctx);
     }).then([&]{
         fmap(_return_type, [&](auto && ret_type) {
             auto explicit_type = ret_type->get_variable();
@@ -216,7 +216,7 @@ reaver::future<> reaver::vapor::analyzer::_v1::function_declaration::_analyze()
     });
 }
 
-reaver::future<reaver::vapor::analyzer::_v1::statement *> reaver::vapor::analyzer::_v1::function_declaration::_simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+reaver::future<reaver::vapor::analyzer::_v1::statement *> reaver::vapor::analyzer::_v1::function_declaration::_simplify(reaver::vapor::analyzer::_v1::simplification_context & ctx)
 {
     return _body->simplify(ctx).then([&](auto && simplified) -> statement * {
         replace_uptr(_body, dynamic_cast<block *>(simplified), ctx);

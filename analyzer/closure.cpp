@@ -64,12 +64,12 @@ void reaver::vapor::analyzer::_v1::closure::print(std::ostream & os, std::size_t
     os << in << "}\n";
 }
 
-reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
+reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze(reaver::vapor::analyzer::_v1::analysis_context & ctx)
 {
     auto initial_future = [&]{
         if (_return_type)
         {
-            return (*_return_type)->analyze()
+            return (*_return_type)->analyze(ctx)
                 .then([&]{
                     auto var = (*_return_type)->get_variable();
 
@@ -83,7 +83,7 @@ reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
 
     return initial_future.then([&]{
         return when_all(fmap(_argument_list, [&](auto && arg) {
-            return arg.type_expression->analyze();
+            return arg.type_expression->analyze(ctx);
         }));
     }).then([&]{
         fmap(_argument_list, [&](auto && arg) {
@@ -91,7 +91,7 @@ reaver::future<> reaver::vapor::analyzer::_v1::closure::_analyze()
             return unit{};
         });
 
-        return _body->analyze();
+        return _body->analyze(ctx);
     }).then([&] {
         fmap(_return_type, [&](auto && ret_type) {
             auto explicit_type = ret_type->get_variable();
@@ -139,7 +139,7 @@ std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyze
     assert(!"this shouldn't be called, or, when called, should return an empty expression...");
 }
 
-reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::closure::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::closure::_simplify_expr(reaver::vapor::analyzer::_v1::simplification_context & ctx)
 {
     return _body->simplify(ctx)
         .then([&](auto && simplified) -> expression * {

@@ -84,7 +84,7 @@ namespace reaver
                     return ret;
                 }
 
-                future<expression *> simplify_expr(optimization_context & ctx)
+                future<expression *> simplify_expr(simplification_context & ctx)
                 {
                     return ctx.get_future_or_init(this, [&]() {
                         return make_ready_future().then([this, &ctx]() {
@@ -101,14 +101,14 @@ namespace reaver
 
                 virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const = 0;
 
-                virtual future<statement *> _simplify(optimization_context & ctx) override final
+                virtual future<statement *> _simplify(simplification_context & ctx) override final
                 {
                     return simplify_expr(ctx).then([&](auto && simplified) -> statement * {
                         return simplified;
                     });
                 }
 
-                virtual future<expression *> _simplify_expr(optimization_context &) = 0;
+                virtual future<expression *> _simplify_expr(simplification_context &) = 0;
 
                 void _set_variable(std::unique_ptr<variable> var)
                 {
@@ -117,7 +117,7 @@ namespace reaver
                     _variable = std::move(var);
                 }
 
-                void _set_variable(variable * ptr, optimization_context & ctx)
+                void _set_variable(variable * ptr, simplification_context & ctx)
                 {
                     replace_uptr(_variable, ptr, ctx);
                 }
@@ -129,9 +129,9 @@ namespace reaver
             class expression_list : public expression
             {
             private:
-                virtual future<> _analyze() override;
+                virtual future<> _analyze(analysis_context &) override;
                 virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
-                virtual future<expression *> _simplify_expr(optimization_context &) override;
+                virtual future<expression *> _simplify_expr(simplification_context &) override;
 
                 virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
                 {
@@ -169,7 +169,7 @@ namespace reaver
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
-                virtual future<> _analyze() override
+                virtual future<> _analyze(analysis_context &) override
                 {
                     return make_ready_future();
                 }
@@ -185,7 +185,7 @@ namespace reaver
                     return std::make_unique<variable_ref_expression>(it->second);
                 }
 
-                virtual future<expression *> _simplify_expr(optimization_context & ctx) override
+                virtual future<expression *> _simplify_expr(simplification_context & ctx) override
                 {
                     return _referenced->simplify(ctx)
                         .then([&](auto && simplified) -> expression * {
@@ -223,7 +223,7 @@ namespace reaver
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
-                virtual future<> _analyze() override
+                virtual future<> _analyze(analysis_context &) override
                 {
                     return make_ready_future();
                 }
@@ -239,7 +239,7 @@ namespace reaver
                     return make_variable_ref_expression(it->second);
                 }
 
-                virtual future<expression *> _simplify_expr(optimization_context & ctx) override
+                virtual future<expression *> _simplify_expr(simplification_context & ctx) override
                 {
                     return get_variable()->simplify(ctx)
                         .then([&](auto && simplified) -> expression * {

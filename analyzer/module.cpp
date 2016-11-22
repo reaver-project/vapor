@@ -48,8 +48,10 @@ reaver::vapor::analyzer::_v1::module::module(const reaver::vapor::parser::module
 
 void reaver::vapor::analyzer::_v1::module::analyze()
 {
+    analysis_context ctx;
+
     _analysis_futures = fmap(_statements, [&](auto && stmt) {
-        return stmt->analyze();
+        return stmt->analyze(ctx);
     });
 
     auto all = when_all(_analysis_futures);
@@ -65,7 +67,7 @@ void reaver::vapor::analyzer::_v1::module::simplify()
     bool cont = true;
     while (cont)
     {
-        optimization_context ctx{};
+        simplification_context ctx{};
 
         auto all = when_all(fmap(_statements, [&](auto && stmt) {
             return stmt->simplify(ctx);

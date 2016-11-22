@@ -45,7 +45,7 @@ namespace reaver
                 }
 
             private:
-                virtual future<> _analyze() override
+                virtual future<> _analyze(analysis_context &) override
                 {
                     assert(0);
                 }
@@ -55,7 +55,7 @@ namespace reaver
                     assert(0);
                 }
 
-                virtual future<expression *> _simplify_expr(optimization_context &) override
+                virtual future<expression *> _simplify_expr(simplification_context &) override
                 {
                     assert(0);
                 }

@@ -88,9 +88,9 @@ namespace reaver
                 }
 
             private:
-                virtual future<> _analyze() override
+                virtual future<> _analyze(analysis_context & ctx) override
                 {
-                    return _init_expr->analyze().then([&]{
+                    return _init_expr->analyze(ctx).then([&]{
                         _declared_symbol->set_variable(_init_expr->get_variable());
                     });
                 }
@@ -100,7 +100,7 @@ namespace reaver
                     return _init_expr->clone_expr_with_replacement(repl);
                 }
 
-                virtual future<statement *> _simplify(optimization_context & ctx) override
+                virtual future<statement *> _simplify(simplification_context & ctx) override
                 {
                     return _init_expr->simplify_expr(ctx)
                         .then([&](auto && simplified) {

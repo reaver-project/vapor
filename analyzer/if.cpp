@@ -49,20 +49,21 @@ void reaver::vapor::analyzer::_v1::if_statement::print(std::ostream & os, std::s
     });
 }
 
-reaver::future<> reaver::vapor::analyzer::_v1::if_statement::_analyze()
+reaver::future<> reaver::vapor::analyzer::_v1::if_statement::_analyze(reaver::vapor::analyzer::_v1::analysis_context & ctx)
 {
-    // I'd write this with when_all, but first I need to fix that
-    // for empty tuples (or just make tuples "special", like David Sankel suggested)
+    auto fut = _condition->analyze(ctx);
 
-    auto fut = _condition->analyze()
-        .then([&]() {
-            return _then_block->analyze();
+    auto analyze_block = [&](auto && block) {
+        fut = fut.then([&]() {
+            auto tmp_ctx = std::make_unique<analysis_context>(ctx);
+            auto fut = block->analyze(*tmp_ctx);
+            return fut.then([ctx = std::move(tmp_ctx)]{});
         });
-
-    fmap(_else_block, [&](auto && else_) {
-        fut = fut.then([&]{ return else_->analyze(); });
         return unit{};
-    });
+    };
+
+    analyze_block(_then_block);
+    fmap(_else_block, analyze_block);
 
     return fut;
 }
@@ -85,7 +86,7 @@ std::unique_ptr<reaver::vapor::analyzer::_v1::statement> reaver::vapor::analyzer
     return ret;
 }
 
-reaver::future<reaver::vapor::analyzer::_v1::statement *> reaver::vapor::analyzer::_v1::if_statement::_simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+reaver::future<reaver::vapor::analyzer::_v1::statement *> reaver::vapor::analyzer::_v1::if_statement::_simplify(reaver::vapor::analyzer::_v1::simplification_context & ctx)
 {
     return _condition->simplify_expr(ctx)
         .then([&](auto && simplified) {

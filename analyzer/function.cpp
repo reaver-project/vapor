@@ -27,7 +27,7 @@
 #include "vapor/analyzer/return.h"
 #include "vapor/analyzer/symbol.h"
 
-reaver::future<> reaver::vapor::analyzer::_v1::function::simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+reaver::future<> reaver::vapor::analyzer::_v1::function::simplify(reaver::vapor::analyzer::_v1::simplification_context & ctx)
 {
     if (_body)
     {
@@ -40,7 +40,7 @@ reaver::future<> reaver::vapor::analyzer::_v1::function::simplify(reaver::vapor:
     return make_ready_future();
 }
 
-reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::function::simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx, std::vector<variable *> args)
+reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::function::simplify(reaver::vapor::analyzer::_v1::simplification_context & ctx, std::vector<variable *> args)
 {
     if (_body)
     {
@@ -57,7 +57,7 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
                     args
                 );
 
-                auto simplify = [ctx = std::make_shared<optimization_context>()](auto self, auto body)
+                auto simplify = [ctx = std::make_shared<simplification_context>()](auto self, auto body)
                 {
                     return body->simplify(*ctx)
                         .then([&, old_body = body, ctx, self](auto && body) -> future<block *> {
@@ -69,8 +69,8 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
                             // ugh
                             // but I don't know how else to write this
                             // without creating a long overload for optctx
-                            ctx->~optimization_context();
-                            new (&*ctx) optimization_context();
+                            ctx->~simplification_context();
+                            new (&*ctx) simplification_context();
                             return self(self, body);
                         });
                 };

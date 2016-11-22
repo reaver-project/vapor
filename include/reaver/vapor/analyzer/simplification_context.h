@@ -37,10 +37,10 @@ namespace reaver
             class expression;
             class variable;
 
-            class optimization_context
+            class simplification_context
             {
             public:
-                ~optimization_context();
+                ~simplification_context();
 
                 template<typename T, typename F>
                 future<T *> get_future_or_init(T * ptr, F && f)
@@ -112,19 +112,19 @@ namespace reaver
             };
 
             template<>
-            inline auto & optimization_context::_get_futures<statement>()
+            inline auto & simplification_context::_get_futures<statement>()
             {
                 return _statement_futures;
             }
 
             template<>
-            inline auto & optimization_context::_get_futures<expression>()
+            inline auto & simplification_context::_get_futures<expression>()
             {
                 return _expression_futures;
             }
 
             template<>
-            inline auto & optimization_context::_get_futures<variable>()
+            inline auto & simplification_context::_get_futures<variable>()
             {
                 return _variable_futures;
             }

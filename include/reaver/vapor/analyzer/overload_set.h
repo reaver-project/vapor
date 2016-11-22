@@ -131,14 +131,14 @@ namespace reaver
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
-                virtual future<> _analyze() override;
+                virtual future<> _analyze(analysis_context &) override;
 
                 virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override
                 {
                     return make_null_statement();
                 }
 
-                virtual future<statement *> _simplify(optimization_context &) override;
+                virtual future<statement *> _simplify(simplification_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::function & _parse;

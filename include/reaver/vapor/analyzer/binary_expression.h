@@ -49,9 +49,9 @@ namespace reaver
                 {
                 }
 
-                virtual future<> _analyze() override;
+                virtual future<> _analyze(analysis_context &) override;
                 virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
-                virtual future<expression *> _simplify_expr(optimization_context &) override;
+                virtual future<expression *> _simplify_expr(simplification_context &) override;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
                 const parser::binary_expression & _parse;

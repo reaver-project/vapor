@@ -27,7 +27,7 @@
 #include <reaver/error.h>
 #include <reaver/id.h>
 
-#include "optimization_context.h"
+#include "simplification_context.h"
 
 namespace reaver
 {
@@ -54,7 +54,7 @@ namespace reaver
             }
 
             template<typename T, typename U>
-            auto replace_uptr(std::unique_ptr<T> & uptr, U * ptr, optimization_context & ctx) -> decltype(uptr.reset(ptr))
+            auto replace_uptr(std::unique_ptr<T> & uptr, U * ptr, simplification_context & ctx) -> decltype(uptr.reset(ptr))
             {
                 if (uptr.get() != ptr)
                 {
@@ -64,7 +64,7 @@ namespace reaver
             }
 
             template<typename T, typename U>
-            void replace_uptrs(std::vector<std::unique_ptr<T>> & uptrs, const std::vector<U *> & ptrs, optimization_context & ctx)
+            void replace_uptrs(std::vector<std::unique_ptr<T>> & uptrs, const std::vector<U *> & ptrs, simplification_context & ctx)
             {
                 assert(uptrs.size() == ptrs.size());
 

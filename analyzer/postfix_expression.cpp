@@ -68,12 +68,14 @@ void reaver::vapor::analyzer::_v1::postfix_expression::print(std::ostream & os, 
     }
 }
 
-reaver::future<> reaver::vapor::analyzer::_v1::postfix_expression::_analyze()
+reaver::future<> reaver::vapor::analyzer::_v1::postfix_expression::_analyze(reaver::vapor::analyzer::_v1::analysis_context & ctx)
 {
-    return when_all(fmap(_arguments, [&](auto && expr) {
-            return expr->analyze();
-        })).then([&]{
-            return _base_expr->analyze();
+    return foldl(_arguments, make_ready_future(), [&](auto && prev, auto && expr) {
+            return prev.then([&] {
+                return expr->analyze(ctx);
+            });
+        }).then([&]{
+            return _base_expr->analyze(ctx);
         }).then([&]{
             if (!_parse.bracket_type)
             {
@@ -104,7 +106,7 @@ std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyze
     return ret;
 }
 
-reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::postfix_expression::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::postfix_expression::_simplify_expr(reaver::vapor::analyzer::_v1::simplification_context & ctx)
 {
     return when_all(fmap(_arguments, [&](auto && expr) {
             return expr->simplify_expr(ctx);

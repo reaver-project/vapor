@@ -64,9 +64,9 @@ namespace reaver
                 virtual void print(std::ostream & os, std::size_t indent) const override;
 
             private:
-                virtual future<> _analyze() override
+                virtual future<> _analyze(analysis_context & ctx) override
                 {
-                    return _value_expr->analyze();
+                    return _value_expr->analyze(ctx);
                 }
 
                 return_statement(const return_statement & other) : _parse{ other._parse }
@@ -82,7 +82,7 @@ namespace reaver
                     return ret;
                 }
 
-                virtual future<statement *> _simplify(optimization_context & ctx) override
+                virtual future<statement *> _simplify(simplification_context & ctx) override
                 {
                     return _value_expr->simplify_expr(ctx).then([&](auto && simplified) -> statement * {
                             replace_uptr(_value_expr, simplified, ctx);

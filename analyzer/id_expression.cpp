@@ -30,19 +30,19 @@ void reaver::vapor::analyzer::_v1::id_expression::print(std::ostream & os, std::
     os << in << "referenced variable type: " << get_variable()->get_type()->explain() << '\n';
 }
 
-reaver::future<> reaver::vapor::analyzer::_v1::id_expression::_analyze()
+reaver::future<> reaver::vapor::analyzer::_v1::id_expression::_analyze(reaver::vapor::analyzer::_v1::analysis_context & ctx)
 {
     return std::accumulate(_parse.id_expression_value.begin() + 1, _parse.id_expression_value.end(),
         _lex_scope->resolve(_parse.id_expression_value.front().string),
         [&](auto fut, auto && ident) {
             return fut.then([&ident](auto && symbol) {
                 return symbol->get_variable_future();
-            }).then([&ident](auto && var) {
+            }).then([this, &ident, &ctx](auto && var) {
                 return var->get_type()->get_scope()->get_future(ident.string);
             });
         }).then([](auto && symbol) {
             return symbol->get_variable_future();
-        }).then([this](auto && variable) {
+        }).then([this, &ctx](auto && variable) {
             _referenced = variable;
         });
 }
@@ -60,7 +60,7 @@ std::unique_ptr<reaver::vapor::analyzer::_v1::expression> reaver::vapor::analyze
     return make_variable_ref_expression(referenced);
 }
 
-reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::id_expression::_simplify_expr(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::id_expression::_simplify_expr(reaver::vapor::analyzer::_v1::simplification_context & ctx)
 {
     return _referenced->simplify(ctx)
         .then([&](auto && simplified) -> expression * {

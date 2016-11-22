@@ -95,14 +95,16 @@ void reaver::vapor::analyzer::_v1::block::print(std::ostream & os, std::size_t i
     });
 }
 
-reaver::future<> reaver::vapor::analyzer::_v1::block::_analyze()
+reaver::future<> reaver::vapor::analyzer::_v1::block::_analyze(reaver::vapor::analyzer::_v1::analysis_context & ctx)
 {
-    auto fut = when_all(
-        fmap(_statements, [&](auto && stmt) { return stmt->analyze(); })
-    );
+    auto fut = foldl(_statements, make_ready_future(), [&ctx](auto && prev, auto && stmt) {
+        return prev.then([&]() {
+            return stmt->analyze(ctx);
+        });
+    });
 
     fmap(_value_expr, [&](auto && expr) {
-        fut = fut.then([expr = expr.get()]{ return expr->analyze(); });
+        fut = fut.then([&ctx, expr = expr.get()]{ return expr->analyze(ctx); });
         return unit{};
     });
 
@@ -149,11 +151,11 @@ std::unique_ptr<reaver::vapor::analyzer::_v1::statement> reaver::vapor::analyzer
     return ret;
 }
 
-reaver::future<reaver::vapor::analyzer::_v1::statement *> reaver::vapor::analyzer::_v1::block::_simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+reaver::future<reaver::vapor::analyzer::_v1::statement *> reaver::vapor::analyzer::_v1::block::_simplify(reaver::vapor::analyzer::_v1::simplification_context & ctx)
 {
     _ensure_cache();
 
-    auto fut = std::accumulate(_statements.begin(), _statements.end(), make_ready_future(true),
+    auto fut = foldl(_statements, make_ready_future(true),
         [&](auto future, auto && statement) {
             return future.then([&](bool do_continue) {
                 if (!do_continue)

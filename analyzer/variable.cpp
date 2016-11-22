@@ -31,7 +31,7 @@ reaver::vapor::analyzer::_v1::variable_ir reaver::vapor::analyzer::_v1::expressi
     };
 }
 
-reaver::future<reaver::vapor::analyzer::_v1::variable *> reaver::vapor::analyzer::_v1::expression_variable::_simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+reaver::future<reaver::vapor::analyzer::_v1::variable *> reaver::vapor::analyzer::_v1::expression_variable::_simplify(reaver::vapor::analyzer::_v1::simplification_context & ctx)
 {
     return _expression->simplify_expr(ctx)
         .then([&](auto && simplified) -> variable * {

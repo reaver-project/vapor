@@ -27,7 +27,8 @@
 #include "../codegen/ir/variable.h"
 #include "../codegen/ir/instruction.h"
 #include "ir_context.h"
-#include "optimization_context.h"
+#include "analysis_context.h"
+#include "simplification_context.h"
 
 namespace reaver
 {
@@ -58,14 +59,14 @@ namespace reaver
                 statement() = default;
                 virtual ~statement() = default;
 
-                future<> analyze()
+                future<> analyze(analysis_context & ctx)
                 {
                     if (!_is_future_assigned)
                     {
                         std::lock_guard<std::mutex> lock{ _future_lock };
                         if (!_is_future_assigned)
                         {
-                            _analysis_future = _analyze();
+                            _analysis_future = _analyze(ctx);
                             _analysis_future->on_error([](std::exception_ptr ptr){
                                 try
                                 {
@@ -104,7 +105,7 @@ namespace reaver
                     return _clone_with_replacement(repl);
                 }
 
-                future<statement *> simplify(optimization_context & ctx)
+                future<statement *> simplify(simplification_context & ctx)
                 {
                     return ctx.get_future_or_init(this, [&]() {
                         return make_ready_future().then([this, &ctx]() {
@@ -136,9 +137,9 @@ namespace reaver
                 }
 
             private:
-                virtual future<> _analyze() = 0;
+                virtual future<> _analyze(analysis_context &) = 0;
                 virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const = 0;
-                virtual future<statement *> _simplify(optimization_context &) = 0;
+                virtual future<statement *> _simplify(simplification_context &) = 0;
                 virtual statement_ir _codegen_ir(ir_generation_context &) const = 0;
 
                 std::mutex _future_lock;
@@ -155,7 +156,7 @@ namespace reaver
                 }
 
             private:
-                virtual future<> _analyze() override
+                virtual future<> _analyze(analysis_context &) override
                 {
                     return make_ready_future();
                 }
@@ -165,7 +166,7 @@ namespace reaver
                     return std::make_unique<null_statement>();
                 }
 
-                virtual future<statement *> _simplify(optimization_context &) override
+                virtual future<statement *> _simplify(simplification_context &) override
                 {
                     return make_ready_future<statement *>(this);
                 }

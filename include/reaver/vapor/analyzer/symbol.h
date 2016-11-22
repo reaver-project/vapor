@@ -96,7 +96,7 @@ namespace reaver
                     return *_future;
                 }
 
-                future<> simplify(optimization_context & ctx)
+                future<> simplify(simplification_context & ctx)
                 {
                     return get_variable()->simplify(ctx)
                         .then([&](auto && simplified) {
