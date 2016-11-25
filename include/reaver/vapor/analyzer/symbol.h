@@ -25,7 +25,7 @@
 #include <memory>
 #include <shared_mutex>
 
-#include "variable.h"
+#include "variables/variable.h"
 
 namespace reaver::vapor::analyzer
 {

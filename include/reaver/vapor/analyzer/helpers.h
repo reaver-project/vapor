@@ -27,7 +27,7 @@
 #include <reaver/error.h>
 #include <reaver/id.h>
 
-#include "simplification_context.h"
+#include "simplification/context.h"
 
 namespace reaver::vapor::analyzer
 {

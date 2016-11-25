@@ -31,7 +31,7 @@
 #include "../codegen/ir/function.h"
 #include "../range.h"
 #include "ir_context.h"
-#include "simplification_context.h"
+#include "simplification/context.h"
 
 namespace reaver::vapor::analyzer
 {

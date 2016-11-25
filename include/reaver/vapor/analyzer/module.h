@@ -32,13 +32,13 @@
 #include "../parser/id_expression.h"
 #include "../parser/module.h"
 #include "../range.h"
-#include "declaration.h"
+#include "expressions/import.h"
 #include "function.h"
 #include "helpers.h"
-#include "import.h"
 #include "ir_context.h"
 #include "scope.h"
-#include "statement.h"
+#include "statements/declaration.h"
+#include "statements/statement.h"
 #include "symbol.h"
 
 namespace reaver::vapor::analyzer

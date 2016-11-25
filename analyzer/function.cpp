@@ -21,8 +21,8 @@
  **/
 
 #include "vapor/analyzer/function.h"
-#include "vapor/analyzer/block.h"
-#include "vapor/analyzer/return.h"
+#include "vapor/analyzer/statements/block.h"
+#include "vapor/analyzer/statements/return.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/parser/expression_list.h"
 #include "vapor/parser/lambda_expression.h"

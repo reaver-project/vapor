@@ -22,7 +22,7 @@
 
 #include "vapor/analyzer/scope.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/analyzer/type_variable.h"
+#include "vapor/analyzer/variables/type.h"
 
 namespace reaver::vapor::analyzer
 {
