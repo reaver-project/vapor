@@ -24,97 +24,33 @@
 
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
-#include "vapor/analyzer/statements/overload_set.h"
+#include "vapor/analyzer/statements/block.h"
+#include "vapor/analyzer/statements/function_declaration.h"
+#include "vapor/analyzer/variables/overload_set.h"
 #include "vapor/codegen/ir/function.h"
-#include "vapor/codegen/ir/type.h"
-#include "vapor/parser.h"
+#include "vapor/parser/lambda_expression.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void overload_set_type::add_function(function * fn)
+    function_declaration::function_declaration(const parser::function & parse, scope * parent_scope) : _parse{ parse }, _scope{ parent_scope->clone_local() }
     {
-        std::unique_lock<std::mutex> lock{ _functions_lock };
-
-        if (std::find_if(_functions.begin(), _functions.end(), [&](auto && f) { return f->arguments() == fn->arguments(); }) != _functions.end())
-        {
-            assert(0);
-        }
-
-        _functions.push_back(fn);
-    }
-
-    future<function *> overload_set_type::get_overload(lexer::token_type bracket, std::vector<const type *> args) const
-    {
-        std::unique_lock<std::mutex> lock{ _functions_lock };
-
-        if (bracket == lexer::token_type::round_bracket_open)
-        {
-            auto it = std::find_if(_functions.begin(), _functions.end(), [&](auto && f) {
-                // this is dumb
-                // but you apparently can't compare `vector<T>` and `vector<const T>`...
-                return args.size() == f->arguments().size()
-                    && std::inner_product(args.begin(), args.end(), f->arguments().begin(), true, std::logical_and<>(), [](auto && type, auto && var) {
-                           return type == var->get_type();
-                       });
-            });
-
-            if (it != _functions.end())
-            {
-                auto ret = *it;
-                return make_ready_future(ret);
-            }
-        }
-
-        assert(0);
-        return make_ready_future(static_cast<function *>(nullptr));
-    }
-
-    void overload_set_type::_codegen_type(ir_generation_context & ctx) const
-    {
-        auto actual_type = *_codegen_t;
-
-        auto type = codegen::ir::variable_type{ U"__overload_set_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.overload_set_index++)),
-            get_scope()->codegen_ir(ctx),
-            0,
-            fmap(_functions, [&](auto && fn) {
-                ctx.add_generated_function(fn);
-                return codegen::ir::member{ fn->codegen_ir(ctx) };
-            }) };
-
-        auto scopes = get_scope()->codegen_ir(ctx);
-        scopes.emplace_back(type.name, codegen::ir::scope_type::type);
-
-        fmap(type.members, [&](auto && member) {
-            fmap(member,
-                make_overload_set(
-                    [&](codegen::ir::function & fn) {
-                        fn.scopes = scopes;
-                        fn.parent_type = actual_type;
-
-                        return unit{};
-                    },
-                    [&](auto &&) {
-                        assert(0);
-                        return unit{};
-                    }));
+        fmap(parse.arguments, [&](auto && arglist) {
+            _argument_list = preanalyze_argument_list(arglist, _scope.get());
             return unit{};
         });
+        _scope->close();
 
-        *actual_type = std::move(type);
-    }
+        _return_type = fmap(_parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, _scope.get()); });
+        _body = preanalyze_block(*_parse.body, _scope.get(), true);
+        std::shared_ptr<overload_set> keep_count;
+        auto symbol = parent_scope->get_or_init(_parse.name.string, [&] {
+            keep_count = std::make_shared<overload_set>(_scope.get());
+            return make_symbol(_parse.name.string, keep_count.get());
+        });
 
-    std::unique_ptr<variable> overload_set::_clone_with_replacement(replacements & repl) const
-    {
-        assert(0);
-    }
-
-    variable_ir overload_set::_codegen_ir(ir_generation_context & ctx) const
-    {
-        auto var = codegen::ir::make_variable(_type->codegen_type(ctx));
-        var->scopes = _type->get_scope()->codegen_ir(ctx);
-        return { std::move(var) };
+        _overload_set = dynamic_cast<overload_set *>(symbol->get_variable())->shared_from_this();
     }
 
     void function_declaration::print(std::ostream & os, std::size_t indent) const
