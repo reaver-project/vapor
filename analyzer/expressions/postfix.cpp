@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/expressions/postfix.h"
+#include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/expressions/id.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
@@ -36,7 +37,7 @@ inline namespace _v1
         fmap(_parse.base_expression,
             make_overload_set(
                 [&](const parser::expression_list & expr_list) {
-                    _base_expr = preanalyze_expression(expr_list, lex_scope);
+                    _base_expr = preanalyze_expression_list(expr_list, lex_scope);
                     return unit{};
                 },
                 [&](const parser::id_expression & id_expr) {

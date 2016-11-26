@@ -27,7 +27,7 @@
 #include <boost/multiprecision/integer.hpp>
 
 #include "../../parser/literal.h"
-#include "../expressions/expression.h"
+#include "../expressions/variable.h"
 #include "../variables/integer.h"
 
 namespace reaver::vapor::analyzer

@@ -24,6 +24,7 @@
 #include "vapor/analyzer/expressions/binary.h"
 #include "vapor/analyzer/expressions/boolean.h"
 #include "vapor/analyzer/expressions/closure.h"
+#include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/expressions/import.h"
 #include "vapor/analyzer/expressions/integer.h"
 #include "vapor/analyzer/expressions/postfix.h"
@@ -72,74 +73,6 @@ inline namespace _v1
                     auto binexpr = preanalyze_binary_expression(binary_expr, lex_scope);
                     return binexpr;
                 })));
-    }
-
-    future<> expression_list::_analyze(analysis_context & ctx)
-    {
-        return foldl(value, make_ready_future(), [&](auto && prev, auto && expr) { return prev.then([&] { return expr->analyze(ctx); }); });
-    }
-
-    future<expression *> expression_list::_simplify_expr(simplification_context & ctx)
-    {
-        return when_all(fmap(value, [&](auto && expr) { return expr->simplify_expr(ctx); })).then([&](auto && simplified) -> expression * {
-            replace_uptrs(value, simplified, ctx);
-            assert(0);
-            return this;
-        });
-    }
-
-    void expression_list::print(std::ostream & os, std::size_t indent) const
-    {
-        auto in = std::string(indent, ' ');
-        os << in << "expression list at " << range << '\n';
-        os << in << "type: " << value.back()->get_type()->explain() << '\n';
-        fmap(value, [&](auto && expr) {
-            os << in << "{\n";
-            expr->print(os, indent + 4);
-            os << in << "}\n";
-
-            return unit{};
-        });
-    }
-
-    std::unique_ptr<expression> preanalyze_expression(const parser::expression_list & expr, scope * lex_scope)
-    {
-        if (expr.expressions.size() == 1)
-        {
-            return preanalyze_expression(expr.expressions.front(), lex_scope);
-        }
-
-        auto ret = std::make_unique<expression_list>();
-        ret->value.reserve(expr.expressions.size());
-        std::transform(expr.expressions.begin(), expr.expressions.end(), std::back_inserter(ret->value), [&](auto && expr) {
-            return preanalyze_expression(expr, lex_scope);
-        });
-        ret->range = expr.range;
-        return ret;
-    }
-
-    void variable_expression::print(std::ostream & os, std::size_t indent) const
-    {
-        auto in = std::string(indent, ' ');
-        os << in << "variable expression:\n";
-        os << in << "type: " << get_variable()->get_type()->explain() << '\n';
-    }
-
-    void variable_ref_expression::print(std::ostream & os, std::size_t indent) const
-    {
-        auto in = std::string(indent, ' ');
-        os << in << "variable ref expression:\n";
-        os << in << "type: " << get_variable()->get_type()->explain() << '\n';
-    }
-
-    std::unique_ptr<expression> expression_list::_clone_expr_with_replacement(replacements & repl) const
-    {
-        auto ret = std::make_unique<expression_list>();
-        ret->range = range;
-
-        ret->value = fmap(value, [&](auto && expr) { return expr->clone_expr_with_replacement(repl); });
-
-        return ret;
     }
 }
 }

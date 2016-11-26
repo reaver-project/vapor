@@ -21,7 +21,7 @@
  **/
 
 #include "vapor/analyzer/types/boolean.h"
-#include "vapor/analyzer/expressions/expression.h"
+#include "vapor/analyzer/expressions/variable.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/variables/boolean.h"
 #include "vapor/codegen/ir/type.h"

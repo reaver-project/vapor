@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/function.h"
+#include "vapor/analyzer/expressions/variable.h"
 #include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/return.h"
 #include "vapor/analyzer/symbol.h"

@@ -28,7 +28,7 @@
 #include "../../parser/literal.h"
 #include "../function.h"
 #include "../variables/boolean.h"
-#include "expression.h"
+#include "variable.h"
 
 namespace reaver::vapor::analyzer
 {

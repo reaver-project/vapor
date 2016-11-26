@@ -22,6 +22,7 @@
 
 #include <numeric>
 
+#include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/return.h"
 #include "vapor/analyzer/symbol.h"
@@ -52,7 +53,7 @@ inline namespace _v1
         _scope->close();
 
         _value_expr = fmap(_parse.value_expression, [&](auto && val_expr) {
-            auto expr = preanalyze_expression(val_expr, _scope.get());
+            auto expr = preanalyze_expression_list(val_expr, _scope.get());
             return expr;
         });
     }
