@@ -22,7 +22,7 @@
 
 #include "vapor/analyzer/types/integer.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/analyzer/types/boolean.h"
+#include "vapor/analyzer/variables/boolean.h"
 #include "vapor/codegen/ir/type.h"
 #include "vapor/codegen/ir/variable.h"
 

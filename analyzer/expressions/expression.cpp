@@ -22,13 +22,13 @@
 
 #include "vapor/analyzer/expressions/expression.h"
 #include "vapor/analyzer/expressions/binary.h"
+#include "vapor/analyzer/expressions/boolean.h"
 #include "vapor/analyzer/expressions/closure.h"
 #include "vapor/analyzer/expressions/import.h"
 #include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/expressions/unary.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/analyzer/types/boolean.h"
 #include "vapor/analyzer/types/integer.h"
 
 namespace reaver::vapor::analyzer

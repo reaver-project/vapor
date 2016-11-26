@@ -23,7 +23,7 @@
 #include "vapor/analyzer/statements/if.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/analyzer/types/boolean.h"
+#include "vapor/analyzer/variables/boolean.h"
 #include "vapor/parser/lambda_expression.h"
 
 namespace reaver::vapor::analyzer
