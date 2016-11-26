@@ -21,8 +21,11 @@
  **/
 
 #include "vapor/analyzer/types/integer.h"
+#include "vapor/analyzer/expressions/expression.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/types/boolean.h"
 #include "vapor/analyzer/variables/boolean.h"
+#include "vapor/analyzer/variables/integer.h"
 #include "vapor/codegen/ir/type.h"
 #include "vapor/codegen/ir/variable.h"
 
@@ -33,20 +36,6 @@ inline namespace _v1
     void integer_type::_codegen_type(ir_generation_context &) const
     {
         _codegen_t = codegen::ir::builtin_types().integer;
-    }
-
-    variable_ir integer_constant::_codegen_ir(ir_generation_context &) const
-    {
-        return { codegen::ir::value{ codegen::ir::integer_value{ _value } } };
-    }
-
-    statement_ir integer_literal::_codegen_ir(ir_generation_context &) const
-    {
-        return { codegen::ir::instruction{ none,
-            none,
-            { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
-            {},
-            codegen::ir::value{ codegen::ir::integer_value{ _value->get_value() } } } };
     }
 
     std::unique_ptr<type> make_integer_type()

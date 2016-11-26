@@ -24,22 +24,22 @@
 
 #include <memory>
 
-#include "../../codegen/ir/boolean.h"
+#include <boost/multiprecision/integer.hpp>
+
 #include "../../parser/literal.h"
-#include "../function.h"
-#include "../variables/boolean.h"
-#include "expression.h"
+#include "../expressions/expression.h"
+#include "../variables/integer.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class boolean_literal : public expression
+    class integer_literal : public expression
     {
     public:
-        boolean_literal(const parser::boolean_literal & parse) : _parse{ parse }
+        integer_literal(const parser::integer_literal & parse) : _parse{ parse }
         {
-            auto val = std::make_unique<boolean_constant>(parse);
+            auto val = std::make_unique<integer_constant>(parse);
             _value = val.get();
             _set_variable(std::move(val));
         }
@@ -47,7 +47,7 @@ inline namespace _v1
         virtual void print(std::ostream & os, std::size_t indent) const override
         {
             auto in = std::string(indent, ' ');
-            os << in << "boolean literal with value of " << _value->get_value() << " at " << _parse.range << '\n';
+            os << in << "integer literal with value of " << _value->get_value() << " at " << _parse.range << '\n';
         }
 
     private:
@@ -68,10 +68,8 @@ inline namespace _v1
 
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-        const parser::boolean_literal & _parse;
-        boolean_constant * _value;
+        const parser::integer_literal & _parse;
+        integer_constant * _value;
     };
-
-    std::unique_ptr<type> make_boolean_type();
 }
 }

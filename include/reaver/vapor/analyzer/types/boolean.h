@@ -24,7 +24,6 @@
 
 #include <memory>
 
-#include "../../codegen/ir/boolean.h"
 #include "../../lexer/token.h"
 #include "../function.h"
 #include "type.h"

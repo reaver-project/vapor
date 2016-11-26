@@ -24,29 +24,29 @@
 
 #include <memory>
 
-#include "../../codegen/ir/boolean.h"
+#include <boost/multiprecision/integer.hpp>
+
 #include "../../parser/literal.h"
-#include "../function.h"
-#include "literal.h"
+#include "../variables/literal.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class boolean_constant : public literal
+    class integer_constant : public literal
     {
     public:
-        boolean_constant(const parser::boolean_literal & parse) : _value{ parse.value.string == U"true" }
+        integer_constant(const parser::integer_literal & parse) : _value{ utf8(parse.value.string) }
         {
         }
 
-        boolean_constant(bool value) : _value{ value }
+        integer_constant(boost::multiprecision::cpp_int value) : _value{ std::move(value) }
         {
         }
 
         virtual type * get_type() const override
         {
-            return builtin_types().boolean.get();
+            return builtin_types().integer.get();
         }
 
         auto get_value() const
@@ -61,7 +61,7 @@ inline namespace _v1
 
         virtual bool is_equal(const variable * other_var) const override
         {
-            auto other = dynamic_cast<const boolean_constant *>(other_var);
+            auto other = dynamic_cast<const integer_constant *>(other_var);
             if (!other)
             {
                 // todo: conversions somehow
@@ -74,12 +74,12 @@ inline namespace _v1
     private:
         virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override
         {
-            return std::make_unique<boolean_constant>(_value);
+            return std::make_unique<integer_constant>(_value);
         }
 
         virtual variable_ir _codegen_ir(ir_generation_context &) const override;
 
-        bool _value;
+        boost::multiprecision::cpp_int _value;
     };
 }
 }
