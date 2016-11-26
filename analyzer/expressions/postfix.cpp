@@ -20,9 +20,11 @@
  *
  **/
 
-#include "vapor/analyzer/expressions/postfix.h"
+#include <reaver/prelude/fold.h>
+
 #include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/expressions/id.h"
+#include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/parser.h"

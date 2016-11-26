@@ -20,6 +20,8 @@
  *
  **/
 
+#include <reaver/prelude/fold.h>
+
 #include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"

@@ -22,6 +22,8 @@
 
 #include <numeric>
 
+#include <reaver/prelude/fold.h>
+
 #include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/return.h"
