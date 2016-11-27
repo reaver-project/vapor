@@ -23,31 +23,23 @@
 #include "vapor/analyzer/expressions/closure.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/codegen/ir/type.h"
+#include "vapor/analyzer/types/closure.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void closure_type::_codegen_type(ir_generation_context & ctx) const
+    closure::closure(const parser::lambda_expression & parse, scope * lex_scope) : _parse{ parse }, _scope{ lex_scope->clone_local() }
     {
-        auto actual_type = *_codegen_t;
+        fmap(parse.arguments, [&](auto && arglist) {
+            _argument_list = preanalyze_argument_list(arglist, _scope.get());
+            ;
+            return unit{};
+        });
+        _scope->close();
 
-        auto type = codegen::ir::variable_type{
-            U"__closure_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.closure_index++)), get_scope()->codegen_ir(ctx), 0, {}
-        };
-
-        auto scopes = get_scope()->codegen_ir(ctx);
-        scopes.emplace_back(type.name, codegen::ir::scope_type::type);
-
-        auto fn = _function->codegen_ir(ctx);
-        fn.scopes = scopes;
-        fn.parent_type = actual_type;
-        type.members = { codegen::ir::member{ fn } };
-
-        ctx.add_generated_function(_function.get());
-
-        *actual_type = std::move(type);
+        _return_type = fmap(_parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, _scope.get()); });
+        _body = preanalyze_block(parse.body, _scope.get(), true);
     }
 
     void closure::print(std::ostream & os, std::size_t indent) const

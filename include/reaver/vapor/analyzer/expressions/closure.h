@@ -36,53 +36,10 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class closure_type : public type
-    {
-    public:
-        closure_type(scope * lex_scope, expression * closure, std::unique_ptr<function> fn)
-            : type{ lex_scope }, _closure{ std::move(closure) }, _function{ std::move(fn) }
-        {
-        }
-
-        virtual std::string explain() const override
-        {
-            return "closure (TODO: location)";
-        }
-
-        virtual future<function *> get_overload(lexer::token_type bracket, std::vector<const type *> args) const override
-        {
-            if (args.size() == _function->arguments().size()
-                && std::inner_product(args.begin(), args.end(), _function->arguments().begin(), true, std::logical_and<>(), [](auto && type, auto && var) {
-                       return type == var->get_type();
-                   }))
-            {
-                return make_ready_future(_function.get());
-            }
-
-            return make_ready_future(static_cast<function *>(nullptr));
-        }
-
-    private:
-        virtual void _codegen_type(ir_generation_context &) const override;
-
-        expression * _closure;
-        std::unique_ptr<function> _function;
-    };
-
     class closure : public expression
     {
     public:
-        closure(const parser::lambda_expression & parse, scope * lex_scope) : _parse{ parse }, _scope{ lex_scope->clone_local() }
-        {
-            fmap(parse.arguments, [&](auto && arglist) {
-                _argument_list = preanalyze_argument_list(arglist, _scope.get());
-                return unit{};
-            });
-            _scope->close();
-
-            _return_type = fmap(_parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, _scope.get()); });
-            _body = preanalyze_block(parse.body, _scope.get(), true);
-        }
+        closure(const parser::lambda_expression & parse, scope * lex_scope);
 
         auto & parse() const
         {
