@@ -57,19 +57,6 @@ inline namespace _v1
         os << in << "}\n";
     }
 
-    std::unique_ptr<expression> closure::_clone_expr_with_replacement(replacements & repl) const
-    {
-        assert(!"this shouldn't be called, or, when called, should return an empty expression...");
-    }
-
-    future<expression *> closure::_simplify_expr(simplification_context & ctx)
-    {
-        return _body->simplify(ctx).then([&](auto && simplified) -> expression * {
-            replace_uptr(_body, dynamic_cast<block *>(simplified), ctx);
-            return this;
-        });
-    }
-
     statement_ir closure::_codegen_ir(ir_generation_context & ctx) const
     {
         auto var = codegen::ir::make_variable(get_variable()->get_type()->codegen_type(ctx));

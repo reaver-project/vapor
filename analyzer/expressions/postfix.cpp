@@ -76,43 +76,6 @@ inline namespace _v1
         }
     }
 
-    std::unique_ptr<expression> postfix_expression::_clone_expr_with_replacement(replacements & repl) const
-    {
-        auto ret = std::unique_ptr<postfix_expression>(new postfix_expression(*this));
-
-        ret->_base_expr = _base_expr->clone_expr_with_replacement(repl);
-        ret->_arguments = fmap(_arguments, [&](auto && arg) { return arg->clone_expr_with_replacement(repl); });
-
-        return ret;
-    }
-
-    future<expression *> postfix_expression::_simplify_expr(simplification_context & ctx)
-    {
-        return when_all(fmap(_arguments, [&](auto && expr) { return expr->simplify_expr(ctx); }))
-            .then([&](auto && simplified) {
-                replace_uptrs(_arguments, simplified, ctx);
-                return _base_expr->simplify_expr(ctx);
-            })
-            .then([&](auto && simplified) {
-                replace_uptr(_base_expr, simplified, ctx);
-
-                if (!_parse.bracket_type)
-                {
-                    return make_ready_future(_base_expr.release());
-                }
-
-                auto args = fmap(_arguments, [&](auto && expr) { return expr->get_variable(); });
-                return _overload->simplify(ctx, std::move(args)).then([&](auto && simplified) -> expression * {
-                    if (simplified)
-                    {
-                        return simplified;
-                    }
-
-                    return this;
-                });
-            });
-    }
-
     statement_ir postfix_expression::_codegen_ir(ir_generation_context & ctx) const
     {
         auto base_expr_instructions = _base_expr->codegen_ir(ctx);

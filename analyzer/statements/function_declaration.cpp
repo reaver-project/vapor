@@ -73,13 +73,5 @@ inline namespace _v1
     {
         return {};
     }
-
-    future<statement *> function_declaration::_simplify(simplification_context & ctx)
-    {
-        return _body->simplify(ctx).then([&](auto && simplified) -> statement * {
-            replace_uptr(_body, dynamic_cast<block *>(simplified), ctx);
-            return this;
-        });
-    }
 }
 }

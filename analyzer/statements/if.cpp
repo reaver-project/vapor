@@ -53,58 +53,6 @@ inline namespace _v1
         });
     }
 
-    std::unique_ptr<statement> if_statement::_clone_with_replacement(replacements & repl) const
-    {
-        auto ret = std::unique_ptr<if_statement>(new if_statement(*this));
-
-        ret->_condition = _condition->clone_expr_with_replacement(repl);
-
-        auto then = _then_block->clone_with_replacement(repl).release();
-        ret->_then_block.reset(static_cast<block *>(then));
-
-        fmap(_else_block, [&](auto && block) {
-            auto else_ = block->clone_with_replacement(repl).release();
-            ret->_else_block = std::unique_ptr<class block>(static_cast<class block *>(else_));
-            return unit{};
-        });
-
-        return ret;
-    }
-
-    future<statement *> if_statement::_simplify(simplification_context & ctx)
-    {
-        return _condition->simplify_expr(ctx).then([&](auto && simplified) {
-            replace_uptr(_condition, simplified, ctx);
-
-            auto var = _condition->get_variable();
-            if (var->is_constant())
-            {
-                if (var->get_type() != builtin_types().boolean.get())
-                {
-                    assert(0);
-                }
-
-                auto condition = dynamic_cast<boolean_constant *>(var)->get_value();
-                if (condition)
-                {
-                    return _then_block.release()->simplify(ctx);
-                }
-
-                else
-                {
-                    if (_else_block)
-                    {
-                        return _else_block.get().release()->simplify(ctx);
-                    }
-
-                    return make_null_statement().release()->simplify(ctx);
-                }
-            }
-
-            return make_ready_future<statement *>(this);
-        });
-    }
-
     statement_ir if_statement::_codegen_ir(ir_generation_context & ctx) const
     {
         // instructions returning those labels are silly

@@ -20,25 +20,26 @@
  *
  **/
 
-#include "vapor/analyzer/expressions/id.h"
-#include "vapor/analyzer/expressions/variable.h"
-#include "vapor/parser.h"
+#include "vapor/analyzer/expressions/closure.h"
+#include "vapor/analyzer/helpers.h"
+#include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/types/closure.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void id_expression::print(std::ostream & os, std::size_t indent) const
+    std::unique_ptr<expression> closure::_clone_expr_with_replacement(replacements & repl) const
     {
-        auto in = std::string(indent, ' ');
-        os << in << "id expression `" << utf8(name()) << "` at " << _parse.range << '\n';
-        os << in << "referenced variable type: " << get_variable()->get_type()->explain() << '\n';
+        assert(!"this shouldn't be called, or, when called, should return an empty expression...");
     }
 
-    statement_ir id_expression::_codegen_ir(ir_generation_context & ctx) const
+    future<expression *> closure::_simplify_expr(simplification_context & ctx)
     {
-        return { codegen::ir::instruction{
-            none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, { get<codegen::ir::value>(_referenced->codegen_ir(ctx)) } } };
+        return _body->simplify(ctx).then([&](auto && simplified) -> expression * {
+            replace_uptr(_body, dynamic_cast<block *>(simplified), ctx);
+            return this;
+        });
     }
 }
 }
