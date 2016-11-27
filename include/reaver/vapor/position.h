@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2015 Michał "Griwes" Dominiak
+ * Copyright © 2014-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,56 +24,58 @@
 
 #include <string>
 
-namespace reaver
+namespace reaver::vapor
 {
-    namespace vapor { inline namespace _v1
+inline namespace _v1
+{
+    struct position
     {
-        struct position
+        position()
         {
-            position() {}
-            position(const position &) = default;
-            position(position &&) = default;
-            position & operator=(const position &) = default;
-            position & operator=(position &&) = default;
+        }
+        position(const position &) = default;
+        position(position &&) = default;
+        position & operator=(const position &) = default;
+        position & operator=(position &&) = default;
 
-            position(std::size_t offset) : offset{ offset }
-            {
-            }
-
-            std::size_t operator-(const position & rhs) const
-            {
-                // throw assert(offset > rhs.offset)
-                return offset - rhs.offset;
-            }
-
-            position & operator+=(std::size_t len)
-            {
-                offset += len;
-                column += len;
-                return *this;
-            }
-
-            position operator+(std::size_t len) const
-            {
-                position ret(*this);
-                ret += len;
-                return ret;
-            }
-
-            std::size_t offset = 0;
-            std::size_t line = 1;
-            std::size_t column = 1;
-            std::string file;
-        };
-
-        inline bool operator!=(const position & lhs, const position & rhs)
+        position(std::size_t offset) : offset{ offset }
         {
-            return lhs.offset != rhs.offset;
         }
 
-        inline bool operator==(const position & lhs, const position & rhs)
+        std::size_t operator-(const position & rhs) const
         {
-            return !(lhs != rhs);
+            // throw assert(offset > rhs.offset)
+            return offset - rhs.offset;
         }
-    }}
+
+        position & operator+=(std::size_t len)
+        {
+            offset += len;
+            column += len;
+            return *this;
+        }
+
+        position operator+(std::size_t len) const
+        {
+            position ret(*this);
+            ret += len;
+            return ret;
+        }
+
+        std::size_t offset = 0;
+        std::size_t line = 1;
+        std::size_t column = 1;
+        std::string file;
+    };
+
+    inline bool operator!=(const position & lhs, const position & rhs)
+    {
+        return lhs.offset != rhs.offset;
+    }
+
+    inline bool operator==(const position & lhs, const position & rhs)
+    {
+        return !(lhs != rhs);
+    }
+}
 }

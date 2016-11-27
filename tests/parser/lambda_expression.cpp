@@ -30,454 +30,191 @@ using namespace reaver::vapor::parser;
 MAYFLY_BEGIN_SUITE("parser");
 MAYFLY_BEGIN_SUITE("lambda_expression");
 
-MAYFLY_ADD_TESTCASE("no arguments, deduced type, simple body", test(
-    UR"(λ => constant;)",
-    lambda_expression{
-        { 0, 13 },
-        {},
-        {},
-        {},
-        block{
-            { 2, 13 },
+MAYFLY_ADD_TESTCASE("no arguments, deduced type, simple body",
+    test(UR"(λ => constant;)",
+        lambda_expression{ { 0, 13 },
             {},
-            { expression_list{
-                { 5, 13 },
-                {
-                    {
-                        { 5, 13 },
-                        postfix_expression{
-                            { 5, 13 },
-                            { id_expression{
-                                { 5, 13 },
-                                {
-                                    { lexer::token_type::identifier, UR"(constant)", { 5, 13 } }
-                                }
-                            } },
-                            {},
-                            {}
-                        }
-                    }
-                }
-            } }
-        }
-    },
-    &parse_lambda_expression
-));
-
-MAYFLY_ADD_TESTCASE("no arguments, explicit type, simple body", test(
-    UR"(λ -> int => constant;)",
-    lambda_expression{
-        { 0, 20 },
-        {},
-        {},
-        reaver::make_optional(expression{
-            { 5, 8 },
-            postfix_expression{
-                { 5, 8 },
-                { id_expression {
-                    { 5, 8 },
-                    {
-                        { lexer::token_type::identifier, UR"(int)", { 5, 8 } }
-                    },
-                } },
+            {},
+            {},
+            block{ { 2, 13 },
                 {},
-                {}
-            }
-        }),
-        block{
-            { 9, 20 },
-            {},
-            { expression_list{
-                { 12, 20 },
-                {
-                    {
-                        { 12, 20 },
-                        postfix_expression{
-                            { 12, 20 },
-                            { id_expression{
-                                { 12, 20 },
-                                {
-                                    { lexer::token_type::identifier, UR"(constant)", { 12, 20 } }
-                                }
-                            } },
+                { expression_list{ { 5, 13 },
+                    { { { 5, 13 },
+                        postfix_expression{ { 5, 13 },
+                            { id_expression{ { 5, 13 }, { { lexer::token_type::identifier, UR"(constant)", { 5, 13 } } } } },
                             {},
-                            {}
-                        }
-                    }
-                }
-            } }
-        }
-    },
-    &parse_lambda_expression
-));
+                            {} } } } } } } },
+        &parse_lambda_expression));
 
-MAYFLY_ADD_TESTCASE("no arguments, deduced type, regular body", test(
-    UR"(λ { => constant })",
-    lambda_expression{
-        { 0, 17 },
-        {},
-        {},
-        {},
-        block{
-            { 2, 17 },
+MAYFLY_ADD_TESTCASE("no arguments, explicit type, simple body",
+    test(UR"(λ -> int => constant;)",
+        lambda_expression{ { 0, 20 },
             {},
-            { expression_list{
-                { 7, 15 },
-                {
-                    {
-                        { 7, 15 },
-                        postfix_expression{
-                            { 7, 15 },
-                            { id_expression{
-                                { 7, 15 },
-                                {
-                                    { lexer::token_type::identifier, UR"(constant)", { 7, 15 } }
-                                }
-                            } },
-                            {},
-                            {}
-                        }
-                    }
-                }
-            } }
-        }
-    },
-    &parse_lambda_expression
-));
-
-MAYFLY_ADD_TESTCASE("no arguments, explicit type, regular body", test(
-    UR"(λ -> int { => constant })",
-    lambda_expression{
-        { 0, 24 },
-        {},
-        {},
-        reaver::make_optional(expression{
-            { 5, 8 },
-            postfix_expression{
-                { 5, 8 },
-                { id_expression {
-                    { 5, 8 },
-                    {
-                        { lexer::token_type::identifier, UR"(int)", { 5, 8 } }
-                    },
-                } },
+            {},
+            reaver::make_optional(expression{ { 5, 8 },
+                postfix_expression{ { 5, 8 },
+                    { id_expression{
+                        { 5, 8 },
+                        { { lexer::token_type::identifier, UR"(int)", { 5, 8 } } },
+                    } },
+                    {},
+                    {} } }),
+            block{ { 9, 20 },
                 {},
-                {}
-            }
-        }),
-        block{
-            { 9, 24 },
-            {},
-            { expression_list{
-                { 14, 22 },
-                {
-                    {
-                        { 14, 22 },
-                        postfix_expression{
-                            { 14, 22 },
-                            { id_expression{
-                                { 14, 22 },
-                                {
-                                    { lexer::token_type::identifier, UR"(constant)", { 14, 22 } }
-                                }
-                            } },
+                { expression_list{ { 12, 20 },
+                    { { { 12, 20 },
+                        postfix_expression{ { 12, 20 },
+                            { id_expression{ { 12, 20 }, { { lexer::token_type::identifier, UR"(constant)", { 12, 20 } } } } },
                             {},
-                            {}
-                        }
-                    }
-                }
-            } }
-        }
-    },
-    &parse_lambda_expression
-));
+                            {} } } } } } } },
+        &parse_lambda_expression));
 
-MAYFLY_ADD_TESTCASE("one argument, deduced type, simple body", test(
-    UR"(λ(x : int) => constant;)",
-    lambda_expression{
-        { 0, 22 },
-        {},
-        reaver::make_optional(argument_list{
-            { 2, 9 },
-            {
-                argument{
-                    { 2, 9 },
-                    { lexer::token_type::identifier, UR"(x)", { 2, 3 } },
-                    {
-                        { 6, 9 },
-                        postfix_expression{
-                            { 6, 9 },
-                            id_expression{
-                                { 6, 9 },
-                                {
-                                    { lexer::token_type::identifier, UR"(int)", { 6, 9 } }
-                                }
-                            },
-                            {},
-                            {}
-                        }
-                    }
-                }
-            }
-        }),
-        {},
-        block{
-            { 11, 22 },
+MAYFLY_ADD_TESTCASE("no arguments, deduced type, regular body",
+    test(UR"(λ { => constant })",
+        lambda_expression{ { 0, 17 },
             {},
-            { expression_list{
-                { 14, 22 },
-                {
-                    {
-                        { 14, 22 },
-                        postfix_expression{
-                            { 14, 22 },
-                            { id_expression{
-                                { 14, 22 },
-                                {
-                                    { lexer::token_type::identifier, UR"(constant)", { 14, 22 } }
-                                }
-                            } },
-                            {},
-                            {}
-                        }
-                    }
-                }
-            } }
-        }
-    },
-    &parse_lambda_expression
-));
-
-MAYFLY_ADD_TESTCASE("one argument, explicit type, simple body", test(
-    UR"(λ(x : int) -> int => constant;)",
-    lambda_expression{
-        { 0, 29 },
-        {},
-        reaver::make_optional(argument_list{
-            { 2, 9 },
-            {
-                argument{
-                    { 2, 9 },
-                    { lexer::token_type::identifier, UR"(x)", { 2, 3 } },
-                    {
-                        { 6, 9 },
-                        postfix_expression{
-                            { 6, 9 },
-                            id_expression{
-                                { 6, 9 },
-                                {
-                                    { lexer::token_type::identifier, UR"(int)", { 6, 9 } }
-                                }
-                            },
-                            {},
-                            {}
-                        }
-                    }
-                }
-            }
-        }),
-        reaver::make_optional(expression{
-            { 14, 17 },
-            postfix_expression{
-                { 14, 17 },
-                { id_expression {
-                    { 14, 17 },
-                    {
-                        { lexer::token_type::identifier, UR"(int)", { 14, 17 } }
-                    },
-                } },
+            {},
+            {},
+            block{ { 2, 17 },
                 {},
-                {}
-            }
-        }),
-        block{
-            { 18, 29 },
-            {},
-            { expression_list{
-                { 21, 29 },
-                {
-                    {
-                        { 21, 29 },
-                        postfix_expression{
-                            { 21, 29 },
-                            { id_expression{
-                                { 21, 29 },
-                                {
-                                    { lexer::token_type::identifier, UR"(constant)", { 21, 29 } }
-                                }
-                            } },
+                { expression_list{ { 7, 15 },
+                    { { { 7, 15 },
+                        postfix_expression{ { 7, 15 },
+                            { id_expression{ { 7, 15 }, { { lexer::token_type::identifier, UR"(constant)", { 7, 15 } } } } },
                             {},
-                            {}
-                        }
-                    }
-                }
-            } }
-        }
-    },
-    &parse_lambda_expression
-));
+                            {} } } } } } } },
+        &parse_lambda_expression));
 
-MAYFLY_ADD_TESTCASE("two arguments, deduced type, simple body", test(
-    UR"(λ(x : int, y : bool) => constant;)",
-    lambda_expression{
-        { 0, 32 },
-        {},
-        reaver::make_optional(argument_list{
-            { 2, 19 },
-            {
-                argument{
-                    { 2, 9 },
-                    { lexer::token_type::identifier, UR"(x)", { 2, 3 } },
-                    {
-                        { 6, 9 },
-                        postfix_expression{
-                            { 6, 9 },
-                            id_expression{
-                                { 6, 9 },
-                                {
-                                    { lexer::token_type::identifier, UR"(int)", { 6, 9 } }
-                                }
-                            },
-                            {},
-                            {}
-                        }
-                    }
-                },
-                argument{
-                    { 11, 19 },
-                    { lexer::token_type::identifier, UR"(y)", { 11, 12 } },
-                    {
-                        { 15, 19 },
-                        postfix_expression{
-                            { 15, 19 },
-                            id_expression{
-                                { 15, 19 },
-                                {
-                                    { lexer::token_type::identifier, UR"(bool)", { 15, 19 } }
-                                }
-                            },
-                            {},
-                            {}
-                        }
-                    }
-                }
-            }
-        }),
-        {},
-        block{
-            { 21, 32 },
+MAYFLY_ADD_TESTCASE("no arguments, explicit type, regular body",
+    test(UR"(λ -> int { => constant })",
+        lambda_expression{ { 0, 24 },
             {},
-            { expression_list{
-                { 24, 32 },
-                {
-                    {
-                        { 24, 32 },
-                        postfix_expression{
-                            { 24, 32 },
-                            { id_expression{
-                                { 24, 32 },
-                                {
-                                    { lexer::token_type::identifier, UR"(constant)", { 24, 32 } }
-                                }
-                            } },
-                            {},
-                            {}
-                        }
-                    }
-                }
-            } }
-        }
-    },
-    &parse_lambda_expression
-));
-
-MAYFLY_ADD_TESTCASE("two arguments, explicit type, simple body", test(
-    UR"(λ(x : int, y : bool) -> int => constant;)",
-    lambda_expression{
-        { 0, 39 },
-        {},
-        reaver::make_optional(argument_list{
-            { 2, 19 },
-            {
-                argument{
-                    { 2, 9 },
-                    { lexer::token_type::identifier, UR"(x)", { 2, 3 } },
-                    {
-                        { 6, 9 },
-                        postfix_expression{
-                            { 6, 9 },
-                            id_expression{
-                                { 6, 9 },
-                                {
-                                    { lexer::token_type::identifier, UR"(int)", { 6, 9 } }
-                                }
-                            },
-                            {},
-                            {}
-                        }
-                    }
-                },
-                argument{
-                    { 11, 19 },
-                    { lexer::token_type::identifier, UR"(y)", { 11, 12 } },
-                    {
-                        { 15, 19 },
-                        postfix_expression{
-                            { 15, 19 },
-                            id_expression{
-                                { 15, 19 },
-                                {
-                                    { lexer::token_type::identifier, UR"(bool)", { 15, 19 } }
-                                }
-                            },
-                            {},
-                            {}
-                        }
-                    }
-                }
-            }
-        }),
-        reaver::make_optional(expression{
-            { 24, 27 },
-            postfix_expression{
-                { 24, 27 },
-                { id_expression {
-                    { 24, 27 },
-                    {
-                        { lexer::token_type::identifier, UR"(int)", { 24, 27 } }
-                    },
-                } },
+            {},
+            reaver::make_optional(expression{ { 5, 8 },
+                postfix_expression{ { 5, 8 },
+                    { id_expression{
+                        { 5, 8 },
+                        { { lexer::token_type::identifier, UR"(int)", { 5, 8 } } },
+                    } },
+                    {},
+                    {} } }),
+            block{ { 9, 24 },
                 {},
-                {}
-            }
-        }),
-        block{
-            { 28, 39 },
-            {},
-            { expression_list{
-                { 31, 39 },
-                {
-                    {
-                        { 31, 39 },
-                        postfix_expression{
-                            { 31, 39 },
-                            { id_expression{
-                                { 31, 39 },
-                                {
-                                    { lexer::token_type::identifier, UR"(constant)", { 31, 39 } }
-                                }
-                            } },
+                { expression_list{ { 14, 22 },
+                    { { { 14, 22 },
+                        postfix_expression{ { 14, 22 },
+                            { id_expression{ { 14, 22 }, { { lexer::token_type::identifier, UR"(constant)", { 14, 22 } } } } },
                             {},
-                            {}
-                        }
-                    }
-                }
-            } }
-        }
-    },
-    &parse_lambda_expression
-));
+                            {} } } } } } } },
+        &parse_lambda_expression));
+
+MAYFLY_ADD_TESTCASE("one argument, deduced type, simple body",
+    test(UR"(λ(x : int) => constant;)",
+        lambda_expression{ { 0, 22 },
+            {},
+            reaver::make_optional(argument_list{ { 2, 9 },
+                { argument{ { 2, 9 },
+                    { lexer::token_type::identifier, UR"(x)", { 2, 3 } },
+                    { { 6, 9 },
+                        postfix_expression{ { 6, 9 }, id_expression{ { 6, 9 }, { { lexer::token_type::identifier, UR"(int)", { 6, 9 } } } }, {}, {} } } } } }),
+            {},
+            block{ { 11, 22 },
+                {},
+                { expression_list{ { 14, 22 },
+                    { { { 14, 22 },
+                        postfix_expression{ { 14, 22 },
+                            { id_expression{ { 14, 22 }, { { lexer::token_type::identifier, UR"(constant)", { 14, 22 } } } } },
+                            {},
+                            {} } } } } } } },
+        &parse_lambda_expression));
+
+MAYFLY_ADD_TESTCASE("one argument, explicit type, simple body",
+    test(UR"(λ(x : int) -> int => constant;)",
+        lambda_expression{ { 0, 29 },
+            {},
+            reaver::make_optional(argument_list{ { 2, 9 },
+                { argument{ { 2, 9 },
+                    { lexer::token_type::identifier, UR"(x)", { 2, 3 } },
+                    { { 6, 9 },
+                        postfix_expression{ { 6, 9 }, id_expression{ { 6, 9 }, { { lexer::token_type::identifier, UR"(int)", { 6, 9 } } } }, {}, {} } } } } }),
+            reaver::make_optional(expression{ { 14, 17 },
+                postfix_expression{ { 14, 17 },
+                    { id_expression{
+                        { 14, 17 },
+                        { { lexer::token_type::identifier, UR"(int)", { 14, 17 } } },
+                    } },
+                    {},
+                    {} } }),
+            block{ { 18, 29 },
+                {},
+                { expression_list{ { 21, 29 },
+                    { { { 21, 29 },
+                        postfix_expression{ { 21, 29 },
+                            { id_expression{ { 21, 29 }, { { lexer::token_type::identifier, UR"(constant)", { 21, 29 } } } } },
+                            {},
+                            {} } } } } } } },
+        &parse_lambda_expression));
+
+MAYFLY_ADD_TESTCASE("two arguments, deduced type, simple body",
+    test(UR"(λ(x : int, y : bool) => constant;)",
+        lambda_expression{ { 0, 32 },
+            {},
+            reaver::make_optional(argument_list{ { 2, 19 },
+                { argument{ { 2, 9 },
+                      { lexer::token_type::identifier, UR"(x)", { 2, 3 } },
+                      { { 6, 9 },
+                          postfix_expression{ { 6, 9 }, id_expression{ { 6, 9 }, { { lexer::token_type::identifier, UR"(int)", { 6, 9 } } } }, {}, {} } } },
+                    argument{ { 11, 19 },
+                        { lexer::token_type::identifier, UR"(y)", { 11, 12 } },
+                        { { 15, 19 },
+                            postfix_expression{ { 15, 19 },
+                                id_expression{ { 15, 19 }, { { lexer::token_type::identifier, UR"(bool)", { 15, 19 } } } },
+                                {},
+                                {} } } } } }),
+            {},
+            block{ { 21, 32 },
+                {},
+                { expression_list{ { 24, 32 },
+                    { { { 24, 32 },
+                        postfix_expression{ { 24, 32 },
+                            { id_expression{ { 24, 32 }, { { lexer::token_type::identifier, UR"(constant)", { 24, 32 } } } } },
+                            {},
+                            {} } } } } } } },
+        &parse_lambda_expression));
+
+MAYFLY_ADD_TESTCASE("two arguments, explicit type, simple body",
+    test(UR"(λ(x : int, y : bool) -> int => constant;)",
+        lambda_expression{ { 0, 39 },
+            {},
+            reaver::make_optional(argument_list{ { 2, 19 },
+                { argument{ { 2, 9 },
+                      { lexer::token_type::identifier, UR"(x)", { 2, 3 } },
+                      { { 6, 9 },
+                          postfix_expression{ { 6, 9 }, id_expression{ { 6, 9 }, { { lexer::token_type::identifier, UR"(int)", { 6, 9 } } } }, {}, {} } } },
+                    argument{ { 11, 19 },
+                        { lexer::token_type::identifier, UR"(y)", { 11, 12 } },
+                        { { 15, 19 },
+                            postfix_expression{ { 15, 19 },
+                                id_expression{ { 15, 19 }, { { lexer::token_type::identifier, UR"(bool)", { 15, 19 } } } },
+                                {},
+                                {} } } } } }),
+            reaver::make_optional(expression{ { 24, 27 },
+                postfix_expression{ { 24, 27 },
+                    { id_expression{
+                        { 24, 27 },
+                        { { lexer::token_type::identifier, UR"(int)", { 24, 27 } } },
+                    } },
+                    {},
+                    {} } }),
+            block{ { 28, 39 },
+                {},
+                { expression_list{ { 31, 39 },
+                    { { { 31, 39 },
+                        postfix_expression{ { 31, 39 },
+                            { id_expression{ { 31, 39 }, { { lexer::token_type::identifier, UR"(constant)", { 31, 39 } } } } },
+                            {},
+                            {} } } } } } } },
+        &parse_lambda_expression));
 
 MAYFLY_END_SUITE;
 MAYFLY_END_SUITE;
-

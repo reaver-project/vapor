@@ -22,24 +22,29 @@
 
 #include "vapor/codegen/ir/instruction.h"
 
-std::ostream & reaver::vapor::codegen::_v1::ir::operator<<(std::ostream & os, const reaver::vapor::codegen::_v1::ir::instruction & inst)
+namespace reaver::vapor::codegen
 {
-    fmap(inst.label, [&](auto && lbl) {
-        os << "label: `" << utf8(lbl) << "`\n";
-        return unit{};
-    });
-    fmap(inst.declared_variable, [&](auto && var) {
-        os << "variable declaration: " << *var << "\n";
-        return unit{};
-    });
-
-    os << inst.result << " = " << inst.instruction.explain() << " ";
-    if (!inst.operands.empty())
+inline namespace _v1
+{
+    std::ostream & ir::operator<<(std::ostream & os, const ir::instruction & inst)
     {
-        std::copy(inst.operands.begin(), inst.operands.end() - 1, std::ostream_iterator<value>(os, ", "));
-        os << inst.operands.back();
+        fmap(inst.label, [&](auto && lbl) {
+            os << "label: `" << utf8(lbl) << "`\n";
+            return unit{};
+        });
+        fmap(inst.declared_variable, [&](auto && var) {
+            os << "variable declaration: " << *var << "\n";
+            return unit{};
+        });
+
+        os << inst.result << " = " << inst.instruction.explain() << " ";
+        if (!inst.operands.empty())
+        {
+            std::copy(inst.operands.begin(), inst.operands.end() - 1, std::ostream_iterator<value>(os, ", "));
+            os << inst.operands.back();
+        }
+
+        return os;
     }
-
-    return os;
 }
-
+}

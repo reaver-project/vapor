@@ -21,47 +21,27 @@
  **/
 
 #include "vapor/codegen/cxx/names.h"
+#include "vapor/codegen/generator.h"
+#include "vapor/codegen/ir/function.h"
 #include "vapor/codegen/ir/type.h"
 #include "vapor/codegen/ir/variable.h"
-#include "vapor/codegen/ir/function.h"
-#include "vapor/codegen/generator.h"
 
 #include <cassert>
 
-std::u32string reaver::vapor::codegen::_v1::cxx::type_name(const std::shared_ptr<const reaver::vapor::codegen::_v1::ir::variable_type> & type, reaver::vapor::codegen::_v1::codegen_context &)
+namespace reaver::vapor::codegen
 {
-    if (type == ir::builtin_types().integer)
+inline namespace _v1
+{
+    std::u32string cxx::type_name(const std::shared_ptr<const ir::variable_type> & type, codegen_context &)
     {
-        return U"::boost::multiprecision::cpp_int";
-    }
-
-    std::u32string ret;
-
-    fmap(type->scopes, [&](auto && scope) {
-        if (scope.type == ir::scope_type::function)
+        if (type == ir::builtin_types().integer)
         {
-            assert(0);
+            return U"::boost::multiprecision::cpp_int";
         }
-        ret += scope.name + U"::";
-        return unit{};
-    });
 
-    ret += type->name;
-    return ret;
-}
-
-std::u32string reaver::vapor::codegen::_v1::cxx::declaration_type_name(const std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> & type, reaver::vapor::codegen::_v1::codegen_context &)
-{
-    return type->name;
-}
-
-std::u32string reaver::vapor::codegen::_v1::cxx::variable_name(const reaver::vapor::codegen::_v1::ir::variable & var, reaver::vapor::codegen::_v1::codegen_context & ctx)
-{
-    if (var.name)
-    {
         std::u32string ret;
 
-        fmap(var.scopes, [&](auto && scope) {
+        fmap(type->scopes, [&](auto && scope) {
             if (scope.type == ir::scope_type::function)
             {
                 assert(0);
@@ -70,43 +50,68 @@ std::u32string reaver::vapor::codegen::_v1::cxx::variable_name(const reaver::vap
             return unit{};
         });
 
-        return ret + *var.name;
+        ret += type->name;
+        return ret;
     }
 
-    return U"__unnamed_variable_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.unnamed_variable_index++));
-}
-
-std::u32string reaver::vapor::codegen::_v1::cxx::declaration_variable_name(reaver::vapor::codegen::_v1::ir::variable & var, reaver::vapor::codegen::_v1::codegen_context & ctx)
-{
-    if (var.name)
+    std::u32string cxx::declaration_type_name(const std::shared_ptr<ir::variable_type> & type, codegen_context &)
     {
-        return *var.name;
+        return type->name;
     }
 
-    auto name = U"__unnamed_variable_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.unnamed_variable_index++));
-    var.name = name;
-    return name;
-}
-
-std::u32string reaver::vapor::codegen::_v1::cxx::function_name(const reaver::vapor::codegen::_v1::ir::function & fn, reaver::vapor::codegen::_v1::codegen_context &)
-{
-    std::u32string ret;
-
-    fmap(fn.scopes, [&](auto && scope) {
-        if (scope.type == ir::scope_type::function)
+    std::u32string cxx::variable_name(const ir::variable & var, codegen_context & ctx)
+    {
+        if (var.name)
         {
-            assert(0);
+            std::u32string ret;
+
+            fmap(var.scopes, [&](auto && scope) {
+                if (scope.type == ir::scope_type::function)
+                {
+                    assert(0);
+                }
+                ret += scope.name + U"::";
+                return unit{};
+            });
+
+            return ret + *var.name;
         }
-        ret += scope.name + U"::";
-        return unit{};
-    });
 
-    ret += fn.name;
-    return ret;
+        return U"__unnamed_variable_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.unnamed_variable_index++));
+    }
+
+    std::u32string cxx::declaration_variable_name(ir::variable & var, codegen_context & ctx)
+    {
+        if (var.name)
+        {
+            return *var.name;
+        }
+
+        auto name = U"__unnamed_variable_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.unnamed_variable_index++));
+        var.name = name;
+        return name;
+    }
+
+    std::u32string cxx::function_name(const ir::function & fn, codegen_context &)
+    {
+        std::u32string ret;
+
+        fmap(fn.scopes, [&](auto && scope) {
+            if (scope.type == ir::scope_type::function)
+            {
+                assert(0);
+            }
+            ret += scope.name + U"::";
+            return unit{};
+        });
+
+        ret += fn.name;
+        return ret;
+    }
+
+    std::u32string cxx::declaration_function_name(const ir::function & fn, codegen_context &)
+    {
+        return fn.name;
+    }
 }
-
-std::u32string reaver::vapor::codegen::_v1::cxx::declaration_function_name(const reaver::vapor::codegen::_v1::ir::function & fn, reaver::vapor::codegen::_v1::codegen_context &)
-{
-    return fn.name;
 }
-

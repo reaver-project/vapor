@@ -27,95 +27,91 @@
 
 #include "detail/iterator_backend.h"
 
-namespace reaver
+namespace reaver::vapor::lexer
 {
-    namespace vapor
+inline namespace _v1
+{
+    class iterator
     {
-        namespace lexer { inline namespace _v1
+    public:
+        iterator() = default;
+
+        template<typename Iter, typename std::enable_if<std::is_same<typename std::iterator_traits<Iter>::value_type, char32_t>::value, int>::type = 0>
+        iterator(Iter begin, Iter end) : _backend{ std::make_shared<_detail::_iterator_backend>(begin, end, _node) }
         {
-            class iterator
+        }
+
+        explicit operator bool() const
+        {
+            return _node != nullptr;
+        }
+
+        bool operator!=(const iterator & other) const
+        {
+            return _node != other._node;
+        }
+
+        iterator & operator++()
+        {
+            if (_node)
             {
-            public:
-                iterator() = default;
-
-                template<typename Iter, typename std::enable_if<std::is_same<typename std::iterator_traits<Iter>::value_type, char32_t>::value, int>::type = 0>
-                iterator(Iter begin, Iter end) : _backend{ std::make_shared<_detail::_iterator_backend>(begin, end, _node) }
+                if (!_node->_next)
                 {
+                    _node->wait_next();
                 }
 
-                explicit operator bool() const
-                {
-                    return _node != nullptr;
-                }
+                _node = _node->_next;
+            }
 
-                bool operator!=(const iterator & other) const
-                {
-                    return _node != other._node;
-                }
+            return *this;
+        }
 
-                iterator & operator++()
-                {
-                    if (_node)
-                    {
-                        if (!_node->_next)
-                        {
-                            _node->wait_next();
-                        }
+        iterator operator++(int)
+        {
+            iterator iter{ *this };
+            ++*this;
+            return iter;
+        };
 
-                        _node = _node->_next;
-                    }
+        token & operator*()
+        {
+            return _node->_token;
+        }
 
-                    return *this;
-                }
+        const token & operator*() const
+        {
+            return _node->_token;
+        }
 
-                iterator operator++(int)
-                {
-                    iterator iter{ *this };
-                    ++*this;
-                    return iter;
-                };
+        token * operator->()
+        {
+            return &_node->_token;
+        }
 
-                token & operator*()
-                {
-                    return _node->_token;
-                }
+        const token * operator->() const
+        {
+            return &_node->_token;
+        }
 
-                const token & operator*() const
-                {
-                    return _node->_token;
-                }
+        bool operator==(const iterator & rhs) const
+        {
+            // throw assert _backend == rhs._backend
+            return _node == rhs._node;
+        }
 
-                token * operator->()
-                {
-                    return &_node->_token;
-                }
-
-                const token * operator->() const
-                {
-                    return &_node->_token;
-                }
-
-                bool operator==(const iterator & rhs) const
-                {
-                    // throw assert _backend == rhs._backend
-                    return _node == rhs._node;
-                }
-
-            private:
-                std::shared_ptr<_detail::_lexer_node> _node = nullptr;
-                std::shared_ptr<_detail::_iterator_backend> _backend = nullptr;
-            };
-        }}
-    }
+    private:
+        std::shared_ptr<_detail::_lexer_node> _node = nullptr;
+        std::shared_ptr<_detail::_iterator_backend> _backend = nullptr;
+    };
+}
 }
 
 namespace std
 {
-    template<>
-    struct iterator_traits<reaver::vapor::lexer::iterator>
-    {
-        using value_type = reaver::vapor::lexer::token;
-        using iterator_category = forward_iterator_tag;
-    };
+template<>
+struct iterator_traits<reaver::vapor::lexer::iterator>
+{
+    using value_type = reaver::vapor::lexer::token;
+    using iterator_category = forward_iterator_tag;
+};
 }
-

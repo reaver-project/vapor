@@ -21,53 +21,58 @@
  **/
 
 #include "vapor/codegen/generator.h"
-#include "vapor/codegen/ir/type.h"
 #include "vapor/codegen/cxx/names.h" // baaaaad, need to sort this nonsense out
+#include "vapor/codegen/ir/type.h"
 
 #include <cassert>
 
-std::u32string reaver::vapor::codegen::_v1::codegen_context::declare_if_necessary(std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> type)
+namespace reaver::vapor::codegen
 {
-    if (_declared_types.find(type) != _declared_types.end())
-    {
-        return {};
-    }
-
-    _declared_types.insert(type);
-    return _generator->generate_declaration(type, *this);
-}
-
-std::u32string reaver::vapor::codegen::_v1::codegen_context::define_if_necessary(std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> type)
+inline namespace _v1
 {
-    if (_defined_types.find(type) != _defined_types.end())
+    std::u32string codegen_context::declare_if_necessary(std::shared_ptr<ir::variable_type> type)
     {
-        return {};
-    }
-
-    _defined_types.insert(type);
-    return _generator->generate_definition(type, *this);
-}
-
-std::u32string reaver::vapor::codegen::_v1::codegen_context::get_storage_for(std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> type)
-{
-    auto it = _unallocated_variables.find(type);
-    if (it != _unallocated_variables.end())
-    {
-        if (!it->second.empty())
+        if (_declared_types.find(type) != _declared_types.end())
         {
-            auto ret = std::move(it->second.back());
-            it->second.pop_back();
-            return ret;
+            return {};
         }
+
+        _declared_types.insert(type);
+        return _generator->generate_declaration(type, *this);
     }
 
-    auto var = U"__pseudoregister_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(storage_object_index++));
-    put_into_function_header += U"::reaver::manual_object<" + cxx::type_name(type, *this) + U"> " + var + U";\n";
-    return var;
-}
+    std::u32string codegen_context::define_if_necessary(std::shared_ptr<ir::variable_type> type)
+    {
+        if (_defined_types.find(type) != _defined_types.end())
+        {
+            return {};
+        }
 
-void reaver::vapor::codegen::_v1::codegen_context::free_storage_for(std::u32string name, std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> type)
-{
-    _unallocated_variables[std::move(type)].push_back(std::move(name));
-}
+        _defined_types.insert(type);
+        return _generator->generate_definition(type, *this);
+    }
 
+    std::u32string codegen_context::get_storage_for(std::shared_ptr<ir::variable_type> type)
+    {
+        auto it = _unallocated_variables.find(type);
+        if (it != _unallocated_variables.end())
+        {
+            if (!it->second.empty())
+            {
+                auto ret = std::move(it->second.back());
+                it->second.pop_back();
+                return ret;
+            }
+        }
+
+        auto var = U"__pseudoregister_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(storage_object_index++));
+        put_into_function_header += U"::reaver::manual_object<" + cxx::type_name(type, *this) + U"> " + var + U";\n";
+        return var;
+    }
+
+    void codegen_context::free_storage_for(std::u32string name, std::shared_ptr<ir::variable_type> type)
+    {
+        _unallocated_variables[std::move(type)].push_back(std::move(name));
+    }
+}
+}

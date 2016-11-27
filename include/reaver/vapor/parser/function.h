@@ -25,40 +25,32 @@
 #include <reaver/optional.h>
 
 #include "../range.h"
-#include "helpers.h"
 #include "argument_list.h"
 #include "expression.h"
+#include "helpers.h"
 
-namespace reaver
+namespace reaver::vapor::parser
 {
-    namespace vapor
+inline namespace _v1
+{
+    struct block;
+
+    struct function
     {
-        namespace parser { inline namespace _v1
-        {
-            struct block;
+        range_type range;
+        lexer::token name;
+        optional<argument_list> arguments;
+        optional<expression> return_type;
+        recursive_wrapper<block> body;
+    };
 
-            struct function
-            {
-                range_type range;
-                lexer::token name;
-                optional<argument_list> arguments;
-                optional<expression> return_type;
-                recursive_wrapper<block> body;
-            };
-
-            inline bool operator==(const function & lhs, const function & rhs)
-            {
-                return lhs.range == rhs.range
-                    && lhs.name == rhs.name
-                    && lhs.arguments == rhs.arguments
-                    && lhs.return_type == rhs.return_type
-                    && *lhs.body == rhs.body;
-            }
-
-            function parse_function(context & ctx);
-
-            void print(const function & f, std::ostream & os, std::size_t indent = 0);
-        }}
+    inline bool operator==(const function & lhs, const function & rhs)
+    {
+        return lhs.range == rhs.range && lhs.name == rhs.name && lhs.arguments == rhs.arguments && lhs.return_type == rhs.return_type && *lhs.body == rhs.body;
     }
-}
 
+    function parse_function(context & ctx);
+
+    void print(const function & f, std::ostream & os, std::size_t indent = 0);
+}
+}

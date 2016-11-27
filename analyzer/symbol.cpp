@@ -23,14 +23,16 @@
 #include "vapor/analyzer/symbol.h"
 #include "vapor/codegen/ir/variable.h"
 
-reaver::variant<std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable>, std::vector<reaver::vapor::codegen::_v1::ir::function>> reaver::vapor::analyzer::_v1::symbol::codegen_ir(reaver::vapor::analyzer::_v1::ir_generation_context & ctx) const
+namespace reaver::vapor::analyzer
 {
-    return fmap(_variable->codegen_ir(ctx), make_overload_set(
-        [](none_t) { return std::vector<codegen::ir::function>{}; },
-        [](std::vector<codegen::ir::function> fs) { return fs; },
-        [](codegen::ir::value val) {
-            return get<std::shared_ptr<codegen::ir::variable>>(val);
-        }
-    ));
+inline namespace _v1
+{
+    variant<std::shared_ptr<codegen::_v1::ir::variable>, std::vector<codegen::_v1::ir::function>> symbol::codegen_ir(ir_generation_context & ctx) const
+    {
+        return fmap(_variable->codegen_ir(ctx),
+            make_overload_set([](none_t) { return std::vector<codegen::ir::function>{}; },
+                [](std::vector<codegen::ir::function> fs) { return fs; },
+                [](codegen::ir::value val) { return get<std::shared_ptr<codegen::ir::variable>>(val); }));
+    }
 }
-
+}

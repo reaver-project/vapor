@@ -23,4 +23,3 @@
 #pragma once
 
 #include "analyzer/ast.h"
-

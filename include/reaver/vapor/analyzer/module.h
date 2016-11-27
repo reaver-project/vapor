@@ -22,54 +22,50 @@
 
 #pragma once
 
-#include <vector>
-#include <string>
 #include <map>
+#include <string>
+#include <vector>
 
 #include <boost/algorithm/string.hpp>
 
-#include "../range.h"
-#include "../parser/module.h"
-#include "../parser/id_expression.h"
-#include "declaration.h"
-#include "scope.h"
-#include "import.h"
-#include "symbol.h"
-#include "helpers.h"
-#include "statement.h"
-#include "function.h"
 #include "../codegen/ir/module.h"
+#include "../parser/id_expression.h"
+#include "../parser/module.h"
+#include "../range.h"
+#include "expressions/import.h"
+#include "function.h"
+#include "helpers.h"
 #include "ir_context.h"
+#include "scope.h"
+#include "statements/declaration.h"
+#include "statements/statement.h"
+#include "symbol.h"
 
-namespace reaver
+namespace reaver::vapor::analyzer
 {
-    namespace vapor
+inline namespace _v1
+{
+    class module
     {
-        namespace analyzer { inline namespace _v1
+    public:
+        module(const parser::module & parse);
+
+        void analyze();
+        void simplify();
+
+        std::u32string name() const
         {
-            class module
-            {
-            public:
-                module(const parser::module & parse);
+            return boost::join(fmap(_parse.name.id_expression_value, [](auto && elem) -> decltype(auto) { return elem.string; }), ".");
+        }
 
-                void analyze();
-                void simplify();
+        void print(std::ostream & os, std::size_t indent = 0) const;
+        codegen::ir::module codegen_ir() const;
 
-                std::u32string name() const
-                {
-                    return boost::join(fmap(_parse.name.id_expression_value, [](auto && elem) -> decltype(auto) { return elem.string; }), ".");
-                }
-
-                void print(std::ostream & os, std::size_t indent = 0) const;
-                codegen::ir::module codegen_ir() const;
-
-            private:
-                const parser::module & _parse;
-                std::unique_ptr<scope> _scope;
-                std::vector<std::unique_ptr<statement>> _statements;
-                std::vector<future<>> _analysis_futures;
-            };
-        }}
-    }
+    private:
+        const parser::module & _parse;
+        std::unique_ptr<scope> _scope;
+        std::vector<std::unique_ptr<statement>> _statements;
+        std::vector<future<>> _analysis_futures;
+    };
 }
-
+}

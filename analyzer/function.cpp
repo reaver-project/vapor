@@ -20,47 +20,45 @@
  *
  **/
 
+#include "vapor/analyzer/function.h"
+#include "vapor/analyzer/expressions/variable.h"
+#include "vapor/analyzer/statements/block.h"
+#include "vapor/analyzer/statements/return.h"
+#include "vapor/analyzer/symbol.h"
 #include "vapor/parser/expression_list.h"
 #include "vapor/parser/lambda_expression.h"
-#include "vapor/analyzer/function.h"
-#include "vapor/analyzer/block.h"
-#include "vapor/analyzer/return.h"
-#include "vapor/analyzer/symbol.h"
 
-reaver::future<> reaver::vapor::analyzer::_v1::function::simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx)
+namespace reaver::vapor::analyzer
 {
-    if (_body)
-    {
-        return _body->simplify(ctx)
-            .then([&](auto && simplified) {
-                _body = dynamic_cast<block *>(simplified);
-            });
-    }
-
-    return make_ready_future();
-}
-
-reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyzer::_v1::function::simplify(reaver::vapor::analyzer::_v1::optimization_context & ctx, std::vector<variable *> args)
+inline namespace _v1
 {
-    if (_body)
+    future<> function::simplify(simplification_context & ctx)
     {
-        if (!std::any_of(args.begin(), args.end(), [](auto && arg){ return arg->is_constant(); }))
+        if (_body)
         {
-            return make_ready_future<expression *>(nullptr);
+            return _body->simplify(ctx).then([&](auto && simplified) { _body = dynamic_cast<block *>(simplified); });
         }
 
-        return [&]{
-            if (args.size())
-            {
-                auto body = _body->clone_with_replacement(
-                    _arguments,
-                    args
-                );
+        return make_ready_future();
+    }
 
-                auto simplify = [ctx = std::make_shared<optimization_context>()](auto self, auto body)
+    future<expression *> function::simplify(simplification_context & ctx, std::vector<variable *> args)
+    {
+        if (_body)
+        {
+            if (!std::any_of(args.begin(), args.end(), [](auto && arg) { return arg->is_constant(); }))
+            {
+                return make_ready_future<expression *>(nullptr);
+            }
+
+            return [&] {
+                if (args.size())
                 {
-                    return body->simplify(*ctx)
-                        .then([&, old_body = body, ctx, self](auto && body) -> future<block *> {
+                    auto body = _body->clone_with_replacement(_arguments, args);
+
+                    auto simplify = [ctx = std::make_shared<simplification_context>()](auto self, auto body)
+                    {
+                        return body->simplify(*ctx).then([&, old_body = body, ctx, self](auto && body)->future<block *> {
                             if (!ctx->did_something_happen())
                             {
                                 return make_ready_future<block *>(dynamic_cast<block *>(body));
@@ -69,44 +67,45 @@ reaver::future<reaver::vapor::analyzer::_v1::expression *> reaver::vapor::analyz
                             // ugh
                             // but I don't know how else to write this
                             // without creating a long overload for optctx
-                            ctx->~optimization_context();
-                            new (&*ctx) optimization_context();
+                            ctx->~simplification_context();
+                            new (&*ctx) simplification_context();
                             return self(self, body);
                         });
-                };
+                    };
 
-                // this is a leak
-                return simplify(simplify, body.release());
-            }
+                    // this is a leak
+                    return simplify(simplify, body.release());
+                }
 
-            return make_ready_future(_body);
-        }().then([&](auto && body) {
-            auto returns = body->get_returns();
+                return make_ready_future(_body);
+            }().then([&](auto && body) {
+                auto returns = body->get_returns();
 
-            assert(body->has_return_expression() || returns.size());
-            auto var = body->has_return_expression() ? body->get_return_expression()->get_variable() : returns.front()->get_returned_variable();
-            auto begin = body->has_return_expression() ? returns.begin() : returns.begin() + 1;
+                assert(body->has_return_expression() || returns.size());
+                auto var = body->has_return_expression() ? body->get_return_expression()->get_variable() : returns.front()->get_returned_variable();
+                auto begin = body->has_return_expression() ? returns.begin() : returns.begin() + 1;
 
-            if (!var->is_constant())
-            {
+                if (!var->is_constant())
+                {
+                    return make_ready_future<expression *>(nullptr);
+                }
+
+                if (std::all_of(begin, returns.end(), [](auto && ret) { return ret->get_returned_variable()->is_constant(); })
+                    && std::all_of(begin, returns.end(), [&](auto && ret) { return ret->get_returned_variable()->is_equal(var); }))
+                {
+                    return make_ready_future(make_variable_ref_expression(var).release());
+                }
+
                 return make_ready_future<expression *>(nullptr);
-            }
+            });
+        }
 
-            if (std::all_of(begin, returns.end(), [](auto && ret) { return ret->get_returned_variable()->is_constant(); })
-                && std::all_of(begin, returns.end(), [&](auto && ret) { return ret->get_returned_variable()->is_equal(var); }))
-            {
-                return make_ready_future(make_variable_ref_expression(var).release());
-            }
+        if (_compile_time_eval)
+        {
+            return make_ready_future((*_compile_time_eval)(ctx, args));
+        }
 
-            return make_ready_future<expression *>(nullptr);
-        });
+        assert(0);
     }
-
-    if (_compile_time_eval)
-    {
-        return make_ready_future((*_compile_time_eval)(ctx, args));
-    }
-
-    assert(0);
 }
-
+}

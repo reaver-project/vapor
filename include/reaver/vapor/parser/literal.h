@@ -27,73 +27,67 @@
 #include "../range.h"
 #include "helpers.h"
 
-namespace reaver
+namespace reaver::vapor::parser
 {
-    namespace vapor
+inline namespace _v1
+{
+    template<lexer::token_type TokenType>
+    struct literal
     {
-        namespace parser { inline namespace _v1
+        range_type range;
+        lexer::token value;
+        optional<lexer::token> suffix;
+    };
+
+    template<lexer::token_type TokenType>
+    bool operator==(const literal<TokenType> & lhs, const literal<TokenType> & rhs)
+    {
+        return lhs.range == rhs.range && lhs.value == rhs.value && lhs.suffix == rhs.suffix;
+    }
+
+    using string_literal = literal<lexer::token_type::string>;
+    using integer_literal = literal<lexer::token_type::integer>;
+    using boolean_literal = literal<lexer::token_type::boolean>;
+
+    template<lexer::token_type TokenType>
+    auto parse_literal(context & ctx)
+    {
+        literal<TokenType> ret;
+
+        if (peek(ctx, TokenType))
         {
-            template<lexer::token_type TokenType>
-            struct literal
-            {
-                range_type range;
-                lexer::token value;
-                optional<lexer::token> suffix;
-            };
+            ret.value = expect(ctx, TokenType);
 
-            template<lexer::token_type TokenType>
-            bool operator==(const literal<TokenType> & lhs, const literal<TokenType> & rhs)
+            auto start = ret.value.range.start();
+            auto end = ret.value.range.end();
+
+            if (peek(ctx, lexer::suffix(TokenType)))
             {
-                return lhs.range == rhs.range
-                    && lhs.value == rhs.value
-                    && lhs.suffix == rhs.suffix;
+                ret.suffix = expect(ctx, lexer::suffix(TokenType));
+                end = ret.suffix->range.end();
             }
 
-            using string_literal = literal<lexer::token_type::string>;
-            using integer_literal = literal<lexer::token_type::integer>;
-            using boolean_literal = literal<lexer::token_type::boolean>;
+            ret.range = { start, end };
+        }
 
-            template<lexer::token_type TokenType>
-            auto parse_literal(context & ctx)
-            {
-                literal<TokenType> ret;
+        return ret;
+    }
 
-                if (peek(ctx, TokenType))
-                {
-                    ret.value = expect(ctx, TokenType);
+    template<lexer::token_type TokenType>
+    void print(const literal<TokenType> & lit, std::ostream & os, std::size_t indent = 0)
+    {
+        auto in = std::string(indent, ' ');
+        os << in << '`' << lexer::token_types[+lit.value.type] << "` literal value: " << lit.value << '\n';
+        if (lit.suffix)
+        {
+            os << in << "literal suffix: " << *lit.suffix << '\n';
+        }
+    }
 
-                    auto start = ret.value.range.start();
-                    auto end = ret.value.range.end();
-
-                    if (peek(ctx, lexer::suffix(TokenType)))
-                    {
-                        ret.suffix = expect(ctx, lexer::suffix(TokenType));
-                        end = ret.suffix->range.end();
-                    }
-
-                    ret.range = { start, end };
-                }
-
-                return ret;
-            }
-
-            template<lexer::token_type TokenType>
-            void print(const literal<TokenType> & lit, std::ostream & os, std::size_t indent = 0)
-            {
-                auto in = std::string(indent, ' ');
-                os << in << '`' << lexer::token_types[+lit.value.type] << "` literal value: " << lit.value << '\n';
-                if (lit.suffix)
-                {
-                    os << in << "literal suffix: " << *lit.suffix << '\n';
-                }
-            }
-
-            inline void print(const lexer::token & tok, std::ostream & os, std::size_t indent = 0)
-            {
-                auto in = std::string(indent, ' ');
-                os << in << tok << '\n';
-            }
-        }}
+    inline void print(const lexer::token & tok, std::ostream & os, std::size_t indent = 0)
+    {
+        auto in = std::string(indent, ' ');
+        os << in << tok << '\n';
     }
 }
-
+}

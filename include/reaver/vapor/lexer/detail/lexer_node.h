@@ -28,57 +28,53 @@
 
 #include "../token.h"
 
-namespace reaver
+namespace reaver::vapor::lexer
 {
-    namespace vapor
+inline namespace _v1
+{
+    class iterator;
+
+    namespace _detail
     {
-        namespace lexer { inline namespace _v1
+        class _iterator_backend;
+
+        class _lexer_node
         {
-            class iterator;
+        public:
+            friend class lexer::iterator;
+            friend class _iterator_backend;
 
-            namespace _detail
+            _lexer_node(token tok, std::exception_ptr & ex) : _token{ std::move(tok) }, _ex(ex)
             {
-                class _iterator_backend;
-
-                class _lexer_node
-                {
-                public:
-                    friend class lexer::iterator;
-                    friend class _iterator_backend;
-
-                    _lexer_node(token tok, std::exception_ptr & ex) : _token{ std::move(tok) }, _ex(ex)
-                    {
-                    }
-
-                    void wait_next()
-                    {
-                        if (_done || _next)
-                        {
-                            return;
-                        }
-
-                        if (_ex)
-                        {
-                            std::rethrow_exception(_ex);
-                        }
-
-                        _sem.wait();
-
-                        if (_ex)
-                        {
-                            std::rethrow_exception(_ex);
-                        }
-                    }
-
-                private:
-                    std::shared_ptr<_lexer_node> _next;
-                    token _token;
-                    semaphore _sem;
-                    std::exception_ptr & _ex;
-                    std::atomic<bool> _done{ false };
-                };
             }
-        }}
+
+            void wait_next()
+            {
+                if (_done || _next)
+                {
+                    return;
+                }
+
+                if (_ex)
+                {
+                    std::rethrow_exception(_ex);
+                }
+
+                _sem.wait();
+
+                if (_ex)
+                {
+                    std::rethrow_exception(_ex);
+                }
+            }
+
+        private:
+            std::shared_ptr<_lexer_node> _next;
+            token _token;
+            semaphore _sem;
+            std::exception_ptr & _ex;
+            std::atomic<bool> _done{ false };
+        };
     }
 }
-
+}

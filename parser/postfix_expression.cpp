@@ -20,104 +20,119 @@
  *
  **/
 
-#include "vapor/parser/helpers.h"
 #include "vapor/parser/postfix_expression.h"
 #include "vapor/parser/expression_list.h"
+#include "vapor/parser/helpers.h"
 #include "vapor/parser/lambda_expression.h"
 
-reaver::vapor::parser::_v1::postfix_expression reaver::vapor::parser::_v1::parse_postfix_expression(reaver::vapor::parser::context & ctx, reaver::vapor::parser::_v1::expression_special_modes mode)
+namespace reaver::vapor::parser
 {
-    auto closing = [](lexer::token_type type)
+inline namespace _v1
+{
+    postfix_expression parse_postfix_expression(context & ctx, expression_special_modes mode)
     {
-        using namespace lexer;
-        switch (type)
-        {
-            case token_type::round_bracket_open: return token_type::round_bracket_close;
-            case token_type::square_bracket_open: return token_type::square_bracket_close;
-            case token_type::curly_bracket_open: return token_type::curly_bracket_close;
-            default: throw exception(logger::crash) << "invalid opening bracket type";
-        }
-    };
-
-    postfix_expression ret;
-
-    position start, end;
-
-    if (peek(ctx, lexer::token_type::round_bracket_open))
-    {
-        start = expect(ctx, lexer::token_type::round_bracket_open).range.start();
-        ret.base_expression = parse_expression_list(ctx);
-        end = expect(ctx, lexer::token_type::round_bracket_close).range.end();;
-    }
-
-    else
-    {
-        ret.base_expression = parse_id_expression(ctx);
-        auto & range = get<id_expression>(ret.base_expression).range;
-        start = range.start();
-        end = range.end();
-    }
-
-    for (auto && type : { lexer::token_type::round_bracket_open, lexer::token_type::square_bracket_open, lexer::token_type::curly_bracket_open })
-    {
-        if (type == lexer::token_type::curly_bracket_open && mode == expression_special_modes::brace)
-        {
-            continue;
-        }
-
-        if (peek(ctx, type))
-        {
-            ret.bracket_type = type;
-            expect(ctx, type);
-
-            break;
-        }
-    }
-
-    if (ret.bracket_type)
-    {
-        if (!peek(ctx, closing(*ret.bracket_type)))
-        {
-            auto old_stack = std::move(ctx.operator_stack);
-
-            ret.arguments.push_back(parse_expression(ctx));
-            while (peek(ctx, lexer::token_type::comma))
+        auto closing = [](lexer::token_type type) {
+            using namespace lexer;
+            switch (type)
             {
-                expect(ctx, lexer::token_type::comma);
-                ret.arguments.push_back(parse_expression(ctx));
+                case token_type::round_bracket_open:
+                    return token_type::round_bracket_close;
+                case token_type::square_bracket_open:
+                    return token_type::square_bracket_close;
+                case token_type::curly_bracket_open:
+                    return token_type::curly_bracket_close;
+                default:
+                    throw exception(logger::crash) << "invalid opening bracket type";
+            }
+        };
+
+        postfix_expression ret;
+
+        position start, end;
+
+        if (peek(ctx, lexer::token_type::round_bracket_open))
+        {
+            start = expect(ctx, lexer::token_type::round_bracket_open).range.start();
+            ret.base_expression = parse_expression_list(ctx);
+            end = expect(ctx, lexer::token_type::round_bracket_close).range.end();
+            ;
+        }
+
+        else
+        {
+            ret.base_expression = parse_id_expression(ctx);
+            auto & range = get<id_expression>(ret.base_expression).range;
+            start = range.start();
+            end = range.end();
+        }
+
+        for (auto && type : { lexer::token_type::round_bracket_open, lexer::token_type::square_bracket_open, lexer::token_type::curly_bracket_open })
+        {
+            if (type == lexer::token_type::curly_bracket_open && mode == expression_special_modes::brace)
+            {
+                continue;
             }
 
-            ctx.operator_stack = std::move(old_stack);
+            if (peek(ctx, type))
+            {
+                ret.bracket_type = type;
+                expect(ctx, type);
+
+                break;
+            }
         }
-        end = expect(ctx, closing(*ret.bracket_type)).range.end();
+
+        if (ret.bracket_type)
+        {
+            if (!peek(ctx, closing(*ret.bracket_type)))
+            {
+                auto old_stack = std::move(ctx.operator_stack);
+
+                ret.arguments.push_back(parse_expression(ctx));
+                while (peek(ctx, lexer::token_type::comma))
+                {
+                    expect(ctx, lexer::token_type::comma);
+                    ret.arguments.push_back(parse_expression(ctx));
+                }
+
+                ctx.operator_stack = std::move(old_stack);
+            }
+            end = expect(ctx, closing(*ret.bracket_type)).range.end();
+        }
+
+        ret.range = { start, end };
+
+        return ret;
     }
 
-    ret.range = { start, end };
-
-    return ret;
-}
-
-void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::postfix_expression & expr, std::ostream & os, std::size_t indent)
-{
-    auto in = std::string(indent, ' ');
-
-    os << in << "`postfix-expression` at " << expr.range << '\n';
-    if (expr.bracket_type)
+    void print(const postfix_expression & expr, std::ostream & os, std::size_t indent)
     {
-        os << in << "bracket type: `" << lexer::token_types[+*expr.bracket_type] << "`\n";
-    }
+        auto in = std::string(indent, ' ');
 
-    os << in << "{\n";
+        os << in << "`postfix-expression` at " << expr.range << '\n';
+        if (expr.bracket_type)
+        {
+            os << in << "bracket type: `" << lexer::token_types[+*expr.bracket_type] << "`\n";
+        }
 
-    fmap(expr.base_expression, [&](const auto & value) -> unit { print(value, os, indent + 4); return {}; });
-    if (expr.arguments.size())
-    {
-        auto in = std::string(indent + 4, ' ');
         os << in << "{\n";
-        fmap(expr.arguments, [&](auto && arg) -> unit { print(arg, os, indent + 8); return {}; });
+
+        fmap(expr.base_expression, [&](const auto & value) -> unit {
+            print(value, os, indent + 4);
+            return {};
+        });
+        if (expr.arguments.size())
+        {
+            auto in = std::string(indent + 4, ' ');
+            os << in << "{\n";
+            fmap(expr.arguments, [&](auto && arg) -> unit {
+                print(arg, os, indent + 8);
+                return {};
+            });
+            os << in << "}\n";
+        }
+
         os << in << "}\n";
     }
-
-    os << in << "}\n";
 }
-
+}

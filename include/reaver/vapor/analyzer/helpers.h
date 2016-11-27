@@ -27,54 +27,50 @@
 #include <reaver/error.h>
 #include <reaver/id.h>
 
-#include "optimization_context.h"
+#include "simplification/context.h"
 
-namespace reaver
+namespace reaver::vapor::analyzer
 {
-    namespace vapor
+inline namespace _v1
+{
+    inline error_engine & default_error_engine()
     {
-        namespace analyzer { inline namespace _v1
+        static error_engine engine;
+        return engine;
+    }
+
+    template<typename Parse>
+    void error(std::string message, const Parse & parse, error_engine & engine)
+    {
+        engine.push(exception(logger::error) << std::move(message));
+    }
+
+    template<typename Parse>
+    void error(std::string message, const Parse & parse)
+    {
+        error(std::move(message), parse, default_error_engine());
+    }
+
+    template<typename T, typename U>
+    auto replace_uptr(std::unique_ptr<T> & uptr, U * ptr, simplification_context & ctx) -> decltype(uptr.reset(ptr))
+    {
+        if (uptr.get() != ptr)
         {
-            inline error_engine & default_error_engine()
-            {
-                static error_engine engine;
-                return engine;
-            }
+            ctx.keep_alive(uptr.release());
+            uptr.reset(ptr);
+        }
+    }
 
-            template<typename Parse>
-            void error(std::string message, const Parse & parse, error_engine & engine)
-            {
-                engine.push(exception(logger::error) << std::move(message));
-            }
+    template<typename T, typename U>
+    void replace_uptrs(std::vector<std::unique_ptr<T>> & uptrs, const std::vector<U *> & ptrs, simplification_context & ctx)
+    {
+        assert(uptrs.size() == ptrs.size());
 
-            template<typename Parse>
-            void error(std::string message, const Parse & parse)
-            {
-                error(std::move(message), parse, default_error_engine());
-            }
-
-            template<typename T, typename U>
-            auto replace_uptr(std::unique_ptr<T> & uptr, U * ptr, optimization_context & ctx) -> decltype(uptr.reset(ptr))
-            {
-                if (uptr.get() != ptr)
-                {
-                    ctx.keep_alive(uptr.release());
-                    uptr.reset(ptr);
-                }
-            }
-
-            template<typename T, typename U>
-            void replace_uptrs(std::vector<std::unique_ptr<T>> & uptrs, const std::vector<U *> & ptrs, optimization_context & ctx)
-            {
-                assert(uptrs.size() == ptrs.size());
-
-                auto it_ptrs = ptrs.begin();
-                for (auto it = uptrs.begin(), end = uptrs.end(); it != end; ++it, ++it_ptrs)
-                {
-                    replace_uptr(*it, *it_ptrs, ctx);
-                }
-            }
-        }}
+        auto it_ptrs = ptrs.begin();
+        for (auto it = uptrs.begin(), end = uptrs.end(); it != end; ++it, ++it_ptrs)
+        {
+            replace_uptr(*it, *it_ptrs, ctx);
+        }
     }
 }
-
+}

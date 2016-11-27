@@ -21,21 +21,27 @@
  **/
 
 #include "vapor/codegen/cxx.h"
-#include "vapor/codegen/ir/instruction.h"
 #include "vapor/codegen/cxx/names.h"
+#include "vapor/codegen/ir/instruction.h"
 
-namespace reaver { namespace vapor { namespace codegen { inline namespace _v1 { namespace cxx {
-template<>
-std::u32string generate<ir::return_instruction>(const ir::instruction & inst, codegen_context & ctx)
+namespace reaver::vapor::codegen
 {
-    mark_destroyed(inst.result, ctx);
-    std::u32string suffix;
-    if (inst.result.index() == 0)
+inline namespace _v1
+{
+    namespace cxx
     {
-        suffix = U".move()";
+        template<>
+        std::u32string generate<ir::return_instruction>(const ir::instruction & inst, codegen_context & ctx)
+        {
+            mark_destroyed(inst.result, ctx);
+            std::u32string suffix;
+            if (inst.result.index() == 0)
+            {
+                suffix = U".move()";
+            }
+
+            return U"return " + value_of(inst.result, ctx, true) + suffix + U";\n";
+        }
     }
-
-    return U"return " + value_of(inst.result, ctx, true) + suffix + U";\n";
 }
-}}}}}
-
+}

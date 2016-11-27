@@ -23,57 +23,48 @@
 #include "vapor/codegen/ir/variable.h"
 #include "vapor/codegen/ir/type.h"
 
-std::ostream & reaver::vapor::codegen::_v1::ir::operator<<(std::ostream & os, const reaver::vapor::codegen::_v1::ir::variable & var)
+namespace reaver::vapor::codegen
 {
-    os << *var.type << "\n\n";
-
-    if (var.name)
+inline namespace _v1
+{
+    std::ostream & ir::operator<<(std::ostream & os, const ir::variable & var)
     {
-        os << "variable `" << utf8(*var.name) << "` of type `" << utf8(var.type->name) << "`";
+        os << *var.type << "\n\n";
+
+        if (var.name)
+        {
+            os << "variable `" << utf8(*var.name) << "` of type `" << utf8(var.type->name) << "`";
+        }
+        else
+        {
+            os << "unnamed variable of type `" << utf8(var.type->name) << "`";
+        }
+
+        return os;
     }
-    else
+
+    std::ostream & ir::operator<<(std::ostream & os, const ir::value & val)
     {
-        os << "unnamed variable of type `" << utf8(var.type->name) << "`";
+        return get<0>(fmap(val,
+            make_overload_set([&](std::shared_ptr<variable> var) -> auto & { return os << *var; },
+                [&](const integer_value & int_) -> auto & { return os << int_.value; },
+                [&](const boolean_value & bool_) -> auto & { return os << bool_.value; },
+                [&](const label & lbl) -> auto & { return os << "label `" << utf8(lbl.name) << "`"; },
+                [&](auto &&) -> auto & {
+                    assert(0);
+                    return os;
+                })));
     }
 
-    return os;
+    std::shared_ptr<ir::variable_type> ir::get_type(const ir::value & val)
+    {
+        return get<0>(fmap(val,
+            make_overload_set([](const std::shared_ptr<variable> & var) { return var->type; },
+                [](const ir::integer_value &) { return ir::builtin_types().integer; },
+                [](auto &&) {
+                    assert(0);
+                    return std::shared_ptr<ir::variable_type>();
+                })));
+    }
 }
-
-std::ostream & reaver::vapor::codegen::_v1::ir::operator<<(std::ostream & os, const reaver::vapor::codegen::_v1::ir::value & val)
-{
-    return get<0>(fmap(val, make_overload_set(
-        [&](std::shared_ptr<variable> var) -> auto & {
-            return os << *var;
-        },
-        [&](const integer_value & int_) -> auto & {
-            return os << int_.value;
-        },
-        [&](const boolean_value & bool_) -> auto & {
-            return os << bool_.value;
-        },
-        [&](const label & lbl) -> auto & {
-            return os << "label `" << utf8(lbl.name) << "`";
-        },
-        [&](auto &&) -> auto & {
-            assert(0);
-            return os;
-        }
-    )));
 }
-
-std::shared_ptr<reaver::vapor::codegen::_v1::ir::variable_type> reaver::vapor::codegen::_v1::ir::get_type(const reaver::vapor::codegen::_v1::ir::value & val)
-{
-    return get<0>(fmap(val, make_overload_set(
-        [](const std::shared_ptr<variable> & var) {
-            return var->type;
-        },
-        [](const ir::integer_value &) {
-            return ir::builtin_types().integer;
-        },
-        [](auto &&) {
-            assert(0);
-            return std::shared_ptr<ir::variable_type>();
-        }
-    )));
-}
-

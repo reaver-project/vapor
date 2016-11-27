@@ -22,37 +22,33 @@
 
 #pragma once
 
-#include <vector>
 #include <memory>
 #include <unordered_set>
+#include <vector>
 
 #include <reaver/logger.h>
 
-namespace reaver
+namespace reaver::vapor::analyzer
 {
-    namespace vapor
+inline namespace _v1
+{
+    class function;
+
+    class ir_generation_context
     {
-        namespace analyzer { inline namespace _v1
-        {
-            class function;
+    public:
+        void add_function_to_generate(const function * fn);
+        void add_generated_function(const function * fn);
+        const function * function_to_generate();
 
-            class ir_generation_context
-            {
-            public:
-                void add_function_to_generate(const function * fn);
-                void add_generated_function(const function * fn);
-                const function * function_to_generate();
+        bool top_level_generation = true;
+        std::size_t overload_set_index = 0;
+        std::size_t closure_index = 0;
+        std::size_t label_index = 0;
 
-                bool top_level_generation = true;
-                std::size_t overload_set_index = 0;
-                std::size_t closure_index = 0;
-                std::size_t label_index = 0;
-
-            private:
-                std::vector<const function *> _functions_to_generate;
-                std::unordered_set<const function *> _generated_functions;
-            };
-        }}
-    }
+    private:
+        std::vector<const function *> _functions_to_generate;
+        std::unordered_set<const function *> _generated_functions;
+    };
 }
-
+}

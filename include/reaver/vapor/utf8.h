@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015 Michał "Griwes" Dominiak
+ * Copyright © 2015-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -26,14 +26,13 @@
 
 #include <boost/locale.hpp>
 
-namespace reaver
+namespace reaver::vapor
 {
-    namespace vapor { inline namespace _v1
+inline namespace _v1
+{
+    inline auto utf8(const std::u32string & utf32)
     {
-        inline auto utf8(const std::u32string & utf32)
-        {
-            return boost::locale::conv::utf_to_utf<char>(utf32);
-        }
-    }}
+        return boost::locale::conv::utf_to_utf<char>(utf32);
+    }
 }
-
+}

@@ -23,4 +23,3 @@
 #pragma once
 
 #include "lexer/iterator.h"
-

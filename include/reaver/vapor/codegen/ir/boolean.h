@@ -24,23 +24,23 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 
-namespace reaver
+namespace reaver::vapor::codegen
 {
-    namespace vapor
+inline namespace _v1
+{
+    namespace ir
     {
-        namespace codegen { inline namespace _v1
+        struct boolean_value
         {
-            namespace ir
-            {
-                struct boolean_value
-                {
-                    bool value;
-                };
+            bool value;
+        };
 
-                struct boolean_equal_comparison_instruction {};
-                struct boolean_negation_instruction {};
-            }
-        }}
+        struct boolean_equal_comparison_instruction
+        {
+        };
+        struct boolean_negation_instruction
+        {
+        };
     }
 }
-
+}

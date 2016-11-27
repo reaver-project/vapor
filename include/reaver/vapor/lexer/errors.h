@@ -26,30 +26,26 @@
 
 #include "../range.h"
 
-namespace reaver
+namespace reaver::vapor::lexer
 {
-    namespace vapor
+inline namespace _v1
+{
+    class unterminated_comment : public reaver::exception
     {
-        namespace lexer { inline namespace _v1
+    public:
+        unterminated_comment(range_type r) : exception{ logger::error }
         {
-            class unterminated_comment : public reaver::exception
-            {
-            public:
-                unterminated_comment(range_type r) : exception{ logger::error }
-                {
-                    *this << "unterminated comment at " << r;
-                }
-            };
+            *this << "unterminated comment at " << r;
+        }
+    };
 
-            class unterminated_string : public reaver::exception
-            {
-            public:
-                unterminated_string(range_type r) : exception{ logger::error }
-                {
-                    *this << "unterminated string at " << r;
-                }
-            };
-        }}
-    }
+    class unterminated_string : public reaver::exception
+    {
+    public:
+        unterminated_string(range_type r) : exception{ logger::error }
+        {
+            *this << "unterminated string at " << r;
+        }
+    };
 }
-
+}

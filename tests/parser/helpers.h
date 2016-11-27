@@ -29,9 +29,11 @@
 
 namespace reaver
 {
-    namespace vapor
+namespace vapor
+{
+    namespace parser
     {
-        namespace parser { inline namespace _v1
+        inline namespace _v1
         {
             template<typename T, typename F>
             auto test(std::u32string program, T expected, F && parser)
@@ -43,7 +45,7 @@ namespace reaver
                     MAYFLY_REQUIRE(expected == parser(ctx));
                 };
             }
-        }}
+        }
     }
 }
-
+}

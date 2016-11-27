@@ -23,44 +23,49 @@
 #include "vapor/parser/argument_list.h"
 #include "vapor/parser/lambda_expression.h"
 
-reaver::vapor::parser::_v1::argument_list reaver::vapor::parser::_v1::parse_argument_list(reaver::vapor::parser::_v1::context & ctx)
+namespace reaver::vapor::parser
 {
-    argument_list ret;
-
-    while (!peek(ctx, lexer::token_type::round_bracket_close))
+inline namespace _v1
+{
+    argument_list parse_argument_list(context & ctx)
     {
-        auto name = expect(ctx, lexer::token_type::identifier);
-        expect(ctx, lexer::token_type::colon);
-        auto type_expr = parse_expression(ctx);
+        argument_list ret;
 
-        auto range = range_type{ name.range.start(), type_expr.range.end() };
-        ret.arguments.push_back(argument{ std::move(range), std::move(name), std::move(type_expr) });
-
-        if (peek(ctx, lexer::token_type::comma))
+        while (!peek(ctx, lexer::token_type::round_bracket_close))
         {
-            expect(ctx, lexer::token_type::comma);
+            auto name = expect(ctx, lexer::token_type::identifier);
+            expect(ctx, lexer::token_type::colon);
+            auto type_expr = parse_expression(ctx);
+
+            auto range = range_type{ name.range.start(), type_expr.range.end() };
+            ret.arguments.push_back(argument{ std::move(range), std::move(name), std::move(type_expr) });
+
+            if (peek(ctx, lexer::token_type::comma))
+            {
+                expect(ctx, lexer::token_type::comma);
+            }
         }
+
+        assert(!ret.arguments.empty());
+        ret.range = range_type{ ret.arguments.front().range.start(), ret.arguments.back().range.end() };
+
+        return ret;
     }
 
-    assert(!ret.arguments.empty());
-    ret.range = range_type{ ret.arguments.front().range.start(), ret.arguments.back().range.end() };
+    void print(const argument_list & arglist, std::ostream & os, std::size_t indent)
+    {
+        auto in = std::string(indent, ' ');
 
-    return ret;
-}
-
-void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::argument_list & arglist, std::ostream & os, std::size_t indent)
-{
-    auto in = std::string(indent, ' ');
-
-    os << in << "`argument-list` at " << arglist.range << '\n';
-    os << in << "{\n";
-    fmap(arglist.arguments, [&, in = std::string(indent + 4, ' ')](auto && argument) {
+        os << in << "`argument-list` at " << arglist.range << '\n';
         os << in << "{\n";
-        print(argument.name, os, indent + 8);
-        print(argument.type, os, indent + 8);
+        fmap(arglist.arguments, [&, in = std::string(indent + 4, ' ')](auto && argument) {
+            os << in << "{\n";
+            print(argument.name, os, indent + 8);
+            print(argument.type, os, indent + 8);
+            os << in << "}\n";
+            return unit{};
+        });
         os << in << "}\n";
-        return unit{};
-    });
-    os << in << "}\n";
+    }
 }
-
+}

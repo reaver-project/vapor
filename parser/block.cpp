@@ -23,76 +23,86 @@
 #include "vapor/parser/block.h"
 #include "vapor/parser/lambda_expression.h"
 
-reaver::vapor::parser::_v1::block reaver::vapor::parser::_v1::parse_block(reaver::vapor::parser::_v1::context & ctx)
+namespace reaver::vapor::parser
 {
-    block ret;
-
-    auto start = expect(ctx, lexer::token_type::curly_bracket_open).range.start();
-
-    while (!peek(ctx, lexer::token_type::curly_bracket_close))
+inline namespace _v1
+{
+    block parse_block(context & ctx)
     {
-        if (peek(ctx, lexer::token_type::curly_bracket_open))
+        block ret;
+
+        auto start = expect(ctx, lexer::token_type::curly_bracket_open).range.start();
+
+        while (!peek(ctx, lexer::token_type::curly_bracket_close))
         {
-            ret.block_value.push_back(parse_block(ctx));
+            if (peek(ctx, lexer::token_type::curly_bracket_open))
+            {
+                ret.block_value.push_back(parse_block(ctx));
+            }
+
+            else if (peek(ctx, lexer::token_type::block_value))
+            {
+                expect(ctx, lexer::token_type::block_value);
+                ret.value_expression = parse_expression_list(ctx);
+                break;
+            }
+
+            else
+            {
+                ret.block_value.push_back(parse_statement(ctx));
+            }
         }
 
-        else if (peek(ctx, lexer::token_type::block_value))
-        {
-            expect(ctx, lexer::token_type::block_value);
-            ret.value_expression = parse_expression_list(ctx);
-            break;
-        }
+        auto end = expect(ctx, lexer::token_type::curly_bracket_close).range.end();
 
-        else
-        {
-            ret.block_value.push_back(parse_statement(ctx));
-        }
+        ret.range = { start, end };
+
+        return ret;
     }
 
-    auto end = expect(ctx, lexer::token_type::curly_bracket_close).range.end();
-
-    ret.range = { start, end };
-
-    return ret;
-}
-
-reaver::vapor::parser::_v1::block reaver::vapor::parser::_v1::parse_single_statement_block(reaver::vapor::parser::_v1::context& ctx)
-{
-    block ret;
-
-    auto start = expect(ctx, lexer::token_type::block_value).range.start();
-    auto expr = parse_expression(ctx);
-    ret.range = { start, expr.range.end() };
-    ret.value_expression = expression_list{ expr.range, { std::move(expr) } };
-
-    return ret;
-}
-
-void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::block & bl, std::ostream & os, std::size_t indent)
-{
-    auto in = std::string(indent, ' ');
-
-    os << in << "`block` at " << bl.range << '\n';
-
-    os << in << "{\n";
+    block parse_single_statement_block(context & ctx)
     {
-        auto in = std::string(indent + 4, ' ');
-        for (auto && element : bl.block_value)
-        {
-            os << in << "{\n";
-            visit([&](const auto & value) -> unit { print(value, os, indent + 8); return {}; }, element);
-            os << in << "}\n";
-        }
+        block ret;
 
-        if (bl.value_expression)
-        {
-            os << in << "value_expression:\n";
-            os << in << "{\n";
-            print(*bl.value_expression, os, indent + 8);
-            os << in << "}\n";
-        }
+        auto start = expect(ctx, lexer::token_type::block_value).range.start();
+        auto expr = parse_expression(ctx);
+        ret.range = { start, expr.range.end() };
+        ret.value_expression = expression_list{ expr.range, { std::move(expr) } };
+
+        return ret;
     }
 
-    os << in << "}\n";
-}
+    void print(const block & bl, std::ostream & os, std::size_t indent)
+    {
+        auto in = std::string(indent, ' ');
 
+        os << in << "`block` at " << bl.range << '\n';
+
+        os << in << "{\n";
+        {
+            auto in = std::string(indent + 4, ' ');
+            for (auto && element : bl.block_value)
+            {
+                os << in << "{\n";
+                visit(
+                    [&](const auto & value) -> unit {
+                        print(value, os, indent + 8);
+                        return {};
+                    },
+                    element);
+                os << in << "}\n";
+            }
+
+            if (bl.value_expression)
+            {
+                os << in << "value_expression:\n";
+                os << in << "{\n";
+                print(*bl.value_expression, os, indent + 8);
+                os << in << "}\n";
+            }
+        }
+
+        os << in << "}\n";
+    }
+}
+}

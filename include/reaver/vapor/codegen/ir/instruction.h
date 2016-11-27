@@ -30,68 +30,82 @@
 
 #include "variable.h"
 
-namespace reaver
+namespace reaver::vapor::codegen
 {
-    namespace vapor
+inline namespace _v1
+{
+    namespace ir
     {
-        namespace codegen { inline namespace _v1
+        class instruction_type
         {
-            namespace ir
+            boost::typeindex::type_index _type;
+
+        public:
+            instruction_type(boost::typeindex::type_index ti) : _type{ std::move(ti) }
             {
-                class instruction_type
-                {
-                    boost::typeindex::type_index _type;
+            }
 
-                public:
-                    instruction_type(boost::typeindex::type_index ti) : _type{ std::move(ti) }
-                    {
-                    }
+            bool operator==(const instruction_type & other) const
+            {
+                return _type == other._type;
+            }
 
-                    bool operator==(const instruction_type & other) const
-                    {
-                        return _type == other._type;
-                    }
+            template<typename T>
+            bool is() const
+            {
+                return _type == boost::typeindex::type_id<T>();
+            }
 
-                    template<typename T>
-                    bool is() const
-                    {
-                        return _type == boost::typeindex::type_id<T>();
-                    }
+            auto id() const
+            {
+                return _type;
+            }
 
-                    auto id() const
-                    {
-                        return _type;
-                    }
+            std::string explain() const
+            {
+                return _type.pretty_name();
+            }
+        };
 
-                    std::string explain() const
-                    {
-                        return _type.pretty_name();
-                    }
-                };
+        struct instruction
+        {
+            optional<std::u32string> label;
+            optional<std::shared_ptr<variable>> declared_variable;
 
-                struct instruction
-                {
-                    optional<std::u32string> label;
-                    optional<std::shared_ptr<variable>> declared_variable;
+            instruction_type instruction;
+            std::vector<value> operands;
+            value result;
+        };
 
-                    instruction_type instruction;
-                    std::vector<value> operands;
-                    value result;
-                };
+        std::ostream & operator<<(std::ostream & os, const instruction & inst);
 
-                std::ostream & operator<<(std::ostream & os, const instruction & inst);
-
-                struct function_call_instruction {};
-                struct materialization_instruction {};
-                struct destruction_instruction {};
-                struct temporary_destruction_instruction {};
-                struct pass_value_instruction {};
-                struct return_instruction {};
-                struct jump_instruction {};
-                struct phi_instruction {};
-                struct noop_instruction {};
-            };
-        }}
-    }
+        struct function_call_instruction
+        {
+        };
+        struct materialization_instruction
+        {
+        };
+        struct destruction_instruction
+        {
+        };
+        struct temporary_destruction_instruction
+        {
+        };
+        struct pass_value_instruction
+        {
+        };
+        struct return_instruction
+        {
+        };
+        struct jump_instruction
+        {
+        };
+        struct phi_instruction
+        {
+        };
+        struct noop_instruction
+        {
+        };
+    };
 }
-
+}

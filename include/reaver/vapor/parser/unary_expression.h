@@ -22,41 +22,35 @@
 
 #pragma once
 
-#include "../range.h"
 #include "../lexer/token.h"
+#include "../range.h"
 #include "expression.h"
 
-namespace reaver
+namespace reaver::vapor::parser
 {
-    namespace vapor
+inline namespace _v1
+{
+    struct unary_expression
     {
-        namespace parser { inline namespace _v1
-        {
-            struct unary_expression
-            {
-                range_type range;
-                lexer::token op;
-                expression operand;
-            };
+        range_type range;
+        lexer::token op;
+        expression operand;
+    };
 
-            inline bool operator==(const unary_expression & lhs, const unary_expression & rhs)
-            {
-                return lhs.range == rhs.range
-                    && lhs.op == rhs.op
-                    && lhs.operand == rhs.operand;
-            }
-
-            const std::vector<lexer::token_type> & unary_operators();
-
-            inline bool is_unary_operator(lexer::token_type t)
-            {
-                return std::find(unary_operators().begin(), unary_operators().end(), t) != unary_operators().end();
-            }
-
-            unary_expression parse_unary_expression(context & ctx);
-
-            void print(const unary_expression & expr, std::ostream & os, std::size_t indent = 0);
-        }}
+    inline bool operator==(const unary_expression & lhs, const unary_expression & rhs)
+    {
+        return lhs.range == rhs.range && lhs.op == rhs.op && lhs.operand == rhs.operand;
     }
-}
 
+    const std::vector<lexer::token_type> & unary_operators();
+
+    inline bool is_unary_operator(lexer::token_type t)
+    {
+        return std::find(unary_operators().begin(), unary_operators().end(), t) != unary_operators().end();
+    }
+
+    unary_expression parse_unary_expression(context & ctx);
+
+    void print(const unary_expression & expr, std::ostream & os, std::size_t indent = 0);
+}
+}

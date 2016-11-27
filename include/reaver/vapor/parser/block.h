@@ -23,38 +23,32 @@
 #pragma once
 
 #include "../range.h"
+#include "expression_list.h"
 #include "helpers.h"
 #include "statement.h"
-#include "expression_list.h"
 
-namespace reaver
+namespace reaver::vapor::parser
 {
-    namespace vapor
+inline namespace _v1
+{
+    struct statement;
+
+    struct block
     {
-        namespace parser { inline namespace _v1
-        {
-            struct statement;
+        range_type range;
+        std::vector<variant<recursive_wrapper<block>, recursive_wrapper<statement>>> block_value;
+        optional<expression_list> value_expression;
+    };
 
-            struct block
-            {
-                range_type range;
-                std::vector<variant<recursive_wrapper<block>, recursive_wrapper<statement>>> block_value;
-                optional<expression_list> value_expression;
-            };
-
-            inline bool operator==(const block & lhs, const block & rhs)
-            {
-                return lhs.range == rhs.range
-                    && lhs.block_value == rhs.block_value
-                    && lhs.value_expression == rhs.value_expression;
-            }
-
-            block parse_block(context & ctx);
-            block parse_single_statement_block(context & ctx);
-
-            void print(const expression_list & list, std::ostream & os, std::size_t indent);
-            void print(const block & bl, std::ostream & os, std::size_t indent);
-        }}
+    inline bool operator==(const block & lhs, const block & rhs)
+    {
+        return lhs.range == rhs.range && lhs.block_value == rhs.block_value && lhs.value_expression == rhs.value_expression;
     }
-}
 
+    block parse_block(context & ctx);
+    block parse_single_statement_block(context & ctx);
+
+    void print(const expression_list & list, std::ostream & os, std::size_t indent);
+    void print(const block & bl, std::ostream & os, std::size_t indent);
+}
+}

@@ -27,32 +27,25 @@
 #include "../range.h"
 #include "expression_list.h"
 
-namespace reaver
+namespace reaver::vapor::parser
 {
-    namespace vapor
+inline namespace _v1
+{
+    struct declaration
     {
-        namespace parser { inline namespace _v1
-        {
-            struct declaration
-            {
-                range_type range;
-                lexer::token identifier;
-                optional<expression> type_expression;
-                expression rhs;
-            };
+        range_type range;
+        lexer::token identifier;
+        optional<expression> type_expression;
+        expression rhs;
+    };
 
-            inline bool operator==(const declaration & lhs, const declaration & rhs)
-            {
-                return lhs.range == rhs.range
-                    && lhs.identifier == rhs.identifier
-                    && lhs.type_expression == rhs.type_expression
-                    && lhs.rhs == rhs.rhs;
-            }
-
-            declaration parse_declaration(context & ctx);
-
-            void print(const declaration & decl, std::ostream & os, std::size_t indent = 0);
-        }}
+    inline bool operator==(const declaration & lhs, const declaration & rhs)
+    {
+        return lhs.range == rhs.range && lhs.identifier == rhs.identifier && lhs.type_expression == rhs.type_expression && lhs.rhs == rhs.rhs;
     }
-}
 
+    declaration parse_declaration(context & ctx);
+
+    void print(const declaration & decl, std::ostream & os, std::size_t indent = 0);
+}
+}

@@ -24,32 +24,28 @@
 
 #include <string>
 
-namespace reaver
+namespace reaver::vapor::codegen
 {
-    namespace vapor
+inline namespace _v1
+{
+    namespace ir
     {
-        namespace codegen { inline namespace _v1
+        enum class scope_type
         {
-            namespace ir
+            module,
+            function,
+            type
+        };
+
+        struct scope
+        {
+            scope(std::u32string name, scope_type type) : name{ std::move(name) }, type{ type }
             {
-                enum class scope_type
-                {
-                    module,
-                    function,
-                    type
-                };
-
-                struct scope
-                {
-                    scope(std::u32string name, scope_type type) : name{ std::move(name) }, type{ type }
-                    {
-                    }
-
-                    std::u32string name;
-                    scope_type type;
-                };
             }
-        }}
+
+            std::u32string name;
+            scope_type type;
+        };
     }
 }
-
+}

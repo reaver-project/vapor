@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015 Michał "Griwes" Dominiak
+ * Copyright © 2015-2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,36 +23,41 @@
 #include "vapor/parser/declaration.h"
 #include "vapor/parser/lambda_expression.h"
 
-reaver::vapor::parser::_v1::declaration reaver::vapor::parser::_v1::parse_declaration(reaver::vapor::parser::_v1::context & ctx)
+namespace reaver::vapor::parser
 {
-    declaration ret;
-
-    auto start = expect(ctx, lexer::token_type::let).range.start();
-    ret.identifier = expect(ctx, lexer::token_type::identifier);
-
-    if (peek(ctx) && peek(ctx)->type == lexer::token_type::colon)
+inline namespace _v1
+{
+    declaration parse_declaration(context & ctx)
     {
-        expect(ctx, lexer::token_type::colon);
+        declaration ret;
 
-        ret.type_expression = parse_expression(ctx, expression_special_modes::assignment);
+        auto start = expect(ctx, lexer::token_type::let).range.start();
+        ret.identifier = expect(ctx, lexer::token_type::identifier);
+
+        if (peek(ctx) && peek(ctx)->type == lexer::token_type::colon)
+        {
+            expect(ctx, lexer::token_type::colon);
+
+            ret.type_expression = parse_expression(ctx, expression_special_modes::assignment);
+        }
+
+        expect(ctx, lexer::token_type::assign);
+        ret.rhs = parse_expression(ctx);
+        ret.range = { start, ret.rhs.range.end() };
+
+        return ret;
     }
 
-    expect(ctx, lexer::token_type::assign);
-    ret.rhs = parse_expression(ctx);
-    ret.range = { start, ret.rhs.range.end() };
+    void print(const declaration & decl, std::ostream & os, std::size_t indent)
+    {
+        auto in = std::string(indent, ' ');
 
-    return ret;
+        os << in << "`declaration` at " << decl.range << '\n';
+
+        os << in << "{\n";
+        print(decl.identifier, os, indent + 4);
+        print(decl.rhs, os, indent + 4);
+        os << in << "}\n";
+    }
 }
-
-void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::declaration & decl, std::ostream & os, std::size_t indent)
-{
-    auto in = std::string(indent, ' ');
-
-    os << in << "`declaration` at " << decl.range << '\n';
-
-    os << in << "{\n";
-    print(decl.identifier, os, indent + 4);
-    print(decl.rhs, os, indent + 4);
-    os << in << "}\n";
 }
-

@@ -22,46 +22,51 @@
 
 #include "vapor/parser.h"
 
-reaver::vapor::parser::_v1::module reaver::vapor::parser::_v1::parse_module(reaver::vapor::parser::_v1::context & ctx)
+namespace reaver::vapor::parser
 {
-    module ret;
-
-    auto start = expect(ctx, lexer::token_type::module).range.start();
-    ret.name = parse_id_expression(ctx);
-
-    expect(ctx, lexer::token_type::curly_bracket_open);
-
-    while (!peek(ctx, lexer::token_type::curly_bracket_close))
-    {
-        ret.statements.push_back(parse_statement(ctx));
-    }
-
-    auto end = expect(ctx, lexer::token_type::curly_bracket_close).range.end();
-
-    ret.range = { start, end };
-
-    return ret;
-}
-
-void reaver::vapor::parser::_v1::print(const reaver::vapor::parser::_v1::module & mod, std::ostream & os, std::size_t indent)
+inline namespace _v1
 {
-    auto in = std::string(indent, ' ');
-
-    os << in << "`module` at " << mod.range << '\n';
-    os << in << "{\n";
-    print(mod.name, os, indent + 4);
-    os << in << "}\n";
-
-    os << in << "{\n";
+    module parse_module(context & ctx)
     {
-        auto in = std::string(indent + 4, ' ');
-        for (auto && statement : mod.statements)
+        module ret;
+
+        auto start = expect(ctx, lexer::token_type::module).range.start();
+        ret.name = parse_id_expression(ctx);
+
+        expect(ctx, lexer::token_type::curly_bracket_open);
+
+        while (!peek(ctx, lexer::token_type::curly_bracket_close))
         {
-            os << in << "{\n";
-            print(statement, os, indent + 8);
-            os << in << "}\n";
+            ret.statements.push_back(parse_statement(ctx));
         }
-    }
-    os << in << "}\n";
-}
 
+        auto end = expect(ctx, lexer::token_type::curly_bracket_close).range.end();
+
+        ret.range = { start, end };
+
+        return ret;
+    }
+
+    void print(const module & mod, std::ostream & os, std::size_t indent)
+    {
+        auto in = std::string(indent, ' ');
+
+        os << in << "`module` at " << mod.range << '\n';
+        os << in << "{\n";
+        print(mod.name, os, indent + 4);
+        os << in << "}\n";
+
+        os << in << "{\n";
+        {
+            auto in = std::string(indent + 4, ' ');
+            for (auto && statement : mod.statements)
+            {
+                os << in << "{\n";
+                print(statement, os, indent + 8);
+                os << in << "}\n";
+            }
+        }
+        os << in << "}\n";
+    }
+}
+}

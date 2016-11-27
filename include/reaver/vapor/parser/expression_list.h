@@ -29,28 +29,23 @@
 #include "expression.h"
 #include "helpers.h"
 
-namespace reaver
+namespace reaver::vapor::parser
 {
-    namespace vapor
+inline namespace _v1
+{
+    struct expression_list
     {
-        namespace parser { inline namespace _v1
-        {
-            struct expression_list
-            {
-                range_type range;
-                std::vector<expression> expressions;
-            };
+        range_type range;
+        std::vector<expression> expressions;
+    };
 
-            inline bool operator==(const expression_list & lhs, const expression_list & rhs)
-            {
-                return lhs.range == rhs.range
-                    && lhs.expressions == rhs.expressions;
-            }
-
-            expression_list parse_expression_list(context & ctx);
-
-            void print(const expression_list & list, std::ostream & os, std::size_t indent = 0);
-        }}
+    inline bool operator==(const expression_list & lhs, const expression_list & rhs)
+    {
+        return lhs.range == rhs.range && lhs.expressions == rhs.expressions;
     }
-}
 
+    expression_list parse_expression_list(context & ctx);
+
+    void print(const expression_list & list, std::ostream & os, std::size_t indent = 0);
+}
+}

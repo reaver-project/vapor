@@ -23,8 +23,7 @@
 #pragma once
 
 #include "parser/ast.h"
+#include "parser/binary_expression.h"
 #include "parser/expression.h"
 #include "parser/lambda_expression.h"
 #include "parser/unary_expression.h"
-#include "parser/binary_expression.h"
-

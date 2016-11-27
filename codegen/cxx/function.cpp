@@ -20,122 +20,127 @@
  *
  **/
 
-#include "vapor/codegen/cxx.h"
 #include "vapor/codegen/ir/function.h"
-#include "vapor/codegen/ir/variable.h"
+#include "vapor/codegen/cxx.h"
 #include "vapor/codegen/cxx/names.h"
+#include "vapor/codegen/ir/variable.h"
 
-std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_declaration(reaver::vapor::codegen::_v1::ir::function & fn, reaver::vapor::codegen::_v1::codegen_context & ctx) const
+namespace reaver::vapor::codegen
 {
-    std::u32string ret;
-
-    if (auto type = fn.parent_type.lock())
-    {
-        ret += ctx.declare_if_necessary(type);
-    }
-    ret += ctx.declare_if_necessary(ir::get_type(fn.return_value));
-    fmap(fn.arguments, [&](auto && value) {
-        ret += ctx.declare_if_necessary(ir::get_type(value));
-        return unit{};
-    });
-
-    ret += cxx::type_name(ir::get_type(fn.return_value), ctx);
-    ret += U" ";
-    ret += cxx::declaration_function_name(fn, ctx);
-    ret += U"(\n";
-    fmap(fn.arguments, [&](auto && var) {
-        ret += U"    " + cxx::type_name(ir::get_type(var), ctx);
-        ret += U" ";
-        var->declared = true;
-        cxx::declaration_variable_name(*var, ctx); // HAAAAACK
-        ret += cxx::variable_name(*var, ctx);
-        ret += U",\n";
-        return unit{};
-    });
-    if (!fn.arguments.empty())
-    {
-        ret.pop_back();
-        ret.pop_back();
-        ret.push_back(U'\n');
-    }
-    ret += U");\n";
-
-    if (!fn.parent_type.lock())
-    {
-        ctx.put_into_global += std::move(ret);
-        ret = U"";
-    }
-
-    return ret;
-}
-
-std::u32string reaver::vapor::codegen::_v1::cxx_generator::generate_definition(const reaver::vapor::codegen::_v1::ir::function & fn, reaver::vapor::codegen::_v1::codegen_context & ctx) const
+inline namespace _v1
 {
-    std::u32string header;
-
-    if (auto type = fn.parent_type.lock())
+    std::u32string cxx_generator::generate_declaration(ir::function & fn, codegen_context & ctx) const
     {
-        header += ctx.declare_if_necessary(type);
-    }
-    header += ctx.declare_if_necessary(ir::get_type(fn.return_value));
-    fmap(fn.arguments, [&](auto && value) {
-        header += ctx.declare_if_necessary(ir::get_type(value));
-        return unit{};
-    });
+        std::u32string ret;
 
-    header += cxx::type_name(ir::get_type(fn.return_value), ctx);
-    header += U" ";
-    header += cxx::function_name(fn, ctx);
-    header += U"(\n";
-    fmap(fn.arguments, [&](auto && var) {
-        header += U"    " + cxx::type_name(ir::get_type(var), ctx);
-        header += U" ";
-        header += cxx::variable_name(*var, ctx);
-        header += U",\n";
-
-        var->argument = true;
-        return unit{};
-    });
-    if (!fn.arguments.empty())
-    {
-        header.pop_back();
-        header.pop_back();
-        header.push_back(U'\n');
-    }
-    header += U")\n{\n";
-
-    // fix phi variable names
-    fmap(fn.instructions, [&](auto && inst) {
-        if (inst.instruction.template is<ir::phi_instruction>())
+        if (auto type = fn.parent_type.lock())
         {
-            assert(inst.label);
-            std::u32string var_name = U"__phi_variable" + *inst.label;
+            ret += ctx.declare_if_necessary(type);
+        }
+        ret += ctx.declare_if_necessary(ir::get_type(fn.return_value));
+        fmap(fn.arguments, [&](auto && value) {
+            ret += ctx.declare_if_necessary(ir::get_type(value));
+            return unit{};
+        });
 
-            for (std::size_t i = 0; i < inst.operands.size() / 2; ++i)
-            {
-                auto && result = inst.operands[i * 2 + 1];
-                assert(result.index() == 0);
+        ret += cxx::type_name(ir::get_type(fn.return_value), ctx);
+        ret += U" ";
+        ret += cxx::declaration_function_name(fn, ctx);
+        ret += U"(\n";
+        fmap(fn.arguments, [&](auto && var) {
+            ret += U"    " + cxx::type_name(ir::get_type(var), ctx);
+            ret += U" ";
+            var->declared = true;
+            cxx::declaration_variable_name(*var, ctx); // HAAAAACK
+            ret += cxx::variable_name(*var, ctx);
+            ret += U",\n";
+            return unit{};
+        });
+        if (!fn.arguments.empty())
+        {
+            ret.pop_back();
+            ret.pop_back();
+            ret.push_back(U'\n');
+        }
+        ret += U");\n";
 
-                auto && var = *get<std::shared_ptr<ir::variable>>(result);
-                var.name = var_name;
-                var.declared = true;
-            }
+        if (!fn.parent_type.lock())
+        {
+            ctx.put_into_global += std::move(ret);
+            ret = U"";
         }
 
-        return unit{};
-    });
+        return ret;
+    }
 
-    std::u32string body;
+    std::u32string cxx_generator::generate_definition(const ir::function & fn, codegen_context & ctx) const
+    {
+        std::u32string header;
 
-    fmap(fn.instructions, [&](auto && inst) {
-        body += this->generate(inst, ctx);
-        return unit{};
-    });
-    body += U"};\n";
+        if (auto type = fn.parent_type.lock())
+        {
+            header += ctx.declare_if_necessary(type);
+        }
+        header += ctx.declare_if_necessary(ir::get_type(fn.return_value));
+        fmap(fn.arguments, [&](auto && value) {
+            header += ctx.declare_if_necessary(ir::get_type(value));
+            return unit{};
+        });
 
-    auto ret = header + ctx.put_into_function_header + body;
-    ctx.put_into_function_header.clear();
-    ctx.clear_storage();
-    return ret;
+        header += cxx::type_name(ir::get_type(fn.return_value), ctx);
+        header += U" ";
+        header += cxx::function_name(fn, ctx);
+        header += U"(\n";
+        fmap(fn.arguments, [&](auto && var) {
+            header += U"    " + cxx::type_name(ir::get_type(var), ctx);
+            header += U" ";
+            header += cxx::variable_name(*var, ctx);
+            header += U",\n";
+
+            var->argument = true;
+            return unit{};
+        });
+        if (!fn.arguments.empty())
+        {
+            header.pop_back();
+            header.pop_back();
+            header.push_back(U'\n');
+        }
+        header += U")\n{\n";
+
+        // fix phi variable names
+        fmap(fn.instructions, [&](auto && inst) {
+            if (inst.instruction.template is<ir::phi_instruction>())
+            {
+                assert(inst.label);
+                std::u32string var_name = U"__phi_variable" + *inst.label;
+
+                for (std::size_t i = 0; i < inst.operands.size() / 2; ++i)
+                {
+                    auto && result = inst.operands[i * 2 + 1];
+                    assert(result.index() == 0);
+
+                    auto && var = *get<std::shared_ptr<ir::variable>>(result);
+                    var.name = var_name;
+                    var.declared = true;
+                }
+            }
+
+            return unit{};
+        });
+
+        std::u32string body;
+
+        fmap(fn.instructions, [&](auto && inst) {
+            body += this->generate(inst, ctx);
+            return unit{};
+        });
+        body += U"};\n";
+
+        auto ret = header + ctx.put_into_function_header + body;
+        ctx.put_into_function_header.clear();
+        ctx.clear_storage();
+        return ret;
+    }
 }
-
+}

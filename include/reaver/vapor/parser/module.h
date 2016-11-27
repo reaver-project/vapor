@@ -25,26 +25,22 @@
 #include <string>
 
 #include "../range.h"
-#include "statement.h"
 #include "helpers.h"
 #include "id_expression.h"
+#include "statement.h"
 
-namespace reaver
+namespace reaver::vapor::parser
 {
-    namespace vapor
+inline namespace _v1
+{
+    struct module
     {
-        namespace parser { inline namespace _v1
-        {
-            struct module
-            {
-                range_type range;
-                id_expression name;
-                std::vector<statement> statements;
-            };
+        range_type range;
+        id_expression name;
+        std::vector<statement> statements;
+    };
 
-            module parse_module(context & ctx);
-            void print(const module & mod, std::ostream & os, std::size_t indent = 0);
-        }}
-    }
+    module parse_module(context & ctx);
+    void print(const module & mod, std::ostream & os, std::size_t indent = 0);
 }
-
+}

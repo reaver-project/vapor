@@ -21,22 +21,28 @@
  **/
 
 #include "vapor/codegen/cxx.h"
-#include "vapor/codegen/ir/instruction.h"
 #include "vapor/codegen/cxx/names.h"
+#include "vapor/codegen/ir/instruction.h"
 
-namespace reaver { namespace vapor { namespace codegen { inline namespace _v1 { namespace cxx {
-template<>
-std::u32string generate<ir::boolean_equal_comparison_instruction>(const ir::instruction & inst, reaver::vapor::codegen::_v1::codegen_context & ctx)
+namespace reaver::vapor::codegen
 {
-    assert(inst.operands.size() == 2);
-    return variable_of(inst.result, ctx) + U".emplace(" + value_of(inst.operands[0], ctx) + U" == " + value_of(inst.operands[1], ctx) + U");\n";
-}
-
-template<>
-std::u32string generate<ir::boolean_negation_instruction>(const ir::instruction & inst, reaver::vapor::codegen::_v1::codegen_context & ctx)
+inline namespace _v1
 {
-    assert(inst.operands.size() == 1);
-    return variable_of(inst.result, ctx) + U".emplace(!" + value_of(inst.operands[0], ctx) + U");\n";
-}
-}}}}}
+    namespace cxx
+    {
+        template<>
+        std::u32string generate<ir::boolean_equal_comparison_instruction>(const ir::instruction & inst, reaver::vapor::codegen::_v1::codegen_context & ctx)
+        {
+            assert(inst.operands.size() == 2);
+            return variable_of(inst.result, ctx) + U".emplace(" + value_of(inst.operands[0], ctx) + U" == " + value_of(inst.operands[1], ctx) + U");\n";
+        }
 
+        template<>
+        std::u32string generate<ir::boolean_negation_instruction>(const ir::instruction & inst, reaver::vapor::codegen::_v1::codegen_context & ctx)
+        {
+            assert(inst.operands.size() == 1);
+            return variable_of(inst.result, ctx) + U".emplace(!" + value_of(inst.operands[0], ctx) + U");\n";
+        }
+    }
+}
+}

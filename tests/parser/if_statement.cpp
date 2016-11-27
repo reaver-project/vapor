@@ -30,99 +30,30 @@ using namespace reaver::vapor::parser;
 MAYFLY_BEGIN_SUITE("parser");
 MAYFLY_BEGIN_SUITE("if_statement");
 
-MAYFLY_ADD_TESTCASE("if-then", test(
-    UR"(if (true) { return 1; })",
-    if_statement{
-        { 0, 23 },
-        {
-            { 4, 8 },
-            boolean_literal{
-                { 4, 8 },
-                { lexer::token_type::boolean, UR"(true)", { 4, 8 } },
-                {}
-            }
-        },
-        block{
-            { 10, 23 },
-            {
-                statement{
-                    { 12, 21 },
-                    return_expression{
-                        { 12, 20 },
-                        {
-                            { 19, 20 },
-                            integer_literal{
-                                { 19, 20 },
-                                { lexer::token_type::integer, UR"(1)", { 19, 20 } },
-                                {}
-                            }
-                        }
-                    }
-                }
-            },
-            {}
-        },
-        {}
-    },
-    &parse_if_statement
-));
+MAYFLY_ADD_TESTCASE("if-then",
+    test(UR"(if (true) { return 1; })",
+        if_statement{ { 0, 23 },
+            { { 4, 8 }, boolean_literal{ { 4, 8 }, { lexer::token_type::boolean, UR"(true)", { 4, 8 } }, {} } },
+            block{ { 10, 23 },
+                { statement{ { 12, 21 },
+                    return_expression{ { 12, 20 }, { { 19, 20 }, integer_literal{ { 19, 20 }, { lexer::token_type::integer, UR"(1)", { 19, 20 } }, {} } } } } },
+                {} },
+            {} },
+        &parse_if_statement));
 
-MAYFLY_ADD_TESTCASE("if-then-else", test(
-    UR"(if (true) { return 1; } else { return 2; })",
-    if_statement{
-        { 0, 42 },
-        {
-            { 4, 8 },
-            boolean_literal{
-                { 4, 8 },
-                { lexer::token_type::boolean, UR"(true)", { 4, 8 } },
-                {}
-            }
-        },
-        block{
-            { 10, 23 },
-            {
-                statement{
-                    { 12, 21 },
-                    return_expression{
-                        { 12, 20 },
-                        {
-                            { 19, 20 },
-                            integer_literal{
-                                { 19, 20 },
-                                { lexer::token_type::integer, UR"(1)", { 19, 20 } },
-                                {}
-                            }
-                        }
-                    }
-                }
-            },
-            {}
-        },
-        reaver::make_optional(reaver::recursive_wrapper<block>{ block{
-            { 29, 42 },
-            {
-                statement{
-                    { 31, 40 },
-                    return_expression{
-                        { 31, 39 },
-                        {
-                            { 38, 39 },
-                            integer_literal{
-                                { 38, 39 },
-                                { lexer::token_type::integer, UR"(2)", { 38, 39 } },
-                                {}
-                            }
-                        }
-                    }
-                }
-            },
-            {}
-        } })
-    },
-    &parse_if_statement
-));
+MAYFLY_ADD_TESTCASE("if-then-else",
+    test(UR"(if (true) { return 1; } else { return 2; })",
+        if_statement{ { 0, 42 },
+            { { 4, 8 }, boolean_literal{ { 4, 8 }, { lexer::token_type::boolean, UR"(true)", { 4, 8 } }, {} } },
+            block{ { 10, 23 },
+                { statement{ { 12, 21 },
+                    return_expression{ { 12, 20 }, { { 19, 20 }, integer_literal{ { 19, 20 }, { lexer::token_type::integer, UR"(1)", { 19, 20 } }, {} } } } } },
+                {} },
+            reaver::make_optional(reaver::recursive_wrapper<block>{ block{ { 29, 42 },
+                { statement{ { 31, 40 },
+                    return_expression{ { 31, 39 }, { { 38, 39 }, integer_literal{ { 38, 39 }, { lexer::token_type::integer, UR"(2)", { 38, 39 } }, {} } } } } },
+                {} } }) },
+        &parse_if_statement));
 
 MAYFLY_END_SUITE;
 MAYFLY_END_SUITE;
-

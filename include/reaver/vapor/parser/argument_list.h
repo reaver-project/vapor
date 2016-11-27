@@ -23,45 +23,38 @@
 #pragma once
 
 #include "../range.h"
-#include "helpers.h"
 #include "expression.h"
+#include "helpers.h"
 
-namespace reaver
+namespace reaver::vapor::parser
 {
-    namespace vapor
+inline namespace _v1
+{
+    struct argument
     {
-        namespace parser { inline namespace _v1
-        {
-            struct argument
-            {
-                range_type range;
-                lexer::token name;
-                expression type;
-            };
+        range_type range;
+        lexer::token name;
+        expression type;
+    };
 
-            struct argument_list
-            {
-                range_type range;
-                std::vector<argument> arguments;
-            };
+    struct argument_list
+    {
+        range_type range;
+        std::vector<argument> arguments;
+    };
 
-            inline bool operator==(const argument & lhs, const argument & rhs)
-            {
-                return lhs.range == rhs.range
-                    && lhs.name == rhs.name
-                    && lhs.type == rhs.type;
-            }
-
-            inline bool operator==(const argument_list & lhs, const argument_list & rhs)
-            {
-                return lhs.range == rhs.range
-                    && lhs.arguments == rhs.arguments;
-            }
-
-            argument_list parse_argument_list(context & ctx);
-
-            void print(const argument_list &, std::ostream &, std::size_t indent);
-        }}
+    inline bool operator==(const argument & lhs, const argument & rhs)
+    {
+        return lhs.range == rhs.range && lhs.name == rhs.name && lhs.type == rhs.type;
     }
-}
 
+    inline bool operator==(const argument_list & lhs, const argument_list & rhs)
+    {
+        return lhs.range == rhs.range && lhs.arguments == rhs.arguments;
+    }
+
+    argument_list parse_argument_list(context & ctx);
+
+    void print(const argument_list &, std::ostream &, std::size_t indent);
+}
+}
