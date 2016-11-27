@@ -51,18 +51,6 @@ inline namespace _v1
         os << in << "}\n";
     }
 
-    future<> binary_expression::_analyze(analysis_context & ctx)
-    {
-        return _lhs->analyze(ctx)
-            .then([&]() { return _rhs->analyze(ctx); })
-            .then([&] { return resolve_overload(_lhs->get_type(), _rhs->get_type(), _op.type, _scope); })
-            .then([&](auto && overload) {
-                _overload = overload;
-                return _overload->return_type();
-            })
-            .then([&](auto && ret_type) { this->_set_variable(make_expression_variable(this, ret_type)); });
-    }
-
     std::unique_ptr<expression> binary_expression::_clone_expr_with_replacement(replacements & repl) const
     {
         auto ret = std::unique_ptr<binary_expression>(new binary_expression(*this));

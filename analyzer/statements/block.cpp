@@ -98,18 +98,6 @@ inline namespace _v1
         });
     }
 
-    future<> block::_analyze(analysis_context & ctx)
-    {
-        auto fut = foldl(_statements, make_ready_future(), [&ctx](auto && prev, auto && stmt) { return prev.then([&]() { return stmt->analyze(ctx); }); });
-
-        fmap(_value_expr, [&](auto && expr) {
-            fut = fut.then([&ctx, expr = expr.get()] { return expr->analyze(ctx); });
-            return unit{};
-        });
-
-        return fut;
-    }
-
     void block::_ensure_cache() const
     {
         if (_is_clone_cache)

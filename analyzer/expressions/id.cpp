@@ -35,20 +35,6 @@ inline namespace _v1
         os << in << "referenced variable type: " << get_variable()->get_type()->explain() << '\n';
     }
 
-    reaver::future<> id_expression::_analyze(analysis_context & ctx)
-    {
-        return std::accumulate(_parse.id_expression_value.begin() + 1,
-            _parse.id_expression_value.end(),
-            _lex_scope->resolve(_parse.id_expression_value.front().string),
-            [&](auto fut, auto && ident) {
-                return fut.then([&ident](auto && symbol) { return symbol->get_variable_future(); }).then([this, &ident, &ctx](auto && var) {
-                    return var->get_type()->get_scope()->get_future(ident.string);
-                });
-            })
-            .then([](auto && symbol) { return symbol->get_variable_future(); })
-            .then([this, &ctx](auto && variable) { _referenced = variable; });
-    }
-
     std::unique_ptr<expression> id_expression::_clone_expr_with_replacement(replacements & repl) const
     {
         auto referenced = _referenced;

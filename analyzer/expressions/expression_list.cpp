@@ -32,11 +32,6 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    future<> expression_list::_analyze(analysis_context & ctx)
-    {
-        return foldl(value, make_ready_future(), [&](auto && prev, auto && expr) { return prev.then([&] { return expr->analyze(ctx); }); });
-    }
-
     future<expression *> expression_list::_simplify_expr(simplification_context & ctx)
     {
         return when_all(fmap(value, [&](auto && expr) { return expr->simplify_expr(ctx); })).then([&](auto && simplified) -> expression * {

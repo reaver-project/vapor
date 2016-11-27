@@ -53,25 +53,6 @@ inline namespace _v1
         });
     }
 
-    future<> if_statement::_analyze(analysis_context & ctx)
-    {
-        auto fut = _condition->analyze(ctx);
-
-        auto analyze_block = [&](auto && block) {
-            fut = fut.then([&]() {
-                auto tmp_ctx = std::make_unique<analysis_context>(ctx);
-                auto fut = block->analyze(*tmp_ctx);
-                return fut.then([ctx = std::move(tmp_ctx)]{});
-            });
-            return unit{};
-        };
-
-        analyze_block(_then_block);
-        fmap(_else_block, analyze_block);
-
-        return fut;
-    }
-
     std::unique_ptr<statement> if_statement::_clone_with_replacement(replacements & repl) const
     {
         auto ret = std::unique_ptr<if_statement>(new if_statement(*this));

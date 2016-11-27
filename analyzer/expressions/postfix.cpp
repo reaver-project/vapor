@@ -76,28 +76,6 @@ inline namespace _v1
         }
     }
 
-    future<> postfix_expression::_analyze(analysis_context & ctx)
-    {
-        return foldl(_arguments, make_ready_future(), [&](auto && prev, auto && expr) {
-            return prev.then([&] { return expr->analyze(ctx); });
-        }).then([&] {
-              return _base_expr->analyze(ctx);
-          }).then([&] {
-            if (!_parse.bracket_type)
-            {
-                return make_ready_future();
-            }
-
-            return resolve_overload(
-                _base_expr->get_type(), *_parse.bracket_type, fmap(_arguments, [](auto && arg) -> const type * { return arg->get_type(); }), _scope)
-                .then([&](auto && overload) {
-                    _overload = overload;
-                    return _overload->return_type();
-                })
-                .then([&](auto && ret_type) { this->_set_variable(make_expression_variable(this, ret_type)); });
-        });
-    }
-
     std::unique_ptr<expression> postfix_expression::_clone_expr_with_replacement(replacements & repl) const
     {
         auto ret = std::unique_ptr<postfix_expression>(new postfix_expression(*this));
