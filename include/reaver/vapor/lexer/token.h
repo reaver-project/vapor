@@ -49,10 +49,10 @@ inline namespace _v1
 
         module,
         import,
-        auto_,
         let,
         return_,
         function,
+        struct_,
 
         if_,
         else_,

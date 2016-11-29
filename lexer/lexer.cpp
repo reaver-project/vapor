@@ -39,10 +39,11 @@ inline namespace _v1
 
         token_types[+token_type::module] = "module";
         token_types[+token_type::import] = "import";
-        token_types[+token_type::auto_] = "auto";
         token_types[+token_type::let] = "let";
         token_types[+token_type::return_] = "return";
         token_types[+token_type::function] = "function";
+        token_types[+token_type::struct_] = "struct";
+
         token_types[+token_type::if_] = "if";
         token_types[+token_type::else_] = "else";
 
@@ -115,10 +116,11 @@ inline namespace _v1
 
         { U"module", token_type::module },
         { U"import", token_type::import },
-        { U"auto", token_type::auto_ },
         { U"let", token_type::let },
         { U"return", token_type::return_ },
         { U"function", token_type::function },
+        { U"struct", token_type::struct_ },
+
         { U"if", token_type::if_ },
         { U"else", token_type::else_ },
     };
@@ -154,33 +156,19 @@ inline namespace _v1
 
     const std::unordered_map<char32_t, std::unordered_map<char32_t, token_type>> symbols2 = {
         { '<', { { '<', token_type::left_shift }, { '=', token_type::less_equal } } },
-
         { '>', { { '>', token_type::right_shift }, { '=', token_type::greater_equal } } },
-
         { '=', { { '>', token_type::block_value }, { '=', token_type::equals } } },
-
         { '&', { { '&', token_type::logical_and }, { '=', token_type::bitwise_and_assignment } } },
-
         { '|', { { '|', token_type::logical_or }, { '=', token_type::bitwise_and_assignment } } },
-
         { '!', { { '=', token_type::not_equals } } },
-
         { '~', { { '=', token_type::bitwise_not_assignment } } },
-
         { '+', { { '=', token_type::plus_assignment } } },
-
         { '-', { { '>', token_type::indirection }, { '=', token_type::minus_assignment } } },
-
         { '*', { { '=', token_type::star_assignment } } },
-
         { '/', { { '=', token_type::slash_assignment } } },
-
         { '%', { { '=', token_type::modulo_assignment } } },
-
         { '&', { { '=', token_type::bitwise_and_assignment } } },
-
         { '|', { { '=', token_type::bitwise_or_assignment } } },
-
         { '^', { { '=', token_type::bitwise_xor_assignment } } }
     };
 
