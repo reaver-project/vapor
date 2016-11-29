@@ -30,6 +30,18 @@
 
 std::u32string program = UR"program(module hello_world
 {
+    struct my_type
+    {
+        let member_a : int;
+        let member_b : int;
+    };
+
+    let my_other_type = struct
+    {
+        let member_a : int;
+        let member_b : int;
+    };
+
     function fibonacci(n : int) -> int
     {
         if (n <= 0)
