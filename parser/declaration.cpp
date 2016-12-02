@@ -21,29 +21,48 @@
  **/
 
 #include "vapor/parser/declaration.h"
-#include "vapor/parser/lambda_expression.h"
+#include "vapor/parser/expr.h"
 
 namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
-    declaration parse_declaration(context & ctx)
+    declaration parse_declaration(context & ctx, declaration_mode mode)
     {
         declaration ret;
 
         auto start = expect(ctx, lexer::token_type::let).range.start();
         ret.identifier = expect(ctx, lexer::token_type::identifier);
 
-        if (peek(ctx) && peek(ctx)->type == lexer::token_type::colon)
+        if (peek(ctx, lexer::token_type::colon))
         {
             expect(ctx, lexer::token_type::colon);
-
             ret.type_expression = parse_expression(ctx, expression_special_modes::assignment);
         }
 
-        expect(ctx, lexer::token_type::assign);
-        ret.rhs = parse_expression(ctx);
-        ret.range = { start, ret.rhs.range.end() };
+        if (peek(ctx, lexer::token_type::assign))
+        {
+            expect(ctx, lexer::token_type::assign);
+            ret.rhs = parse_expression(ctx);
+            ret.range = { start, ret.rhs->range.end() };
+        }
+
+        else
+        {
+            if (mode != declaration_mode::member_declaration || !ret.type_expression)
+            {
+                const char * message = "a type specifier or an initializer expression";
+
+                if (!peek(ctx))
+                {
+                    throw expectation_failure{ message };
+                }
+
+                throw expectation_failure{ message, ctx.begin->string, ctx.begin->range };
+            }
+
+            ret.range = { start, ret.type_expression->range.end() };
+        }
 
         return ret;
     }
@@ -56,7 +75,22 @@ inline namespace _v1
 
         os << in << "{\n";
         print(decl.identifier, os, indent + 4);
-        print(decl.rhs, os, indent + 4);
+        fmap(decl.type_expression, [&](auto && expr) {
+            auto in = std::string(indent + 4, ' ');
+            os << in << "`type-specifier`:\n";
+            os << in << "{\n";
+            print(expr, os, indent + 8);
+            os << in << "}\n";
+            return unit{};
+        });
+        fmap(decl.rhs, [&](auto && rhs) {
+            auto in = std::string(indent + 4, ' ');
+            os << in << "`initializer-expression`:\n";
+            os << in << "{\n";
+            print(rhs, os, indent + 8);
+            os << in << "}\n";
+            return unit{};
+        });
         os << in << "}\n";
     }
 }

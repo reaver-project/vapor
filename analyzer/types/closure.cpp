@@ -24,6 +24,7 @@
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/codegen/ir/type.h"
+#include "vapor/parser/expr.h"
 
 namespace reaver::vapor::analyzer
 {

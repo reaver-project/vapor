@@ -27,7 +27,7 @@
 #include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/function_declaration.h"
 #include "vapor/analyzer/variables/overload_set.h"
-#include "vapor/parser/lambda_expression.h"
+#include "vapor/parser/expr.h"
 
 namespace reaver::vapor::analyzer
 {

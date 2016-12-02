@@ -21,8 +21,8 @@
  **/
 
 #include "vapor/parser/return_expression.h"
+#include "vapor/parser/expr.h"
 #include "vapor/parser/expression_list.h"
-#include "vapor/parser/lambda_expression.h"
 
 namespace reaver::vapor::parser
 {

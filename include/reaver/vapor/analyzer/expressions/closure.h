@@ -25,7 +25,6 @@
 #include <memory>
 #include <numeric>
 
-#include "../../parser/lambda_expression.h"
 #include "../function.h"
 #include "../scope.h"
 #include "../semantic/argument_list.h"

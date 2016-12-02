@@ -26,6 +26,7 @@
 
 #include <reaver/prelude/monad.h>
 
+#include "../../parser/expr.h"
 #include "../helpers.h"
 #include "../statements/statement.h"
 #include "../variables/variable.h"

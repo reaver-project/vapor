@@ -22,6 +22,7 @@
 
 #include "vapor/parser/lambda_expression.h"
 #include "vapor/parser/block.h"
+#include "vapor/parser/expr.h"
 
 namespace reaver::vapor::parser
 {

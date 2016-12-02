@@ -33,13 +33,15 @@ std::u32string program = UR"program(module hello_world
     struct my_type
     {
         let member_a : int;
-        let member_b : int;
+        let member_b = 2;
+        let member_c : int = 3;
     };
 
     let my_other_type = struct
     {
-        let member_a : int;
+        let member_a = 1;
         let member_b : int;
+        let member_c : int = 3;
     };
 
     function fibonacci(n : int) -> int

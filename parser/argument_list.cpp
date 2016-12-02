@@ -21,7 +21,7 @@
  **/
 
 #include "vapor/parser/argument_list.h"
-#include "vapor/parser/lambda_expression.h"
+#include "vapor/parser/expr.h"
 
 namespace reaver::vapor::parser
 {

@@ -31,6 +31,7 @@
 #include "vapor/analyzer/expressions/unary.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/parser/expr.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -72,7 +73,9 @@ inline namespace _v1
                 [&](const parser::binary_expression & binary_expr) -> std::unique_ptr<expression> {
                     auto binexpr = preanalyze_binary_expression(binary_expr, lex_scope);
                     return binexpr;
-                })));
+                },
+
+                [](auto &&) -> std::unique_ptr<expression> { assert(0); })));
     }
 }
 }

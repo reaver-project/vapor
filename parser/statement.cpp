@@ -21,7 +21,7 @@
  **/
 
 #include "vapor/parser/statement.h"
-#include "vapor/parser/lambda_expression.h"
+#include "vapor/parser/expr.h"
 
 namespace reaver::vapor::parser
 {
@@ -55,6 +55,11 @@ inline namespace _v1
             else if (peek(ctx, lexer::token_type::return_))
             {
                 ret.statement_value = parse_return_expression(ctx);
+            }
+
+            else if (peek(ctx, lexer::token_type::struct_))
+            {
+                ret.statement_value = parse_struct_declaration(ctx);
             }
 
             else

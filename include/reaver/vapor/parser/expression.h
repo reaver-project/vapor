@@ -40,6 +40,7 @@ inline namespace _v1
     struct lambda_expression;
     struct unary_expression;
     struct binary_expression;
+    struct struct_literal;
 
     void print(const unary_expression & expr, std::ostream & os, std::size_t indent);
     void print(const binary_expression & expr, std::ostream & os, std::size_t indent);
@@ -54,7 +55,8 @@ inline namespace _v1
             import_expression,
             recursive_wrapper<lambda_expression>,
             recursive_wrapper<unary_expression>,
-            recursive_wrapper<binary_expression>>
+            recursive_wrapper<binary_expression>,
+            recursive_wrapper<struct_literal>>
             expression_value = postfix_expression();
     };
 

@@ -39,7 +39,8 @@ inline namespace _v1
     public:
         declaration(const parser::declaration & parse, scope * old_scope, scope * new_scope) : _parse{ parse }, _name{ parse.identifier.string }
         {
-            _init_expr = preanalyze_expression(_parse.rhs, old_scope);
+            assert(_parse.rhs);
+            _init_expr = preanalyze_expression(*_parse.rhs, old_scope);
             auto symbol = make_symbol(_name);
             _declared_symbol = symbol.get();
             if (!new_scope->init(_name, std::move(symbol)))
