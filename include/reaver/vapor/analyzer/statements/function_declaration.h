@@ -26,6 +26,7 @@
 
 #include "../../parser/function.h"
 #include "../expressions/expression.h"
+#include "../function.h"
 #include "../semantic/argument_list.h"
 #include "../statements/block.h"
 #include "../statements/statement.h"
