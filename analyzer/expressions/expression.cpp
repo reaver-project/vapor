@@ -28,6 +28,7 @@
 #include "vapor/analyzer/expressions/import.h"
 #include "vapor/analyzer/expressions/integer.h"
 #include "vapor/analyzer/expressions/postfix.h"
+#include "vapor/analyzer/expressions/struct.h"
 #include "vapor/analyzer/expressions/unary.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
@@ -73,6 +74,11 @@ inline namespace _v1
                 [&](const parser::binary_expression & binary_expr) -> std::unique_ptr<expression> {
                     auto binexpr = preanalyze_binary_expression(binary_expr, lex_scope);
                     return binexpr;
+                },
+
+                [&](const parser::struct_literal & struct_lit) -> std::unique_ptr<expression> {
+                    auto struct_expr = preanalyze_struct_literal(struct_lit, lex_scope);
+                    return struct_expr;
                 },
 
                 [](auto &&) -> std::unique_ptr<expression> { assert(0); })));

@@ -51,11 +51,11 @@ inline namespace _v1
     class type
     {
     public:
-        type() : _lex_scope{ std::make_unique<scope>() }
+        type() : _member_scope{ std::make_unique<scope>() }
         {
         }
 
-        type(scope * outer_scope) : _lex_scope{ outer_scope->clone_for_class() }
+        type(scope * outer_scope) : _member_scope{ outer_scope->clone_for_class() }
         {
         }
 
@@ -73,9 +73,9 @@ inline namespace _v1
 
         virtual std::string explain() const = 0;
 
-        virtual scope * get_scope() const
+        virtual const scope * get_scope() const
         {
-            return _lex_scope.get();
+            return _member_scope.get();
         }
 
         std::shared_ptr<codegen::ir::variable_type> codegen_type(ir_generation_context & ctx) const
@@ -92,9 +92,9 @@ inline namespace _v1
     private:
         virtual void _codegen_type(ir_generation_context &) const = 0;
 
-        std::unique_ptr<scope> _lex_scope;
-
     protected:
+        std::unique_ptr<scope> _member_scope;
+
         mutable optional<std::shared_ptr<codegen::ir::variable_type>> _codegen_t;
     };
 

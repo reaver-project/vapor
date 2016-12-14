@@ -97,7 +97,7 @@ inline namespace _v1
         return true;
     }
 
-    future<symbol *> scope::get_future(const std::u32string & name)
+    future<symbol *> scope::get_future(const std::u32string & name) const
     {
         {
             _shlock lock{ _lock };
@@ -135,7 +135,7 @@ inline namespace _v1
         return _symbol_futures.emplace(name, std::move(pair.future)).first->second;
     }
 
-    future<symbol *> scope::resolve(const std::u32string & name)
+    future<symbol *> scope::resolve(const std::u32string & name) const
     {
         {
             auto it = non_overridable().find(name);
@@ -195,6 +195,7 @@ inline namespace _v1
     {
         static auto integer_type_var = make_type_variable(builtin_types().integer.get());
         static auto boolean_type_var = make_type_variable(builtin_types().boolean.get());
+        static auto type_type_var = make_type_variable(builtin_types().type.get());
 
         static auto symbols = [&] {
             std::unordered_map<std::u32string, std::unique_ptr<symbol>> symbols;
@@ -203,6 +204,7 @@ inline namespace _v1
 
             add_symbol(U"int", integer_type_var);
             add_symbol(U"bool", boolean_type_var);
+            add_symbol(U"type", type_type_var);
 
             return symbols;
         }();
