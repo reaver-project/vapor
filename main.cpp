@@ -30,46 +30,48 @@
 
 std::u32string program = UR"program(module hello_world
 {
-    struct my_type
+    /*let mn = struct
     {
-        let member_a : int;
-        let member_b = 2;
-        let member_c : int = 3;
+        let m : int;
+        let n : int;
     };
 
-    let my_other_type = struct
+    function ackermann(args : mn) -> int
     {
-        let member_a = 1;
-        let member_b : int;
-        let member_c : int = 3;
-    };
-
-    function fibonacci(n : int) -> int
-    {
-        if (n <= 0)
+        if (args.m == 0)
         {
-            return 0;
+            return args.n + 1;
         }
 
-        if (n == 1)
+        if (args.n == 0)
         {
-            return 1;
+            return ackermann(args{ .m = .m - 1, .n = 1 });
         }
 
-        if (n == 2)
-        {
-            return 1;
-        }
-
-        return fibonacci(n - 1) + fibonacci(n - 2);
+        return ackermann(args{ .m = .m - 1, .n = ackermann(args{ .n = .n - 1 }) });
     }
 
     let entry = λ(arg : int) -> int
     {
-        let constant_foldable = fibonacci(7);
-        let non_constant_foldable = fibonacci(arg);
+        let constant_foldable = ackermann(mn{ 3, 4 });
+        let non_constant_foldable = ackermann(mn{ .m = arg, .n = arg + 1 });
 
-        return constant_foldable + non_constant_foldable;
+        return constant_foldable - non_constant_foldable;
+    };*/
+
+    struct foo
+    {
+        let i : int;
+        let j = 1;
+    };
+
+    let entry = λ(arg : int) -> int
+    {
+        let a = foo{ 1 };
+        // let b = foo{ 2, .j = a.i + foo{ 0 }.j };
+        let b = foo{ 2, a.i + a.j };
+
+        return b.i + b.j;
     };
 })program";
 
