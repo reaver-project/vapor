@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/statements/declaration.h"
+#include "vapor/analyzer/variables/member.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -42,7 +43,7 @@ inline namespace _v1
         });
 
         fmap(_init_expr, [&](auto && expr) {
-            fut = fut.then([&]() { return expr->analyze(ctx); }).then([&] { _declared_symbol->set_variable(_init_expr.get()->get_variable()); });
+            fut = fut.then([&]() { return expr->analyze(ctx); });
 
             fmap(_type_specifier, [&](auto && expr) {
                 fut = fut.then([&]() {
@@ -53,8 +54,33 @@ inline namespace _v1
                 return unit{};
             });
 
+            fut = fut.then([&] {
+                auto variable = _init_expr.get()->get_variable();
+
+                if (_type == declaration_type::member)
+                {
+                    _variable_wrapper = make_member_variable(variable);
+                    variable = _variable_wrapper.get();
+                }
+
+                _declared_symbol->set_variable(variable);
+            });
+
             return unit{};
         });
+
+        if (!_init_expr)
+        {
+            fut = fut.then([&]() {
+                assert(_type_specifier);
+                auto type_var = _type_specifier.get()->get_variable();
+                auto type = static_cast<type_variable *>(type_var)->get_value();
+                _blank_variable = make_blank_variable(type);
+                _variable_wrapper = make_member_variable(_blank_variable.get());
+
+                _declared_symbol->set_variable(_variable_wrapper.get());
+            });
+        }
 
         return fut;
     }

@@ -93,6 +93,11 @@ inline namespace _v1
             return false;
         }
 
+        virtual bool is_member() const
+        {
+            return false;
+        }
+
         bool is_local() const
         {
             return _is_local;

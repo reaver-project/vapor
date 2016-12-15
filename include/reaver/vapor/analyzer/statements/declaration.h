@@ -79,6 +79,9 @@ inline namespace _v1
         optional<std::unique_ptr<expression>> _type_specifier;
         optional<std::unique_ptr<expression>> _init_expr;
         declaration_type _type;
+
+        std::unique_ptr<variable> _blank_variable;
+        std::unique_ptr<variable> _variable_wrapper;
     };
 
     inline std::unique_ptr<declaration> preanalyze_declaration(const parser::declaration & parse, scope *& lex_scope)
