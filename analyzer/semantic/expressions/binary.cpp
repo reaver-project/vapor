@@ -35,10 +35,10 @@ inline namespace _v1
     future<> binary_expression::_analyze(analysis_context & ctx)
     {
         return when_all(_lhs->analyze(ctx), _rhs->analyze(ctx))
-            .then([&](auto) { return resolve_overload(_lhs->get_type(), _rhs->get_type(), _op.type, _scope); })
+            .then([&](auto) { return resolve_overload(_lhs->get_variable(), _rhs->get_variable(), _op.type, _scope); })
             .then([&](auto && overload) {
                 _overload = overload;
-                return _overload->return_type();
+                return _overload->return_type(ctx);
             })
             .then([&](auto && ret_type) { this->_set_variable(make_expression_variable(this, ret_type)); });
     }

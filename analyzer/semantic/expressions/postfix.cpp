@@ -42,10 +42,10 @@ inline namespace _v1
             }
 
             return resolve_overload(
-                _base_expr->get_type(), *_parse.bracket_type, fmap(_arguments, [](auto && arg) -> const type * { return arg->get_type(); }), _scope)
+                _base_expr->get_variable(), *_parse.bracket_type, fmap(_arguments, [](auto && arg) -> const variable * { return arg->get_variable(); }), _scope)
                 .then([&](auto && overload) {
                     _overload = overload;
-                    return _overload->return_type();
+                    return _overload->return_type(ctx);
                 })
                 .then([&](auto && ret_type) { this->_set_variable(make_expression_variable(this, ret_type)); });
         });

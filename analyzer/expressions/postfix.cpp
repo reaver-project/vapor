@@ -98,7 +98,7 @@ inline namespace _v1
             none,
             { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
             std::move(arguments_values),
-            { codegen::ir::make_variable((*_overload->return_type().try_get())->codegen_type(ctx)) } };
+            { codegen::ir::make_variable(_overload->return_type()->codegen_type(ctx)) } };
 
         ctx.add_function_to_generate(_overload);
 

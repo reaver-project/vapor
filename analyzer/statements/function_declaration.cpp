@@ -63,7 +63,7 @@ inline namespace _v1
             return unit{};
         });
         os << in << "}\n";
-        os << in << "return type: " << (*_function->return_type().try_get())->explain() << '\n';
+        os << in << "return type: " << _function->return_type()->explain() << '\n';
         os << in << "{\n";
         _body->print(os, indent + 4);
         os << in << "}\n";

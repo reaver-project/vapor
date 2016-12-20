@@ -31,6 +31,7 @@
 #include "../codegen/ir/function.h"
 #include "../range.h"
 #include "ir_context.h"
+#include "semantic/context.h"
 #include "simplification/context.h"
 
 namespace reaver::vapor::analyzer
@@ -47,7 +48,10 @@ inline namespace _v1
     {
     public:
         function(std::string explanation, type * ret, std::vector<variable *> args, function_codegen codegen, optional<range_type> range = none)
-            : _explanation{ std::move(explanation) }, _range{ std::move(range) }, _return_type{ ret }, _arguments{ std::move(args) },
+            : _explanation{ std::move(explanation) },
+              _range{ std::move(range) },
+              _return_type{ ret },
+              _arguments{ std::move(args) },
               _codegen{ std::move(codegen) }
         {
             if (ret)
@@ -61,9 +65,15 @@ inline namespace _v1
             _return_type_future = std::move(pair.future);
         }
 
-        future<type *> return_type() const
+        future<type *> return_type(analysis_context &) const
         {
             return *_return_type_future;
+        }
+
+        type * return_type() const
+        {
+            assert(_return_type);
+            return _return_type;
         }
 
         std::vector<variable *> arguments() const
@@ -116,6 +126,7 @@ inline namespace _v1
         void set_return_type(type * ret)
         {
             std::unique_lock<std::mutex> lock{ _ret_lock };
+            assert(!_return_type);
             _return_type = ret;
             fmap(_return_type_promise, [ret](auto && promise) {
                 promise.set(ret);

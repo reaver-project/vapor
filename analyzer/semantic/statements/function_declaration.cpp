@@ -90,7 +90,7 @@ inline namespace _v1
 
                 _function->set_body(_body.get());
 
-                if (!_function->return_type().try_get())
+                if (!_return_type)
                 {
                     _function->set_return_type(_body->return_type());
                 }
