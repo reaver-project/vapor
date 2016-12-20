@@ -79,12 +79,13 @@ inline namespace _v1
                                                                                                                                                                \
             if (!args[0]->is_constant() || !args[1]->is_constant())                                                                                            \
             {                                                                                                                                                  \
-                return (expression *)nullptr;                                                                                                                  \
+                return make_ready_future<expression *>(nullptr);                                                                                               \
             }                                                                                                                                                  \
                                                                                                                                                                \
             auto lhs = static_cast<boolean_constant *>(args[0]);                                                                                               \
             auto rhs = static_cast<boolean_constant *>(args[1]);                                                                                               \
-            return make_variable_expression(std::make_unique<RESULT_TYPE##_constant>(lhs->get_value() OPERATOR rhs->get_value())).release();                   \
+            return make_ready_future<expression *>(                                                                                                            \
+                make_variable_expression(std::make_unique<RESULT_TYPE##_constant>(lhs->get_value() OPERATOR rhs->get_value())).release());                     \
         };                                                                                                                                                     \
         static auto NAME = _generate_function<codegen::ir::boolean_##NAME##_instruction>(                                                                      \
             BUILTIN_NAME, "<builtin boolean " #NAME ">", eval, builtin_types().RESULT_TYPE.get());                                                             \

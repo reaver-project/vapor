@@ -41,7 +41,7 @@ inline namespace _v1
     class block;
 
     using function_codegen = reaver::function<codegen::ir::function(ir_generation_context &)>;
-    using function_eval = reaver::function<expression *(simplification_context &, std::vector<variable *>)>;
+    using function_eval = reaver::function<future<expression *>(simplification_context &, std::vector<variable *>)>;
 
     class function
     {

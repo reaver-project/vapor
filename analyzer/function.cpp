@@ -102,7 +102,7 @@ inline namespace _v1
 
         if (_compile_time_eval)
         {
-            return make_ready_future((*_compile_time_eval)(ctx, args));
+            return (*_compile_time_eval)(ctx, args);
         }
 
         assert(0);
