@@ -35,7 +35,7 @@ inline namespace _v1
     class boolean_type : public type
     {
     public:
-        virtual future<function *> get_overload(lexer::token_type token, const type * rhs) const override
+        virtual future<function *> get_overload(lexer::token_type token, const variable * rhs) const override
         {
             switch (token)
             {

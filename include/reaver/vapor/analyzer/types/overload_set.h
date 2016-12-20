@@ -57,7 +57,7 @@ inline namespace _v1
             return "overload set (TODO: add location and member info)";
         }
 
-        virtual future<function *> get_overload(lexer::token_type bracket, std::vector<const type *> args) const override;
+        virtual future<function *> get_overload(lexer::token_type bracket, const variable * base, std::vector<const variable *> args) const override;
 
     private:
         virtual void _codegen_type(ir_generation_context &) const override;

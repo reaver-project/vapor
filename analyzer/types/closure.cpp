@@ -30,12 +30,11 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    future<function *> closure_type::get_overload(lexer::token_type bracket, std::vector<const type *> args) const
+    future<function *> closure_type::get_overload(lexer::token_type bracket, const variable *, std::vector<const variable *> args) const
     {
-        if (args.size() == _function->arguments().size()
-            && std::inner_product(args.begin(), args.end(), _function->arguments().begin(), true, std::logical_and<>(), [](auto && type, auto && var) {
-                   return type == var->get_type();
-               }))
+        if (args.size() == _function->arguments().size() && std::equal(args.begin(), args.end(), _function->arguments().begin(), [](auto && arg, auto && par) {
+                return arg->get_type() == par->get_type();
+            }))
         {
             return make_ready_future(_function.get());
         }

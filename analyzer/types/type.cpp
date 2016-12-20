@@ -21,7 +21,9 @@
  **/
 
 #include "vapor/analyzer/types/type.h"
+#include "vapor/analyzer/function.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/variables/type.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -30,6 +32,36 @@ inline namespace _v1
     void type_type::_codegen_type(ir_generation_context &) const
     {
         assert(0);
+    }
+
+    future<function *> resolve_overload(const variable * lhs, const variable * rhs, lexer::token_type op, scope * in_scope)
+    {
+        return lhs->get_type()->get_overload(op, rhs).then([](auto && overload) {
+            assert(overload);
+            return overload;
+        });
+    }
+
+    future<function *> resolve_overload(const variable * base_expr, lexer::token_type bracket_type, std::vector<const variable *> arguments, scope * in_scope)
+    {
+        return base_expr->get_type()->get_overload(bracket_type, base_expr, std::move(arguments)).then([](auto && overload) {
+            assert(overload);
+            return overload;
+        });
+    }
+
+    future<function *> type_type::get_overload(lexer::token_type token, const variable * base, std::vector<const variable *> args) const
+    {
+        if (token != lexer::token_type::curly_bracket_open)
+        {
+            return make_ready_future<function *>(nullptr);
+        }
+
+        assert(base->is_constant());
+        assert(base->get_type() == builtin_types().type.get()); // this check is a little paranoid
+
+        auto base_type = static_cast<const type_variable *>(base)->get_value();
+        return base_type->get_constructor(args);
     }
 }
 }

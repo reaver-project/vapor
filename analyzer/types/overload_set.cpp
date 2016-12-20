@@ -44,7 +44,7 @@ inline namespace _v1
         _functions.push_back(fn);
     }
 
-    future<function *> overload_set_type::get_overload(lexer::token_type bracket, std::vector<const type *> args) const
+    future<function *> overload_set_type::get_overload(lexer::token_type bracket, const variable *, std::vector<const variable *> args) const
     {
         std::unique_lock<std::mutex> lock{ _functions_lock };
 
@@ -52,8 +52,9 @@ inline namespace _v1
         {
             auto it = std::find_if(_functions.begin(), _functions.end(), [&](auto && f) {
                 // you apparently can't compare `vector<T>` and `vector<const T>`...
-                return args.size() == f->arguments().size()
-                    && std::equal(args.begin(), args.end(), f->arguments().begin(), [](auto && type, auto && var) { return type == var->get_type(); });
+                return args.size() == f->arguments().size() && std::equal(args.begin(), args.end(), f->arguments().begin(), [](auto && arg, auto && par) {
+                    return arg->get_type() == par->get_type();
+                });
             });
 
             if (it != _functions.end())

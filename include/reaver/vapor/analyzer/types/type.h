@@ -47,6 +47,7 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     class function;
+    class variable;
 
     class type
     {
@@ -61,12 +62,17 @@ inline namespace _v1
 
         virtual ~type() = default;
 
-        virtual future<function *> get_overload(lexer::token_type, const type *) const
+        virtual future<function *> get_overload(lexer::token_type, const variable *) const
         {
             return make_ready_future(static_cast<function *>(nullptr));
         }
 
-        virtual future<function *> get_overload(lexer::token_type, std::vector<const type *>) const
+        virtual future<function *> get_overload(lexer::token_type, const variable *, std::vector<const variable *>) const
+        {
+            return make_ready_future(static_cast<function *>(nullptr));
+        }
+
+        virtual future<function *> get_constructor(std::vector<const variable *>) const
         {
             return make_ready_future(static_cast<function *>(nullptr));
         }
@@ -106,6 +112,8 @@ inline namespace _v1
             return "type";
         }
 
+        virtual future<function *> get_overload(lexer::token_type token, const variable *, std::vector<const variable *>) const override;
+
     private:
         virtual void _codegen_type(ir_generation_context &) const override;
     };
@@ -113,21 +121,8 @@ inline namespace _v1
     // these here are currently kinda silly
     // will get less silly and properly separated once typeclasses are a thing
 
-    inline future<function *> resolve_overload(const type * lhs, const type * rhs, lexer::token_type op, scope * in_scope)
-    {
-        return lhs->get_overload(op, rhs).then([](auto && overload) {
-            assert(overload);
-            return overload;
-        });
-    }
-
-    inline future<function *> resolve_overload(const type * base_expr, lexer::token_type bracket_type, std::vector<const type *> arguments, scope * in_scope)
-    {
-        return base_expr->get_overload(bracket_type, std::move(arguments)).then([](auto && overload) {
-            assert(overload);
-            return overload;
-        });
-    }
+    future<function *> resolve_overload(const variable * lhs, const variable * rhs, lexer::token_type op, scope * in_scope);
+    future<function *> resolve_overload(const variable * base_expr, lexer::token_type bracket_type, std::vector<const variable *> arguments, scope * in_scope);
 
     std::unique_ptr<type> make_integer_type();
     std::unique_ptr<type> make_boolean_type();
