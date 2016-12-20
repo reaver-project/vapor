@@ -104,10 +104,7 @@ inline namespace _v1
                 replacement_map.emplace(to_replace[i], replacements[i]);
             }
 
-            struct replacements repl
-            {
-                std::move(replacement_map)
-            };
+            struct replacements repl = { std::move(replacement_map) };
             return _clone_with_replacement(repl);
         }
 
