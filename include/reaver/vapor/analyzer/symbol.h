@@ -45,8 +45,8 @@ inline namespace _v1
         {
             _ulock lock{ _lock };
 
-            assert(!_variable);
-            _variable = std::move(var);
+            assert(!_variable && var);
+            _variable = var;
             if (_promise)
             {
                 _promise->set(_variable);
@@ -78,18 +78,18 @@ inline namespace _v1
         {
             _ulock lock{ _lock };
 
-            if (_variable)
+            if (_variable && !_future)
             {
-                if (!_future)
-                {
-                    _future = make_ready_future(_variable);
-                }
-                return *_future;
+                _future = make_ready_future(_variable);
             }
 
-            auto pair = make_promise<variable *>();
-            _promise = std::move(pair.promise);
-            _future = std::move(pair.future);
+            if (!_future)
+            {
+                auto pair = make_promise<variable *>();
+                _promise = std::move(pair.promise);
+                _future = std::move(pair.future);
+            }
+
             return *_future;
         }
 
