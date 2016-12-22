@@ -26,7 +26,7 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "../../parser/id_expression.h"
+#include "../../parser/literal.h"
 #include "../symbol.h"
 #include "expression.h"
 
@@ -34,16 +34,16 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class id_expression : public expression
+    class identifier : public expression
     {
     public:
-        id_expression(const parser::id_expression & parse, scope * lex_scope) : _parse{ parse }, _lex_scope{ lex_scope }
+        identifier(const parser::identifier & parse, scope * lex_scope) : _parse{ parse }, _lex_scope{ lex_scope }
         {
         }
 
-        std::u32string name() const
+        const std::u32string & name() const
         {
-            return boost::join(fmap(_parse.id_expression_value, [](auto && elem) -> decltype(auto) { return elem.string; }), ".");
+            return _parse.value.string;
         }
 
         virtual void print(std::ostream & os, std::size_t indent) const override;
@@ -59,14 +59,14 @@ inline namespace _v1
         virtual future<expression *> _simplify_expr(simplification_context &) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-        const parser::id_expression & _parse;
+        const parser::identifier & _parse;
         scope * _lex_scope;
         variable * _referenced;
     };
 
-    inline std::unique_ptr<id_expression> preanalyze_id_expression(const parser::id_expression & parse, scope * lex_scope)
+    inline std::unique_ptr<identifier> preanalyze_identifier(const parser::identifier & parse, scope * lex_scope)
     {
-        return std::make_unique<id_expression>(parse, lex_scope);
+        return std::make_unique<identifier>(parse, lex_scope);
     }
 }
 }

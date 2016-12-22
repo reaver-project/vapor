@@ -48,7 +48,8 @@ inline namespace _v1
         virtual variable * get_variable() const override;
 
     private:
-        postfix_expression(const postfix_expression & other) : _parse{ other._parse }, _brace{ other._brace }, _overload{ other._overload }
+        postfix_expression(const postfix_expression & other)
+            : _parse{ other._parse }, _modifier{ other._modifier }, _overload{ other._overload }, _accessed_member{ other._accessed_member }
         {
         }
 
@@ -60,9 +61,12 @@ inline namespace _v1
         const parser::postfix_expression & _parse;
         scope * _scope = nullptr;
         std::unique_ptr<expression> _base_expr;
-        optional<lexer::token_type> _brace;
+        optional<lexer::token_type> _modifier;
         std::vector<std::unique_ptr<expression>> _arguments;
         function * _overload;
+
+        optional<std::u32string> _accessed_member;
+        optional<variable *> _referenced_variable;
     };
 
     inline std::unique_ptr<postfix_expression> preanalyze_postfix_expression(const parser::postfix_expression & parse, scope * lex_scope)

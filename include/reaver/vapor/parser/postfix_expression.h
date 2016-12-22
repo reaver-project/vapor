@@ -23,10 +23,9 @@
 #pragma once
 
 #include <reaver/optional.h>
-
 #include "../range.h"
 #include "helpers.h"
-#include "id_expression.h"
+#include "literal.h"
 
 namespace reaver::vapor::parser
 {
@@ -38,14 +37,16 @@ inline namespace _v1
     struct postfix_expression
     {
         range_type range;
-        variant<id_expression, recursive_wrapper<expression_list>> base_expression = id_expression();
-        optional<lexer::token_type> bracket_type;
-        std::vector<expression> arguments;
+        variant<identifier, recursive_wrapper<expression_list>> base_expression = identifier();
+        optional<lexer::token_type> modifier_type = none;
+        std::vector<expression> arguments = {};
+        optional<identifier> accessed_member = none;
     };
 
     inline bool operator==(const postfix_expression & lhs, const postfix_expression & rhs)
     {
-        return lhs.range == rhs.range && lhs.base_expression == rhs.base_expression && lhs.bracket_type == rhs.bracket_type && lhs.arguments == rhs.arguments;
+        return lhs.range == rhs.range && lhs.base_expression == rhs.base_expression && lhs.modifier_type == rhs.modifier_type && lhs.arguments == rhs.arguments
+            && lhs.accessed_member == rhs.accessed_member;
     }
 
     postfix_expression parse_postfix_expression(context & ctx, expression_special_modes = expression_special_modes::none);

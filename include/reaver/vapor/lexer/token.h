@@ -144,6 +144,8 @@ inline namespace _v1
                 return token_type::integer_suffix;
             case token_type::boolean:
                 return token_type::none;
+            case token_type::identifier:
+                return token_type::none;
             default:
                 throw invalid_suffix_requested{};
         }

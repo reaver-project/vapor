@@ -20,7 +20,7 @@
  *
  **/
 
-#include "vapor/analyzer/expressions/id.h"
+#include "vapor/analyzer/expressions/identifier.h"
 #include "vapor/analyzer/expressions/variable.h"
 #include "vapor/parser.h"
 
@@ -28,17 +28,28 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void id_expression::print(std::ostream & os, std::size_t indent) const
+    std::unique_ptr<expression> identifier::_clone_expr_with_replacement(replacements & repl) const
     {
-        auto in = std::string(indent, ' ');
-        os << in << "id expression `" << utf8(name()) << "` at " << _parse.range << '\n';
-        os << in << "referenced variable type: " << get_variable()->get_type()->explain() << '\n';
+        auto referenced = _referenced;
+
+        auto it = repl.variables.find(referenced);
+        if (it != repl.variables.end())
+        {
+            referenced = it->second;
+        }
+
+        return make_variable_ref_expression(referenced);
     }
 
-    statement_ir id_expression::_codegen_ir(ir_generation_context & ctx) const
+    reaver::future<expression *> identifier::_simplify_expr(simplification_context & ctx)
     {
-        return { codegen::ir::instruction{
-            none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, { get<codegen::ir::value>(_referenced->codegen_ir(ctx)) } } };
+        return _referenced->simplify(ctx).then([&](auto && simplified) -> expression * {
+            if (simplified && simplified != _referenced)
+            {
+                _referenced = simplified;
+            }
+            return this;
+        });
     }
 }
 }

@@ -23,7 +23,7 @@
 #include <reaver/prelude/fold.h>
 
 #include "vapor/analyzer/expressions/expression_list.h"
-#include "vapor/analyzer/expressions/id.h"
+#include "vapor/analyzer/expressions/identifier.h"
 #include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
@@ -34,7 +34,7 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     postfix_expression::postfix_expression(const parser::postfix_expression & parse, scope * lex_scope)
-        : _parse{ parse }, _scope{ lex_scope }, _brace{ parse.bracket_type }
+        : _parse{ parse }, _scope{ lex_scope }, _modifier{ parse.modifier_type }
     {
         fmap(_parse.base_expression,
             make_overload_set(
@@ -42,12 +42,20 @@ inline namespace _v1
                     _base_expr = preanalyze_expression_list(expr_list, lex_scope);
                     return unit{};
                 },
-                [&](const parser::id_expression & id_expr) {
-                    _base_expr = preanalyze_id_expression(id_expr, lex_scope);
+                [&](const parser::identifier & ident) {
+                    _base_expr = preanalyze_identifier(ident, lex_scope);
                     return unit{};
                 }));
 
-        _arguments = fmap(_parse.arguments, [&](auto && expr) { return preanalyze_expression(expr, lex_scope); });
+        if (_parse.arguments.size())
+        {
+            _arguments = fmap(_parse.arguments, [&](auto && expr) { return preanalyze_expression(expr, lex_scope); });
+        }
+
+        fmap(_parse.accessed_member, [&](auto && member) {
+            _accessed_member = member.value.string;
+            return unit{};
+        });
     }
 
     void postfix_expression::print(std::ostream & os, std::size_t indent) const
@@ -60,10 +68,16 @@ inline namespace _v1
         _base_expr->print(os, indent + 4);
         os << in << "}\n";
 
-        if (_parse.bracket_type)
+        if (_modifier)
         {
+            if (_modifier == lexer::token_type::dot)
+            {
+                os << in << "referenced member: " << utf8(*_accessed_member) << '\n';
+                return;
+            }
+
             os << in << "selected overload: " << _overload->explain() << '\n';
-            os << in << "bracket type: " << lexer::token_types[+_brace] << '\n';
+            os << in << "modifier type: " << lexer::token_types[+_modifier] << '\n';
 
             os << in << "arguments:\n";
             fmap(_arguments, [&](auto && arg) {
@@ -80,9 +94,14 @@ inline namespace _v1
     {
         auto base_expr_instructions = _base_expr->codegen_ir(ctx);
 
-        if (!_parse.bracket_type)
+        if (!_modifier)
         {
             return base_expr_instructions;
+        }
+
+        if (_modifier == lexer::token_type::dot)
+        {
+            assert(0);
         }
 
         auto base_variable_value = get<codegen::ir::value>(_base_expr->get_variable()->codegen_ir(ctx));
@@ -117,9 +136,14 @@ inline namespace _v1
 
     variable * postfix_expression::get_variable() const
     {
-        if (!_parse.bracket_type)
+        if (!_modifier)
         {
             return _base_expr->get_variable();
+        }
+
+        if (_referenced_variable)
+        {
+            return *_referenced_variable;
         }
 
         return expression::get_variable();

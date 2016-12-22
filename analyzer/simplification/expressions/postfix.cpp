@@ -23,7 +23,7 @@
 #include <reaver/prelude/fold.h>
 
 #include "vapor/analyzer/expressions/expression_list.h"
-#include "vapor/analyzer/expressions/id.h"
+#include "vapor/analyzer/expressions/identifier.h"
 #include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
@@ -40,6 +40,15 @@ inline namespace _v1
         ret->_base_expr = _base_expr->clone_expr_with_replacement(repl);
         ret->_arguments = fmap(_arguments, [&](auto && arg) { return arg->clone_expr_with_replacement(repl); });
 
+        ret->_referenced_variable = fmap(_referenced_variable, [&](auto && var) {
+            auto it = repl.variables.find(var);
+            if (it != repl.variables.end())
+            {
+                return repl.variables[var];
+            }
+            return var;
+        });
+
         return ret;
     }
 
@@ -53,9 +62,14 @@ inline namespace _v1
             .then([&](auto && simplified) {
                 replace_uptr(_base_expr, simplified, ctx);
 
-                if (!_parse.bracket_type)
+                if (!_modifier)
                 {
                     return make_ready_future(_base_expr.release());
+                }
+
+                if (_accessed_member)
+                {
+                    return make_ready_future<expression *>(this);
                 }
 
                 auto args = fmap(_arguments, [&](auto && expr) { return expr->get_variable(); });

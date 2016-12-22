@@ -23,7 +23,7 @@
 #include <reaver/prelude/fold.h>
 
 #include "vapor/analyzer/expressions/expression_list.h"
-#include "vapor/analyzer/expressions/id.h"
+#include "vapor/analyzer/expressions/identifier.h"
 #include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
@@ -36,13 +36,22 @@ inline namespace _v1
     future<> postfix_expression::_analyze(analysis_context & ctx)
     {
         return when_all(fmap(_arguments, [&](auto && expr) { return expr->analyze(ctx); })).then([&] { return _base_expr->analyze(ctx); }).then([&] {
-            if (!_parse.bracket_type)
+            if (!_modifier)
             {
                 return make_ready_future();
             }
 
+            if (_modifier == lexer::token_type::dot)
+            {
+                return _base_expr->get_type()
+                    ->get_scope()
+                    ->get_future(*_accessed_member)
+                    .then([](auto && symb) { return symb->get_variable_future(); })
+                    .then([&](auto && var) { _referenced_variable = var; });
+            }
+
             return resolve_overload(
-                _base_expr->get_variable(), *_parse.bracket_type, fmap(_arguments, [](auto && arg) -> const variable * { return arg->get_variable(); }), _scope)
+                _base_expr->get_variable(), *_modifier, fmap(_arguments, [](auto && arg) -> const variable * { return arg->get_variable(); }), _scope)
                 .then([&](auto && overload) {
                     _overload = overload;
                     return _overload->return_type(ctx);

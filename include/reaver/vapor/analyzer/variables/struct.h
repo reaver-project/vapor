@@ -48,6 +48,11 @@ inline namespace _v1
             return _type;
         }
 
+        virtual bool is_constant() const override
+        {
+            return true;
+        }
+
     private:
         virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override
         {

@@ -58,6 +58,8 @@ inline namespace _v1
 
             return unit{};
         });
+
+        _member_scope->close();
     }
 
     future<function *> struct_type::get_constructor(std::vector<const variable *> args) const
@@ -82,6 +84,11 @@ inline namespace _v1
             "struct type constructor", this, _data_members, [&](auto &&) -> codegen::ir::function { assert(!"TODO: codegen for struct constructors"); });
 
         _aggregate_ctor->set_eval([this](auto &&, const std::vector<variable *> & args) {
+            if (!std::all_of(args.begin(), args.end(), [](auto && arg) { return arg->is_constant(); }))
+            {
+                return make_ready_future<expression *>(nullptr);
+            }
+
             auto repl = replacements{};
             auto arg_copies = fmap(args, [&](auto && arg) { return arg->clone_with_replacement(repl); });
             return make_ready_future<expression *>(make_variable_expression(make_struct_variable(this, std::move(arg_copies))).release());
