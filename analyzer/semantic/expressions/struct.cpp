@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/expressions/struct.h"
+#include "vapor/analyzer/statements/declaration.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/variables/type.h"
 
@@ -30,7 +31,8 @@ inline namespace _v1
 {
     future<> struct_literal::_analyze(analysis_context & ctx)
     {
-        return when_all(fmap(_type->get_members(), [&](auto && member) { return member->analyze(ctx); })).then([this] {
+        return when_all(fmap(_type->get_data_member_decls(), [&](auto && member) { return member->analyze(ctx); })).then([this] {
+            _type->generate_constructor();
             this->_set_variable(make_type_variable(_type.get()));
         });
     }

@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include "../function.h"
 #include "../statements/statement.h"
 #include "type.h"
 
@@ -37,19 +38,30 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    class declaration;
+
     class struct_type : public type
     {
     public:
         struct_type(const parser::struct_literal & parse, scope * lex_scope);
+        ~struct_type();
+
+        virtual future<function *> get_constructor(std::vector<const variable *> args) const override;
+        void generate_constructor();
 
         virtual std::string explain() const override
         {
             return "struct type (TODO: trace information!)";
         }
 
-        std::vector<statement *> get_members() const
+        std::vector<declaration *> get_data_member_decls() const
         {
-            return fmap(_members, [](auto && ptr) { return ptr.get(); });
+            return fmap(_data_members_declarations, [](auto && ptr) { return ptr.get(); });
+        }
+
+        std::vector<const variable *> get_data_members() const
+        {
+            return fmap(_data_members, [](auto && ptr) -> const variable * { return ptr; });
         }
 
     private:
@@ -60,7 +72,12 @@ inline namespace _v1
 
         const parser::struct_literal & _parse;
 
-        std::vector<std::unique_ptr<statement>> _members;
+        std::vector<std::unique_ptr<declaration>> _data_members_declarations;
+        std::vector<variable *> _data_members;
+
+        std::unique_ptr<function> _aggregate_ctor;
+        mutable optional<future<function *>> _aggregate_ctor_future;
+        optional<manual_promise<function *>> _aggregate_ctor_promise;
     };
 
     inline auto make_struct_type(const parser::struct_literal & parse, scope * lex_scope)
