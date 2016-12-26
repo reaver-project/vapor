@@ -65,11 +65,25 @@ inline namespace _v1
     future<function *> struct_type::get_constructor(std::vector<const variable *> args) const
     {
         return _aggregate_ctor_future->then([&, args = std::move(args)](auto ret) {
-            if (args.size() != _data_members.size() || !std::equal(args.begin(), args.end(), _data_members.begin(), [](auto && arg, auto && member) {
-                    return arg->get_type() == member->get_type();
-                }))
+            if (args.size() != _data_members.size())
+            {
+                if (args.size() > _data_members.size())
+                {
+                    ret = nullptr;
+                    return ret;
+                }
+
+                if (!std::all_of(_data_members.begin() + args.size(), _data_members.end(), [](auto && arg) { return arg->get_default_value() != nullptr; }))
+                {
+                    ret = nullptr;
+                    return ret;
+                }
+            }
+
+            if (!std::equal(args.begin(), args.end(), _data_members.begin(), [](auto && arg, auto && member) { return arg->get_type() == member->get_type(); }))
             {
                 ret = nullptr;
+                return ret;
             }
 
             return ret;

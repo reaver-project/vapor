@@ -117,6 +117,15 @@ inline namespace _v1
 
         auto arguments_instructions = fmap(_arguments, [&](auto && arg) { return arg->codegen_ir(ctx); });
 
+        auto repl = replacements{};
+        arguments_instructions.reserve(_overload->arguments().size());
+        std::transform(
+            _overload->arguments().begin() + _arguments.size(), _overload->arguments().end(), std::back_inserter(arguments_instructions), [&](auto && member) {
+                auto def = member->get_default_value();
+                assert(def);
+                return def->clone_expr_with_replacement(repl)->codegen_ir(ctx);
+            });
+
         auto base_expr_variable = base_expr_instructions.back().result;
         auto arguments_values = fmap(arguments_instructions, [](auto && insts) { return insts.back().result; });
         arguments_values.insert(arguments_values.begin(), _overload->call_operand_ir(ctx));

@@ -113,6 +113,14 @@ inline namespace _v1
             return nullptr;
         }
 
+        // used for function arguments
+        void set_default_value(const expression * expr);
+
+        const expression * get_default_value() const
+        {
+            return _default_value;
+        }
+
     private:
         virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const = 0;
 
@@ -125,6 +133,8 @@ inline namespace _v1
 
         mutable optional<variable_ir> _ir;
         bool _is_local = false;
+
+        const expression * _default_value = nullptr;
     };
 
     class expression_variable : public variable

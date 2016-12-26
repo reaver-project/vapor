@@ -28,6 +28,14 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    void variable::set_default_value(const expression * expr)
+    {
+        assert(!_default_value);
+        assert(expr);
+        assert(expr->get_type() == get_type());
+        _default_value = expr;
+    }
+
     variable_ir expression_variable::_codegen_ir(ir_generation_context & ctx) const
     {
         return { _expression->codegen_ir(ctx).back().result };

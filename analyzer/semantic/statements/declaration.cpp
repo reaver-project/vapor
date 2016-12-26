@@ -61,6 +61,7 @@ inline namespace _v1
                 {
                     _blank_variable = make_blank_variable(variable->get_type());
                     _variable_wrapper = make_member_variable(_blank_variable.get(), _parse.identifier.string);
+                    _variable_wrapper->set_default_value(_init_expr.get().get());
                     variable = _variable_wrapper.get();
                 }
 

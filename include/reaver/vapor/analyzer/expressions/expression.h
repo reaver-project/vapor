@@ -67,7 +67,7 @@ inline namespace _v1
             return _variable.get();
         }
 
-        type * get_type()
+        type * get_type() const
         {
             auto var = get_variable();
 

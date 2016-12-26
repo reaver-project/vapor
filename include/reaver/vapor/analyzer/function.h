@@ -76,7 +76,7 @@ inline namespace _v1
             return _return_type;
         }
 
-        std::vector<variable *> arguments() const
+        const std::vector<variable *> & arguments() const
         {
             return _arguments;
         }

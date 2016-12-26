@@ -35,6 +35,15 @@ inline namespace _v1
         struct_variable(std::shared_ptr<struct_type> type, std::vector<std::unique_ptr<variable>> fields) : _type{ type }
         {
             auto members = _type->get_data_members();
+
+            auto repl = replacements{};
+            fields.reserve(members.size());
+            std::transform(members.begin() + fields.size(), members.end(), std::back_inserter(fields), [&](auto && member) {
+                auto def = member->get_default_value();
+                assert(def);
+                return def->get_variable()->clone_with_replacement(repl);
+            });
+
             assert(fields.size() == members.size());
 
             _fields_in_order.reserve(fields.size());
