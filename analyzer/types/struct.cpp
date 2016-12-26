@@ -78,10 +78,27 @@ inline namespace _v1
 
     void struct_type::generate_constructor()
     {
-        _data_members = fmap(_data_members_declarations, [&](auto && member) { return member->declared_symbol()->get_variable(); });
+        _data_members =
+            fmap(_data_members_declarations, [&](auto && member) { return static_cast<member_variable *>(member->declared_symbol()->get_variable()); });
 
-        _aggregate_ctor = make_function(
-            "struct type constructor", this, _data_members, [&](auto &&) -> codegen::ir::function { assert(!"TODO: codegen for struct constructors"); });
+        _aggregate_ctor =
+            make_function("struct type constructor", this, fmap(_data_members, [](auto && member) -> variable * { return member; }), [&](auto && ctx) {
+                auto ir_type = this->codegen_type(ctx);
+                auto args = fmap(_data_members, [&](auto && member) { return get<codegen::ir::value>(member->codegen_ir(ctx)); });
+                auto result = codegen::ir::make_variable(ir_type);
+
+                auto aggregate_ctor = codegen::ir::function{ U"constructor",
+                    get_scope()->codegen_ir(ctx),
+                    fmap(args, [](auto && arg) { return get<std::shared_ptr<codegen::ir::variable>>(arg); }),
+                    result,
+                    { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() }, args, result },
+                        codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
+                aggregate_ctor.scopes = get_scope()->codegen_ir(ctx);
+                aggregate_ctor.scopes.emplace_back(_codegen_type_name(ctx), codegen::ir::scope_type::type);
+                aggregate_ctor.parent_type = codegen_type(ctx);
+
+                return aggregate_ctor;
+            });
 
         _aggregate_ctor->set_eval([this](auto &&, const std::vector<variable *> & args) {
             if (!std::all_of(args.begin(), args.end(), [](auto && arg) { return arg->is_constant(); }))
@@ -91,10 +108,26 @@ inline namespace _v1
 
             auto repl = replacements{};
             auto arg_copies = fmap(args, [&](auto && arg) { return arg->clone_with_replacement(repl); });
-            return make_ready_future<expression *>(make_variable_expression(make_struct_variable(this, std::move(arg_copies))).release());
+            return make_ready_future<expression *>(make_variable_expression(make_struct_variable(this->shared_from_this(), std::move(arg_copies))).release());
         });
 
+        _aggregate_ctor->set_name(U"constructor");
+
         _aggregate_ctor_promise->set(_aggregate_ctor.get());
+    }
+
+    void struct_type::_codegen_type(ir_generation_context & ctx) const
+    {
+        auto actual_type = *_codegen_t;
+
+        // TODO: actual name tracking for this shit
+
+        auto members = fmap(_data_members, [&](auto && member) { return codegen::ir::member{ member->member_codegen_ir(ctx) }; });
+        auto type = codegen::ir::variable_type{ _codegen_type_name(ctx), get_scope()->codegen_ir(ctx), 0, members };
+        auto aggregate_ctor = _aggregate_ctor->codegen_ir(ctx);
+        type.members.push_back(std::move(aggregate_ctor));
+
+        *actual_type = std::move(type);
     }
 }
 }

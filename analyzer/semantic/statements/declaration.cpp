@@ -59,7 +59,8 @@ inline namespace _v1
 
                 if (_type == declaration_type::member)
                 {
-                    _variable_wrapper = make_member_variable(variable);
+                    _blank_variable = make_blank_variable(variable->get_type());
+                    _variable_wrapper = make_member_variable(_blank_variable.get(), _parse.identifier.string);
                     variable = _variable_wrapper.get();
                 }
 
@@ -76,7 +77,7 @@ inline namespace _v1
                 auto type_var = _type_specifier.get()->get_variable();
                 auto type = static_cast<type_variable *>(type_var)->get_value();
                 _blank_variable = make_blank_variable(type);
-                _variable_wrapper = make_member_variable(_blank_variable.get());
+                _variable_wrapper = make_member_variable(_blank_variable.get(), _parse.identifier.string);
 
                 _declared_symbol->set_variable(_variable_wrapper.get());
             });

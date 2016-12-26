@@ -40,7 +40,7 @@ inline namespace _v1
             fut = expr->simplify_expr(ctx)
                       .then([&](auto && simplified) { replace_uptr(_init_expr.get(), simplified, ctx); })
                       .then([&]() { return _declared_symbol->simplify(ctx); })
-                      .then([&]() -> statement * { return this; });
+                      .then([&]() -> statement * { return _init_expr->release(); });
 
             return unit{};
         });

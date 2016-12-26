@@ -45,6 +45,7 @@ inline namespace _v1
         std::size_t overload_set_index = 0;
         std::size_t closure_index = 0;
         std::size_t label_index = 0;
+        std::size_t struct_index = 0;
 
     private:
         std::vector<const function *> _functions_to_generate;

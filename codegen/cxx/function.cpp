@@ -35,7 +35,12 @@ inline namespace _v1
 
         if (auto type = fn.parent_type.lock())
         {
-            ret += ctx.declare_if_necessary(type);
+            ret += ctx.define_if_necessary(type);
+
+            if (ctx.declaring_members_for != type)
+            {
+                return ret;
+            }
         }
         ret += ctx.declare_if_necessary(ir::get_type(fn.return_value));
         fmap(fn.arguments, [&](auto && value) {
@@ -79,7 +84,10 @@ inline namespace _v1
 
         if (auto type = fn.parent_type.lock())
         {
-            header += ctx.declare_if_necessary(type);
+            if (type != ctx.declaring_members_for)
+            {
+                return {};
+            }
         }
         header += ctx.declare_if_necessary(ir::get_type(fn.return_value));
         fmap(fn.arguments, [&](auto && value) {

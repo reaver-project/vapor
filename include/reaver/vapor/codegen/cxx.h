@@ -40,6 +40,7 @@ inline namespace _v1
         virtual std::u32string generate_definition(const ir::variable &, codegen_context &) const override;
         virtual std::u32string generate_definition(const ir::function &, codegen_context &) const override;
         virtual std::u32string generate_definition(const std::shared_ptr<ir::variable_type> &, codegen_context &) const override;
+        virtual std::u32string generate_definition(const ir::member_variable &, codegen_context &) const override;
 
         virtual std::u32string generate(const ir::instruction &, codegen_context &) const override;
     };

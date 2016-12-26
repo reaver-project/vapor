@@ -31,7 +31,7 @@ inline namespace _v1
     class member_variable : public variable
     {
     public:
-        member_variable(variable * original) : _wrapped{ original }
+        member_variable(variable * original, std::u32string name) : _wrapped{ original }, _name{ std::move(name) }
         {
         }
 
@@ -45,23 +45,26 @@ inline namespace _v1
             return true;
         }
 
+        codegen::ir::member_variable member_codegen_ir(ir_generation_context & ctx) const;
+
     private:
         virtual std::unique_ptr<variable> _clone_with_replacement(replacements & repl) const override
         {
             assert(0);
         }
 
-        virtual variable_ir _codegen_ir(ir_generation_context &) const override
+        virtual variable_ir _codegen_ir(ir_generation_context & ctx) const override
         {
-            assert(0);
+            return _wrapped->codegen_ir(ctx);
         }
 
         variable * _wrapped = nullptr;
+        std::u32string _name;
     };
 
-    inline auto make_member_variable(variable * original)
+    inline auto make_member_variable(variable * original, std::u32string name)
     {
-        return std::make_unique<member_variable>(original);
+        return std::make_unique<member_variable>(original, std::move(name));
     }
 }
 }

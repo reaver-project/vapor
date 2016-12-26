@@ -50,6 +50,7 @@ inline namespace _v1
     public:
         variable_ref_expression(variable * var) : _referenced(var)
         {
+            assert(var);
         }
 
         virtual variable * get_variable() const final override

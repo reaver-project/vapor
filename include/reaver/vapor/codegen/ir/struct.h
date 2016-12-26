@@ -20,16 +20,29 @@
  *
  **/
 
-#include "vapor/analyzer/variables/member.h"
-#include "vapor/analyzer/symbol.h"
+#pragma once
 
-namespace reaver::vapor::analyzer
+#include <vector>
+
+namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    codegen::ir::member_variable member_variable::member_codegen_ir(ir_generation_context & ctx) const
+    namespace ir
     {
-        return codegen::ir::member_variable{ _name, _wrapped->get_type()->codegen_type(ctx), 0 };
+        struct value;
+
+        struct struct_value
+        {
+            std::vector<value> fields;
+        };
+
+        struct aggregate_init_instruction
+        {
+        };
+        struct member_access_instruction
+        {
+        };
     }
 }
 }

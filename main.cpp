@@ -67,11 +67,13 @@ std::u32string program = UR"program(module hello_world
 
     let entry = λ(arg : int) -> int
     {
+        let c = foo{ arg, arg };
+
         let a = foo{ 1, 1 };
         // let b = foo{ 2, .j = a.i + foo{ 0 }.j };
         let b = foo{ 2, a.i + a.j };
 
-        return b.i + b.j;
+        return b.i + b.j + c.i;
     };
 })program";
 

@@ -108,6 +108,11 @@ inline namespace _v1
             _is_local = true;
         }
 
+        virtual variable * get_member(const variable *) const
+        {
+            return nullptr;
+        }
+
     private:
         virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const = 0;
 

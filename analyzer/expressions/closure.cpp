@@ -47,10 +47,12 @@ inline namespace _v1
         auto in = std::string(indent, ' ');
         os << in << "closure at " << _parse.range << '\n';
         assert(!_parse.captures);
+        os << in << "{\n";
         fmap(_argument_list, [&, in = std::string(indent + 4, ' ')](auto && argument) {
             os << in << "argument `" << utf8(argument.name) << "` of type `" << argument.variable->get_type()->explain() << "`\n";
             return unit{};
         });
+        os << in << "}\n";
         os << in << "return type: " << _body->return_type()->explain() << '\n';
         os << in << "{\n";
         _body->print(os, indent + 4);

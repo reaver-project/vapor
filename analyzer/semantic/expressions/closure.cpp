@@ -70,7 +70,7 @@ inline namespace _v1
                     _body->return_type(),
                     std::move(arg_variables),
                     [this](ir_generation_context & ctx) {
-                        return codegen::ir::function{
+                        auto ret = codegen::ir::function{
                             U"operator()",
                             {},
                             fmap(_argument_list,
@@ -80,6 +80,8 @@ inline namespace _v1
                             _body->codegen_return(ctx),
                             _body->codegen_ir(ctx),
                         };
+                        ret.is_member = true;
+                        return ret;
                     },
                     _parse.range);
 

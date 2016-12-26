@@ -43,6 +43,8 @@ inline namespace _v1
             value return_value;
             std::vector<instruction> instructions;
             std::weak_ptr<variable_type> parent_type = {};
+
+            bool is_member = false; // this is a terrible name for this feature, but naming things is hard
         };
 
         std::ostream & operator<<(std::ostream & os, const function & fn);

@@ -40,12 +40,14 @@ inline namespace _v1
             nullptr,
             {},
             [=, name = _parse.name.string](ir_generation_context & ctx) {
-                return codegen::ir::function{ U"operator()",
+                auto ret = codegen::ir::function{ U"operator()",
                     {},
                     fmap(_argument_list,
                         [&](auto && arg) { return get<std::shared_ptr<codegen::ir::variable>>(get<codegen::ir::value>(arg.variable->codegen_ir(ctx))); }),
                     _body->codegen_return(ctx),
                     _body->codegen_ir(ctx) };
+                ret.is_member = true;
+                return ret;
             },
             _parse.range);
         _function->set_name(U"operator()");

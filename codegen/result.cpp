@@ -39,7 +39,7 @@ inline namespace _v1
         _generated_code = UR"code(#include <type_traits>
 #include <utility>
 #include <reaver/manual.h>
-    )code";
+)code";
 
         fmap(ir, [&](auto && module) {
             fmap(module.name, [&](auto && token) {

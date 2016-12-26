@@ -99,13 +99,22 @@ inline namespace _v1
             return base_expr_instructions;
         }
 
-        if (_modifier == lexer::token_type::dot)
-        {
-            assert(0);
-        }
-
         auto base_variable_value = get<codegen::ir::value>(_base_expr->get_variable()->codegen_ir(ctx));
         auto base_variable = get<std::shared_ptr<codegen::ir::variable>>(base_variable_value);
+
+        if (_modifier == lexer::token_type::dot)
+        {
+            auto access_instruction = codegen::ir::instruction{ none,
+                none,
+                { boost::typeindex::type_id<codegen::ir::member_access_instruction>() },
+                { base_variable, codegen::ir::label{ _accessed_member.get(), {} } },
+                { codegen::ir::make_variable(_referenced_variable.get()->get_type()->codegen_type(ctx)) } };
+
+            base_expr_instructions.push_back(std::move(access_instruction));
+
+            return base_expr_instructions;
+        }
+
         auto arguments_instructions = fmap(_arguments, [&](auto && arg) { return arg->codegen_ir(ctx); });
 
         auto base_expr_variable = base_expr_instructions.back().result;

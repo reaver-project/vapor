@@ -92,6 +92,7 @@ inline namespace _v1
             {
                 std::shared_ptr<variable_type> integer;
                 std::shared_ptr<variable_type> boolean;
+                std::shared_ptr<variable_type> type;
             };
 
             static auto types = [] {
@@ -100,6 +101,8 @@ inline namespace _v1
                 types.integer->name = U"int";
                 types.boolean = std::make_shared<variable_type>();
                 types.boolean->name = U"bool";
+                types.type = std::make_shared<variable_type>();
+                types.type->name = U"type";
                 return types;
             }();
 

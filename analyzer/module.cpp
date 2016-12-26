@@ -68,7 +68,8 @@ inline namespace _v1
         {
             simplification_context ctx{};
 
-            auto all = when_all(fmap(_statements, [&](auto && stmt) { return stmt->simplify(ctx); }));
+            auto all = when_all(
+                fmap(_statements, [&](auto && stmt) { return stmt->simplify(ctx).then([&](auto && simplified) { replace_uptr(stmt, simplified, ctx); }); }));
 
             while (!all.try_get())
             {

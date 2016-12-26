@@ -20,10 +20,10 @@
  *
  **/
 
+#include <boost/algorithm/string/join.hpp>
+
 #include "vapor/codegen/cxx.h"
-#include "vapor/codegen/cxx/names.h"
 #include "vapor/codegen/ir/instruction.h"
-#include "vapor/codegen/ir/type.h"
 
 namespace reaver::vapor::codegen
 {
@@ -32,30 +32,28 @@ inline namespace _v1
     namespace cxx
     {
         template<>
-        std::u32string generate<ir::function_call_instruction>(const ir::instruction & inst, codegen_context & ctx)
+        std::u32string generate<ir::aggregate_init_instruction>(const ir::instruction & inst, codegen_context & ctx)
         {
-            std::size_t actual_argument_offset = inst.operands.front().index() == 0 ? 2 : 1;
-
             std::u32string arguments;
-            std::for_each(inst.operands.begin() + actual_argument_offset, inst.operands.end(), [&](auto && operand) {
+            std::for_each(inst.operands.begin(), inst.operands.end(), [&](auto && operand) {
                 arguments += value_of(operand, ctx);
                 arguments += U", ";
             });
-            if (inst.operands.size() > actual_argument_offset)
+            if (inst.operands.size() > 0)
             {
                 arguments.pop_back();
                 arguments.pop_back();
             }
 
-            std::u32string base_variable;
-            if (actual_argument_offset == 2) // member call
-            {
-                auto is_type = get<0>(inst.operands.front())->type == ir::builtin_types().type;
-                base_variable = variable_of(inst.operands.front(), ctx) + (is_type ? U"::" : U".");
-            }
+            return variable_of(inst.result, ctx) + U".emplace(" + arguments + U");\n";
+        }
 
-            return variable_of(inst.result, ctx) + U".emplace(" + base_variable + get<codegen::ir::label>(inst.operands[actual_argument_offset - 1]).name + U"("
-                + arguments + U"));\n";
+        template<>
+        std::u32string generate<ir::member_access_instruction>(const ir::instruction & inst, codegen_context & ctx)
+        {
+            assert(inst.operands.size() == 2);
+            return variable_of(inst.result, ctx) + U".emplace(" + variable_of(inst.operands[0], ctx) + U".reference()." + get<ir::label>(inst.operands[1]).name
+                + U");\n";
         }
     }
 }

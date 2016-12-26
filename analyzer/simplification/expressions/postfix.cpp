@@ -25,6 +25,7 @@
 #include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/expressions/identifier.h"
 #include "vapor/analyzer/expressions/postfix.h"
+#include "vapor/analyzer/expressions/variable.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/parser.h"
@@ -69,7 +70,17 @@ inline namespace _v1
 
                 if (_accessed_member)
                 {
-                    return make_ready_future<expression *>(this);
+                    auto var = _base_expr->get_variable();
+                    if (!var->is_constant())
+                    {
+                        return make_ready_future<expression *>(this);
+                    }
+
+                    auto member = var->get_member(*_referenced_variable);
+                    assert(member && member->is_constant());
+
+                    auto repl = replacements{};
+                    return make_ready_future<expression *>(make_variable_expression(member->clone_with_replacement(repl)).release());
                 }
 
                 auto args = fmap(_arguments, [&](auto && expr) { return expr->get_variable(); });

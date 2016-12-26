@@ -42,7 +42,7 @@ inline namespace _v1
 
         const parser::struct_literal & _parse;
 
-        std::unique_ptr<struct_type> _type;
+        std::shared_ptr<struct_type> _type;
     };
 
     inline auto preanalyze_struct_literal(const parser::struct_literal & parse, scope * lex_scope)

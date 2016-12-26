@@ -24,6 +24,7 @@
 
 #include "../function.h"
 #include "../statements/statement.h"
+#include "../variables/member.h"
 #include "type.h"
 
 namespace reaver::vapor::parser
@@ -40,7 +41,7 @@ inline namespace _v1
 {
     class declaration;
 
-    class struct_type : public type
+    class struct_type : public type, public std::enable_shared_from_this<struct_type>
     {
     public:
         struct_type(const parser::struct_literal & parse, scope * lex_scope);
@@ -65,19 +66,28 @@ inline namespace _v1
         }
 
     private:
-        virtual void _codegen_type(ir_generation_context &) const override
-        {
-            assert(0);
-        }
+        virtual void _codegen_type(ir_generation_context &) const override;
 
         const parser::struct_literal & _parse;
 
         std::vector<std::unique_ptr<declaration>> _data_members_declarations;
-        std::vector<variable *> _data_members;
+        std::vector<member_variable *> _data_members;
 
         std::unique_ptr<function> _aggregate_ctor;
         mutable optional<future<function *>> _aggregate_ctor_future;
         optional<manual_promise<function *>> _aggregate_ctor_promise;
+
+        mutable optional<std::u32string> _codegen_type_name_value;
+
+        std::u32string _codegen_type_name(ir_generation_context & ctx) const
+        {
+            if (!_codegen_type_name_value)
+            {
+                _codegen_type_name_value = U"__struct_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.struct_index++));
+            }
+
+            return *_codegen_type_name_value;
+        }
     };
 
     inline auto make_struct_type(const parser::struct_literal & parse, scope * lex_scope)

@@ -32,25 +32,39 @@ inline namespace _v1
     class struct_variable : public variable
     {
     public:
-        struct_variable(struct_type * type, std::vector<std::unique_ptr<variable>> fields) : _type{ type }
+        struct_variable(std::shared_ptr<struct_type> type, std::vector<std::unique_ptr<variable>> fields) : _type{ type }
         {
             auto members = _type->get_data_members();
             assert(fields.size() == members.size());
 
+            _fields_in_order.reserve(fields.size());
+
             for (std::size_t i = 0; i < fields.size(); ++i)
             {
+                _fields_in_order.push_back(fields[i].get());
                 _fields[members[i]] = std::move(fields[i]);
             }
         }
 
         virtual type * get_type() const override
         {
-            return _type;
+            return _type.get();
         }
 
         virtual bool is_constant() const override
         {
             return true;
+        }
+
+        virtual variable * get_member(const variable * var) const override
+        {
+            auto it = _fields.find(var);
+            if (it != _fields.end())
+            {
+                return it->second.get();
+            }
+
+            return nullptr;
         }
 
     private:
@@ -59,16 +73,17 @@ inline namespace _v1
             assert(0);
         }
 
-        virtual variable_ir _codegen_ir(ir_generation_context &) const override
+        virtual variable_ir _codegen_ir(ir_generation_context & ctx) const override
         {
-            assert(0);
+            return codegen::ir::struct_value{ fmap(_fields_in_order, [&](auto && field) { return get<codegen::ir::value>(field->codegen_ir(ctx)); }) };
         }
 
-        struct_type * _type;
+        std::shared_ptr<struct_type> _type;
         std::unordered_map<const variable *, std::unique_ptr<variable>> _fields;
+        std::vector<variable *> _fields_in_order;
     };
 
-    inline auto make_struct_variable(struct_type * type, std::vector<std::unique_ptr<variable>> fields)
+    inline auto make_struct_variable(std::shared_ptr<struct_type> type, std::vector<std::unique_ptr<variable>> fields)
     {
         return std::make_unique<struct_variable>(type, std::move(fields));
     }

@@ -35,8 +35,18 @@ inline namespace _v1
     {
         std::u32string ret;
 
-        ret += ctx.declare_if_necessary(var.type);
-        ret += U"extern " + cxx::type_name(var.type, ctx) + U" " + cxx::declaration_variable_name(var, ctx) + U";\n";
+        if (var.type == ir::builtin_types().type)
+        {
+            assert(var.refers_to);
+            ctx.put_into_global_before += ctx.declare_if_necessary(var.refers_to);
+            ret += U"using " + cxx::declaration_variable_name(var, ctx) + U" = " + var.refers_to->name + U";\n";
+        }
+
+        else
+        {
+            ret += ctx.declare_if_necessary(var.type);
+            ret += U"extern " + cxx::type_name(var.type, ctx) + U" " + cxx::declaration_variable_name(var, ctx) + U";\n";
+        }
 
         var.declared = true;
 
@@ -47,8 +57,30 @@ inline namespace _v1
     {
         std::u32string ret;
 
-        ret += ctx.define_if_necessary(var.type);
+        if (var.type == ir::builtin_types().type)
+        {
+            assert(var.refers_to);
+            ctx.put_into_global_before += ctx.define_if_necessary(var.refers_to);
+            return U"";
+        }
+
+        ctx.put_into_global_before += ctx.define_if_necessary(var.type);
         ret += cxx::type_name(var.type, ctx) + U" " + cxx::variable_name(var, ctx) + U"{};\n";
+
+        return ret;
+    }
+
+    std::u32string cxx_generator::generate_definition(const ir::member_variable & member, codegen_context & ctx) const
+    {
+        std::u32string ret;
+
+        if (member.type == ir::builtin_types().type)
+        {
+            assert(0);
+        }
+
+        ctx.put_into_global_before += ctx.define_if_necessary(member.type);
+        ret += cxx::type_name(member.type, ctx) + U" " + member.name + U"{};\n";
 
         return ret;
     }

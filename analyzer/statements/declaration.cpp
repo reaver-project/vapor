@@ -73,6 +73,11 @@ inline namespace _v1
 
     statement_ir declaration::_codegen_ir(ir_generation_context & ctx) const
     {
+        if (_declared_symbol->get_variable()->get_type() == builtin_types().type.get())
+        {
+            return {};
+        }
+
         assert(_type == declaration_type::variable);
         auto ir = _init_expr.get()->codegen_ir(ctx);
 
