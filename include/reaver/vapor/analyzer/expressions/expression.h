@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016 Michał "Griwes" Dominiak
+ * Copyright © 2014-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -30,6 +30,7 @@
 #include "../helpers.h"
 #include "../statements/statement.h"
 #include "../variables/variable.h"
+#include "context.h"
 
 namespace reaver::vapor::parser
 {
@@ -56,7 +57,6 @@ inline namespace _v1
         {
         }
 
-        // do NOT abuse the fact this is virtual!
         virtual variable * get_variable() const
         {
             if (!_variable)
@@ -91,6 +91,16 @@ inline namespace _v1
             return ctx.get_future_or_init(this, [&]() { return make_ready_future().then([this, &ctx]() { return _simplify_expr(ctx); }); });
         }
 
+        void set_context(expression_context ctx)
+        {
+            _expr_ctx = std::move(ctx);
+        }
+
+        const expression_context & get_context() const
+        {
+            return _expr_ctx;
+        }
+
     protected:
         virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const override
         {
@@ -120,6 +130,8 @@ inline namespace _v1
 
     private:
         std::unique_ptr<variable> _variable;
+
+        expression_context _expr_ctx;
     };
 
     std::unique_ptr<expression> preanalyze_expression(const parser::expression & expr, scope * lex_scope);

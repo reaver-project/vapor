@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -28,6 +28,7 @@
 #include "vapor/analyzer/expressions/variable.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
+#include "vapor/analyzer/variables/member.h"
 #include "vapor/parser.h"
 
 namespace reaver::vapor::analyzer
@@ -36,6 +37,11 @@ inline namespace _v1
 {
     std::unique_ptr<expression> postfix_expression::_clone_expr_with_replacement(replacements & repl) const
     {
+        if (_call_expression)
+        {
+            return _call_expression->clone_expr_with_replacement(repl);
+        }
+
         auto ret = std::unique_ptr<postfix_expression>(new postfix_expression(*this));
 
         ret->_base_expr = _base_expr->clone_expr_with_replacement(repl);
@@ -76,22 +82,15 @@ inline namespace _v1
                         return make_ready_future<expression *>(this);
                     }
 
-                    auto member = var->get_member(*_referenced_variable);
+                    assert(_referenced_variable.get()->is_member());
+                    auto member = var->get_member(static_cast<member_variable *>(*_referenced_variable));
                     assert(member && member->is_constant());
 
                     auto repl = replacements{};
                     return make_ready_future<expression *>(make_variable_expression(member->clone_with_replacement(repl)).release());
                 }
 
-                auto args = fmap(_arguments, [&](auto && expr) { return expr->get_variable(); });
-                return _overload->simplify(ctx, std::move(args)).then([&](auto && simplified) -> expression * {
-                    if (simplified)
-                    {
-                        return simplified;
-                    }
-
-                    return this;
-                });
+                return _call_expression->simplify_expr(ctx);
             });
     }
 }

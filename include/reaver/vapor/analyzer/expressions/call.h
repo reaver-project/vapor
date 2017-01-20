@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,36 +22,34 @@
 
 #pragma once
 
-#include <memory>
-#include <numeric>
-
-#include "../function.h"
-#include "type.h"
+#include "expression.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class closure_type : public type
+    class call_expression : public expression
     {
     public:
-        closure_type(scope * lex_scope, expression * closure, std::unique_ptr<function> fn)
-            : type{ lex_scope }, _closure{ std::move(closure) }, _function{ std::move(fn) }
+        call_expression(function * fun, std::vector<expression *> args) : _function{ fun }, _args{ std::move(args) }
         {
         }
 
-        virtual std::string explain() const override
-        {
-            return "closure (TODO: location)";
-        }
-
-        virtual future<std::vector<function *>> get_candidates(lexer::token_type bracket) const override;
+        virtual void print(std::ostream &, std::size_t indent) const override;
 
     private:
-        virtual void _codegen_type(ir_generation_context &) const override;
+        virtual future<> _analyze(analysis_context &) override;
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
+        virtual future<expression *> _simplify_expr(simplification_context &) override;
+        virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-        expression * _closure;
-        std::unique_ptr<function> _function;
+        function * _function;
+        std::vector<expression *> _args;
     };
+
+    inline auto make_call_expression(function * fun, std::vector<expression *> args)
+    {
+        return std::make_unique<call_expression>(fun, args);
+    }
 }
 }

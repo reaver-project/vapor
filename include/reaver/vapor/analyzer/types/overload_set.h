@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -57,7 +57,7 @@ inline namespace _v1
             return "overload set (TODO: add location and member info)";
         }
 
-        virtual future<function *> get_overload(lexer::token_type bracket, const variable * base, std::vector<const variable *> args) const override;
+        virtual future<std::vector<function *>> get_candidates(lexer::token_type bracket) const override;
 
     private:
         virtual void _codegen_type(ir_generation_context &) const override;

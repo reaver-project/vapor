@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,29 +20,5 @@
  *
  **/
 
-#include <boost/type_index.hpp>
-
-#include "vapor/analyzer/expressions/binary.h"
-#include "vapor/analyzer/function.h"
-#include "vapor/analyzer/helpers.h"
+#include "vapor/analyzer/expressions/call.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/parser.h"
-
-namespace reaver::vapor::analyzer
-{
-inline namespace _v1
-{
-    future<> binary_expression::_analyze(analysis_context & ctx)
-    {
-        auto expr_ctx = get_context();
-        expr_ctx.push_back(this);
-
-        _lhs->set_context(expr_ctx);
-        _rhs->set_context(expr_ctx);
-
-        return when_all(_lhs->analyze(ctx), _rhs->analyze(ctx))
-            .then([&](auto) { return resolve_overload(_lhs.get(), _rhs.get(), _op.type, _scope); })
-            .then([&](auto && call_expr) { _call_expression = std::move(call_expr); });
-    }
-}
-}

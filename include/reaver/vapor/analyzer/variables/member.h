@@ -47,6 +47,11 @@ inline namespace _v1
 
         codegen::ir::member_variable member_codegen_ir(ir_generation_context & ctx) const;
 
+        const std::u32string & get_name() const
+        {
+            return _name;
+        }
+
     private:
         virtual std::unique_ptr<variable> _clone_with_replacement(replacements & repl) const override
         {

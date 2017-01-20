@@ -27,6 +27,7 @@
 #include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/expressions/import.h"
 #include "vapor/analyzer/expressions/integer.h"
+#include "vapor/analyzer/expressions/member.h"
 #include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/expressions/struct.h"
 #include "vapor/analyzer/expressions/unary.h"
@@ -79,6 +80,11 @@ inline namespace _v1
                 [&](const parser::struct_literal & struct_lit) -> std::unique_ptr<expression> {
                     auto struct_expr = preanalyze_struct_literal(struct_lit, lex_scope);
                     return struct_expr;
+                },
+
+                [&](const parser::member_expression & mexpr) -> std::unique_ptr<expression> {
+                    auto memexpr = preanalyze_member_expression(mexpr, lex_scope);
+                    return memexpr;
                 },
 
                 [](auto &&) -> std::unique_ptr<expression> { assert(0); })));

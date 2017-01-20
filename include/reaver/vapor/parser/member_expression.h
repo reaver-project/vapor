@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,36 +22,26 @@
 
 #pragma once
 
-#include <memory>
-#include <numeric>
+#include "helpers.h"
+#include "literal.h"
 
-#include "../function.h"
-#include "type.h"
-
-namespace reaver::vapor::analyzer
+namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
-    class closure_type : public type
+    struct member_expression
     {
-    public:
-        closure_type(scope * lex_scope, expression * closure, std::unique_ptr<function> fn)
-            : type{ lex_scope }, _closure{ std::move(closure) }, _function{ std::move(fn) }
-        {
-        }
-
-        virtual std::string explain() const override
-        {
-            return "closure (TODO: location)";
-        }
-
-        virtual future<std::vector<function *>> get_candidates(lexer::token_type bracket) const override;
-
-    private:
-        virtual void _codegen_type(ir_generation_context &) const override;
-
-        expression * _closure;
-        std::unique_ptr<function> _function;
+        range_type range;
+        identifier member_name;
     };
+
+    inline bool operator==(const member_expression & lhs, const member_expression & rhs)
+    {
+        return lhs.range == rhs.range && lhs.member_name == rhs.member_name;
+    }
+
+    member_expression parse_member_expression(context & ctx);
+
+    void print(const member_expression &, std::ostream &, std::size_t = 0);
 }
 }

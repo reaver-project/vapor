@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -47,9 +47,13 @@ inline namespace _v1
         virtual void print(std::ostream & os, std::size_t indent) const override;
         virtual variable * get_variable() const override;
 
+        future<variable *> get_base_variable(analysis_context & ctx) const
+        {
+            return _base_expr->analyze(ctx).then([&] { return _base_expr->get_variable(); });
+        }
+
     private:
-        postfix_expression(const postfix_expression & other)
-            : _parse{ other._parse }, _modifier{ other._modifier }, _overload{ other._overload }, _accessed_member{ other._accessed_member }
+        postfix_expression(const postfix_expression & other) : _parse{ other._parse }, _modifier{ other._modifier }, _accessed_member{ other._accessed_member }
         {
         }
 
@@ -63,7 +67,7 @@ inline namespace _v1
         std::unique_ptr<expression> _base_expr;
         optional<lexer::token_type> _modifier;
         std::vector<std::unique_ptr<expression>> _arguments;
-        function * _overload;
+        std::unique_ptr<expression> _call_expression;
 
         optional<std::u32string> _accessed_member;
         optional<variable *> _referenced_variable;

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -39,6 +39,7 @@ inline namespace _v1
 {
     class type;
     class expression;
+    class member_variable;
 
     using variable_ir = variant<none_t, codegen::ir::value, std::vector<codegen::ir::function>>;
 
@@ -98,6 +99,11 @@ inline namespace _v1
             return false;
         }
 
+        virtual bool is_member_assignment() const
+        {
+            return false;
+        }
+
         bool is_local() const
         {
             return _is_local;
@@ -108,10 +114,8 @@ inline namespace _v1
             _is_local = true;
         }
 
-        virtual variable * get_member(const variable *) const
-        {
-            return nullptr;
-        }
+        virtual variable * get_member(const member_variable *) const;
+        virtual variable * get_member(const std::u32string &) const;
 
         // used for function arguments
         void set_default_value(const expression * expr);

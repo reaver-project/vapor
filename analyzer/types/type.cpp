@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/types/type.h"
+#include "vapor/analyzer/expressions/call.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/variables/type.h"
@@ -34,34 +35,41 @@ inline namespace _v1
         assert(0);
     }
 
-    future<function *> resolve_overload(const variable * lhs, const variable * rhs, lexer::token_type op, scope * in_scope)
+    future<std::unique_ptr<expression>> resolve_overload(const expression * lhs, const expression * rhs, lexer::token_type op, scope * in_scope)
     {
-        return lhs->get_type()->get_overload(op, rhs).then([](auto && overload) {
-            assert(overload);
-            return overload;
+        return lhs->get_type()->get_candidates(op).then([lhs, rhs](auto && overloads) -> std::unique_ptr<expression> {
+            assert(0);
+            // assert(overload);
+            // return make_call_expression(overload, { lhs, rhs });
         });
     }
 
-    future<function *> resolve_overload(const variable * base_expr, lexer::token_type bracket_type, std::vector<const variable *> arguments, scope * in_scope)
+    future<std::unique_ptr<expression>> resolve_overload(const expression * base_expr,
+        lexer::token_type bracket_type,
+        std::vector<const expression *> arguments,
+        scope * in_scope)
     {
-        return base_expr->get_type()->get_overload(bracket_type, base_expr, std::move(arguments)).then([](auto && overload) {
-            assert(overload);
-            return overload;
+        return base_expr->get_type()->get_candidates(bracket_type).then([arguments](auto && overloads) -> std::unique_ptr<expression> {
+            assert(0);
+            // assert(overload);
+            // return make_call_expression(overload, std::move(arguments));
         });
     }
 
-    future<function *> type_type::get_overload(lexer::token_type token, const variable * base, std::vector<const variable *> args) const
+    future<std::vector<function *>> type_type::get_candidates(lexer::token_type token) const
     {
+        assert(0);
+
         if (token != lexer::token_type::curly_bracket_open)
         {
-            return make_ready_future<function *>(nullptr);
+            return make_ready_future(std::vector<function *>{});
         }
 
-        assert(base->is_constant());
+        /*assert(base->is_constant());
         assert(base->get_type() == builtin_types().type.get()); // this check is a little paranoid
 
         auto base_type = static_cast<const type_variable *>(base)->get_value();
-        return base_type->get_constructor(args);
+        return base_type->get_constructor(args);*/
     }
 }
 }

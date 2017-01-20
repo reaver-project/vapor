@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -76,7 +76,10 @@ inline namespace _v1
                 return;
             }
 
-            os << in << "selected overload: " << _overload->explain() << '\n';
+            os << in << "selected call expression: ";
+            os << in << "{\n";
+            _call_expression->print(os, indent + 4);
+            os << in << "}\n";
             os << in << "modifier type: " << lexer::token_types[+_modifier] << '\n';
 
             os << in << "arguments:\n";
@@ -115,15 +118,16 @@ inline namespace _v1
             return base_expr_instructions;
         }
 
-        auto arguments_instructions = fmap(_arguments, [&](auto && arg) { return arg->codegen_ir(ctx); });
+        return _call_expression->codegen_ir(ctx);
 
-        auto repl = replacements{};
+        /*auto arguments_instructions = fmap(_arguments, [&](auto && arg) { return arg->codegen_ir(ctx); });
+
         arguments_instructions.reserve(_overload->arguments().size());
         std::transform(
             _overload->arguments().begin() + _arguments.size(), _overload->arguments().end(), std::back_inserter(arguments_instructions), [&](auto && member) {
                 auto def = member->get_default_value();
                 assert(def);
-                return def->clone_expr_with_replacement(repl)->codegen_ir(ctx);
+                return def->codegen_ir(ctx);
             });
 
         auto base_expr_variable = base_expr_instructions.back().result;
@@ -149,7 +153,7 @@ inline namespace _v1
         });
         ret.push_back(std::move(postfix_expr_instruction));
 
-        return ret;
+        return ret;*/
     }
 
     variable * postfix_expression::get_variable() const
@@ -164,7 +168,7 @@ inline namespace _v1
             return *_referenced_variable;
         }
 
-        return expression::get_variable();
+        return _call_expression->get_variable();
     }
 }
 }

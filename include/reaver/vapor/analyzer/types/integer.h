@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -35,27 +35,29 @@ inline namespace _v1
     class integer_type : public type
     {
     public:
-        virtual future<function *> get_overload(lexer::token_type token, const variable * rhs) const override
+        virtual future<std::vector<function *>> get_candidates(lexer::token_type token) const override
         {
+            auto ret = [](auto && fn) { return make_ready_future(std::vector<function *>{ fn }); };
+
             switch (token)
             {
                 case lexer::token_type::plus:
-                    return make_ready_future(_addition());
+                    return ret(_addition());
 
                 case lexer::token_type::minus:
-                    return make_ready_future(_subtraction());
+                    return ret(_subtraction());
 
                 case lexer::token_type::star:
-                    return make_ready_future(_multiplication());
+                    return ret(_multiplication());
 
                 case lexer::token_type::equals:
-                    return make_ready_future(_equal_comparison());
+                    return ret(_equal_comparison());
 
                 case lexer::token_type::less:
-                    return make_ready_future(_less_comparison());
+                    return ret(_less_comparison());
 
                 case lexer::token_type::less_equal:
-                    return make_ready_future(_less_equal_comparison());
+                    return ret(_less_equal_comparison());
 
                 default:
                     assert(!"unimplemented int op");

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -65,25 +65,18 @@ inline namespace _v1
     future<function *> struct_type::get_constructor(std::vector<const variable *> args) const
     {
         return _aggregate_ctor_future->then([&, args = std::move(args)](auto ret) {
-            if (args.size() != _data_members.size())
+            if (std::any_of(args.begin(), args.end(), [](auto && arg) {
+                    assert(!arg->is_member_assignment());
+                    return arg->is_member_assignment();
+                }))
             {
-                if (args.size() > _data_members.size())
-                {
-                    ret = nullptr;
-                    return ret;
-                }
-
-                if (!std::all_of(_data_members.begin() + args.size(), _data_members.end(), [](auto && arg) { return arg->get_default_value() != nullptr; }))
-                {
-                    ret = nullptr;
-                    return ret;
-                }
             }
 
-            if (!std::equal(args.begin(), args.end(), _data_members.begin(), [](auto && arg, auto && member) { return arg->get_type() == member->get_type(); }))
+            else if (args.size() != _data_members.size() || !std::equal(args.begin(), args.end(), _data_members.begin(), [](auto && arg, auto && member) {
+                         return arg->get_type() == member->get_type();
+                     }))
             {
                 ret = nullptr;
-                return ret;
             }
 
             return ret;
@@ -95,23 +88,19 @@ inline namespace _v1
         _data_members =
             fmap(_data_members_declarations, [&](auto && member) { return static_cast<member_variable *>(member->declared_symbol()->get_variable()); });
 
-        _aggregate_ctor =
-            make_function("struct type constructor", this, fmap(_data_members, [](auto && member) -> variable * { return member; }), [&](auto && ctx) {
+        _aggregate_ctor = make_function("struct type constructor",
+            this,
+            fmap(_data_members, [](auto && member) -> variable * { return member; }),
+            [&](auto && ctx) -> codegen::ir::function {
                 auto ir_type = this->codegen_type(ctx);
                 auto args = fmap(_data_members, [&](auto && member) { return get<codegen::ir::value>(member->codegen_ir(ctx)); });
                 auto result = codegen::ir::make_variable(ir_type);
 
-                auto aggregate_ctor = codegen::ir::function{ U"constructor",
+                return { U"constructor",
                     get_scope()->codegen_ir(ctx),
                     fmap(args, [](auto && arg) { return get<std::shared_ptr<codegen::ir::variable>>(arg); }),
                     result,
-                    { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() }, args, result },
-                        codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
-                aggregate_ctor.scopes = get_scope()->codegen_ir(ctx);
-                aggregate_ctor.scopes.emplace_back(_codegen_type_name(ctx), codegen::ir::scope_type::type);
-                aggregate_ctor.parent_type = codegen_type(ctx);
-
-                return aggregate_ctor;
+                    { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() }, args, result } } };
             });
 
         _aggregate_ctor->set_eval([this](auto &&, const std::vector<variable *> & args) {
@@ -135,11 +124,10 @@ inline namespace _v1
         auto actual_type = *_codegen_t;
 
         // TODO: actual name tracking for this shit
-
-        auto members = fmap(_data_members, [&](auto && member) { return codegen::ir::member{ member->member_codegen_ir(ctx) }; });
-        auto type = codegen::ir::variable_type{ _codegen_type_name(ctx), get_scope()->codegen_ir(ctx), 0, members };
-        auto aggregate_ctor = _aggregate_ctor->codegen_ir(ctx);
-        type.members.push_back(std::move(aggregate_ctor));
+        auto type = codegen::ir::variable_type{ U"__struct_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.struct_index++)),
+            get_scope()->codegen_ir(ctx),
+            0,
+            fmap(_data_members, [&](auto && member) { return codegen::ir::member{ member->member_codegen_ir(ctx) }; }) };
 
         *actual_type = std::move(type);
     }

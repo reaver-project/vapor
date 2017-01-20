@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016 Michał "Griwes" Dominiak
+ * Copyright © 2014-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -30,7 +30,7 @@
 
 std::u32string program = UR"program(module hello_world
 {
-    /*let mn = struct
+    let mn = struct
     {
         let m : int;
         let n : int;
@@ -57,23 +57,6 @@ std::u32string program = UR"program(module hello_world
         let non_constant_foldable = ackermann(mn{ .m = arg, .n = arg + 1 });
 
         return constant_foldable - non_constant_foldable;
-    };*/
-
-    struct foo
-    {
-        let i : int;
-        let j = 1;
-    };
-
-    let entry = λ(arg : int) -> int
-    {
-        let c = foo{ arg };
-
-        let a = foo{ 1 };
-        // let b = foo{ 2, .j = a.i + foo{ 0 }.j };
-        let b = foo{ 2, a.i + a.j };
-
-        return b.i + b.j + c.i;
     };
 })program";
 

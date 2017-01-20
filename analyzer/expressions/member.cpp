@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,38 +20,35 @@
  *
  **/
 
-#pragma once
-
-#include <memory>
-#include <numeric>
-
-#include "../function.h"
-#include "type.h"
+#include "vapor/analyzer/expressions/member.h"
+#include "vapor/analyzer/symbol.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class closure_type : public type
+    member_expression::member_expression(const parser::member_expression & parse) : _parse{ parse }
     {
-    public:
-        closure_type(scope * lex_scope, expression * closure, std::unique_ptr<function> fn)
-            : type{ lex_scope }, _closure{ std::move(closure) }, _function{ std::move(fn) }
+    }
+
+    void member_expression::print(std::ostream & os, std::size_t indent) const
+    {
+        assert(0);
+    }
+
+    variable * member_expression::get_variable() const
+    {
+        if (!_referenced)
         {
+            return expression::get_variable();
         }
 
-        virtual std::string explain() const override
-        {
-            return "closure (TODO: location)";
-        }
+        return _referenced;
+    }
 
-        virtual future<std::vector<function *>> get_candidates(lexer::token_type bracket) const override;
-
-    private:
-        virtual void _codegen_type(ir_generation_context &) const override;
-
-        expression * _closure;
-        std::unique_ptr<function> _function;
-    };
+    statement_ir member_expression::_codegen_ir(ir_generation_context & ctx) const
+    {
+        assert(0);
+    }
 }
 }

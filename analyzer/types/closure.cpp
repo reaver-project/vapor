@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -30,16 +30,11 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    future<function *> closure_type::get_overload(lexer::token_type bracket, const variable *, std::vector<const variable *> args) const
+    future<std::vector<function *>> closure_type::get_candidates(lexer::token_type bracket) const
     {
-        if (args.size() == _function->arguments().size() && std::equal(args.begin(), args.end(), _function->arguments().begin(), [](auto && arg, auto && par) {
-                return arg->get_type() == par->get_type();
-            }))
-        {
-            return make_ready_future(_function.get());
-        }
+        assert(0);
 
-        return make_ready_future(static_cast<function *>(nullptr));
+        return make_ready_future(std::vector<function *>{});
     }
 
     void closure_type::_codegen_type(ir_generation_context & ctx) const

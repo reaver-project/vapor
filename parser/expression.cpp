@@ -68,6 +68,10 @@ inline namespace _v1
                 ret.expression_value = parse_struct_literal(ctx);
                 break;
 
+            case lexer::token_type::dot:
+                ret.expression_value = parse_member_expression(ctx);
+                break;
+
             default:
                 if (is_unary_operator(type))
                 {

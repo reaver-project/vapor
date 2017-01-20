@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -47,6 +47,7 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     class function;
+    class expression;
     class variable;
 
     class type
@@ -62,14 +63,9 @@ inline namespace _v1
 
         virtual ~type() = default;
 
-        virtual future<function *> get_overload(lexer::token_type, const variable *) const
+        virtual future<std::vector<function *>> get_candidates(lexer::token_type) const
         {
-            return make_ready_future(static_cast<function *>(nullptr));
-        }
-
-        virtual future<function *> get_overload(lexer::token_type, const variable *, std::vector<const variable *>) const
-        {
-            return make_ready_future(static_cast<function *>(nullptr));
+            return make_ready_future(std::vector<function *>{});
         }
 
         virtual future<function *> get_constructor(std::vector<const variable *>) const
@@ -112,7 +108,7 @@ inline namespace _v1
             return "type";
         }
 
-        virtual future<function *> get_overload(lexer::token_type token, const variable *, std::vector<const variable *>) const override;
+        virtual future<std::vector<function *>> get_candidates(lexer::token_type token) const override;
 
     private:
         virtual void _codegen_type(ir_generation_context &) const override;
@@ -121,8 +117,11 @@ inline namespace _v1
     // these here are currently kinda silly
     // will get less silly and properly separated once typeclasses are a thing
 
-    future<function *> resolve_overload(const variable * lhs, const variable * rhs, lexer::token_type op, scope * in_scope);
-    future<function *> resolve_overload(const variable * base_expr, lexer::token_type bracket_type, std::vector<const variable *> arguments, scope * in_scope);
+    future<std::unique_ptr<expression>> resolve_overload(const expression * lhs, const expression * rhs, lexer::token_type op, scope * in_scope);
+    future<std::unique_ptr<expression>> resolve_overload(const expression * base_expr,
+        lexer::token_type bracket_type,
+        std::vector<const expression *> arguments,
+        scope * in_scope);
 
     std::unique_ptr<type> make_integer_type();
     std::unique_ptr<type> make_boolean_type();

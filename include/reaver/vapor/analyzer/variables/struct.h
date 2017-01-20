@@ -65,7 +65,7 @@ inline namespace _v1
             return true;
         }
 
-        virtual variable * get_member(const variable * var) const override
+        virtual variable * get_member(const member_variable * var) const override
         {
             auto it = _fields.find(var);
             if (it != _fields.end())
@@ -74,6 +74,17 @@ inline namespace _v1
             }
 
             return nullptr;
+        }
+
+        virtual variable * get_member(const std::u32string & name) const override
+        {
+            auto it = std::find_if(_fields.begin(), _fields.end(), [&](auto && elem) { return elem.first->get_name() == name; });
+            if (it == _fields.end())
+            {
+                return nullptr;
+            }
+
+            return it->second.get();
         }
 
     private:
@@ -88,7 +99,7 @@ inline namespace _v1
         }
 
         std::shared_ptr<struct_type> _type;
-        std::unordered_map<const variable *, std::unique_ptr<variable>> _fields;
+        std::unordered_map<const member_variable *, std::unique_ptr<variable>> _fields;
         std::vector<variable *> _fields_in_order;
     };
 

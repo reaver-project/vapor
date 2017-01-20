@@ -22,12 +22,30 @@
 
 #include "vapor/analyzer/variables/variable.h"
 #include "vapor/analyzer/expressions/expression.h"
+#include "vapor/analyzer/scope.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/types/type.h"
+#include "vapor/analyzer/variables/member.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    variable * variable::get_member(const member_variable * member) const
+    {
+        return get_member(member->get_name());
+    }
+
+    variable * variable::get_member(const std::u32string & name) const
+    {
+        if (auto symbol = get_type()->get_scope()->try_get(name))
+        {
+            return symbol.get()->get_variable();
+        }
+
+        return nullptr;
+    }
+
     void variable::set_default_value(const expression * expr)
     {
         assert(!_default_value);

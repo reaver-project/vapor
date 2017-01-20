@@ -60,9 +60,9 @@ inline namespace _v1
             return fmap(_data_members_declarations, [](auto && ptr) { return ptr.get(); });
         }
 
-        std::vector<const variable *> get_data_members() const
+        const std::vector<member_variable *> & get_data_members() const
         {
-            return fmap(_data_members, [](auto && ptr) -> const variable * { return ptr; });
+            return _data_members;
         }
 
     private:

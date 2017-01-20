@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,38 +20,31 @@
  *
  **/
 
-#pragma once
+#include "vapor/parser/member_expression.h"
 
-#include <memory>
-#include <numeric>
-
-#include "../function.h"
-#include "type.h"
-
-namespace reaver::vapor::analyzer
+namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
-    class closure_type : public type
+    member_expression parse_member_expression(context & ctx)
     {
-    public:
-        closure_type(scope * lex_scope, expression * closure, std::unique_ptr<function> fn)
-            : type{ lex_scope }, _closure{ std::move(closure) }, _function{ std::move(fn) }
-        {
-        }
+        member_expression ret;
 
-        virtual std::string explain() const override
-        {
-            return "closure (TODO: location)";
-        }
+        auto start = expect(ctx, lexer::token_type::dot).range.start();
+        ret.member_name = parse_literal<lexer::token_type::identifier>(ctx);
+        ret.range = { start, ret.member_name.value.range.end() };
 
-        virtual future<std::vector<function *>> get_candidates(lexer::token_type bracket) const override;
+        return ret;
+    }
 
-    private:
-        virtual void _codegen_type(ir_generation_context &) const override;
+    void print(const member_expression & mexpr, std::ostream & os, std::size_t indent)
+    {
+        auto in = std::string(indent, ' ');
 
-        expression * _closure;
-        std::unique_ptr<function> _function;
-    };
+        os << in << "`member-expression` at " << mexpr.range << '\n';
+        os << in << "{\n";
+        print(mexpr.member_name, os, indent + 4);
+        os << in << "}\n";
+    }
 }
 }

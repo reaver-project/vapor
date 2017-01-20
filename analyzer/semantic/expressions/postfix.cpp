@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -35,29 +35,34 @@ inline namespace _v1
 {
     future<> postfix_expression::_analyze(analysis_context & ctx)
     {
-        return when_all(fmap(_arguments, [&](auto && expr) { return expr->analyze(ctx); })).then([&] { return _base_expr->analyze(ctx); }).then([&] {
-            if (!_modifier)
-            {
-                return make_ready_future();
-            }
+        return _base_expr->analyze(ctx)
+            .then([&] {
+                auto expr_ctx = get_context();
+                expr_ctx.push_back(this);
 
-            if (_modifier == lexer::token_type::dot)
-            {
-                return _base_expr->get_type()
-                    ->get_scope()
-                    ->get_future(*_accessed_member)
-                    .then([](auto && symb) { return symb->get_variable_future(); })
-                    .then([&](auto && var) { _referenced_variable = var; });
-            }
+                return when_all(fmap(_arguments, [&](auto && expr) {
+                    expr->set_context(expr_ctx);
+                    return expr->analyze(ctx);
+                }));
+            })
+            .then([&] {
+                if (!_modifier)
+                {
+                    return make_ready_future();
+                }
 
-            return resolve_overload(
-                _base_expr->get_variable(), *_modifier, fmap(_arguments, [](auto && arg) -> const variable * { return arg->get_variable(); }), _scope)
-                .then([&](auto && overload) {
-                    _overload = overload;
-                    return _overload->return_type(ctx);
-                })
-                .then([&](auto && ret_type) { this->_set_variable(make_expression_variable(this, ret_type)); });
-        });
+                if (_modifier == lexer::token_type::dot)
+                {
+                    return _base_expr->get_type()
+                        ->get_scope()
+                        ->get_future(*_accessed_member)
+                        .then([](auto && symb) { return symb->get_variable_future(); })
+                        .then([&](auto && var) { _referenced_variable = var; });
+                }
+
+                return resolve_overload(_base_expr.get(), *_modifier, fmap(_arguments, [](auto && arg) -> const expression * { return arg.get(); }), _scope)
+                    .then([&](auto && call_expr) { _call_expression = std::move(call_expr); });
+            });
     }
 }
 }
