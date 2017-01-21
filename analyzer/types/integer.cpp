@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -52,8 +52,10 @@ inline namespace _v1
         auto lhs_arg = lhs.get();
         auto rhs_arg = rhs.get();
 
-        auto fun = make_function(
-            desc, return_type, { lhs_arg, rhs_arg }, [name, return_type, lhs = std::move(lhs), rhs = std::move(rhs)](ir_generation_context & ctx) {
+        auto fun = make_function(desc,
+            return_type->get_expression(),
+            { lhs_arg, rhs_arg },
+            [name, return_type, lhs = std::move(lhs), rhs = std::move(rhs)](ir_generation_context & ctx) {
                 auto lhs_ir = get_ir_variable(lhs->codegen_ir(ctx));
                 auto rhs_ir = get_ir_variable(rhs->codegen_ir(ctx));
 

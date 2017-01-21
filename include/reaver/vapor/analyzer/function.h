@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -47,10 +47,10 @@ inline namespace _v1
     class function
     {
     public:
-        function(std::string explanation, type * ret, std::vector<variable *> args, function_codegen codegen, optional<range_type> range = none)
+        function(std::string explanation, expression * ret, std::vector<variable *> args, function_codegen codegen, optional<range_type> range = none)
             : _explanation{ std::move(explanation) },
               _range{ std::move(range) },
-              _return_type{ ret },
+              _return_type_expression{ ret },
               _arguments{ std::move(args) },
               _codegen{ std::move(codegen) }
         {
@@ -60,20 +60,20 @@ inline namespace _v1
                 return;
             }
 
-            auto pair = make_promise<type *>();
+            auto pair = make_promise<expression *>();
             _return_type_promise = std::move(pair.promise);
             _return_type_future = std::move(pair.future);
         }
 
-        future<type *> return_type(analysis_context &) const
+        future<expression *> return_type_expression(analysis_context &) const
         {
             return *_return_type_future;
         }
 
-        type * return_type() const
+        expression * return_type_expression() const
         {
-            assert(_return_type);
-            return _return_type;
+            assert(0);
+            return nullptr;
         }
 
         const std::vector<variable *> & arguments() const
@@ -125,13 +125,13 @@ inline namespace _v1
 
         void set_return_type(type * ret)
         {
-            std::unique_lock<std::mutex> lock{ _ret_lock };
+            /*std::unique_lock<std::mutex> lock{ _ret_lock };
             assert(!_return_type);
             _return_type = ret;
             fmap(_return_type_promise, [ret](auto && promise) {
                 promise.set(ret);
                 return unit{};
-            });
+            });*/
         }
 
         void set_name(std::u32string name)
@@ -164,10 +164,10 @@ inline namespace _v1
         optional<range_type> _range;
 
         block * _body = nullptr;
-        type * _return_type;
+        expression * _return_type_expression;
         mutable std::mutex _ret_lock;
-        optional<future<type *>> _return_type_future;
-        optional<manual_promise<type *>> _return_type_promise;
+        optional<future<expression *>> _return_type_future;
+        optional<manual_promise<expression *>> _return_type_promise;
 
         std::vector<variable *> _arguments;
         optional<std::u32string> _name;
@@ -178,7 +178,7 @@ inline namespace _v1
     };
 
     inline std::unique_ptr<function> make_function(std::string expl,
-        type * return_type,
+        expression * return_type,
         std::vector<variable *> arguments,
         function_codegen codegen,
         optional<range_type> range = none)

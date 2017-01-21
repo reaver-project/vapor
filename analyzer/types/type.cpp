@@ -22,6 +22,7 @@
 
 #include "vapor/analyzer/types/type.h"
 #include "vapor/analyzer/expressions/call.h"
+#include "vapor/analyzer/expressions/variable.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/variables/type.h"
@@ -30,6 +31,14 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    type::~type() = default;
+
+    expression * type::get_expression()
+    {
+        _self_expression = make_variable_expression(make_type_variable(this));
+        return _self_expression.get();
+    }
+
     void type_type::_codegen_type(ir_generation_context &) const
     {
         assert(0);

@@ -61,7 +61,7 @@ inline namespace _v1
         {
         }
 
-        virtual ~type() = default;
+        virtual ~type();
 
         virtual future<std::vector<function *>> get_candidates(lexer::token_type) const
         {
@@ -91,11 +91,16 @@ inline namespace _v1
             return *_codegen_t;
         }
 
+        expression * get_expression();
+
     private:
         virtual void _codegen_type(ir_generation_context &) const = 0;
 
     protected:
         std::unique_ptr<scope> _member_scope;
+        // only shared to not require a complete definition of expression to be visible
+        // (unique_ptr would require that unless I moved all ctors and dtors out of the header)
+        mutable std::shared_ptr<expression> _self_expression;
 
         mutable optional<std::shared_ptr<codegen::ir::variable_type>> _codegen_t;
     };

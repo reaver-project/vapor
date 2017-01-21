@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/expressions/closure.h"
+#include "vapor/analyzer/expressions/variable.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/closure.h"
@@ -66,8 +67,10 @@ inline namespace _v1
 
                 auto arg_variables = fmap(_argument_list, [&](auto && arg) -> variable * { return arg.variable.get(); });
 
+                auto ret_expr = _return_type ? _return_type->get() : _body->return_type()->get_expression();
+
                 auto function = make_function("closure",
-                    _body->return_type(),
+                    ret_expr,
                     std::move(arg_variables),
                     [this](ir_generation_context & ctx) {
                         auto ret = codegen::ir::function{

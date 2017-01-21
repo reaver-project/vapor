@@ -89,7 +89,7 @@ inline namespace _v1
             fmap(_data_members_declarations, [&](auto && member) { return static_cast<member_variable *>(member->declared_symbol()->get_variable()); });
 
         _aggregate_ctor = make_function("struct type constructor",
-            this,
+            get_expression(),
             fmap(_data_members, [](auto && member) -> variable * { return member; }),
             [&](auto && ctx) -> codegen::ir::function {
                 auto ir_type = this->codegen_type(ctx);

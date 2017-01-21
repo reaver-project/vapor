@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -63,7 +63,10 @@ inline namespace _v1
             return unit{};
         });
         os << in << "}\n";
-        os << in << "return type: " << _function->return_type()->explain() << '\n';
+        os << in << "return type expression:\n";
+        os << in << "{\n";
+        _function->return_type_expression()->print(os, indent + 4);
+        os << in << "}\n";
         os << in << "{\n";
         _body->print(os, indent + 4);
         os << in << "}\n";
