@@ -22,3 +22,19 @@
 
 #include "vapor/analyzer/expressions/call.h"
 #include "vapor/analyzer/symbol.h"
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    void call_expression::print(std::ostream &, std::size_t indent) const
+    {
+        assert(0);
+    }
+
+    statement_ir call_expression::_codegen_ir(ir_generation_context & ctx) const
+    {
+        assert(0);
+    }
+}
+}

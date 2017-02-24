@@ -20,13 +20,12 @@
  *
  **/
 
-#include <reaver/prelude/fold.h>
-
+#include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/expressions/identifier.h"
-#include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
+#include "vapor/analyzer/semantic/overloads.h"
 #include "vapor/parser.h"
 
 namespace reaver::vapor::analyzer
@@ -60,7 +59,7 @@ inline namespace _v1
                         .then([&](auto && var) { _referenced_variable = var; });
                 }
 
-                return resolve_overload(_base_expr.get(), *_modifier, fmap(_arguments, [](auto && arg) -> const expression * { return arg.get(); }), _scope)
+                return resolve_overload(ctx, _base_expr.get(), *_modifier, fmap(_arguments, [](auto && arg) { return arg.get(); }))
                     .then([&](auto && call_expr) { _call_expression = std::move(call_expr); });
             });
     }

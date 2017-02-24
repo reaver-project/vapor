@@ -117,16 +117,12 @@ inline namespace _v1
 
     private:
         virtual void _codegen_type(ir_generation_context &) const override;
+
+        mutable std::mutex _generic_ctor_lock;
+        mutable std::shared_ptr<function> _generic_ctor;
+        mutable std::shared_ptr<variable> _generic_ctor_first_arg;
+        mutable std::shared_ptr<variable> _generic_ctor_pack_arg;
     };
-
-    // these here are currently kinda silly
-    // will get less silly and properly separated once typeclasses are a thing
-
-    future<std::unique_ptr<expression>> resolve_overload(const expression * lhs, const expression * rhs, lexer::token_type op, scope * in_scope);
-    future<std::unique_ptr<expression>> resolve_overload(const expression * base_expr,
-        lexer::token_type bracket_type,
-        std::vector<const expression *> arguments,
-        scope * in_scope);
 
     std::unique_ptr<type> make_integer_type();
     std::unique_ptr<type> make_boolean_type();

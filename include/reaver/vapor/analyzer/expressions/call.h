@@ -22,7 +22,9 @@
 
 #pragma once
 
+#include "../function.h"
 #include "expression.h"
+#include "variable.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -45,11 +47,29 @@ inline namespace _v1
 
         function * _function;
         std::vector<expression *> _args;
+        std::unique_ptr<variable> _var;
+    };
+
+    class owning_call_expression : public call_expression
+    {
+    public:
+        owning_call_expression(function * fun, std::vector<std::unique_ptr<expression>> args)
+            : call_expression{ fun, fmap(args, [](auto && arg) { return arg.get(); }) }, _var_exprs{ std::move(args) }
+        {
+        }
+
+    private:
+        std::vector<std::unique_ptr<expression>> _var_exprs;
     };
 
     inline auto make_call_expression(function * fun, std::vector<expression *> args)
     {
         return std::make_unique<call_expression>(fun, args);
+    }
+
+    inline auto make_call_expression(function * fun, std::vector<variable *> args)
+    {
+        return std::make_unique<owning_call_expression>(fun, fmap(args, [](auto && arg) { return make_variable_ref_expression(arg); }));
     }
 }
 }

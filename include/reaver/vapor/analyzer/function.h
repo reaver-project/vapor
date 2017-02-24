@@ -123,15 +123,34 @@ inline namespace _v1
             return { codegen::ir::label{ *_name, {} } };
         }
 
-        void set_return_type(type * ret)
+        void set_return_type(std::shared_ptr<expression> ret)
         {
-            /*std::unique_lock<std::mutex> lock{ _ret_lock };
-            assert(!_return_type);
-            _return_type = ret;
+            _owned_expression = std::move(ret);
+            set_return_type(ret.get());
+        }
+
+        void set_return_type(expression * ret)
+        {
+            std::unique_lock<std::mutex> lock{ _ret_lock };
+            assert(!_return_type_expression);
+            _return_type_expression = ret;
             fmap(_return_type_promise, [ret](auto && promise) {
                 promise.set(ret);
                 return unit{};
-            });*/
+            });
+        }
+
+        future<expression *> get_return_type() const
+        {
+            std::unique_lock<std::mutex> lock{ _ret_lock };
+
+            if (_return_type_expression)
+            {
+                return make_ready_future(+_return_type_expression);
+            }
+
+            assert(_return_type_future);
+            return _return_type_future.get();
         }
 
         void set_name(std::u32string name)
@@ -159,15 +178,22 @@ inline namespace _v1
             _arguments = std::move(args);
         }
 
+        bool is_member() const
+        {
+            return false;
+        }
+
     private:
         std::string _explanation;
         optional<range_type> _range;
 
         block * _body = nullptr;
-        expression * _return_type_expression;
         mutable std::mutex _ret_lock;
+        expression * _return_type_expression;
         optional<future<expression *>> _return_type_future;
         optional<manual_promise<expression *>> _return_type_promise;
+        // this is shared ONLY because unique_ptr would require the definition of `expression`
+        std::shared_ptr<expression> _owned_expression;
 
         std::vector<variable *> _arguments;
         optional<std::u32string> _name;

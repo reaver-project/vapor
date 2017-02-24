@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,6 +22,7 @@
 
 #include <numeric>
 
+#include "vapor/analyzer/expressions/variable.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/statements/block.h"
@@ -62,7 +63,7 @@ inline namespace _v1
                     assert(var->get_type() == builtin_types().type.get());
                     assert(var->is_constant());
 
-                    _function->set_return_type(dynamic_cast<type_variable *>(var)->get_value());
+                    _function->set_return_type(_return_type->get());
                 });
             }
 
@@ -94,7 +95,7 @@ inline namespace _v1
 
                 if (!_return_type)
                 {
-                    _function->set_return_type(_body->return_type());
+                    _function->set_return_type(make_variable_expression(make_type_variable(_body->return_type())));
                 }
             });
     }

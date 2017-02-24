@@ -1,6 +1,7 @@
 CXX = c++
 LD = c++
-CXXFLAGS += -Os -Wall -std=c++1z -MP -MD -fPIC -Wno-unused-parameter -g -Wno-unused-private-field -Wnon-virtual-dtor
+CXXFLAGS += -O0 -Wall -std=c++1z -MP -MD -fPIC -Wno-unused-parameter -g -Wno-unused-private-field -Wnon-virtual-dtor -fno-omit-frame-pointer \
+	-Wno-error=unused-lambda-capture # clang 5.0 trunk is retarded
 SOFLAGS += -shared
 LDFLAGS +=
 LIBRARIES += -pthread -lboost_system -lboost_filesystem -ldl

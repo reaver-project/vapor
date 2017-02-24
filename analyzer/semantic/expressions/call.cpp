@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,30 +20,24 @@
  *
  **/
 
-#include <boost/type_index.hpp>
-
-#include "vapor/analyzer/expressions/binary.h"
-#include "vapor/analyzer/function.h"
-#include "vapor/analyzer/helpers.h"
-#include "vapor/analyzer/semantic/overloads.h"
+#include "vapor/analyzer/expressions/call.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/parser.h"
+#include "vapor/analyzer/variables/type.h"
+#include "vapor/analyzer/variables/variable.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    future<> binary_expression::_analyze(analysis_context & ctx)
+    future<> call_expression::_analyze(analysis_context &)
     {
-        auto expr_ctx = get_context();
-        expr_ctx.push_back(this);
+        return _function->get_return_type().then([&](auto && type_expr) {
+            auto var = type_expr->get_variable();
+            assert(var->get_type() == builtin_types().type.get());
+            auto type_var = static_cast<type_variable *>(var);
 
-        _lhs->set_context(expr_ctx);
-        _rhs->set_context(expr_ctx);
-
-        return when_all(_lhs->analyze(ctx), _rhs->analyze(ctx))
-            .then([&](auto) { return resolve_overload(ctx, _lhs.get(), _rhs.get(), _op.type); })
-            .then([&](auto && call_expr) { _call_expression = std::move(call_expr); });
+            _var = make_blank_variable(type_var->get_value());
+        });
     }
 }
 }

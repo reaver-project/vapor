@@ -50,7 +50,7 @@ inline namespace _v1
 
         if (bracket == lexer::token_type::round_bracket_open)
         {
-            assert(0);
+            return make_ready_future([&] { return _functions; }());
         }
 
         assert(0);

@@ -44,41 +44,45 @@ inline namespace _v1
         assert(0);
     }
 
-    future<std::unique_ptr<expression>> resolve_overload(const expression * lhs, const expression * rhs, lexer::token_type op, scope * in_scope)
-    {
-        return lhs->get_type()->get_candidates(op).then([lhs, rhs](auto && overloads) -> std::unique_ptr<expression> {
-            assert(0);
-            // assert(overload);
-            // return make_call_expression(overload, { lhs, rhs });
-        });
-    }
-
-    future<std::unique_ptr<expression>> resolve_overload(const expression * base_expr,
-        lexer::token_type bracket_type,
-        std::vector<const expression *> arguments,
-        scope * in_scope)
-    {
-        return base_expr->get_type()->get_candidates(bracket_type).then([arguments](auto && overloads) -> std::unique_ptr<expression> {
-            assert(0);
-            // assert(overload);
-            // return make_call_expression(overload, std::move(arguments));
-        });
-    }
-
     future<std::vector<function *>> type_type::get_candidates(lexer::token_type token) const
     {
-        assert(0);
-
         if (token != lexer::token_type::curly_bracket_open)
         {
             return make_ready_future(std::vector<function *>{});
         }
 
-        /*assert(base->is_constant());
-        assert(base->get_type() == builtin_types().type.get()); // this check is a little paranoid
+        [&] {
+            std::lock_guard<std::mutex> lock{ _generic_ctor_lock };
 
-        auto base_type = static_cast<const type_variable *>(base)->get_value();
-        return base_type->get_constructor(args);*/
+            if (_generic_ctor)
+            {
+                return;
+            }
+
+            _generic_ctor_first_arg = make_blank_variable(builtin_types().type.get());
+            // _generic_ctor_pack_arg = make_blank_pack_variable();
+
+            _generic_ctor = make_function("generic constructor",
+                builtin_types().type->get_expression(),
+                { _generic_ctor_first_arg.get(), _generic_ctor_pack_arg.get() },
+                [](auto &&) -> codegen::ir::function { assert(!"tried to codegen the generic constructor!"); });
+
+            // _generic_ctor->set_return_type_expression(_generic_ctor_first_arg.get());
+
+            _generic_ctor->set_eval([](auto && ctx, auto && args) -> future<expression *> {
+                assert(args.size() != 0);
+                assert(args.front()->get_type() == builtin_types().type.get());
+
+                auto type_var = static_cast<type_variable *>(args.front());
+                auto actual_type = type_var->get_value();
+                args.erase(args.begin());
+                auto actual_ctor = actual_type->get_constructor(fmap(args, [](auto && arg) -> const variable * { return arg; }));
+
+                return actual_ctor.then([args](auto && ctor) -> expression * { return make_call_expression(ctor, args).release(); });
+            });
+        }();
+
+        return make_ready_future(std::vector<function *>{ _generic_ctor.get() });
     }
 }
 }

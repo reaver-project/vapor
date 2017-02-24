@@ -97,7 +97,7 @@ inline namespace _v1
                 auto result = codegen::ir::make_variable(ir_type);
 
                 return { U"constructor",
-                    get_scope()->codegen_ir(ctx),
+                    this->get_scope()->codegen_ir(ctx),
                     fmap(args, [](auto && arg) { return get<std::shared_ptr<codegen::ir::variable>>(arg); }),
                     result,
                     { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() }, args, result } } };

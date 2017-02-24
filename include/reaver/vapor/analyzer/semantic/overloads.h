@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,30 +20,30 @@
  *
  **/
 
-#include <boost/type_index.hpp>
+#pragma once
 
-#include "vapor/analyzer/expressions/binary.h"
-#include "vapor/analyzer/function.h"
-#include "vapor/analyzer/helpers.h"
-#include "vapor/analyzer/semantic/overloads.h"
-#include "vapor/analyzer/symbol.h"
-#include "vapor/parser.h"
+#include <memory>
+#include <vector>
+
+#include <reaver/future.h>
+
+#include "../../lexer/token.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    future<> binary_expression::_analyze(analysis_context & ctx)
-    {
-        auto expr_ctx = get_context();
-        expr_ctx.push_back(this);
+    class expression;
+    class scope;
+    class analysis_context;
 
-        _lhs->set_context(expr_ctx);
-        _rhs->set_context(expr_ctx);
+    // these here are currently kinda silly
+    // will get less silly and properly separated once typeclasses are a thing
 
-        return when_all(_lhs->analyze(ctx), _rhs->analyze(ctx))
-            .then([&](auto) { return resolve_overload(ctx, _lhs.get(), _rhs.get(), _op.type); })
-            .then([&](auto && call_expr) { _call_expression = std::move(call_expr); });
-    }
+    future<std::unique_ptr<expression>> resolve_overload(analysis_context & ctx, expression * lhs, expression * rhs, lexer::token_type op);
+    future<std::unique_ptr<expression>> resolve_overload(analysis_context & ctx,
+        expression * base_expr,
+        lexer::token_type bracket_type,
+        std::vector<expression *> arguments);
 }
 }
