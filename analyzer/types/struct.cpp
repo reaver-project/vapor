@@ -62,27 +62,6 @@ inline namespace _v1
         _member_scope->close();
     }
 
-    future<function *> struct_type::get_constructor(std::vector<const variable *> args) const
-    {
-        return _aggregate_ctor_future->then([&, args = std::move(args)](auto ret) {
-            if (std::any_of(args.begin(), args.end(), [](auto && arg) {
-                    assert(!arg->is_member_assignment());
-                    return arg->is_member_assignment();
-                }))
-            {
-            }
-
-            else if (args.size() != _data_members.size() || !std::equal(args.begin(), args.end(), _data_members.begin(), [](auto && arg, auto && member) {
-                         return arg->get_type() == member->get_type();
-                     }))
-            {
-                ret = nullptr;
-            }
-
-            return ret;
-        });
-    }
-
     void struct_type::generate_constructor()
     {
         _data_members =

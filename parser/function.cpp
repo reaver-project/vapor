@@ -38,7 +38,7 @@ inline namespace _v1
         expect(ctx, lexer::token_type::round_bracket_open);
         if (peek(ctx) && peek(ctx)->type != lexer::token_type::round_bracket_close)
         {
-            ret.arguments = parse_argument_list(ctx);
+            ret.parameters = parse_parameter_list(ctx);
         }
         expect(ctx, lexer::token_type::round_bracket_close);
 
@@ -70,8 +70,8 @@ inline namespace _v1
         os << in << "`function` at " << f.range << '\n';
         os << in << "{\n";
         os << in4 << f.name << '\n';
-        fmap(f.arguments, [&](auto && arguments) {
-            print(arguments, os, indent + 4);
+        fmap(f.parameters, [&](auto && parameters) {
+            print(parameters, os, indent + 4);
             return unit{};
         });
         fmap(f.return_type, [&](auto && ret_type) {

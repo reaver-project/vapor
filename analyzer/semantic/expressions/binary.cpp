@@ -23,6 +23,7 @@
 #include <boost/type_index.hpp>
 
 #include "vapor/analyzer/expressions/binary.h"
+#include "vapor/analyzer/expressions/call.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/semantic/overloads.h"
@@ -43,7 +44,14 @@ inline namespace _v1
 
         return when_all(_lhs->analyze(ctx), _rhs->analyze(ctx))
             .then([&](auto) { return resolve_overload(ctx, _lhs.get(), _rhs.get(), _op.type); })
-            .then([&](auto && call_expr) { _call_expression = std::move(call_expr); });
+            .then([&](auto && call_expr) {
+                if (auto call_expr_downcasted = dynamic_cast<call_expression *>(call_expr.get()))
+                {
+                    call_expr_downcasted->set_parse_range(_parse.range);
+                }
+                _call_expression = std::move(call_expr);
+                return _call_expression->analyze(ctx);
+            });
     }
 }
 }

@@ -35,8 +35,8 @@ inline namespace _v1
 {
     function_declaration::function_declaration(const parser::function & parse, scope * parent_scope) : _parse{ parse }, _scope{ parent_scope->clone_local() }
     {
-        fmap(parse.arguments, [&](auto && arglist) {
-            _argument_list = preanalyze_argument_list(arglist, _scope.get());
+        fmap(parse.parameters, [&](auto && param_list) {
+            _parameter_list = preanalyze_parameter_list(param_list, _scope.get());
             return unit{};
         });
         _scope->close();
@@ -56,9 +56,9 @@ inline namespace _v1
     {
         auto in = std::string(indent, ' ');
         os << in << "function declaration of `" << utf8(_parse.name.string) << "` at " << _parse.range << '\n';
-        os << in << "arguments:\n";
+        os << in << "parameters:\n";
         os << in << "{\n";
-        fmap(_argument_list, [&, in = std::string(indent + 4, ' ')](auto && argument) {
+        fmap(_parameter_list, [&, in = std::string(indent + 4, ' ')](auto && argument) {
             os << in << "argument `" << utf8(argument.name) << "` of type `" << argument.variable->get_type()->explain() << "`\n";
             return unit{};
         });

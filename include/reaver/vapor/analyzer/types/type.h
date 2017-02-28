@@ -55,12 +55,34 @@ inline namespace _v1
     public:
         type() : _member_scope{ std::make_unique<scope>() }
         {
+            _init_expr();
+            _init_pack_type();
         }
 
         type(scope * outer_scope) : _member_scope{ outer_scope->clone_for_class() }
         {
+            _init_expr();
+            _init_pack_type();
         }
 
+    protected:
+        // this is virtually only for `pack_type`
+        // don't abuse, please
+        static constexpr struct dont_init_pack_t
+        {
+        } dont_init_pack{};
+
+        type(dont_init_pack_t) : _member_scope{ std::make_unique<scope>() }
+        {
+            _init_expr();
+        }
+
+        type(scope * outer_scope, dont_init_pack_t) : _member_scope{ outer_scope->clone_for_class() }
+        {
+            _init_expr();
+        }
+
+    public:
         virtual ~type();
 
         virtual future<std::vector<function *>> get_candidates(lexer::token_type) const
@@ -91,7 +113,26 @@ inline namespace _v1
             return *_codegen_t;
         }
 
-        expression * get_expression();
+        expression * get_expression() const
+        {
+            return _self_expression.get();
+        }
+
+        virtual type * get_pack_type() const
+        {
+            assert(_pack_type);
+            return _pack_type.get();
+        }
+
+        virtual bool matches(type * other) const
+        {
+            return this == other;
+        }
+
+        virtual bool matches(const std::vector<type *> & types) const
+        {
+            return false;
+        }
 
     private:
         virtual void _codegen_type(ir_generation_context &) const = 0;
@@ -100,7 +141,10 @@ inline namespace _v1
         std::unique_ptr<scope> _member_scope;
         // only shared to not require a complete definition of expression to be visible
         // (unique_ptr would require that unless I moved all ctors and dtors out of the header)
-        mutable std::shared_ptr<expression> _self_expression;
+        std::shared_ptr<expression> _self_expression;
+        void _init_expr();
+        std::unique_ptr<type> _pack_type;
+        void _init_pack_type();
 
         mutable optional<std::shared_ptr<codegen::ir::variable_type>> _codegen_t;
     };
@@ -126,6 +170,7 @@ inline namespace _v1
 
     std::unique_ptr<type> make_integer_type();
     std::unique_ptr<type> make_boolean_type();
+    std::unique_ptr<type> make_unconstrained_type();
 
     inline const auto & builtin_types()
     {
@@ -136,6 +181,7 @@ inline namespace _v1
             member_t type;
             member_t integer;
             member_t boolean;
+            member_t unconstrained;
         };
 
         static auto builtins = [] {
@@ -144,6 +190,7 @@ inline namespace _v1
             builtins.type = std::make_unique<type_type>();
             builtins.integer = make_integer_type();
             builtins.boolean = make_boolean_type();
+            builtins.unconstrained = make_unconstrained_type();
 
             return builtins;
         }();

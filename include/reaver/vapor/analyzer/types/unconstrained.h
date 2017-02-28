@@ -20,27 +20,39 @@
  *
  **/
 
-#include "vapor/analyzer/expressions/call.h"
-#include "vapor/analyzer/symbol.h"
+#pragma once
+
+#include "type.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void call_expression::print(std::ostream &, std::size_t indent) const
+    class unconstrained_type : public type
     {
-        assert(0);
-    }
+    public:
+        unconstrained_type() = default;
 
-    variable * call_expression::get_variable() const
-    {
-        assert(_var);
-        return _var.get();
-    }
+        virtual std::string explain() const override
+        {
+            return "unconstrained type pattern";
+        }
 
-    statement_ir call_expression::_codegen_ir(ir_generation_context & ctx) const
+        virtual bool matches(type * other) const override
+        {
+            return true;
+        }
+
+    private:
+        virtual void _codegen_type(ir_generation_context &) const override
+        {
+            assert(!"tried to codegen a type pattern!");
+        }
+    };
+
+    inline std::unique_ptr<type> make_unconstrained_type()
     {
-        assert(0);
+        return std::make_unique<unconstrained_type>();
     }
 }
 }

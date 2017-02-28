@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include "../../range.h"
 #include "../function.h"
 #include "expression.h"
 #include "variable.h"
@@ -37,7 +38,14 @@ inline namespace _v1
         {
         }
 
+        void set_parse_range(const range_type & range)
+        {
+            assert(!_range);
+            _range = range;
+        }
+
         virtual void print(std::ostream &, std::size_t indent) const override;
+        virtual variable * get_variable() const override;
 
     private:
         virtual future<> _analyze(analysis_context &) override;
@@ -48,6 +56,9 @@ inline namespace _v1
         function * _function;
         std::vector<expression *> _args;
         std::unique_ptr<variable> _var;
+        std::unique_ptr<expression> _cloned_type_expr;
+
+        optional<const range_type &> _range;
     };
 
     class owning_call_expression : public call_expression

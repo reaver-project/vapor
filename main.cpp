@@ -45,16 +45,16 @@ std::u32string program = UR"program(module hello_world
 
         if (args.n == 0)
         {
-            return ackermann(args{ .m = .m - 1, .n = 1 });
+            return 1;//ackermann(args{ .m = .m - 1, .n = 1 });
         }
 
-        return ackermann(args{ .m = .m - 1, .n = ackermann(args{ .n = .n - 1 }) });
+        return 1;//ackermann(args{ .m = .m - 1, .n = ackermann(args{ .n = .n - 1 }) });
     }
 
     let entry = λ(arg : int) -> int
     {
         let constant_foldable = ackermann(mn{ 3, 4 });
-        let non_constant_foldable = ackermann(mn{ .m = arg, .n = arg + 1 });
+        let non_constant_foldable = 1;//ackermann(mn{ .m = arg, .n = arg + 1 });
 
         return constant_foldable - non_constant_foldable;
     };

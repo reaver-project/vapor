@@ -43,7 +43,7 @@ inline namespace _v1
             [=, name = _parse.name.string](ir_generation_context & ctx) {
                 auto ret = codegen::ir::function{ U"operator()",
                     {},
-                    fmap(_argument_list,
+                    fmap(_parameter_list,
                         [&](auto && arg) { return get<std::shared_ptr<codegen::ir::variable>>(get<codegen::ir::value>(arg.variable->codegen_ir(ctx))); }),
                     _body->codegen_return(ctx),
                     _body->codegen_ir(ctx) };
@@ -70,14 +70,14 @@ inline namespace _v1
             return make_ready_future();
         }();
 
-        return initial_future.then([&] { return when_all(fmap(_argument_list, [&](auto && arg) { return arg.type_expression->analyze(ctx); })); })
+        return initial_future.then([&] { return when_all(fmap(_parameter_list, [&](auto && arg) { return arg.type_expression->analyze(ctx); })); })
             .then([&] {
-                auto arg_variables = fmap(_argument_list, [&](auto && arg) -> variable * {
+                auto param_variables = fmap(_parameter_list, [&](auto && arg) -> variable * {
                     arg.variable->set_type(arg.type_expression->get_variable());
                     return arg.variable.get();
                 });
 
-                _function->set_arguments(std::move(arg_variables));
+                _function->set_parameters(std::move(param_variables));
 
                 return _body->analyze(ctx);
             })

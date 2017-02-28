@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/expressions/postfix.h"
+#include "vapor/analyzer/expressions/call.h"
 #include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/expressions/identifier.h"
 #include "vapor/analyzer/function.h"
@@ -60,7 +61,14 @@ inline namespace _v1
                 }
 
                 return resolve_overload(ctx, _base_expr.get(), *_modifier, fmap(_arguments, [](auto && arg) { return arg.get(); }))
-                    .then([&](auto && call_expr) { _call_expression = std::move(call_expr); });
+                    .then([&](auto && call_expr) {
+                        if (auto call_expr_downcasted = dynamic_cast<call_expression *>(call_expr.get()))
+                        {
+                            call_expr_downcasted->set_parse_range(_parse.range);
+                        }
+                        _call_expression = std::move(call_expr);
+                        return _call_expression->analyze(ctx);
+                    });
             });
     }
 }

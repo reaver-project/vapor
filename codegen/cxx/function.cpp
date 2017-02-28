@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -43,7 +43,7 @@ inline namespace _v1
             }
         }
         ret += ctx.declare_if_necessary(ir::get_type(fn.return_value));
-        fmap(fn.arguments, [&](auto && value) {
+        fmap(fn.parameters, [&](auto && value) {
             ret += ctx.declare_if_necessary(ir::get_type(value));
             return unit{};
         });
@@ -52,7 +52,7 @@ inline namespace _v1
         ret += U" ";
         ret += cxx::declaration_function_name(fn, ctx);
         ret += U"(\n";
-        fmap(fn.arguments, [&](auto && var) {
+        fmap(fn.parameters, [&](auto && var) {
             ret += U"    " + cxx::type_name(ir::get_type(var), ctx);
             ret += U" ";
             var->declared = true;
@@ -61,7 +61,7 @@ inline namespace _v1
             ret += U",\n";
             return unit{};
         });
-        if (!fn.arguments.empty())
+        if (!fn.parameters.empty())
         {
             ret.pop_back();
             ret.pop_back();
@@ -90,7 +90,7 @@ inline namespace _v1
             }
         }
         header += ctx.declare_if_necessary(ir::get_type(fn.return_value));
-        fmap(fn.arguments, [&](auto && value) {
+        fmap(fn.parameters, [&](auto && value) {
             header += ctx.declare_if_necessary(ir::get_type(value));
             return unit{};
         });
@@ -99,7 +99,7 @@ inline namespace _v1
         header += U" ";
         header += cxx::function_name(fn, ctx);
         header += U"(\n";
-        fmap(fn.arguments, [&](auto && var) {
+        fmap(fn.parameters, [&](auto && var) {
             header += U"    " + cxx::type_name(ir::get_type(var), ctx);
             header += U" ";
             header += cxx::variable_name(*var, ctx);
@@ -108,7 +108,7 @@ inline namespace _v1
             var->argument = true;
             return unit{};
         });
-        if (!fn.arguments.empty())
+        if (!fn.parameters.empty())
         {
             header.pop_back();
             header.pop_back();

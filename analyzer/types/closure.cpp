@@ -32,9 +32,7 @@ inline namespace _v1
 {
     future<std::vector<function *>> closure_type::get_candidates(lexer::token_type bracket) const
     {
-        assert(0);
-
-        return make_ready_future(std::vector<function *>{});
+        return make_ready_future(std::vector<function *>{ _function.get() });
     }
 
     void closure_type::_codegen_type(ir_generation_context & ctx) const

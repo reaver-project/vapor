@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "../../parser/argument_list.h"
+#include "../../parser/parameter_list.h"
 #include "../expressions/expression.h"
 #include "../symbol.h"
 #include "../variables/unresolved.h"
@@ -31,18 +31,18 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    struct argument
+    struct parameter
     {
         std::u32string name;
         std::unique_ptr<expression> type_expression;
         std::unique_ptr<unresolved_variable> variable;
     };
 
-    using argument_list = std::vector<argument>;
+    using parameter_list = std::vector<parameter>;
 
-    inline argument_list preanalyze_argument_list(const parser::argument_list & arglist, scope * lex_scope)
+    inline parameter_list preanalyze_parameter_list(const parser::parameter_list & arglist, scope * lex_scope)
     {
-        return fmap(arglist.arguments, [&](auto && arg) {
+        return fmap(arglist.parameters, [&](auto && arg) {
             auto expr = preanalyze_expression(arg.type, lex_scope);
             auto var = make_unresolved_variable(arg.name.string);
             var->mark_local();
@@ -50,7 +50,7 @@ inline namespace _v1
             auto symb = make_symbol(arg.name.string, var.get());
             lex_scope->init(arg.name.string, std::move(symb));
 
-            return argument{ arg.name.string, std::move(expr), std::move(var) };
+            return parameter{ arg.name.string, std::move(expr), std::move(var) };
         });
     }
 }

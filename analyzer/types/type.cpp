@@ -25,6 +25,8 @@
 #include "vapor/analyzer/expressions/variable.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/types/pack.h"
+#include "vapor/analyzer/types/unconstrained.h"
 #include "vapor/analyzer/variables/type.h"
 
 namespace reaver::vapor::analyzer
@@ -33,10 +35,14 @@ inline namespace _v1
 {
     type::~type() = default;
 
-    expression * type::get_expression()
+    void type::_init_expr()
     {
         _self_expression = make_variable_expression(make_type_variable(this));
-        return _self_expression.get();
+    }
+
+    void type::_init_pack_type()
+    {
+        _pack_type = make_pack_type(this);
     }
 
     void type_type::_codegen_type(ir_generation_context &) const
@@ -48,6 +54,7 @@ inline namespace _v1
     {
         if (token != lexer::token_type::curly_bracket_open)
         {
+            assert(0);
             return make_ready_future(std::vector<function *>{});
         }
 
@@ -60,14 +67,16 @@ inline namespace _v1
             }
 
             _generic_ctor_first_arg = make_blank_variable(builtin_types().type.get());
-            // _generic_ctor_pack_arg = make_blank_pack_variable();
+            _generic_ctor_pack_arg = make_blank_variable(builtin_types().unconstrained->get_pack_type());
 
-            _generic_ctor = make_function("generic constructor",
-                builtin_types().type->get_expression(),
-                { _generic_ctor_first_arg.get(), _generic_ctor_pack_arg.get() },
-                [](auto &&) -> codegen::ir::function { assert(!"tried to codegen the generic constructor!"); });
+            _generic_ctor = make_function(
+                "generic constructor", nullptr, { _generic_ctor_first_arg.get(), _generic_ctor_pack_arg.get() }, [](auto &&) -> codegen::ir::function {
+                    assert(!"tried to codegen the generic constructor!");
+                });
 
-            // _generic_ctor->set_return_type_expression(_generic_ctor_first_arg.get());
+            _generic_ctor->set_return_type(make_variable_ref_expression(_generic_ctor_first_arg.get()));
+
+            _generic_ctor->make_member();
 
             _generic_ctor->set_eval([](auto && ctx, auto && args) -> future<expression *> {
                 assert(args.size() != 0);

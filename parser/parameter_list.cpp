@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2016 Michał "Griwes" Dominiak
+ * Copyright © 2015-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,16 +20,16 @@
  *
  **/
 
-#include "vapor/parser/argument_list.h"
+#include "vapor/parser/parameter_list.h"
 #include "vapor/parser/expr.h"
 
 namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
-    argument_list parse_argument_list(context & ctx)
+    parameter_list parse_parameter_list(context & ctx)
     {
-        argument_list ret;
+        parameter_list ret;
 
         while (!peek(ctx, lexer::token_type::round_bracket_close))
         {
@@ -38,7 +38,7 @@ inline namespace _v1
             auto type_expr = parse_expression(ctx);
 
             auto range = range_type{ name.range.start(), type_expr.range.end() };
-            ret.arguments.push_back(argument{ std::move(range), std::move(name), std::move(type_expr) });
+            ret.parameters.push_back(parameter{ std::move(range), std::move(name), std::move(type_expr) });
 
             if (peek(ctx, lexer::token_type::comma))
             {
@@ -46,22 +46,22 @@ inline namespace _v1
             }
         }
 
-        assert(!ret.arguments.empty());
-        ret.range = range_type{ ret.arguments.front().range.start(), ret.arguments.back().range.end() };
+        assert(!ret.parameters.empty());
+        ret.range = range_type{ ret.parameters.front().range.start(), ret.parameters.back().range.end() };
 
         return ret;
     }
 
-    void print(const argument_list & arglist, std::ostream & os, std::size_t indent)
+    void print(const parameter_list & arglist, std::ostream & os, std::size_t indent)
     {
         auto in = std::string(indent, ' ');
 
-        os << in << "`argument-list` at " << arglist.range << '\n';
+        os << in << "`parameter-list` at " << arglist.range << '\n';
         os << in << "{\n";
-        fmap(arglist.arguments, [&, in = std::string(indent + 4, ' ')](auto && argument) {
+        fmap(arglist.parameters, [&, in = std::string(indent + 4, ' ')](auto && parameter) {
             os << in << "{\n";
-            print(argument.name, os, indent + 8);
-            print(argument.type, os, indent + 8);
+            print(parameter.name, os, indent + 8);
+            print(parameter.type, os, indent + 8);
             os << in << "}\n";
             return unit{};
         });

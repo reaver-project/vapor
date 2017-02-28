@@ -47,7 +47,6 @@ inline namespace _v1
         struct_type(const parser::struct_literal & parse, scope * lex_scope);
         ~struct_type();
 
-        virtual future<function *> get_constructor(std::vector<const variable *> args) const override;
         void generate_constructor();
 
         virtual std::string explain() const override
@@ -63,6 +62,16 @@ inline namespace _v1
         const std::vector<member_variable *> & get_data_members() const
         {
             return _data_members;
+        }
+
+        virtual future<std::vector<function *>> get_candidates(lexer::token_type op) const override
+        {
+            if (op != lexer::token_type::curly_bracket_open)
+            {
+                return make_ready_future(std::vector<function *>{});
+            }
+
+            return make_ready_future(std::vector<function *>{ _aggregate_ctor.get() });
         }
 
     private:

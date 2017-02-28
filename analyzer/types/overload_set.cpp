@@ -36,7 +36,7 @@ inline namespace _v1
     {
         std::unique_lock<std::mutex> lock{ _functions_lock };
 
-        if (std::find_if(_functions.begin(), _functions.end(), [&](auto && f) { return f->arguments() == fn->arguments(); }) != _functions.end())
+        if (std::find_if(_functions.begin(), _functions.end(), [&](auto && f) { return f->parameters() == fn->parameters(); }) != _functions.end())
         {
             assert(0);
         }
@@ -50,6 +50,7 @@ inline namespace _v1
 
         if (bracket == lexer::token_type::round_bracket_open)
         {
+            assert(_functions.size());
             return make_ready_future([&] { return _functions; }());
         }
 

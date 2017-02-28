@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2016 Michał "Griwes" Dominiak
+ * Copyright © 2015-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -25,9 +25,9 @@
 #include <reaver/optional.h>
 
 #include "../range.h"
-#include "argument_list.h"
 #include "expression.h"
 #include "helpers.h"
+#include "parameter_list.h"
 
 namespace reaver::vapor::parser
 {
@@ -39,14 +39,15 @@ inline namespace _v1
     {
         range_type range;
         lexer::token name;
-        optional<argument_list> arguments;
+        optional<parameter_list> parameters;
         optional<expression> return_type;
         recursive_wrapper<block> body;
     };
 
     inline bool operator==(const function & lhs, const function & rhs)
     {
-        return lhs.range == rhs.range && lhs.name == rhs.name && lhs.arguments == rhs.arguments && lhs.return_type == rhs.return_type && *lhs.body == rhs.body;
+        return lhs.range == rhs.range && lhs.name == rhs.name && lhs.parameters == rhs.parameters && lhs.return_type == rhs.return_type
+            && *lhs.body == rhs.body;
     }
 
     function parse_function(context & ctx);

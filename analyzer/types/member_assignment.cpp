@@ -23,7 +23,9 @@
 #include "vapor/analyzer/types/member_assignment.h"
 #include "vapor/analyzer/expressions/variable.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/types/unconstrained.h"
 #include "vapor/analyzer/variables/member_assignment.h"
+#include "vapor/analyzer/variables/type.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -33,20 +35,20 @@ inline namespace _v1
 
     future<std::vector<function *>> member_assignment_type::get_candidates(lexer::token_type tt) const
     {
-        assert(0);
-
         if (tt != lexer::token_type::assign)
         {
+            assert(0);
             return make_ready_future(std::vector<function *>{});
         }
 
-        /*auto var = make_blank_variable(rhs->get_type());
+        auto var = make_blank_variable(builtin_types().unconstrained.get());
 
-        auto overload = make_function("member assignment", _var->get_type(), { var.get() }, [](auto &&) -> codegen::ir::function {
-            assert(!"trying to codegen a member-assignment expression");
-        });
-        overload->set_eval([this](auto &&... args) {
-            swallow{ args... };
+        auto overload = make_function(
+            "member assignment", nullptr, { var.get() }, [](auto &&) -> codegen::ir::function { assert(!"trying to codegen a member-assignment expression"); });
+        overload->set_return_type(make_variable_expression(make_type_variable(builtin_types().unconstrained.get())));
+        overload->set_eval([this](simplification_context &, std::vector<variable *> args) {
+            assert(args.size() == 1);
+            _var->set_rhs(args.front());
             return make_ready_future(make_variable_ref_expression(_var).release());
         });
 
@@ -58,9 +60,7 @@ inline namespace _v1
             _var_storage.push_back(std::move(var));
         }
 
-        _var->set_rhs(rhs);
-
-        return make_ready_future(ret);*/
+        return make_ready_future(std::vector<function *>{ ret });
     }
 }
 }

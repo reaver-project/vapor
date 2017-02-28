@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016 Michał "Griwes" Dominiak
+ * Copyright © 2014-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -30,31 +30,31 @@ namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
-    struct argument
+    struct parameter
     {
         range_type range;
         lexer::token name;
         expression type;
     };
 
-    struct argument_list
+    struct parameter_list
     {
         range_type range;
-        std::vector<argument> arguments;
+        std::vector<parameter> parameters;
     };
 
-    inline bool operator==(const argument & lhs, const argument & rhs)
+    inline bool operator==(const parameter & lhs, const parameter & rhs)
     {
         return lhs.range == rhs.range && lhs.name == rhs.name && lhs.type == rhs.type;
     }
 
-    inline bool operator==(const argument_list & lhs, const argument_list & rhs)
+    inline bool operator==(const parameter_list & lhs, const parameter_list & rhs)
     {
-        return lhs.range == rhs.range && lhs.arguments == rhs.arguments;
+        return lhs.range == rhs.range && lhs.parameters == rhs.parameters;
     }
 
-    argument_list parse_argument_list(context & ctx);
+    parameter_list parse_parameter_list(context & ctx);
 
-    void print(const argument_list &, std::ostream &, std::size_t indent);
+    void print(const parameter_list &, std::ostream &, std::size_t indent);
 }
 }

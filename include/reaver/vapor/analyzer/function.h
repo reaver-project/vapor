@@ -47,11 +47,11 @@ inline namespace _v1
     class function
     {
     public:
-        function(std::string explanation, expression * ret, std::vector<variable *> args, function_codegen codegen, optional<range_type> range = none)
+        function(std::string explanation, expression * ret, std::vector<variable *> params, function_codegen codegen, optional<range_type> range = none)
             : _explanation{ std::move(explanation) },
               _range{ std::move(range) },
               _return_type_expression{ ret },
-              _arguments{ std::move(args) },
+              _parameters{ std::move(params) },
               _codegen{ std::move(codegen) }
         {
             if (ret)
@@ -76,9 +76,9 @@ inline namespace _v1
             return nullptr;
         }
 
-        const std::vector<variable *> & arguments() const
+        const std::vector<variable *> & parameters() const
         {
-            return _arguments;
+            return _parameters;
         }
 
         std::string explain() const
@@ -125,14 +125,15 @@ inline namespace _v1
 
         void set_return_type(std::shared_ptr<expression> ret)
         {
-            _owned_expression = std::move(ret);
-            set_return_type(ret.get());
+            _owned_expression = ret;
+            set_return_type(_owned_expression.get());
         }
 
         void set_return_type(expression * ret)
         {
             std::unique_lock<std::mutex> lock{ _ret_lock };
             assert(!_return_type_expression);
+            assert(ret);
             _return_type_expression = ret;
             fmap(_return_type_promise, [ret](auto && promise) {
                 promise.set(ret);
@@ -173,14 +174,19 @@ inline namespace _v1
             _compile_time_eval = std::move(eval);
         }
 
-        void set_arguments(std::vector<variable *> args)
+        void set_parameters(std::vector<variable *> params)
         {
-            _arguments = std::move(args);
+            _parameters = std::move(params);
         }
 
         bool is_member() const
         {
-            return false;
+            return _is_member;
+        }
+
+        void make_member()
+        {
+            _is_member = true;
         }
 
     private:
@@ -195,7 +201,8 @@ inline namespace _v1
         // this is shared ONLY because unique_ptr would require the definition of `expression`
         std::shared_ptr<expression> _owned_expression;
 
-        std::vector<variable *> _arguments;
+        bool _is_member = false;
+        std::vector<variable *> _parameters;
         optional<std::u32string> _name;
         function_codegen _codegen;
         mutable optional<codegen::ir::function> _ir;
@@ -205,11 +212,11 @@ inline namespace _v1
 
     inline std::unique_ptr<function> make_function(std::string expl,
         expression * return_type,
-        std::vector<variable *> arguments,
+        std::vector<variable *> parameters,
         function_codegen codegen,
         optional<range_type> range = none)
     {
-        return std::make_unique<function>(std::move(expl), std::move(return_type), std::move(arguments), std::move(codegen), std::move(range));
+        return std::make_unique<function>(std::move(expl), std::move(return_type), std::move(parameters), std::move(codegen), std::move(range));
     }
 }
 }

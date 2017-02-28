@@ -46,10 +46,10 @@ inline namespace _v1
             return make_ready_future();
         }();
 
-        return initial_future.then([&] { return when_all(fmap(_argument_list, [&](auto && arg) { return arg.type_expression->analyze(ctx); })); })
+        return initial_future.then([&] { return when_all(fmap(_parameter_list, [&](auto && param) { return param.type_expression->analyze(ctx); })); })
             .then([&] {
-                fmap(_argument_list, [&](auto && arg) {
-                    arg.variable->set_type(arg.type_expression->get_variable());
+                fmap(_parameter_list, [&](auto && param) {
+                    param.variable->set_type(param.type_expression->get_variable());
                     return unit{};
                 });
 
@@ -65,20 +65,20 @@ inline namespace _v1
                     return unit{};
                 });
 
-                auto arg_variables = fmap(_argument_list, [&](auto && arg) -> variable * { return arg.variable.get(); });
+                auto param_variables = fmap(_parameter_list, [&](auto && param) -> variable * { return param.variable.get(); });
 
                 auto ret_expr = _return_type ? _return_type->get() : _body->return_type()->get_expression();
 
                 auto function = make_function("closure",
                     ret_expr,
-                    std::move(arg_variables),
+                    std::move(param_variables),
                     [this](ir_generation_context & ctx) {
                         auto ret = codegen::ir::function{
                             U"operator()",
                             {},
-                            fmap(_argument_list,
-                                [&](auto && arg) {
-                                    return get<std::shared_ptr<codegen::ir::variable>>(get<codegen::ir::value>(arg.variable->codegen_ir(ctx)));
+                            fmap(_parameter_list,
+                                [&](auto && param) {
+                                    return get<std::shared_ptr<codegen::ir::variable>>(get<codegen::ir::value>(param.variable->codegen_ir(ctx)));
                                 }),
                             _body->codegen_return(ctx),
                             _body->codegen_ir(ctx),

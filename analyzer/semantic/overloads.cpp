@@ -45,9 +45,90 @@ inline namespace _v1
         return overload_match::equal;
     }
 
+    bool is_valid(function * overload, const std::vector<expression *> & arguments, expression * base = nullptr)
+    {
+        auto param_begin = overload->parameters().begin();
+        auto param_end = overload->parameters().end();
+        auto arg_begin = arguments.begin();
+        auto arg_end = arguments.end();
+
+        if (overload->is_member())
+        {
+            if (!base)
+            {
+                return false;
+            }
+
+            // TODO: conversions? possibly "interface inheritance" that operator. by Bjarne attempts (badly)?
+            if ((*param_begin)->get_type() != base->get_type())
+            {
+                return false;
+            }
+
+            assert(param_begin != param_end);
+            ++param_begin;
+        }
+
+        if (std::find_if(arg_begin, arg_end, [](auto && arg) { return arg->get_variable()->is_member_assignment(); }) != arg_end)
+        {
+            assert(0);
+        }
+
+        std::vector<type *> matching_space;
+        matching_space.reserve(arg_end - arg_begin);
+
+        // TODO: this will need some help in the future
+        // in particular to be able to handle cases like
+        // with (Ts... : type)
+        // function foo(ts : Ts.uref..., last : int);
+        // I know this can be done, but is more complex and we don't need it right now
+        // and we can probably live with it not working until there's actually syntax for the above in the language
+        // (i.e. when I'll be adding packs to the language for more than just the generic ctor)
+        while (arg_begin != arg_end && param_begin != param_end)
+        {
+            matching_space.clear();
+
+            auto && param_type = (*param_begin)->get_type();
+
+            if (!param_type->matches((*arg_begin)->get_type()))
+            {
+                if (!param_type->matches(matching_space))
+                {
+                    assert(0);
+                    return false;
+                }
+
+                ++param_begin;
+                continue;
+            }
+
+            bool last_matched;
+
+            do
+            {
+                matching_space.push_back((*arg_begin)->get_type());
+            } while ((last_matched = param_type->matches(matching_space)) && ++arg_begin != arg_end);
+
+            if (matching_space.size() == 1 && !last_matched)
+            {
+                ++arg_begin;
+            }
+
+            ++param_begin;
+        }
+
+        assert(arg_begin == arg_end);
+
+        return std::all_of(param_begin, param_end, [](auto && param) { return param->get_default_value(); });
+    }
+
     auto select_overload(analysis_context & ctx, std::vector<expression *> arguments, std::vector<function *> possible_overloads, expression * base = nullptr)
     {
         assert(!possible_overloads.empty());
+
+        possible_overloads.erase(
+            std::remove_if(possible_overloads.begin(), possible_overloads.end(), [&](auto && overload) { return !is_valid(overload, arguments, base); }),
+            possible_overloads.end());
 
         std::sort(possible_overloads.begin(), possible_overloads.end(), [](auto && lhs, auto && rhs) {
             return compare_overloads(lhs, rhs) == overload_match::first_better;
@@ -66,7 +147,8 @@ inline namespace _v1
             best_matches.push_back(overload);
         }
 
-        assert(best_matches.size() == 1);
+        assert(best_matches.size() > 0);
+        assert(best_matches.size() < 2);
         auto overload = best_matches.front();
 
         if (overload->is_member())
@@ -76,7 +158,7 @@ inline namespace _v1
         }
 
         auto ret = make_call_expression(overload, std::move(arguments));
-        return ret->analyze(ctx).then([ret = std::move(ret)]() mutable->std::unique_ptr<expression> { return std::move(ret); });
+        return make_ready_future<std::unique_ptr<expression>>(std::move(ret));
     }
 
     future<std::unique_ptr<expression>> resolve_overload(analysis_context & ctx, expression * lhs, expression * rhs, lexer::token_type op)
