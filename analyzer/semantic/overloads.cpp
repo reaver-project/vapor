@@ -69,8 +69,14 @@ inline namespace _v1
             ++param_begin;
         }
 
-        if (std::find_if(arg_begin, arg_end, [](auto && arg) { return arg->get_variable()->is_member_assignment(); }) != arg_end)
+        auto it = arg_begin;
+        if ((it = std::find_if(it, arg_end, [](auto && arg) { return arg->get_variable()->is_member_assignment(); })) != arg_end)
         {
+            if ((it = std::find_if(it, arg_end, [](auto && arg) { return !arg->get_variable()->is_member_assignment(); })) != arg_end)
+            {
+                assert(!"a non-mem-assignment argument after a mem-assignment argument");
+            }
+
             assert(0);
         }
 

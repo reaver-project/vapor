@@ -133,14 +133,14 @@ inline namespace _v1
                     assert(type_var);
                     assert(type_var->get_value() != builtin_types().type.get());
 
-                    _var = make_blank_variable(type_var->get_value());
+                    _var = make_expression_variable(this, type_var->get_value());
                 });
             }
 
             auto type_var = dynamic_cast<type_variable *>(var);
             assert(type_var->get_value() != builtin_types().type.get());
 
-            _var = make_blank_variable(type_var->get_value());
+            _var = make_expression_variable(this, type_var->get_value());
 
             return make_ready_future();
         });

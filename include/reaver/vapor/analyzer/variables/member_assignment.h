@@ -38,18 +38,18 @@ inline namespace _v1
 
         virtual type * get_type() const override
         {
-            return _type.get();
+            if (!_rhs)
+            {
+                return _type.get();
+            }
+
+            return _type->assigned_type();
         }
 
         type * get_member_type() const
         {
             assert(_rhs);
             return _rhs->get_type();
-        }
-
-        virtual bool is_member_assignment() const override
-        {
-            return true;
         }
 
         void set_rhs(const variable * rhs)

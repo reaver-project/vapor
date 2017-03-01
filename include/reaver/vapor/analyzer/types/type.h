@@ -134,6 +134,11 @@ inline namespace _v1
             return false;
         }
 
+        virtual bool is_member_assignment() const
+        {
+            return false;
+        }
+
     private:
         virtual void _codegen_type(ir_generation_context &) const = 0;
 

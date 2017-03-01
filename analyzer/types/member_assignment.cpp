@@ -35,6 +35,8 @@ inline namespace _v1
 
     future<std::vector<function *>> member_assignment_type::get_candidates(lexer::token_type tt) const
     {
+        assert(!_assigned);
+
         if (tt != lexer::token_type::assign)
         {
             assert(0);
@@ -43,18 +45,23 @@ inline namespace _v1
 
         auto var = make_blank_variable(builtin_types().unconstrained.get());
 
-        auto overload = make_function(
-            "member assignment", nullptr, { var.get() }, [](auto &&) -> codegen::ir::function { assert(!"trying to codegen a member-assignment expression"); });
-        overload->set_return_type(make_variable_expression(make_type_variable(builtin_types().unconstrained.get())));
+        auto overload = make_function("member assignment", nullptr, { _var, var.get() }, [](auto &&) -> codegen::ir::function {
+            assert(!"trying to codegen a member-assignment expression");
+        });
+        overload->set_return_type(assigned_type()->get_expression());
         overload->set_eval([this](simplification_context &, std::vector<variable *> args) {
-            assert(args.size() == 1);
-            _var->set_rhs(args.front());
+            assert(args.size() == 2);
+            assert(args.front() == _var);
+            _var->set_rhs(args.back());
             return make_ready_future(make_variable_ref_expression(_var).release());
         });
+
+        assert(dynamic_cast<type_variable *>(overload->get_return_type().try_get().get()->get_variable())->get_value()->is_member_assignment());
 
         auto ret = overload.get();
 
         {
+            // TODO: this is useless, move the generation of the overload to the constructor
             std::lock_guard<std::mutex> lock{ _storage_lock };
             _fun_storage.push_back(std::move(overload));
             _var_storage.push_back(std::move(var));

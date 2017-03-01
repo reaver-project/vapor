@@ -101,7 +101,7 @@ inline namespace _v1
 
         virtual bool is_member_assignment() const
         {
-            return false;
+            return get_type()->is_member_assignment();
         }
 
         bool is_local() const
