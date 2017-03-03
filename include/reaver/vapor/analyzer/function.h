@@ -177,12 +177,7 @@ inline namespace _v1
             _analysis_hooks.push_back(std::move(hook));
         }
 
-        reaver::future<> run_analysis_hooks(analysis_context & ctx, call_expression * expr, std::vector<variable *> args)
-        {
-            return foldl(_analysis_hooks, make_ready_future(), [&ctx, expr, args](auto && prev, auto && hook) {
-                return prev.then([&hook, &ctx, expr, args] { return hook(ctx, expr, args); });
-            });
-        }
+        future<> run_analysis_hooks(analysis_context & ctx, call_expression * expr, std::vector<variable *> args);
 
         void set_eval(function_eval eval)
         {

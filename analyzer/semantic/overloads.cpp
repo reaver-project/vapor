@@ -314,7 +314,7 @@ inline namespace _v1
     {
         return lhs->get_type()->get_candidates(op).then([&ctx, &range, lhs, rhs](auto && overloads) {
             assert(overloads.size());
-            return select_overload(ctx, range, { lhs, rhs }, overloads);
+            return select_overload(ctx, range, std::vector<expression *>{ lhs, rhs }, overloads);
         });
     }
 

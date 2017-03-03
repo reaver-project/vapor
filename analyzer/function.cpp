@@ -109,5 +109,12 @@ inline namespace _v1
         // currently hitting this because the copy ctor doesn't have an eval
         assert(0);
     }
+
+    future<> function::run_analysis_hooks(analysis_context & ctx, call_expression * expr, std::vector<variable *> args)
+    {
+        return foldl(_analysis_hooks, make_ready_future(), [&ctx, expr, args](auto && prev, auto && hook) {
+            return prev.then([&hook, &ctx, expr, args] { return hook(ctx, expr, args); });
+        });
+    }
 }
 }
