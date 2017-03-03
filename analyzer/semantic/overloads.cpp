@@ -58,12 +58,14 @@ inline namespace _v1
         {
             if (!base)
             {
+                logger::dlog() << overload->explain() << " not considered; is a member function, but the base expression is null";
                 return false;
             }
 
             // TODO: conversions? possibly "interface inheritance" that operator. by Bjarne attempts (badly)?
             if ((*param_begin)->get_type() != base->get_type())
             {
+                logger::dlog() << overload->explain() << " not considered; is a member function, but the base expression is of the wrong type";
                 return false;
             }
 
@@ -125,6 +127,8 @@ inline namespace _v1
 
                 if (succeeded_before)
                 {
+                    logger::dlog() << overload->explain() << " not considered; mismatch in member assignment arguments; ." << utf8(arg->member_name())
+                                   << " did not match any members";
                     return false;
                 }
 
@@ -164,6 +168,8 @@ inline namespace _v1
             {
                 if (!param_type->matches(matching_space))
                 {
+                    logger::dlog() << overload->explain() << " not considered; argument #" << arg_begin - arguments.begin() << " does not match the parameter #"
+                                   << param_begin - overload->parameters().begin();
                     return false;
                 }
 
@@ -188,16 +194,36 @@ inline namespace _v1
 
         assert(arg_begin == arg_end);
 
-        return std::all_of(param_begin, param_end, [&](auto && param) {
-            return std::find(provided_params.begin(), provided_params.end(), param) != provided_params.begin() || param->get_default_value();
+        auto ret = std::all_of(param_begin, param_end, [&](auto && param) {
+            return std::find(provided_params.begin(), provided_params.end(), param) != provided_params.end() || param->get_default_value();
         });
+
+        if (!ret)
+        {
+            logger::dlog() << overload->explain() << " not considered; some not provided parameters do not have a default value";
+        }
+
+        return ret;
     }
 
-    auto select_overload(analysis_context & ctx,
+    // TODO FIXME: this is horrendeously inefficient
+    // making these var_ref_expressions really needs to happen in select_overload_impl
+    // but I don't know how to do that elegantly
+    bool is_valid(function * overload, const std::vector<variable *> & arguments, variable * base = nullptr)
+    {
+        auto arg_exprs = fmap(arguments, [](auto && arg) { return make_variable_ref_expression(arg); });
+        auto base_expr = base ? make_variable_ref_expression(base) : nullptr;
+
+        return is_valid(overload, fmap(arg_exprs, [](auto && expr) { return expr.get(); }), base_expr.get());
+    }
+
+    template<typename ArgumentPointer, typename MakeExpression>
+    future<std::unique_ptr<expression>> select_overload_impl(analysis_context & ctx,
         const range_type & range,
-        std::vector<expression *> arguments,
+        std::vector<ArgumentPointer> & arguments,
         std::vector<function *> possible_overloads,
-        expression * base = nullptr)
+        ArgumentPointer base,
+        MakeExpression && expr_maker)
     {
         auto original = possible_overloads;
 
@@ -256,8 +282,28 @@ inline namespace _v1
             arguments.insert(arguments.begin(), base);
         }
 
-        auto ret = make_call_expression(overload, std::move(arguments));
+        auto ret = expr_maker(overload, std::move(arguments));
         return make_ready_future<std::unique_ptr<expression>>(std::move(ret));
+    }
+
+    future<std::unique_ptr<expression>> select_overload(analysis_context & ctx,
+        const range_type & range,
+        std::vector<expression *> arguments,
+        std::vector<function *> possible_overloads,
+        expression * base)
+    {
+        return select_overload_impl(
+            ctx, range, arguments, possible_overloads, base, [](auto &&... args) { return make_call_expression(std::forward<decltype(args)>(args)...); });
+    }
+
+    future<std::unique_ptr<expression>> select_overload(analysis_context & ctx,
+        const range_type & range,
+        std::vector<variable *> arguments,
+        std::vector<function *> possible_overloads,
+        variable * base)
+    {
+        return select_overload_impl(
+            ctx, range, arguments, possible_overloads, base, [](auto &&... args) { return make_call_expression(std::forward<decltype(args)>(args)...); });
     }
 
     future<std::unique_ptr<expression>> resolve_overload(analysis_context & ctx,

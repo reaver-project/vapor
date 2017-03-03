@@ -34,17 +34,29 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     class expression;
+    class variable;
     class scope;
     class analysis_context;
+    class function;
 
-    // these here are currently kinda silly
-    // will get less silly and properly separated once typeclasses are a thing
+    future<std::unique_ptr<expression>> select_overload(analysis_context & ctx,
+        const range_type & range,
+        std::vector<expression *> arguments,
+        std::vector<function *> possible_overloads,
+        expression * base = nullptr);
+
+    future<std::unique_ptr<expression>> select_overload(analysis_context & ctx,
+        const range_type & range,
+        std::vector<variable *> arguments,
+        std::vector<function *> possible_overloads,
+        variable * base = nullptr);
 
     future<std::unique_ptr<expression>> resolve_overload(analysis_context & ctx,
         const range_type & range,
         expression * lhs,
         expression * rhs,
         lexer::token_type op);
+
     future<std::unique_ptr<expression>> resolve_overload(analysis_context & ctx,
         const range_type & range,
         expression * base_expr,

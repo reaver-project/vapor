@@ -34,6 +34,11 @@ inline namespace _v1
 
     variable * call_expression::get_variable() const
     {
+        if (_replacement_expr)
+        {
+            return _replacement_expr->get_variable();
+        }
+
         assert(_var);
         return _var.get();
     }

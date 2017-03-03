@@ -47,18 +47,35 @@ inline namespace _v1
         virtual void print(std::ostream &, std::size_t indent) const override;
         virtual variable * get_variable() const override;
 
+        void replace_with(std::unique_ptr<expression> expr)
+        {
+            assert(!_var);
+            assert(!_replacement_expr);
+
+            _replacement_expr = std::move(expr);
+        }
+
+        const range_type & get_range() const
+        {
+            assert(_range);
+            return *_range;
+        }
+
     private:
         virtual future<> _analyze(analysis_context &) override;
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
         virtual future<expression *> _simplify_expr(simplification_context &) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
+    protected:
         function * _function;
+        optional<const range_type &> _range;
+        std::unique_ptr<expression> _replacement_expr;
+
+    private:
         std::vector<expression *> _args;
         std::unique_ptr<variable> _var;
         std::unique_ptr<expression> _cloned_type_expr;
-
-        optional<const range_type &> _range;
     };
 
     class owning_call_expression : public call_expression
@@ -70,6 +87,8 @@ inline namespace _v1
         }
 
     private:
+        virtual future<expression *> _simplify_expr(simplification_context &) override;
+
         std::vector<std::unique_ptr<expression>> _var_exprs;
     };
 

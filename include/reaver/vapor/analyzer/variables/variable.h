@@ -141,35 +141,6 @@ inline namespace _v1
         const expression * _default_value = nullptr;
     };
 
-    class expression_variable : public variable
-    {
-    public:
-        expression_variable(expression * expr, type * type) : _expression{ expr }, _type{ type }
-        {
-        }
-
-        virtual type * get_type() const override
-        {
-            return _type;
-        }
-
-        virtual bool is_constant() const override;
-        virtual bool is_equal(const variable *) const override;
-
-    private:
-        virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override;
-        virtual future<variable *> _simplify(simplification_context & ctx) override;
-        virtual variable_ir _codegen_ir(ir_generation_context &) const override;
-
-        expression * _expression;
-        type * _type;
-    };
-
-    inline std::unique_ptr<variable> make_expression_variable(expression * expr, type * type)
-    {
-        return std::make_unique<expression_variable>(expr, type);
-    }
-
     class blank_variable : public variable
     {
     public:

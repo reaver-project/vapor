@@ -27,6 +27,7 @@
 
 #include <reaver/function.h>
 #include <reaver/optional.h>
+#include <reaver/prelude/fold.h>
 
 #include "../codegen/ir/function.h"
 #include "../range.h"
@@ -40,9 +41,10 @@ inline namespace _v1
 {
     class type;
     class block;
+    class call_expression;
 
     using function_codegen = reaver::function<codegen::ir::function(ir_generation_context &)>;
-    using function_hook = reaver::function<void(std::vector<variable *>)>;
+    using function_hook = reaver::function<reaver::future<>(analysis_context &, call_expression *, std::vector<variable *>)>;
     using function_eval = reaver::function<future<expression *>(simplification_context &, std::vector<variable *>)>;
 
     class function
@@ -175,12 +177,11 @@ inline namespace _v1
             _analysis_hooks.push_back(std::move(hook));
         }
 
-        void run_analysis_hooks(const std::vector<variable *> & args)
+        reaver::future<> run_analysis_hooks(analysis_context & ctx, call_expression * expr, std::vector<variable *> args)
         {
-            for (auto && hook : _analysis_hooks)
-            {
-                hook(args);
-            }
+            return foldl(_analysis_hooks, make_ready_future(), [&ctx, expr, args](auto && prev, auto && hook) {
+                return prev.then([&hook, &ctx, expr, args] { return hook(ctx, expr, args); });
+            });
         }
 
         void set_eval(function_eval eval)

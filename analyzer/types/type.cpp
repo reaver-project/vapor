@@ -24,6 +24,7 @@
 #include "vapor/analyzer/expressions/call.h"
 #include "vapor/analyzer/expressions/variable.h"
 #include "vapor/analyzer/function.h"
+#include "vapor/analyzer/semantic/overloads.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/pack.h"
 #include "vapor/analyzer/types/unconstrained.h"
@@ -78,7 +79,7 @@ inline namespace _v1
 
             _generic_ctor->make_member();
 
-            _generic_ctor->set_eval([](auto && ctx, auto && args) -> future<expression *> {
+            _generic_ctor->add_analysis_hook([](auto && ctx, auto && call_expr, auto && args) {
                 assert(args.size() != 0);
                 assert(args.front()->get_type() == builtin_types().type.get());
 
@@ -87,8 +88,12 @@ inline namespace _v1
                 args.erase(args.begin());
                 auto actual_ctor = actual_type->get_constructor(fmap(args, [](auto && arg) -> const variable * { return arg; }));
 
-                return actual_ctor.then([args](auto && ctor) -> expression * { return make_call_expression(ctor, args).release(); });
+                return actual_ctor.then([&ctx, args, call_expr](auto && ctor) { return select_overload(ctx, call_expr->get_range(), args, { ctor }); })
+                    .then([call_expr](auto && expr) { call_expr->replace_with(std::move(expr)); });
             });
+
+            _generic_ctor->set_eval(
+                [](auto &&, auto &&) -> future<expression *> { assert(!"a generic constructor call survived analysis; this is a compiler bug"); });
         }();
 
         return make_ready_future(std::vector<function *>{ _generic_ctor.get() });

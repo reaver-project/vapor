@@ -53,33 +53,5 @@ inline namespace _v1
         assert(expr->get_type() == get_type());
         _default_value = expr;
     }
-
-    variable_ir expression_variable::_codegen_ir(ir_generation_context & ctx) const
-    {
-        return { _expression->codegen_ir(ctx).back().result };
-    }
-
-    future<variable *> expression_variable::_simplify(simplification_context & ctx)
-    {
-        return _expression->simplify_expr(ctx).then([&](auto && simplified) -> variable * { return simplified->get_variable(); });
-    }
-
-    std::unique_ptr<variable> expression_variable::_clone_with_replacement(replacements & repl) const
-    {
-        auto it = repl.expressions.find(_expression);
-        assert(it != repl.expressions.end());
-
-        return make_expression_variable(it->second, _type);
-    }
-
-    bool expression_variable::is_constant() const
-    {
-        return false;
-    }
-
-    bool expression_variable::is_equal(const variable * ptr) const
-    {
-        return false;
-    }
 }
 }

@@ -32,9 +32,25 @@ inline namespace _v1
         return std::make_unique<owning_call_expression>(_function, fmap(_args, [&](auto && arg) { return arg->clone_expr_with_replacement(repl); }));
     }
 
-    future<expression *> call_expression::_simplify_expr(simplification_context &)
+    future<expression *> call_expression::_simplify_expr(simplification_context & ctx)
     {
-        assert(0);
+        if (_replacement_expr)
+        {
+            return _replacement_expr->simplify_expr(ctx);
+        }
+
+        return when_all(fmap(_args, [&](auto && arg) { return arg->simplify_expr(ctx); })).then([&](auto && repl) {
+            _args = repl;
+            return _function->simplify(ctx, fmap(_args, [](auto && arg) { return arg->get_variable(); }));
+        });
+    }
+
+    future<expression *> owning_call_expression::_simplify_expr(simplification_context & ctx)
+    {
+        return when_all(fmap(_var_exprs, [&](auto && arg) { return arg->simplify_expr(ctx); })).then([&](auto && repl) {
+            replace_uptrs(_var_exprs, repl, ctx);
+            return _function->simplify(ctx, fmap(_var_exprs, [](auto && arg) { return arg->get_variable(); }));
+        });
     }
 }
 }

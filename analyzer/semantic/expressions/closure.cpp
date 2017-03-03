@@ -25,6 +25,7 @@
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/closure.h"
+#include "vapor/analyzer/variables/expression.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -92,7 +93,7 @@ inline namespace _v1
                 function->set_body(_body.get());
 
                 _type = std::make_unique<closure_type>(_scope.get(), this, std::move(function));
-                _set_variable(make_expression_variable(this, _type.get()));
+                _set_variable(make_expression_ref_variable(this, _type.get()));
             });
     }
 }

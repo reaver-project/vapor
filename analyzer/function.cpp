@@ -106,6 +106,7 @@ inline namespace _v1
             return (*_compile_time_eval)(ctx, params);
         }
 
+        // currently hitting this because the copy ctor doesn't have an eval
         assert(0);
     }
 }

@@ -117,8 +117,8 @@ inline namespace _v1
         _aggregate_copy_ctor =
             make_function("struct type copy replacement constructor", get_expression(), data_members, [&](auto && ctx) -> codegen::ir::function { assert(0); });
 
-        _aggregate_ctor->set_name(U"replacing_copy_constructor");
-        _aggregate_ctor->make_member();
+        _aggregate_copy_ctor->set_name(U"replacing_copy_constructor");
+        _aggregate_copy_ctor->make_member();
 
         _aggregate_copy_ctor_promise->set(_aggregate_copy_ctor.get());
     }
