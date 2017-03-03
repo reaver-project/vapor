@@ -34,6 +34,8 @@ inline namespace _v1
 {
     future<> call_expression::_analyze(analysis_context & ctx)
     {
+        _function->run_analysis_hooks(fmap(_args, [](auto && arg) { return arg->get_variable(); }));
+
         return _function->get_return_type().then([&](expression * type_expr) {
             assert(type_expr);
             auto var = type_expr->get_variable();
@@ -43,6 +45,11 @@ inline namespace _v1
             {
                 replacements repl;
                 std::vector<std::shared_ptr<variable>> var_space;
+                std::vector<std::shared_ptr<expression>> expr_space = fmap(_args, [&](auto && arg) {
+                    std::shared_ptr<expression> cloned = arg->clone_expr_with_replacement(repl);
+                    repl.expressions[arg] = cloned.get();
+                    return cloned;
+                });
 
                 auto arg_begin = _args.begin();
                 auto arg_end = _args.end();
@@ -86,6 +93,25 @@ inline namespace _v1
 
                     if (matching_space.size() == 1 && !last_matched)
                     {
+                        if (*param_begin == var)
+                        {
+                            // this is the simple case: one of the arguments is literally returned
+                            // AND the function actually provides this information the way it should
+                            // this is a special case that is PRIMARILY here for the generic constructor
+                            //
+                            // the other way does work for it too, but... it's not pretty resource-wise
+                            auto var = matching_variables.front();
+                            assert(var->get_type() == builtin_types().type.get());
+
+                            auto type_var = dynamic_cast<type_variable *>(var);
+                            assert(type_var);
+                            assert(type_var->get_value() != builtin_types().type.get());
+
+                            _var = make_expression_variable(this, type_var->get_value());
+
+                            return make_ready_future();
+                        }
+
                         auto cloned = matching_variables.front()->clone_with_replacement(repl);
                         repl.variables[*param_begin] = cloned.get();
                         var_space.push_back(std::move(cloned));
@@ -95,6 +121,8 @@ inline namespace _v1
                         continue;
                     }
 
+                    auto range = &*_range;
+                    (void)range;
                     auto pack = make_pack_variable(
                         fmap(matching_variables, [&](auto && var) { return var->clone_with_replacement(repl); }), (*param_begin)->get_type());
                     repl.variables[*param_begin] = pack.get();
@@ -124,7 +152,7 @@ inline namespace _v1
                     });
                 };
 
-                return cont(cont).then([this, var_space](auto && type_expr) {
+                return cont(cont).then([this, var_space, expr_space](auto && type_expr) {
                     assert(type_expr);
                     auto var = type_expr->get_variable();
                     assert(var->get_type() == builtin_types().type.get());

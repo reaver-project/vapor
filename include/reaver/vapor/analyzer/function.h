@@ -42,6 +42,7 @@ inline namespace _v1
     class block;
 
     using function_codegen = reaver::function<codegen::ir::function(ir_generation_context &)>;
+    using function_hook = reaver::function<void(std::vector<variable *>)>;
     using function_eval = reaver::function<future<expression *>(simplification_context &, std::vector<variable *>)>;
 
     class function
@@ -169,6 +170,19 @@ inline namespace _v1
             return _body;
         }
 
+        void add_analysis_hook(function_hook hook)
+        {
+            _analysis_hooks.push_back(std::move(hook));
+        }
+
+        void run_analysis_hooks(const std::vector<variable *> & args)
+        {
+            for (auto && hook : _analysis_hooks)
+            {
+                hook(args);
+            }
+        }
+
         void set_eval(function_eval eval)
         {
             _compile_time_eval = std::move(eval);
@@ -207,6 +221,7 @@ inline namespace _v1
         function_codegen _codegen;
         mutable optional<codegen::ir::function> _ir;
 
+        std::vector<function_hook> _analysis_hooks;
         optional<function_eval> _compile_time_eval;
     };
 

@@ -60,7 +60,7 @@ inline namespace _v1
                         .then([&](auto && var) { _referenced_variable = var; });
                 }
 
-                return resolve_overload(ctx, _base_expr.get(), *_modifier, fmap(_arguments, [](auto && arg) { return arg.get(); }))
+                return resolve_overload(ctx, _parse.range, _base_expr.get(), *_modifier, fmap(_arguments, [](auto && arg) { return arg.get(); }))
                     .then([&](auto && call_expr) {
                         if (auto call_expr_downcasted = dynamic_cast<call_expression *>(call_expr.get()))
                         {

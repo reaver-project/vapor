@@ -43,7 +43,7 @@ inline namespace _v1
         _rhs->set_context(expr_ctx);
 
         return when_all(_lhs->analyze(ctx), _rhs->analyze(ctx))
-            .then([&](auto) { return resolve_overload(ctx, _lhs.get(), _rhs.get(), _op.type); })
+            .then([&](auto) { return resolve_overload(ctx, _parse.range, _lhs.get(), _rhs.get(), _op.type); })
             .then([&](auto && call_expr) {
                 if (auto call_expr_downcasted = dynamic_cast<call_expression *>(call_expr.get()))
                 {

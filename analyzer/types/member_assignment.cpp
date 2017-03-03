@@ -49,14 +49,12 @@ inline namespace _v1
             assert(!"trying to codegen a member-assignment expression");
         });
         overload->set_return_type(assigned_type()->get_expression());
-        overload->set_eval([this](simplification_context &, std::vector<variable *> args) {
+        overload->add_analysis_hook([this](std::vector<variable *> args) {
             assert(args.size() == 2);
             assert(args.front() == _var);
             _var->set_rhs(args.back());
-            return make_ready_future(make_variable_ref_expression(_var).release());
         });
-
-        assert(dynamic_cast<type_variable *>(overload->get_return_type().try_get().get()->get_variable())->get_value()->is_member_assignment());
+        overload->set_eval([this](auto &&...) { return make_ready_future(make_variable_ref_expression(_var).release()); });
 
         auto ret = overload.get();
 

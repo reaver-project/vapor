@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -32,7 +32,7 @@ inline namespace _v1
     future<> struct_literal::_analyze(analysis_context & ctx)
     {
         return when_all(fmap(_type->get_data_member_decls(), [&](auto && member) { return member->analyze(ctx); })).then([this] {
-            _type->generate_constructor();
+            _type->generate_constructors();
             this->_set_variable(make_type_variable(_type.get()));
         });
     }

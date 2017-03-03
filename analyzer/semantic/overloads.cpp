@@ -25,6 +25,8 @@
 #include "vapor/analyzer/expressions/expression.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/variables/member.h"
+#include "vapor/analyzer/variables/member_assignment.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -69,15 +71,70 @@ inline namespace _v1
             ++param_begin;
         }
 
+        std::vector<variable *> provided_params;
+
         auto it = arg_begin;
         if ((it = std::find_if(it, arg_end, [](auto && arg) { return arg->get_variable()->is_member_assignment(); })) != arg_end)
         {
+            auto arg_begin = it;
+            auto possible_arg_end = it;
+
             if ((it = std::find_if(it, arg_end, [](auto && arg) { return !arg->get_variable()->is_member_assignment(); })) != arg_end)
             {
                 assert(!"a non-mem-assignment argument after a mem-assignment argument");
             }
 
-            assert(0);
+            // this is kind of a hack to allow passing member assignments that are *before the first matching one*
+            // to pack arguments
+            //
+            // this will need a rework
+            //
+            // basically this is necessary to get the generic constructor to work
+            // and I'm wondering wether this magic shouldn't just be limited to that single thing
+            //
+            // but I guess it'll be generally allowed to allow making forwarding wrappers that accept member assignments
+            bool succeeded_before = false;
+
+            while (arg_begin != arguments.end())
+            {
+                auto arg_type = dynamic_cast<member_assignment_type *>((*arg_begin)->get_type());
+                assert(arg_type);
+                auto arg = arg_type->get_associated_variable();
+
+                auto it = param_begin;
+                if ((it = std::find_if(param_begin,
+                         param_end,
+                         [&](auto && param) {
+                             auto member_param = dynamic_cast<member_variable *>(param);
+                             if (!member_param)
+                             {
+                                 return false;
+                             }
+                             return member_param->get_name() == arg->member_name();
+                         }))
+                    != param_end)
+                {
+                    assert((*it)->get_type()->matches(arg->get_assigned_type()));
+                    succeeded_before = true;
+
+                    provided_params.push_back(*it);
+
+                    ++arg_begin;
+                    continue;
+                }
+
+                if (succeeded_before)
+                {
+                    return false;
+                }
+
+                ++arg_begin;
+            }
+
+            if (succeeded_before)
+            {
+                arg_end = possible_arg_end;
+            }
         }
 
         std::vector<type *> matching_space;
@@ -92,6 +149,13 @@ inline namespace _v1
         // (i.e. when I'll be adding packs to the language for more than just the generic ctor)
         while (arg_begin != arg_end && param_begin != param_end)
         {
+            if (std::find(provided_params.begin(), provided_params.end(), *param_begin) != provided_params.end())
+            {
+                // should this be a hard error? probably not
+                assert(0);
+                return false;
+            }
+
             matching_space.clear();
 
             auto && param_type = (*param_begin)->get_type();
@@ -100,7 +164,6 @@ inline namespace _v1
             {
                 if (!param_type->matches(matching_space))
                 {
-                    assert(0);
                     return false;
                 }
 
@@ -125,11 +188,19 @@ inline namespace _v1
 
         assert(arg_begin == arg_end);
 
-        return std::all_of(param_begin, param_end, [](auto && param) { return param->get_default_value(); });
+        return std::all_of(param_begin, param_end, [&](auto && param) {
+            return std::find(provided_params.begin(), provided_params.end(), param) != provided_params.begin() || param->get_default_value();
+        });
     }
 
-    auto select_overload(analysis_context & ctx, std::vector<expression *> arguments, std::vector<function *> possible_overloads, expression * base = nullptr)
+    auto select_overload(analysis_context & ctx,
+        const range_type & range,
+        std::vector<expression *> arguments,
+        std::vector<function *> possible_overloads,
+        expression * base = nullptr)
     {
+        auto original = possible_overloads;
+
         assert(!possible_overloads.empty());
 
         possible_overloads.erase(
@@ -153,8 +224,30 @@ inline namespace _v1
             best_matches.push_back(overload);
         }
 
-        assert(best_matches.size() > 0);
-        assert(best_matches.size() < 2);
+        if (best_matches.empty())
+        {
+            logger::dlog(logger::error) << "no matching overload found for expression at " << range;
+            logger::dlog(logger::info) << "originally possible overloads:";
+            fmap(original, [](auto && overload) {
+                logger::dlog() << overload->explain();
+                return unit{};
+            });
+            logger::default_logger().sync();
+            std::terminate();
+        }
+
+        else if (best_matches.size() != 1)
+        {
+            logger::dlog(logger::error) << "multiple matching overloads found for expression at " << range;
+            logger::dlog(logger::info) << "possible overloads:";
+            fmap(best_matches, [](auto && overload) {
+                logger::dlog() << overload->explain();
+                return unit{};
+            });
+            logger::default_logger().sync();
+            std::terminate();
+        }
+
         auto overload = best_matches.front();
 
         if (overload->is_member())
@@ -167,19 +260,28 @@ inline namespace _v1
         return make_ready_future<std::unique_ptr<expression>>(std::move(ret));
     }
 
-    future<std::unique_ptr<expression>> resolve_overload(analysis_context & ctx, expression * lhs, expression * rhs, lexer::token_type op)
+    future<std::unique_ptr<expression>> resolve_overload(analysis_context & ctx,
+        const range_type & range,
+        expression * lhs,
+        expression * rhs,
+        lexer::token_type op)
     {
-        return lhs->get_type()->get_candidates(op).then([&ctx, lhs, rhs](auto && overloads) { return select_overload(ctx, { lhs, rhs }, overloads); });
+        return lhs->get_type()->get_candidates(op).then([&ctx, &range, lhs, rhs](auto && overloads) {
+            assert(overloads.size());
+            return select_overload(ctx, range, { lhs, rhs }, overloads);
+        });
     }
 
     future<std::unique_ptr<expression>> resolve_overload(analysis_context & ctx,
+        const range_type & range,
         expression * base_expr,
         lexer::token_type bracket_type,
         std::vector<expression *> arguments)
     {
         // mutable for `arguments`
-        return base_expr->get_type()->get_candidates(bracket_type).then([&ctx, arguments, base_expr](auto && overloads) mutable {
-            return select_overload(ctx, std::move(arguments), overloads, base_expr);
+        return base_expr->get_type()->get_candidates(bracket_type).then([&ctx, &range, arguments, base_expr](auto && overloads) mutable {
+            assert(overloads.size());
+            return select_overload(ctx, range, std::move(arguments), overloads, base_expr);
         });
     }
 }

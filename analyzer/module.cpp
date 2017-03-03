@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -59,6 +59,8 @@ inline namespace _v1
         {
             std::this_thread::sleep_for(std::chrono::nanoseconds(10000));
         }
+
+        logger::dlog() << "Analysis of module " << utf8(name()) << " finished.";
     }
 
     void module::simplify()
@@ -78,6 +80,8 @@ inline namespace _v1
 
             cont = ctx.did_something_happen();
         }
+
+        logger::dlog() << "Simplification of module " << utf8(name()) << " finished.";
     }
 
     void module::print(std::ostream & os, std::size_t indent) const

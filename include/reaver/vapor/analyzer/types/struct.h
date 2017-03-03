@@ -47,7 +47,7 @@ inline namespace _v1
         struct_type(const parser::struct_literal & parse, scope * lex_scope);
         ~struct_type();
 
-        void generate_constructor();
+        void generate_constructors();
 
         virtual std::string explain() const override
         {
@@ -64,6 +64,11 @@ inline namespace _v1
             return _data_members;
         }
 
+        virtual future<function *> get_constructor(std::vector<const variable *>) const override
+        {
+            return _aggregate_ctor_future.get();
+        }
+
         virtual future<std::vector<function *>> get_candidates(lexer::token_type op) const override
         {
             if (op != lexer::token_type::curly_bracket_open)
@@ -71,7 +76,7 @@ inline namespace _v1
                 return make_ready_future(std::vector<function *>{});
             }
 
-            return make_ready_future(std::vector<function *>{ _aggregate_ctor.get() });
+            return _aggregate_copy_ctor_future->then([](auto && ctor) { return std::vector<function *>{ ctor }; });
         }
 
     private:
@@ -85,6 +90,13 @@ inline namespace _v1
         std::unique_ptr<function> _aggregate_ctor;
         mutable optional<future<function *>> _aggregate_ctor_future;
         optional<manual_promise<function *>> _aggregate_ctor_promise;
+
+        std::unique_ptr<function> _aggregate_copy_ctor;
+        mutable optional<future<function *>> _aggregate_copy_ctor_future;
+        optional<manual_promise<function *>> _aggregate_copy_ctor_promise;
+        std::unique_ptr<variable> _this_argument;
+        std::vector<std::unique_ptr<variable>> _member_copy_arguments;
+        std::vector<std::unique_ptr<expression>> _member_copy_defaults;
 
         mutable optional<std::u32string> _codegen_type_name_value;
 

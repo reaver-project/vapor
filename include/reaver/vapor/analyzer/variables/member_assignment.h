@@ -46,7 +46,12 @@ inline namespace _v1
             return _type->assigned_type();
         }
 
-        type * get_member_type() const
+        const std::u32string member_name() const
+        {
+            return _type->member_name();
+        }
+
+        type * get_assigned_type() const
         {
             assert(_rhs);
             return _rhs->get_type();

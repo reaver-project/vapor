@@ -35,9 +35,13 @@ inline namespace _v1
 
     struct_type::struct_type(const parser::struct_literal & parse, scope * lex_scope) : type{ lex_scope }, _parse{ parse }
     {
-        auto pair = make_promise<function *>();
-        _aggregate_ctor_future = std::move(pair.future);
-        _aggregate_ctor_promise = std::move(pair.promise);
+        auto ctor_pair = make_promise<function *>();
+        _aggregate_ctor_future = std::move(ctor_pair.future);
+        _aggregate_ctor_promise = std::move(ctor_pair.promise);
+
+        auto copy_pair = make_promise<function *>();
+        _aggregate_copy_ctor_future = std::move(copy_pair.future);
+        _aggregate_copy_ctor_promise = std::move(copy_pair.promise);
 
         fmap(parse.members, [&](auto && member) {
             fmap(member,
@@ -62,25 +66,24 @@ inline namespace _v1
         _member_scope->close();
     }
 
-    void struct_type::generate_constructor()
+    void struct_type::generate_constructors()
     {
         _data_members =
             fmap(_data_members_declarations, [&](auto && member) { return static_cast<member_variable *>(member->declared_symbol()->get_variable()); });
 
-        _aggregate_ctor = make_function("struct type constructor",
-            get_expression(),
-            fmap(_data_members, [](auto && member) -> variable * { return member; }),
-            [&](auto && ctx) -> codegen::ir::function {
-                auto ir_type = this->codegen_type(ctx);
-                auto args = fmap(_data_members, [&](auto && member) { return get<codegen::ir::value>(member->codegen_ir(ctx)); });
-                auto result = codegen::ir::make_variable(ir_type);
+        auto data_members = fmap(_data_members, [](auto && member) -> variable * { return member; });
 
-                return { U"constructor",
-                    this->get_scope()->codegen_ir(ctx),
-                    fmap(args, [](auto && arg) { return get<std::shared_ptr<codegen::ir::variable>>(arg); }),
-                    result,
-                    { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() }, args, result } } };
-            });
+        _aggregate_ctor = make_function("struct type constructor", get_expression(), data_members, [&](auto && ctx) -> codegen::ir::function {
+            auto ir_type = this->codegen_type(ctx);
+            auto args = fmap(_data_members, [&](auto && member) { return get<codegen::ir::value>(member->codegen_ir(ctx)); });
+            auto result = codegen::ir::make_variable(ir_type);
+
+            return { U"constructor",
+                this->get_scope()->codegen_ir(ctx),
+                fmap(args, [](auto && arg) { return get<std::shared_ptr<codegen::ir::variable>>(arg); }),
+                result,
+                { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() }, args, result } } };
+        });
 
         _aggregate_ctor->set_eval([this](auto &&, const std::vector<variable *> & args) {
             if (!std::all_of(args.begin(), args.end(), [](auto && arg) { return arg->is_constant(); }))
@@ -96,6 +99,28 @@ inline namespace _v1
         _aggregate_ctor->set_name(U"constructor");
 
         _aggregate_ctor_promise->set(_aggregate_ctor.get());
+
+        data_members = fmap(_data_members, [&](auto && member) -> variable * {
+            auto param = make_member_variable(member->get_original(), member->get_name());
+            auto expr = make_variable_ref_expression(member);
+            param->set_default_value(expr.get());
+
+            auto ret = param.get();
+            _member_copy_arguments.push_back(std::move(param));
+            _member_copy_defaults.push_back(std::move(expr));
+            return ret;
+        });
+
+        _this_argument = make_blank_variable(this);
+        data_members.insert(data_members.begin(), _this_argument.get());
+
+        _aggregate_copy_ctor =
+            make_function("struct type copy replacement constructor", get_expression(), data_members, [&](auto && ctx) -> codegen::ir::function { assert(0); });
+
+        _aggregate_ctor->set_name(U"replacing_copy_constructor");
+        _aggregate_ctor->make_member();
+
+        _aggregate_copy_ctor_promise->set(_aggregate_copy_ctor.get());
     }
 
     void struct_type::_codegen_type(ir_generation_context & ctx) const

@@ -70,6 +70,11 @@ inline namespace _v1
 
         virtual future<std::vector<function *>> get_candidates(lexer::token_type) const override;
 
+        auto get_associated_variable() const
+        {
+            return _var;
+        }
+
     private:
         virtual void _codegen_type(ir_generation_context &) const override
         {
