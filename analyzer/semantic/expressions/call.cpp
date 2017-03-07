@@ -52,7 +52,6 @@ inline namespace _v1
                     std::vector<std::shared_ptr<variable>> var_space;
                     std::vector<std::shared_ptr<expression>> expr_space = fmap(_args, [&](auto && arg) {
                         std::shared_ptr<expression> cloned = arg->clone_expr_with_replacement(repl);
-                        repl.expressions[arg] = cloned.get();
                         return cloned;
                     });
 
@@ -117,9 +116,7 @@ inline namespace _v1
                                 return make_ready_future();
                             }
 
-                            auto cloned = matching_variables.front()->clone_with_replacement(repl);
-                            repl.variables[*param_begin] = cloned.get();
-                            var_space.push_back(std::move(cloned));
+                            var_space.push_back(matching_variables.front()->clone_with_replacement(repl));
 
                             ++arg_begin;
                             ++param_begin;

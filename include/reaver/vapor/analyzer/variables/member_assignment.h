@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include "../expressions/variable.h"
 #include "../types/member_assignment.h"
 #include "variable.h"
 
@@ -57,10 +58,23 @@ inline namespace _v1
             return _rhs->get_type();
         }
 
-        void set_rhs(const variable * rhs)
+        void set_rhs(variable * rhs)
         {
             assert(!_rhs);
             _rhs = rhs;
+            _rhs_expr = make_variable_ref_expression(_rhs);
+        }
+
+        auto get_rhs() const
+        {
+            assert(_rhs);
+            return _rhs;
+        }
+
+        auto get_rhs_expression() const
+        {
+            assert(_rhs_expr);
+            return _rhs_expr.get();
         }
 
     private:
@@ -83,7 +97,8 @@ inline namespace _v1
             assert(!"attempted to codegen a member-assignment-variable");
         }
 
-        const variable * _rhs = nullptr;
+        variable * _rhs = nullptr;
+        std::unique_ptr<expression> _rhs_expr;
 
         std::unique_ptr<member_assignment_type> _type;
     };

@@ -22,6 +22,8 @@
 
 #include "vapor/analyzer/expressions/call.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/variables/expression.h"
+#include "vapor/analyzer/variables/type.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -29,7 +31,24 @@ inline namespace _v1
 {
     std::unique_ptr<expression> call_expression::_clone_expr_with_replacement(replacements & repl) const
     {
-        return std::make_unique<owning_call_expression>(_function, fmap(_args, [&](auto && arg) { return arg->clone_expr_with_replacement(repl); }));
+        if (_replacement_expr)
+        {
+            return _replacement_expr->clone_expr_with_replacement(repl);
+        }
+
+        auto ret = std::make_unique<owning_call_expression>(_function, fmap(_args, [&](auto && arg) { return arg->clone_expr_with_replacement(repl); }));
+
+        if (_cloned_type_expr)
+        {
+            ret->_cloned_type_expr = _cloned_type_expr->clone_expr_with_replacement(repl);
+            auto var = ret->_cloned_type_expr->get_variable();
+            auto type_var = dynamic_cast<type_variable *>(var);
+            ret->_var = make_expression_ref_variable(ret.get(), type_var->get_value());
+            return ret;
+        }
+
+        ret->_var = make_expression_ref_variable(ret.get(), _var->get_type());
+        return ret;
     }
 
     future<expression *> call_expression::_simplify_expr(simplification_context & ctx)
@@ -40,13 +59,30 @@ inline namespace _v1
         }
 
         return when_all(fmap(_args, [&](auto && arg) { return arg->simplify_expr(ctx); })).then([&](auto && repl) {
-            _args = repl;
+            assert(_args.size() == repl.size());
+            for (std::size_t i = 0; i < _args.size(); ++i)
+            {
+                if (repl[i] && repl[i] != _args[i])
+                {
+                    _args[i] = repl[i];
+                    ctx.something_happened();
+                }
+            }
+
             return _function->simplify(ctx, fmap(_args, [](auto && arg) { return arg->get_variable(); }));
         });
     }
 
     future<expression *> owning_call_expression::_simplify_expr(simplification_context & ctx)
     {
+        if (_replacement_expr)
+        {
+            return _replacement_expr->simplify_expr(ctx).then([&](auto && repl) -> expression * {
+                replace_uptr(_replacement_expr, repl, ctx);
+                return this;
+            });
+        }
+
         return when_all(fmap(_var_exprs, [&](auto && arg) { return arg->simplify_expr(ctx); })).then([&](auto && repl) {
             replace_uptrs(_var_exprs, repl, ctx);
             return _function->simplify(ctx, fmap(_var_exprs, [](auto && arg) { return arg->get_variable(); }));

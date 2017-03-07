@@ -68,6 +68,8 @@ inline namespace _v1
         bool cont = true;
         while (cont)
         {
+            logger::dlog() << "Simplification run of module " << utf8(name()) << " starting...";
+
             simplification_context ctx{};
 
             auto all = when_all(
@@ -79,6 +81,8 @@ inline namespace _v1
             }
 
             cont = ctx.did_something_happen();
+
+            logger::dlog() << "Simplification run of module " << utf8(name()) << " finished.";
         }
 
         logger::dlog() << "Simplification of module " << utf8(name()) << " finished.";

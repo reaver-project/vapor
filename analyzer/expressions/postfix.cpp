@@ -76,7 +76,7 @@ inline namespace _v1
                 return;
             }
 
-            os << in << "selected call expression: ";
+            os << in << "selected call expression:\n";
             os << in << "{\n";
             _call_expression->print(os, indent + 4);
             os << in << "}\n";
@@ -119,41 +119,6 @@ inline namespace _v1
         }
 
         return _call_expression->codegen_ir(ctx);
-
-        /*auto arguments_instructions = fmap(_arguments, [&](auto && arg) { return arg->codegen_ir(ctx); });
-
-        arguments_instructions.reserve(_overload->arguments().size());
-        std::transform(
-            _overload->arguments().begin() + _arguments.size(), _overload->arguments().end(), std::back_inserter(arguments_instructions), [&](auto && member) {
-                auto def = member->get_default_value();
-                assert(def);
-                return def->codegen_ir(ctx);
-            });
-
-        auto base_expr_variable = base_expr_instructions.back().result;
-        auto arguments_values = fmap(arguments_instructions, [](auto && insts) { return insts.back().result; });
-        arguments_values.insert(arguments_values.begin(), _overload->call_operand_ir(ctx));
-        arguments_values.insert(arguments_values.begin(), std::move(base_variable));
-
-        auto postfix_expr_instruction = codegen::ir::instruction{ none,
-            none,
-            { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
-            std::move(arguments_values),
-            { codegen::ir::make_variable(_overload->return_type()->codegen_type(ctx)) } };
-
-        ctx.add_function_to_generate(_overload);
-
-        statement_ir ret;
-        ret.reserve(base_expr_instructions.size()
-            + std::accumulate(arguments_instructions.begin(), arguments_instructions.end(), 1, [](std::size_t i, auto && insts) { return i + insts.size(); }));
-        std::move(base_expr_instructions.begin(), base_expr_instructions.end(), std::back_inserter(ret));
-        fmap(arguments_instructions, [&](auto && insts) {
-            std::move(insts.begin(), insts.end(), std::back_inserter(ret));
-            return unit{};
-        });
-        ret.push_back(std::move(postfix_expr_instruction));
-
-        return ret;*/
     }
 
     variable * postfix_expression::get_variable() const

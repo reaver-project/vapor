@@ -39,13 +39,18 @@ inline namespace _v1
 
     future<variable *> expression_variable::_simplify(simplification_context & ctx)
     {
-        return _expression->simplify_expr(ctx).then([&](auto && simplified) -> variable * { return simplified->get_variable(); });
+        return _expression->simplify_expr(ctx).then([&](auto && simplified) -> variable * { return simplified ? simplified->get_variable() : this; });
     }
 
     std::unique_ptr<variable> expression_variable::_clone_with_replacement(replacements & repl) const
     {
+        auto & cloned = repl.expressions[_expression.get()];
+        if (cloned)
+        {
+            return make_expression_ref_variable(cloned, _type);
+        }
+
         auto cloned_expr = _expression->clone_expr_with_replacement(repl);
-        repl.expressions[_expression.get()] = cloned_expr.get();
         return make_expression_variable(std::move(cloned_expr), _type);
     }
 
@@ -66,15 +71,19 @@ inline namespace _v1
 
     future<variable *> expression_ref_variable::_simplify(simplification_context & ctx)
     {
-        return _expression->simplify_expr(ctx).then([&](auto && simplified) -> variable * { return simplified->get_variable(); });
+        return _expression->simplify_expr(ctx).then([&](auto && simplified) -> variable * { return simplified ? simplified->get_variable() : this; });
     }
 
     std::unique_ptr<variable> expression_ref_variable::_clone_with_replacement(replacements & repl) const
     {
-        auto it = repl.expressions.find(_expression);
-        assert(it != repl.expressions.end());
+        auto & cloned = repl.expressions[_expression];
+        if (cloned)
+        {
+            return make_expression_ref_variable(cloned, _type);
+        }
 
-        return make_expression_ref_variable(it->second, _type);
+        auto cloned_expr = _expression->clone_expr_with_replacement(repl);
+        return make_expression_variable(std::move(cloned_expr), _type);
     }
 
     bool expression_ref_variable::is_constant() const

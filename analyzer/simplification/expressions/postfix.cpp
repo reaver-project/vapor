@@ -90,7 +90,10 @@ inline namespace _v1
                     return make_ready_future<expression *>(make_variable_expression(member->clone_with_replacement(repl)).release());
                 }
 
-                return _call_expression->simplify_expr(ctx);
+                return _call_expression->simplify_expr(ctx).then([&](auto && repl) -> expression * {
+                    replace_uptr(_call_expression, repl, ctx);
+                    return this;
+                });
             });
     }
 }

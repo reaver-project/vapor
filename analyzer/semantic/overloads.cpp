@@ -21,6 +21,9 @@
  **/
 
 #include "vapor/analyzer/semantic/overloads.h"
+
+#include <reaver/id.h>
+
 #include "vapor/analyzer/expressions/call.h"
 #include "vapor/analyzer/expressions/expression.h"
 #include "vapor/analyzer/function.h"
@@ -170,6 +173,8 @@ inline namespace _v1
                 {
                     logger::dlog() << overload->explain() << " not considered; argument #" << arg_begin - arguments.begin() << " does not match the parameter #"
                                    << param_begin - overload->parameters().begin();
+                    logger::dlog() << "argument type: " << (*arg_begin)->get_type()->explain();
+                    logger::dlog() << "parameter type: " << (*param_begin)->get_type()->explain();
                     return false;
                 }
 
@@ -215,6 +220,153 @@ inline namespace _v1
         auto base_expr = base ? make_variable_ref_expression(base) : nullptr;
 
         return is_valid(overload, fmap(arg_exprs, [](auto && expr) { return expr.get(); }), base_expr.get());
+    }
+
+    template<typename Pointer>
+    void process_member_arguments(std::vector<Pointer> & arguments, Pointer base)
+    {
+        auto get_variable = make_overload_set([](variable * var) { return var; }, [](expression * expr) { return expr->get_variable(); });
+
+        auto set_variable = make_overload_set([](variable * var, variable * actual) { assert(0); }, [](expression * expr, variable * actual) { assert(0); });
+
+        for (auto && arg : arguments)
+        {
+            auto var = get_variable(arg);
+
+            if (var->is_member())
+            {
+                auto member_var = dynamic_cast<member_variable *>(var);
+                assert(member_var);
+                auto actual = get_variable(base)->get_member(member_var);
+                assert(actual);
+
+                set_variable(arg, actual);
+            }
+        }
+    }
+
+    template<typename Pointer>
+    auto prepare_actual_arguments(function * overload, std::vector<Pointer> arguments, Pointer base = nullptr)
+    {
+        if (overload->is_member())
+        {
+            assert(base);
+            process_member_arguments(arguments, base);
+        }
+
+        std::vector<Pointer> ret;
+
+        std::vector<Pointer> matched;
+
+        std::vector<type *> matching_space;
+        std::vector<Pointer> used_args;
+
+        auto arg_begin = arguments.begin();
+        auto arg_end = arguments.end();
+        auto param_begin = overload->parameters().begin();
+        auto param_end = overload->parameters().end();
+
+        if (overload->is_member())
+        {
+            ret.push_back(base);
+            ++param_begin;
+        }
+
+        auto is_member_assignment = make_overload_set(
+            [](variable * var) { return var->is_member_assignment(); }, [](expression * expr) { return expr->get_variable()->is_member_assignment(); });
+
+        while (arg_begin != arg_end)
+        {
+            assert(param_begin != param_end);
+
+            matching_space.clear();
+            matched.clear();
+
+            auto && param_type = (*param_begin)->get_type();
+
+            if (!param_type->matches((*arg_begin)->get_type()))
+            {
+                if (!param_type->matches(matching_space))
+                {
+                    if (is_member_assignment(*arg_begin))
+                    {
+                        break;
+                    }
+
+                    assert(0);
+                }
+
+                ++param_begin;
+                continue;
+            }
+
+            bool last_matched;
+
+            do
+            {
+                matching_space.push_back((*arg_begin)->get_type());
+                matched.push_back(*arg_begin);
+            } while ((last_matched = param_type->matches(matching_space)) && ++arg_begin != arg_end);
+
+            if (matching_space.size() == 1 && !last_matched)
+            {
+                ++arg_begin;
+            }
+
+            std::copy(matched.begin(), matched.end(), std::back_inserter(ret));
+
+            ++param_begin;
+        }
+
+        auto get_rhs = make_overload_set(
+            [](variable * arg) {
+                auto arg_type = static_cast<member_assignment_type *>(arg->get_type());
+                return arg_type->get_associated_variable()->get_rhs();
+            },
+            [](expression * arg) {
+                auto arg_type = static_cast<member_assignment_type *>(arg->get_type());
+                return arg_type->get_associated_variable()->get_rhs_expression();
+            });
+
+        auto get_default_value = make_overload_set([](id<variable *>, variable * param) { return param->get_default_value()->get_variable(); },
+            [](id<expression *>, variable * param) { return param->get_default_value(); });
+
+        while (param_begin != param_end)
+        {
+            auto param = *param_begin;
+
+            if (auto member_param = dynamic_cast<member_variable *>(param))
+            {
+                auto it = std::find_if(arg_begin, arg_end, [&member_param](auto && arg) {
+                    if (!arg->get_type()->is_member_assignment())
+                    {
+                        return false;
+                    }
+
+                    auto arg_type = dynamic_cast<member_assignment_type *>(arg->get_type());
+                    assert(arg_type);
+                    return arg_type->member_name() == member_param->get_name();
+                });
+
+                if (it != arg_end)
+                {
+                    ret.push_back(get_rhs(*it));
+                    ++param_begin;
+                    continue;
+                }
+            }
+
+            assert(param->get_default_value());
+            ret.push_back(get_default_value(id<Pointer>(), param));
+            ++param_begin;
+        }
+
+        if (overload->is_member())
+        {
+            process_member_arguments(arguments, base);
+        }
+
+        return ret;
     }
 
     template<typename ArgumentPointer, typename MakeExpression>
@@ -275,14 +427,8 @@ inline namespace _v1
         }
 
         auto overload = best_matches.front();
-
-        if (overload->is_member())
-        {
-            assert(base);
-            arguments.insert(arguments.begin(), base);
-        }
-
-        auto ret = expr_maker(overload, std::move(arguments));
+        auto actual_arguments = prepare_actual_arguments(overload, arguments, base);
+        auto ret = expr_maker(overload, std::move(actual_arguments));
         return make_ready_future<std::unique_ptr<expression>>(std::move(ret));
     }
 

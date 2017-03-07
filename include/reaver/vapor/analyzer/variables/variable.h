@@ -118,9 +118,9 @@ inline namespace _v1
         virtual variable * get_member(const std::u32string &) const;
 
         // used for function arguments
-        void set_default_value(const expression * expr);
+        void set_default_value(expression * expr);
 
-        const expression * get_default_value() const
+        expression * get_default_value() const
         {
             return _default_value;
         }
@@ -138,7 +138,7 @@ inline namespace _v1
         mutable optional<variable_ir> _ir;
         bool _is_local = false;
 
-        const expression * _default_value = nullptr;
+        expression * _default_value = nullptr;
     };
 
     class blank_variable : public variable

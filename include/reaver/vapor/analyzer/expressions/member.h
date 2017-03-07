@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -46,11 +46,20 @@ inline namespace _v1
         virtual variable * get_variable() const override;
 
     private:
+        member_expression(const parser::member_expression & parse, variable * referenced) : _parse{ parse }, _referenced{ referenced }
+        {
+        }
+
         virtual future<> _analyze(analysis_context &) override;
 
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
-            return std::make_unique<member_expression>(_parse);
+            if (_referenced)
+            {
+                return std::unique_ptr<expression>{ new member_expression(_parse, repl.variables.at(_referenced)) };
+            }
+
+            assert(!"tried to clone_expr_with_replacement a member expression that refers to a member assignment; this shouldn't've survived analysis!");
         }
 
         virtual future<expression *> _simplify_expr(simplification_context &) override

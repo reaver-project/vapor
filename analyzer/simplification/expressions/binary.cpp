@@ -51,12 +51,8 @@ inline namespace _v1
                 replace_uptr(_rhs, get<1>(simplified), ctx);
                 return _call_expression->simplify_expr(ctx);
             })
-            .then([&](auto && simplified) -> expression * {
-                if (simplified)
-                {
-                    return simplified;
-                }
-
+            .then([&](auto && repl) -> expression * {
+                replace_uptr(_call_expression, repl, ctx);
                 return this;
             });
     }

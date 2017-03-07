@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -31,15 +31,13 @@ inline namespace _v1
     void variable_expression::print(std::ostream & os, std::size_t indent) const
     {
         auto in = std::string(indent, ' ');
-        os << in << "variable expression:\n";
-        os << in << "type: " << get_variable()->get_type()->explain() << '\n';
+        os << in << "variable expression of type: " << get_variable()->get_type()->explain() << '\n';
     }
 
     void variable_ref_expression::print(std::ostream & os, std::size_t indent) const
     {
         auto in = std::string(indent, ' ');
-        os << in << "variable ref expression:\n";
-        os << in << "type: " << get_variable()->get_type()->explain() << '\n';
+        os << in << "variable ref expression of type: " << get_variable()->get_type()->explain() << '\n';
     }
 }
 }

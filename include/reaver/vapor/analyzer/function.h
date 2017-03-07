@@ -75,8 +75,8 @@ inline namespace _v1
 
         expression * return_type_expression() const
         {
-            assert(0);
-            return nullptr;
+            assert(_return_type_expression);
+            return _return_type_expression;
         }
 
         const std::vector<variable *> & parameters() const

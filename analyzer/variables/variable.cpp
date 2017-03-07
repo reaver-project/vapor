@@ -46,7 +46,7 @@ inline namespace _v1
         return nullptr;
     }
 
-    void variable::set_default_value(const expression * expr)
+    void variable::set_default_value(expression * expr)
     {
         assert(!_default_value);
         assert(expr);

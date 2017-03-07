@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -52,9 +52,9 @@ inline namespace _v1
     }
 
     template<typename T, typename U>
-    auto replace_uptr(std::unique_ptr<T> & uptr, U * ptr, simplification_context & ctx) -> decltype(uptr.reset(ptr))
+    auto replace_uptr(std::unique_ptr<T> & uptr, U * ptr, simplification_context & ctx) -> decltype(uptr.reset(ptr), void())
     {
-        if (uptr.get() != ptr)
+        if (ptr && uptr.get() != ptr)
         {
             ctx.keep_alive(uptr.release());
             uptr.reset(ptr);
