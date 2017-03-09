@@ -84,7 +84,12 @@ inline namespace _v1
 
                     assert(_referenced_variable.get()->is_member());
                     auto member = var->get_member(static_cast<member_variable *>(*_referenced_variable));
-                    assert(member && member->is_constant());
+                    assert(member);
+
+                    if (!member->is_constant())
+                    {
+                        return make_ready_future<expression *>(nullptr);
+                    }
 
                     auto repl = replacements{};
                     return make_ready_future<expression *>(make_variable_expression(member->clone_with_replacement(repl)).release());

@@ -58,9 +58,9 @@ inline namespace _v1
         }
 
     private:
-        virtual std::unique_ptr<variable> _clone_with_replacement(replacements & repl) const override
+        virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override
         {
-            assert(0);
+            return std::make_unique<member_variable>(_wrapped, _name);
         }
 
         virtual variable_ir _codegen_ir(ir_generation_context & ctx) const override

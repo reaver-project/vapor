@@ -23,6 +23,7 @@
 #pragma once
 
 #include "expression.h"
+#include "variable.h"
 
 namespace reaver::vapor::parser
 {
@@ -56,7 +57,7 @@ inline namespace _v1
         {
             if (_referenced)
             {
-                return std::unique_ptr<expression>{ new member_expression(_parse, repl.variables.at(_referenced)) };
+                return make_variable_expression(_referenced->clone_with_replacement(repl));
             }
 
             assert(!"tried to clone_expr_with_replacement a member expression that refers to a member assignment; this shouldn't've survived analysis!");
@@ -72,6 +73,7 @@ inline namespace _v1
         const parser::member_expression & _parse;
 
         variable * _referenced = nullptr;
+        variable * _base = nullptr;
     };
 
     inline std::unique_ptr<member_expression> preanalyze_member_expression(const parser::member_expression & parse, scope *)

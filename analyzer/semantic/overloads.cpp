@@ -227,7 +227,12 @@ inline namespace _v1
     {
         auto get_variable = make_overload_set([](variable * var) { return var; }, [](expression * expr) { return expr->get_variable(); });
 
-        auto set_variable = make_overload_set([](variable * var, variable * actual) { assert(0); }, [](expression * expr, variable * actual) { assert(0); });
+        auto set_variable = make_overload_set([](variable *& var, variable * actual) { var = actual; },
+            [](expression *& expr, variable * actual) {
+                // FIXME: this is a dumb-ass leak
+                auto var_expr = make_variable_ref_expression(actual);
+                expr = var_expr.release();
+            });
 
         for (auto && arg : arguments)
         {
@@ -248,12 +253,6 @@ inline namespace _v1
     template<typename Pointer>
     auto prepare_actual_arguments(function * overload, std::vector<Pointer> arguments, Pointer base = nullptr)
     {
-        if (overload->is_member())
-        {
-            assert(base);
-            process_member_arguments(arguments, base);
-        }
-
         std::vector<Pointer> ret;
 
         std::vector<Pointer> matched;
@@ -268,6 +267,7 @@ inline namespace _v1
 
         if (overload->is_member())
         {
+            assert(base);
             ret.push_back(base);
             ++param_begin;
         }
@@ -351,6 +351,7 @@ inline namespace _v1
                 if (it != arg_end)
                 {
                     ret.push_back(get_rhs(*it));
+                    assert(!ret.back()->get_type()->is_member_assignment());
                     ++param_begin;
                     continue;
                 }
@@ -358,12 +359,13 @@ inline namespace _v1
 
             assert(param->get_default_value());
             ret.push_back(get_default_value(id<Pointer>(), param));
+            assert(!ret.back()->get_type()->is_member_assignment());
             ++param_begin;
         }
 
         if (overload->is_member())
         {
-            process_member_arguments(arguments, base);
+            process_member_arguments(ret, base);
         }
 
         return ret;

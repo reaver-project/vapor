@@ -42,19 +42,19 @@ inline namespace _v1
         return make_ready_future();
     }
 
-    future<expression *> function::simplify(simplification_context & ctx, std::vector<variable *> params)
+    future<expression *> function::simplify(simplification_context & ctx, std::vector<variable *> arguments)
     {
         if (_body)
         {
-            if (!std::any_of(params.begin(), params.end(), [](auto && arg) { return arg->is_constant(); }))
+            if (!std::any_of(arguments.begin(), arguments.end(), [](auto && arg) { return arg->is_constant(); }))
             {
                 return make_ready_future<expression *>(nullptr);
             }
 
             return [&] {
-                if (params.size())
+                if (arguments.size())
                 {
-                    auto body = _body->clone_with_replacement(_parameters, params);
+                    auto body = _body->clone_with_replacement(_parameters, arguments);
 
                     auto simplify = [ctx = std::make_shared<simplification_context>()](auto self, auto body)
                     {
@@ -103,10 +103,9 @@ inline namespace _v1
 
         if (_compile_time_eval)
         {
-            return (*_compile_time_eval)(ctx, params);
+            return (*_compile_time_eval)(ctx, arguments);
         }
 
-        // currently hitting this because the copy ctor doesn't have an eval
         assert(0);
     }
 

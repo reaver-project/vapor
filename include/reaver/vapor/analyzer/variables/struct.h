@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -62,7 +62,7 @@ inline namespace _v1
 
         virtual bool is_constant() const override
         {
-            return true;
+            return std::all_of(_fields_in_order.begin(), _fields_in_order.end(), [](auto && field) { return field->is_constant(); });
         }
 
         virtual variable * get_member(const member_variable * var) const override
@@ -88,9 +88,10 @@ inline namespace _v1
         }
 
     private:
-        virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override
+        virtual std::unique_ptr<variable> _clone_with_replacement(replacements & repl) const override
         {
-            assert(0);
+            return std::make_unique<struct_variable>(
+                _type, fmap(_fields_in_order, [&](auto && field) { return repl.variables.at(field)->clone_with_replacement(repl); }));
         }
 
         virtual variable_ir _codegen_ir(ir_generation_context & ctx) const override

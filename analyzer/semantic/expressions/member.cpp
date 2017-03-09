@@ -59,6 +59,7 @@ inline namespace _v1
 
         return get<postfix_expression *>(*last_postfix)->get_base_variable(ctx).then([&](auto && base_var) {
             _referenced = base_var->get_member(_parse.member_name.value.string);
+            _base = base_var;
             assert(_referenced && "this should be a nice error");
         });
     }

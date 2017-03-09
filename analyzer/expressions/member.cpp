@@ -36,6 +36,7 @@ inline namespace _v1
         auto in = std::string(indent, ' ');
         os << in << "member expression at " << _parse.range << '\n';
         os << in << "referenced member name: " << utf8(_parse.member_name.value.string) << '\n';
+        os << in << "referenced variable type: " << get_variable()->get_type()->explain() << '\n';
     }
 
     variable * member_expression::get_variable() const
@@ -50,7 +51,8 @@ inline namespace _v1
 
     statement_ir member_expression::_codegen_ir(ir_generation_context & ctx) const
     {
-        assert(0);
+        return { codegen::ir::instruction{
+            none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, get<codegen::ir::value>(_referenced->codegen_ir(ctx)) } };
     }
 }
 }

@@ -86,11 +86,6 @@ inline namespace _v1
         });
 
         _aggregate_ctor->set_eval([this](auto &&, const std::vector<variable *> & args) {
-            if (!std::all_of(args.begin(), args.end(), [](auto && arg) { return arg->is_constant(); }))
-            {
-                return make_ready_future<expression *>(nullptr);
-            }
-
             if (!std::equal(args.begin(), args.end(), _data_members.begin(), [](auto && arg, auto && member) { return arg->get_type() == member->get_type(); }))
             {
                 assert(0);
@@ -120,14 +115,19 @@ inline namespace _v1
         data_members.insert(data_members.begin(), _this_argument.get());
 
         _aggregate_copy_ctor =
-            make_function("struct type copy replacement constructor", get_expression(), data_members, [&](auto && ctx) -> codegen::ir::function { assert(0); });
+            make_function("struct type copy replacement constructor", get_expression(), data_members, [&](auto && ctx) -> codegen::ir::function {
+                auto ir_type = this->codegen_type(ctx);
+                auto args = fmap(_data_members, [&](auto && member) { return get<codegen::ir::value>(member->codegen_ir(ctx)); });
+                auto result = codegen::ir::make_variable(ir_type);
+
+                return { U"constructor",
+                    this->get_scope()->codegen_ir(ctx),
+                    fmap(args, [](auto && arg) { return get<std::shared_ptr<codegen::ir::variable>>(arg); }),
+                    result,
+                    { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() }, args, result } } };
+            });
 
         _aggregate_copy_ctor->set_eval([this](auto &&, std::vector<variable *> args) {
-            if (!std::all_of(args.begin(), args.end(), [](auto && arg) { return arg->is_constant(); }))
-            {
-                return make_ready_future<expression *>(nullptr);
-            }
-
             [[maybe_unused]] auto base = args.front();
             args.erase(args.begin());
 
@@ -138,10 +138,12 @@ inline namespace _v1
                 assert(0);
             }
 
-            assert(0);
             auto repl = replacements{};
-            auto arg_copies = fmap(args, [&](auto && arg) { return arg->clone_with_replacement(repl); });
-            return make_ready_future<expression *>(make_variable_expression(make_struct_variable(this->shared_from_this(), std::move(arg_copies))).release());
+            for (std::size_t i = 0; i < _data_members.size(); ++i)
+            {
+                repl.variables[base->get_member(_data_members[i])] = args[i];
+            }
+            return make_ready_future(make_variable_expression(base->clone_with_replacement(repl)).release());
         });
 
         _aggregate_copy_ctor->set_name(U"replacing_copy_constructor");
