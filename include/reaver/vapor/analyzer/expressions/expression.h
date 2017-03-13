@@ -83,6 +83,7 @@ inline namespace _v1
         {
             auto ret = _clone_expr_with_replacement(repl);
             repl.expressions[this] = ret.get();
+            repl.statements[this] = ret.get();
             return ret;
         }
 

@@ -38,11 +38,6 @@ inline namespace _v1
     class simplification_context
     {
     public:
-        simplification_context()
-        {
-            logger::dlog() << "Creating a simplification context at " << this << ".";
-        }
-
         ~simplification_context();
 
         template<typename T, typename F>

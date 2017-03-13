@@ -7,7 +7,7 @@ LDFLAGS +=
 LIBRARIES += -pthread -lboost_system -lboost_filesystem -ldl
 
 SOURCES := $(shell find . -name "*.cpp" ! -wholename "./tests/*" ! -name "main.cpp" ! -wholename "./main/*" ! -wholename "./output/*")
-MAINSRC := $(shell find ./main/ -name "*.cpp") main.cpp
+MAINSRC := $(shell find ./main/ -name "*.cpp" 2>/dev/null) main.cpp
 TESTSRC := $(shell find ./tests/ -name "*.cpp")
 OBJECTS := $(SOURCES:.cpp=.o)
 MAINOBJ := $(MAINSRC:.cpp=.o)
