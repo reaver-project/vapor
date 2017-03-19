@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -222,6 +222,7 @@ inline namespace _v1
         std::vector<symbol *> _symbols_in_order;
         mutable std::unordered_map<std::u32string, future<symbol *>> _symbol_futures;
         mutable std::unordered_map<std::u32string, manual_promise<symbol *>> _symbol_promises;
+        mutable std::unordered_map<std::u32string, future<symbol *>> _resolve_futures;
         const bool _is_local_scope = false;
         const bool _is_shadowing_boundary = false;
         bool _is_closed = false;

@@ -148,8 +148,8 @@ inline namespace _v1
         {
             _shlock lock{ _lock };
 
-            auto it = _symbol_futures.find(name);
-            if (it != _symbol_futures.end())
+            auto it = _resolve_futures.find(name);
+            if (it != _resolve_futures.end())
             {
                 return it->second;
             }
@@ -159,7 +159,7 @@ inline namespace _v1
 
         get_future(name)
             .then([promise = pair.promise](auto && symb) { promise.set(symb); })
-            .on_error([&name, promise = pair.promise, parent = _parent](auto exptr) {
+            .on_error([name, promise = pair.promise, parent = _parent](auto exptr) {
                 try
                 {
                     std::rethrow_exception(exptr);
@@ -187,7 +187,7 @@ inline namespace _v1
             .detach();
 
         _ulock lock{ _lock };
-        _symbol_futures.emplace(name, pair.future);
+        _resolve_futures.emplace(name, pair.future);
         return std::move(pair.future);
     }
 
