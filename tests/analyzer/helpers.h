@@ -31,7 +31,7 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    template<typename T, typename F>
+    template<typename F>
     auto parse(std::u32string program, F && parser)
     {
         parser::context ctx;
