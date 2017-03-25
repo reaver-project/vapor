@@ -57,7 +57,7 @@ MAYFLY_ADD_TESTCASE("non-member, explicit type, initializer", [] {
         MAYFLY_CHECK(decl->declared_symbol()->get_variable()->get_type() == builtin_types().integer.get());
         MAYFLY_CHECK(decl->initializer_expression().get()->get_type() == builtin_types().integer.get());
 
-        auto expected_value = integer_constant(1);
+        integer_constant expected_value{ 1 };
         MAYFLY_CHECK(decl->initializer_expression().get()->get_variable()->is_equal(&expected_value));
     }
 
@@ -97,7 +97,7 @@ MAYFLY_ADD_TESTCASE("non-member, deduced type, initializer", [] {
         MAYFLY_CHECK(decl->declared_symbol()->get_variable()->get_type() == builtin_types().integer.get());
         MAYFLY_CHECK(decl->initializer_expression().get()->get_type() == builtin_types().integer.get());
 
-        auto expected_value = integer_constant(1);
+        integer_constant expected_value{ 1 };
         MAYFLY_CHECK(decl->initializer_expression().get()->get_variable()->is_equal(&expected_value));
     }
 });
@@ -120,7 +120,7 @@ MAYFLY_ADD_TESTCASE("member, deduced type, initializer", [] {
         MAYFLY_CHECK(decl->declared_symbol()->get_variable()->get_type() == builtin_types().integer.get());
         MAYFLY_CHECK(decl->initializer_expression().get()->get_type() == builtin_types().integer.get());
 
-        auto expected_value = integer_constant(1);
+        integer_constant expected_value{ 1 };
         MAYFLY_CHECK(decl->initializer_expression().get()->get_variable()->is_equal(&expected_value));
         MAYFLY_CHECK(decl->declared_symbol()->get_variable()->is_member());
         MAYFLY_CHECK(decl->declared_symbol()->get_variable()->get_default_value()->get_variable()->is_equal(&expected_value));
