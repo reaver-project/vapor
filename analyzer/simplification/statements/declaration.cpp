@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -38,8 +38,10 @@ inline namespace _v1
 
         fmap(_init_expr, [&](auto && expr) {
             fut = expr->simplify_expr(ctx)
-                      .then([&](auto && simplified) { replace_uptr(_init_expr.get(), simplified, ctx); })
-                      .then([&]() { return _declared_symbol->simplify(ctx); })
+                      .then([&](auto && simplified) {
+                          replace_uptr(_init_expr.get(), simplified, ctx);
+                          return _declared_symbol->simplify(ctx);
+                      })
                       .then([&]() -> statement * { return _init_expr->release(); });
 
             return unit{};

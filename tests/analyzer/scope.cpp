@@ -22,6 +22,8 @@
 
 #include <reaver/mayfly.h>
 
+#include <reaver/future_get.h>
+
 #include "helpers.h"
 
 using namespace reaver::vapor;
@@ -56,8 +58,6 @@ MAYFLY_ADD_TESTCASE("init and get", [] {
 });
 
 MAYFLY_ADD_TESTCASE("get_future", [] {
-    reaver::default_executor(reaver::make_executor<trivial_executor>());
-
     scope s{};
 
     auto preexisting = make_symbol(U"preexisting");
@@ -80,16 +80,14 @@ MAYFLY_ADD_TESTCASE("get_future", [] {
 
     s.close();
 
-    MAYFLY_REQUIRE(preexisting_future.try_get() == preexisting_ptr);
-    MAYFLY_REQUIRE(added_after_future.try_get() == added_after_ptr);
+    MAYFLY_REQUIRE(reaver::get(preexisting_future) == preexisting_ptr);
+    MAYFLY_REQUIRE(reaver::get(added_after_future) == added_after_ptr);
 
-    MAYFLY_REQUIRE_THROWS_TYPE(failed_lookup, failed_future.try_get());
+    MAYFLY_REQUIRE_THROWS_TYPE(failed_lookup, reaver::get(failed_future));
     MAYFLY_REQUIRE_THROWS_TYPE(failed_lookup, s.get_future(U"another_failed").try_get());
 });
 
 MAYFLY_ADD_TESTCASE("resolve", [] {
-    reaver::default_executor(reaver::make_executor<trivial_executor>());
-
     scope parent;
     auto child = parent.clone_for_class();
 
@@ -121,11 +119,11 @@ MAYFLY_ADD_TESTCASE("resolve", [] {
     child->close();
     parent.close();
 
-    MAYFLY_CHECK(parent_only_future.try_get() == parent_only_ptr);
-    MAYFLY_CHECK(child_only_future.try_get() == child_only_ptr);
-    MAYFLY_CHECK(overloaded_future.try_get() == overloaded_child_ptr);
-    MAYFLY_CHECK_THROWS_TYPE(failed_lookup, failed_future.try_get());
-    MAYFLY_CHECK(grandchild_future.try_get() == parent_only_ptr);
+    MAYFLY_CHECK(reaver::get(parent_only_future) == parent_only_ptr);
+    MAYFLY_CHECK(reaver::get(child_only_future) == child_only_ptr);
+    MAYFLY_CHECK(reaver::get(overloaded_future) == overloaded_child_ptr);
+    MAYFLY_CHECK_THROWS_TYPE(failed_lookup, reaver::get(failed_future));
+    MAYFLY_CHECK(reaver::get(grandchild_future) == parent_only_ptr);
 });
 
 MAYFLY_ADD_TESTCASE("is_local", [] {

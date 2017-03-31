@@ -40,37 +40,6 @@ inline namespace _v1
         return parser(ctx);
     }
 
-    struct trivial_executor : public reaver::executor
-    {
-        virtual void push(reaver::function<void()> f) override
-        {
-            if (in_function)
-            {
-                queue.push_back(std::move(f));
-                return;
-            }
-
-            in_function = true;
-            f();
-
-            while (queue.size())
-            {
-                auto fs = move(queue);
-                queue.clear();
-
-                for (auto && f : fs)
-                {
-                    f();
-                }
-            }
-
-            in_function = false;
-        }
-
-        std::vector<reaver::function<void()>> queue;
-        bool in_function = false;
-    };
-
     class unexpected_call : public reaver::exception
     {
     public:

@@ -22,6 +22,8 @@
 
 #include <reaver/mayfly.h>
 
+#include <reaver/future_get.h>
+
 #include "../helpers.h"
 
 using namespace reaver::vapor;
@@ -32,8 +34,6 @@ MAYFLY_BEGIN_SUITE("expressions");
 MAYFLY_BEGIN_SUITE("expression");
 
 MAYFLY_ADD_TESTCASE("analysis", [] {
-    reaver::default_executor(reaver::make_executor<trivial_executor>());
-
     test_type t1{};
     test_expression expr{};
 
@@ -70,7 +70,7 @@ MAYFLY_ADD_TESTCASE("clone cache", [] {
 });
 
 MAYFLY_ADD_TESTCASE("simplification", [] {
-    reaver::default_executor(reaver::make_executor<trivial_executor>());
+    MAYFLY_MAIN_THREAD;
 
     test_expression expr{};
 
@@ -81,26 +81,27 @@ MAYFLY_ADD_TESTCASE("simplification", [] {
 
     simplification_context ctx;
     auto simpl_future = expr.simplify_expr(ctx);
-    MAYFLY_CHECK(simpl_future.try_get() == simplified_ptr);
+    MAYFLY_REQUIRE(reaver::get(simpl_future) == simplified_ptr);
 
     auto resimpl_future = expr.simplify_expr(ctx);
-    MAYFLY_CHECK(resimpl_future.try_get() == simplified_ptr);
+    MAYFLY_REQUIRE(reaver::get(resimpl_future) == simplified_ptr);
 
     auto stmt_simpl_future = expr.simplify(ctx);
-    MAYFLY_CHECK(stmt_simpl_future.try_get() == simplified_ptr);
+    MAYFLY_REQUIRE(reaver::get(stmt_simpl_future) == simplified_ptr);
 
-    auto ctx_future = ctx.get_future_or_init<expression>(&expr, []() -> reaver::future<expression *> {
+    auto ctx_future = ctx.get_future_or_init<expression>(&expr, [&]() -> reaver::future<expression *> {
+        MAYFLY_THREAD;
         MAYFLY_REQUIRE(!"the context doesn't hold the required future!");
         __builtin_unreachable();
     });
-    MAYFLY_CHECK(ctx_future.try_get() == simplified_ptr);
+    MAYFLY_REQUIRE(reaver::get(ctx_future) == simplified_ptr);
 
     delete simplified_ptr;
 
     simplification_context other_ctx;
     auto bad_simpl_future = expr.simplify_expr(other_ctx);
-    MAYFLY_CHECK_THROWS_TYPE(unexpected_call, bad_simpl_future.try_get());
-    MAYFLY_CHECK_THROWS_TYPE(unexpected_call, expr.simplify(other_ctx).try_get());
+    MAYFLY_CHECK_THROWS_TYPE(unexpected_call, reaver::get(bad_simpl_future));
+    MAYFLY_CHECK_THROWS_TYPE(unexpected_call, reaver::get(expr.simplify(other_ctx)));
 });
 
 MAYFLY_END_SUITE;
