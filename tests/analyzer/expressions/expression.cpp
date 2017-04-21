@@ -44,10 +44,10 @@ MAYFLY_ADD_TESTCASE("analysis", [] {
 
     analysis_context ctx;
     auto analysis_future = expr.analyze(ctx);
-    MAYFLY_REQUIRE_NOTHROW(analysis_future.try_get());
+    MAYFLY_REQUIRE_NOTHROW(reaver::get(analysis_future));
 
     auto reanalysis_future = expr.analyze(ctx);
-    MAYFLY_REQUIRE_NOTHROW(reanalysis_future.try_get());
+    MAYFLY_REQUIRE_NOTHROW(reaver::get(reanalysis_future));
 
     MAYFLY_CHECK(expr.get_variable() == var_ptr);
     MAYFLY_CHECK(expr.get_type() == &t1);
