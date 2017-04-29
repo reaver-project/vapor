@@ -20,6 +20,8 @@
  *
  **/
 
+#include <boost/filesystem.hpp>
+
 #include <fstream>
 
 #include "vapor/analyzer.h"
@@ -104,6 +106,7 @@ int main() try
     reaver::logger::dlog() << "Generated code:";
     reaver::logger::dlog() << generated_code;
 
+    boost::filesystem::create_directories("output");
     std::ofstream out{ "output/output.cpp", std::ios::trunc | std::ios::out };
     out << generated_code;
 
