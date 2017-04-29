@@ -22,6 +22,7 @@
 
 #include "vapor/analyzer/expressions/call.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/variables/member_assignment.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -80,6 +81,12 @@ inline namespace _v1
 
         auto arguments_values = fmap(arguments_instructions, [](auto && insts) { return insts.back().result; });
         arguments_values.insert(arguments_values.begin(), _function->call_operand_ir(ctx));
+
+        if (_function->is_member())
+        {
+            assert(arguments_values.size() >= 2);
+            std::swap(arguments_values[0], arguments_values[1]);
+        }
 
         auto call_expr_instruction = codegen::ir::instruction{ none,
             none,

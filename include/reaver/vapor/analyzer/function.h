@@ -46,6 +46,7 @@ inline namespace _v1
     using function_codegen = reaver::function<codegen::ir::function(ir_generation_context &)>;
     using function_hook = reaver::function<reaver::future<>(analysis_context &, call_expression *, std::vector<variable *>)>;
     using function_eval = reaver::function<future<expression *>(simplification_context &, std::vector<variable *>)>;
+    using scopes_generator = reaver::function<std::vector<codegen::ir::scope>(ir_generation_context &)>;
 
     class function
     {
@@ -108,6 +109,10 @@ inline namespace _v1
             if (!_ir)
             {
                 _ir = _codegen(ctx);
+                if (_is_member)
+                {
+                    _ir->is_member = true;
+                }
             }
 
             if (state)
@@ -122,8 +127,14 @@ inline namespace _v1
 
         codegen::ir::value call_operand_ir(ir_generation_context & ctx) const
         {
-            assert(_name);
-            return { codegen::ir::label{ *_name, {} } };
+            auto scopes = [&]() -> std::vector<codegen::ir::scope> {
+                if (!_is_member && _scopes_generator)
+                {
+                    return _scopes_generator.get()(ctx);
+                }
+                return {};
+            }();
+            return { codegen::ir::label{ *_name, scopes } };
         }
 
         void set_return_type(std::shared_ptr<expression> ret)
@@ -199,6 +210,11 @@ inline namespace _v1
             _is_member = true;
         }
 
+        void set_scopes_generator(scopes_generator generator)
+        {
+            _scopes_generator = std::move(generator);
+        }
+
     private:
         std::string _explanation;
         optional<range_type> _range;
@@ -219,6 +235,7 @@ inline namespace _v1
 
         std::vector<function_hook> _analysis_hooks;
         optional<function_eval> _compile_time_eval;
+        optional<scopes_generator> _scopes_generator;
     };
 
     inline std::unique_ptr<function> make_function(std::string expl,

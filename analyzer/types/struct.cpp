@@ -78,17 +78,35 @@ inline namespace _v1
             auto args = fmap(_data_members, [&](auto && member) { return get<codegen::ir::value>(member->codegen_ir(ctx)); });
             auto result = codegen::ir::make_variable(ir_type);
 
+            auto scopes = this->get_scope()->codegen_ir(ctx);
+            scopes.emplace_back(_codegen_type_name_value.get(), codegen::ir::scope_type::type);
+
             return { U"constructor",
-                this->get_scope()->codegen_ir(ctx),
+                std::move(scopes),
                 fmap(args, [](auto && arg) { return get<std::shared_ptr<codegen::ir::variable>>(arg); }),
                 result,
-                { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() }, args, result } } };
+                { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() }, args, result },
+                    codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
+        });
+
+        _aggregate_ctor->set_scopes_generator([this](auto && ctx) {
+            this->codegen_type(ctx);
+
+            auto scopes = this->get_scope()->codegen_ir(ctx);
+            scopes.emplace_back(_codegen_type_name_value.get(), codegen::ir::scope_type::type);
+
+            return scopes;
         });
 
         _aggregate_ctor->set_eval([this](auto &&, const std::vector<variable *> & args) {
             if (!std::equal(args.begin(), args.end(), _data_members.begin(), [](auto && arg, auto && member) { return arg->get_type() == member->get_type(); }))
             {
                 assert(0);
+            }
+
+            if (!std::all_of(args.begin(), args.end(), [](auto && arg) { return arg->is_constant(); }))
+            {
+                return make_ready_future<expression *>(nullptr);
             }
 
             auto repl = replacements{};
@@ -120,15 +138,19 @@ inline namespace _v1
                 auto args = fmap(_data_members, [&](auto && member) { return get<codegen::ir::value>(member->codegen_ir(ctx)); });
                 auto result = codegen::ir::make_variable(ir_type);
 
-                return { U"constructor",
-                    this->get_scope()->codegen_ir(ctx),
+                auto scopes = this->get_scope()->codegen_ir(ctx);
+                scopes.emplace_back(_codegen_type_name_value.get(), codegen::ir::scope_type::type);
+
+                return { U"replacing_copy_constructor",
+                    std::move(scopes),
                     fmap(args, [](auto && arg) { return get<std::shared_ptr<codegen::ir::variable>>(arg); }),
                     result,
-                    { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() }, args, result } } };
+                    { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() }, args, result },
+                        codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
             });
 
         _aggregate_copy_ctor->set_eval([this](auto &&, std::vector<variable *> args) {
-            [[maybe_unused]] auto base = args.front();
+            auto base = args.front();
             args.erase(args.begin());
 
             if (base->get_type() != this || !std::equal(args.begin(), args.end(), _data_members.begin(), [](auto && arg, auto && member) {
@@ -136,6 +158,11 @@ inline namespace _v1
                 }))
             {
                 assert(0);
+            }
+
+            if (!std::all_of(args.begin(), args.end(), [](auto && arg) { return arg->is_constant(); }))
+            {
+                return make_ready_future<expression *>(nullptr);
             }
 
             auto repl = replacements{};
@@ -157,10 +184,25 @@ inline namespace _v1
         auto actual_type = *_codegen_t;
 
         // TODO: actual name tracking for this shit
-        auto type = codegen::ir::variable_type{ U"__struct_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.struct_index++)),
-            get_scope()->codegen_ir(ctx),
-            0,
-            fmap(_data_members, [&](auto && member) { return codegen::ir::member{ member->member_codegen_ir(ctx) }; }) };
+        _codegen_type_name_value = U"__struct_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.struct_index++));
+        auto type = codegen::ir::variable_type{ _codegen_type_name_value.get(), get_scope()->codegen_ir(ctx), 0, {} };
+
+        auto members = fmap(_data_members, [&](auto && member) { return codegen::ir::member{ member->member_codegen_ir(ctx) }; });
+
+        auto scopes = this->get_scope()->codegen_ir(ctx);
+        scopes.emplace_back(type.name, codegen::ir::scope_type::type);
+
+        auto add_fn = [&](auto && fn) {
+            auto fn_ir = fn->codegen_ir(ctx);
+            fn_ir.scopes = scopes;
+            fn_ir.parent_type = actual_type;
+            members.push_back(codegen::ir::member{ fn_ir });
+            ctx.add_generated_function(fn.get());
+        };
+        add_fn(_aggregate_ctor);
+        add_fn(_aggregate_copy_ctor);
+
+        type.members = std::move(members);
 
         *actual_type = std::move(type);
     }

@@ -53,5 +53,10 @@ inline namespace _v1
         assert(expr->get_type() == get_type());
         _default_value = expr;
     }
+
+    std::unique_ptr<expression> variable::release_owned_expression()
+    {
+        return nullptr;
+    }
 }
 }

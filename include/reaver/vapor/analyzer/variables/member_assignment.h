@@ -44,7 +44,7 @@ inline namespace _v1
                 return _type.get();
             }
 
-            return _type->assigned_type();
+            return _rhs->get_type();
         }
 
         const std::u32string member_name() const
@@ -62,7 +62,14 @@ inline namespace _v1
         {
             assert(!_rhs);
             _rhs = rhs;
+            _rhs->do_give_expression();
+
             _rhs_expr = make_variable_ref_expression(_rhs);
+        }
+
+        virtual std::unique_ptr<expression> release_owned_expression() override
+        {
+            return std::move(_rhs_expr);
         }
 
         auto get_rhs() const
@@ -71,10 +78,19 @@ inline namespace _v1
             return _rhs;
         }
 
-        auto get_rhs_expression() const
+        virtual expression * get_expression() const override
         {
-            assert(_rhs_expr);
+            assert(_rhs);
+            if (auto expr = _rhs->get_expression())
+            {
+                return expr;
+            }
             return _rhs_expr.get();
+        }
+
+        virtual bool is_member_assignment() const override
+        {
+            return !_rhs;
         }
 
     private:
@@ -92,9 +108,9 @@ inline namespace _v1
             return ret;
         }
 
-        virtual variable_ir _codegen_ir(ir_generation_context &) const override
+        virtual variable_ir _codegen_ir(ir_generation_context & ctx) const override
         {
-            assert(!"attempted to codegen a member-assignment-variable");
+            return _rhs->codegen_ir(ctx);
         }
 
         variable * _rhs = nullptr;

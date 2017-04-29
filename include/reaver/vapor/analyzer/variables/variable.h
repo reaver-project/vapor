@@ -38,7 +38,6 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     class type;
-    class expression;
     class member_variable;
 
     using variable_ir = variant<none_t, codegen::ir::value, std::vector<codegen::ir::function>>;
@@ -124,6 +123,21 @@ inline namespace _v1
         {
             return _default_value;
         }
+
+        virtual std::unique_ptr<expression> release_owned_expression();
+
+        virtual expression * get_expression() const
+        {
+            return nullptr;
+        }
+
+        void do_give_expression()
+        {
+            _do_give_expression = true;
+        }
+
+    protected:
+        bool _do_give_expression = false;
 
     private:
         virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const = 0;

@@ -31,3 +31,8 @@ make -j${core_number} -l${core_number}
 make test -j${core_number} -l${core_number}
 ./tests/test -j ${core_number} -l 3 -r teamcity
 
+./vprc
+echo 'int main(int argc, char ** argv) { return hello_world::entry(atoi(argv[1])).convert_to<int>(); }' >> output/output.cpp
+c++ -Wno-extra-qualification -Werror -std=c++1z -O3 output/output.cpp -o output/output -g -fsanitize=address
+./output/output 3
+

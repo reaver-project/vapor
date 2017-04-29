@@ -52,6 +52,7 @@ inline namespace _v1
             },
             _parse.range);
         _function->set_name(U"operator()");
+        _function->make_member();
         _overload_set->add_function(this);
 
         auto initial_future = [&] {
@@ -76,6 +77,9 @@ inline namespace _v1
                     arg.variable->set_type(arg.type_expression->get_variable());
                     return arg.variable.get();
                 });
+
+                _self = make_blank_variable(_overload_set->get_type());
+                param_variables.insert(param_variables.begin(), _self.get());
 
                 _function->set_parameters(std::move(param_variables));
 

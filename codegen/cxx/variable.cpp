@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,10 +20,12 @@
  *
  **/
 
-#include "vapor/codegen/ir/variable.h"
+#include <boost/algorithm/string/join.hpp>
+
 #include "vapor/codegen/cxx.h"
 #include "vapor/codegen/cxx/names.h"
 #include "vapor/codegen/ir/type.h"
+#include "vapor/codegen/ir/variable.h"
 
 #include <cassert>
 
@@ -101,6 +103,10 @@ inline namespace _v1
                 [&](const codegen::ir::label & label) {
                     assert(label.scopes.empty());
                     return label.name;
+                },
+                [&](const codegen::ir::struct_value & struct_val) {
+                    std::vector<std::u32string> subvalues = fmap(struct_val.fields, [&](auto && val) { return value_of(val, ctx); });
+                    return type_name(struct_val.type, ctx) + U"::constructor(" + boost::algorithm::join(subvalues, ", ") + U")";
                 },
                 [&](auto &&) {
                     assert(0);

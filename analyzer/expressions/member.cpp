@@ -51,8 +51,16 @@ inline namespace _v1
 
     statement_ir member_expression::_codegen_ir(ir_generation_context & ctx) const
     {
-        return { codegen::ir::instruction{
-            none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, get<codegen::ir::value>(_referenced->codegen_ir(ctx)) } };
+        auto base_variable_value = get<codegen::ir::value>(_base->codegen_ir(ctx));
+        auto base_variable = get<std::shared_ptr<codegen::ir::variable>>(base_variable_value);
+
+        return { codegen::ir::instruction{ none,
+                     none,
+                     { boost::typeindex::type_id<codegen::ir::member_access_instruction>() },
+                     { base_variable, codegen::ir::label{ _parse.member_name.value.string, {} } },
+                     get<codegen::ir::value>(_referenced->codegen_ir(ctx)) },
+            codegen::ir::instruction{
+                none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, get<codegen::ir::value>(_referenced->codegen_ir(ctx)) } };
     }
 }
 }

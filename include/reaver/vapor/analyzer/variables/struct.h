@@ -96,7 +96,8 @@ inline namespace _v1
 
         virtual variable_ir _codegen_ir(ir_generation_context & ctx) const override
         {
-            return codegen::ir::struct_value{ fmap(_fields_in_order, [&](auto && field) { return get<codegen::ir::value>(field->codegen_ir(ctx)); }) };
+            return codegen::ir::struct_value{ _type->codegen_type(ctx),
+                fmap(_fields_in_order, [&](auto && field) { return get<codegen::ir::value>(field->codegen_ir(ctx)); }) };
         }
 
         std::shared_ptr<struct_type> _type;

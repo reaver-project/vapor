@@ -69,6 +69,8 @@ inline namespace _v1
             if ((*param_begin)->get_type() != base->get_type())
             {
                 logger::dlog() << overload->explain() << " not considered; is a member function, but the base expression is of the wrong type";
+                logger::dlog() << "expected expression type: " << (*param_begin)->get_type()->explain();
+                logger::dlog() << "actual expression type: " << base->get_type()->explain();
                 return false;
             }
 
@@ -79,12 +81,12 @@ inline namespace _v1
         std::vector<variable *> provided_params;
 
         auto it = arg_begin;
-        if ((it = std::find_if(it, arg_end, [](auto && arg) { return arg->get_variable()->is_member_assignment(); })) != arg_end)
+        if ((it = std::find_if(it, arg_end, [](auto && arg) { return arg->get_type()->is_member_assignment(); })) != arg_end)
         {
             auto arg_begin = it;
             auto possible_arg_end = it;
 
-            if ((it = std::find_if(it, arg_end, [](auto && arg) { return !arg->get_variable()->is_member_assignment(); })) != arg_end)
+            if ((it = std::find_if(it, arg_end, [](auto && arg) { return !arg->get_type()->is_member_assignment(); })) != arg_end)
             {
                 assert(!"a non-mem-assignment argument after a mem-assignment argument");
             }
@@ -321,12 +323,14 @@ inline namespace _v1
         auto get_rhs = make_overload_set(
             [](variable * arg) {
                 auto arg_type = static_cast<member_assignment_type *>(arg->get_type());
-                return arg_type->get_associated_variable()->get_rhs();
+                return arg_type->get_associated_variable();
             },
             [](expression * arg) {
                 auto arg_type = static_cast<member_assignment_type *>(arg->get_type());
-                return arg_type->get_associated_variable()->get_rhs_expression();
+                return arg_type->get_associated_variable()->get_expression();
             });
+
+        auto get_variable = make_overload_set([](variable * arg) { return arg; }, [](expression * arg) { return arg->get_variable(); });
 
         auto get_default_value = make_overload_set([](id<variable *>, variable * param) { return param->get_default_value()->get_variable(); },
             [](id<expression *>, variable * param) { return param->get_default_value(); });
@@ -351,7 +355,7 @@ inline namespace _v1
                 if (it != arg_end)
                 {
                     ret.push_back(get_rhs(*it));
-                    assert(!ret.back()->get_type()->is_member_assignment());
+                    assert(!get_variable(ret.back())->is_member_assignment());
                     ++param_begin;
                     continue;
                 }
@@ -359,7 +363,7 @@ inline namespace _v1
 
             assert(param->get_default_value());
             ret.push_back(get_default_value(id<Pointer>(), param));
-            assert(!ret.back()->get_type()->is_member_assignment());
+            assert(!get_variable(ret.back())->is_member_assignment());
             ++param_begin;
         }
 

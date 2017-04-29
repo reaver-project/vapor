@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -52,8 +52,7 @@ inline namespace _v1
         std::u32string generate<ir::member_access_instruction>(const ir::instruction & inst, codegen_context & ctx)
         {
             assert(inst.operands.size() == 2);
-            return variable_of(inst.result, ctx) + U".emplace(" + variable_of(inst.operands[0], ctx) + U".reference()." + get<ir::label>(inst.operands[1]).name
-                + U");\n";
+            return variable_of(inst.result, ctx) + U".emplace(" + value_of(inst.operands[0], ctx) + U"." + get<ir::label>(inst.operands[1]).name + U");\n";
         }
     }
 }

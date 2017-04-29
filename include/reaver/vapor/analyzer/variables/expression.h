@@ -43,6 +43,16 @@ inline namespace _v1
         virtual bool is_constant() const override;
         virtual bool is_equal(const variable *) const override;
 
+        virtual std::unique_ptr<expression> release_owned_expression() override
+        {
+            return std::move(_expression);
+        }
+
+        virtual expression * get_expression() const override
+        {
+            return _expression.get();
+        }
+
     private:
         virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override;
         virtual future<variable *> _simplify(simplification_context & ctx) override;
@@ -71,6 +81,11 @@ inline namespace _v1
 
         virtual bool is_constant() const override;
         virtual bool is_equal(const variable *) const override;
+
+        virtual expression * get_expression() const override
+        {
+            return _do_give_expression ? _expression : nullptr;
+        }
 
     private:
         virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override;
