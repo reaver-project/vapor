@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,3 +22,8 @@
 
 #include <reaver/mayfly/main.h>
 #include <reaver/mayfly/teamcity.h>
+
+#include <reaver/future.h>
+#include <reaver/once.h>
+
+auto init = reaver::once([]() { reaver::default_executor(reaver::make_executor<reaver::thread_pool>(1)); });

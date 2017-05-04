@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,13 +20,13 @@
  *
  **/
 
-#include <reaver/prelude/fold.h>
-
-#include "vapor/analyzer/expressions/expression_list.h"
-#include "vapor/analyzer/expressions/id.h"
 #include "vapor/analyzer/expressions/postfix.h"
+#include "vapor/analyzer/expressions/call.h"
+#include "vapor/analyzer/expressions/expression_list.h"
+#include "vapor/analyzer/expressions/identifier.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
+#include "vapor/analyzer/semantic/overloads.h"
 #include "vapor/parser.h"
 
 namespace reaver::vapor::analyzer
@@ -35,20 +35,41 @@ inline namespace _v1
 {
     future<> postfix_expression::_analyze(analysis_context & ctx)
     {
-        return when_all(fmap(_arguments, [&](auto && expr) { return expr->analyze(ctx); })).then([&] { return _base_expr->analyze(ctx); }).then([&] {
-            if (!_parse.bracket_type)
-            {
-                return make_ready_future();
-            }
+        return _base_expr->analyze(ctx)
+            .then([&] {
+                auto expr_ctx = get_context();
+                expr_ctx.push_back(this);
 
-            return resolve_overload(
-                _base_expr->get_type(), *_parse.bracket_type, fmap(_arguments, [](auto && arg) -> const type * { return arg->get_type(); }), _scope)
-                .then([&](auto && overload) {
-                    _overload = overload;
-                    return _overload->return_type();
-                })
-                .then([&](auto && ret_type) { this->_set_variable(make_expression_variable(this, ret_type)); });
-        });
+                return when_all(fmap(_arguments, [&](auto && expr) {
+                    expr->set_context(expr_ctx);
+                    return expr->analyze(ctx);
+                }));
+            })
+            .then([&] {
+                if (!_modifier)
+                {
+                    return make_ready_future();
+                }
+
+                if (_modifier == lexer::token_type::dot)
+                {
+                    return _base_expr->get_type()
+                        ->get_scope()
+                        ->get_future(*_accessed_member)
+                        .then([](auto && symb) { return symb->get_variable_future(); })
+                        .then([&](auto && var) { _referenced_variable = var; });
+                }
+
+                return resolve_overload(ctx, _parse.range, _base_expr.get(), *_modifier, fmap(_arguments, [](auto && arg) { return arg.get(); }))
+                    .then([&](auto && call_expr) {
+                        if (auto call_expr_downcasted = dynamic_cast<call_expression *>(call_expr.get()))
+                        {
+                            call_expr_downcasted->set_parse_range(_parse.range);
+                        }
+                        _call_expression = std::move(call_expr);
+                        return _call_expression->analyze(ctx);
+                    });
+            });
     }
 }
 }

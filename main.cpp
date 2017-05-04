@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016 Michał "Griwes" Dominiak
+ * Copyright © 2014-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,6 +20,8 @@
  *
  **/
 
+#include <boost/filesystem.hpp>
+
 #include <fstream>
 
 #include "vapor/analyzer.h"
@@ -30,37 +32,41 @@
 
 std::u32string program = UR"program(module hello_world
 {
-    function fibonacci(n : int) -> int
+    let mn = struct
     {
-        if (n <= 0)
+        let m : int;
+        let n : int;
+    };
+
+    function ackermann(args : mn) -> int
+    {
+        if (args.m == 0)
         {
-            return 0;
+            return args.n + 1;
         }
 
-        if (n == 1)
+        if (args.n == 0)
         {
-            return 1;
+            return ackermann(args{ .m = .m - 1, .n = 1 });
         }
 
-        if (n == 2)
-        {
-            return 1;
-        }
-
-        return fibonacci(n - 1) + fibonacci(n - 2);
+        return ackermann(args{ .m = .m - 1, .n = ackermann(args{ .n = .n - 1 }) });
     }
 
     let entry = λ(arg : int) -> int
     {
-        let constant_foldable = fibonacci(7);
-        let non_constant_foldable = fibonacci(arg);
+        let constant_foldable = ackermann(mn{ 3, 4 });
+        let non_constant_foldable = ackermann(mn{ .m = arg, .n = arg + 1 });
 
-        return constant_foldable + non_constant_foldable;
+        return constant_foldable - non_constant_foldable;
     };
 })program";
 
 int main() try
 {
+    // force a single thread of execution
+    reaver::default_executor(reaver::make_executor<reaver::thread_pool>(1));
+
     reaver::logger::dlog() << "Input:";
     reaver::logger::dlog() << reaver::vapor::utf8(program);
     reaver::logger::dlog();
@@ -100,6 +106,7 @@ int main() try
     reaver::logger::dlog() << "Generated code:";
     reaver::logger::dlog() << generated_code;
 
+    boost::filesystem::create_directories("output");
     std::ofstream out{ "output/output.cpp", std::ios::trunc | std::ios::out };
     out << generated_code;
 

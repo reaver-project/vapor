@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -42,23 +42,23 @@ inline namespace _v1
         return make_ready_future();
     }
 
-    future<expression *> function::simplify(simplification_context & ctx, std::vector<variable *> args)
+    future<expression *> function::simplify(simplification_context & ctx, std::vector<variable *> arguments)
     {
         if (_body)
         {
-            if (!std::any_of(args.begin(), args.end(), [](auto && arg) { return arg->is_constant(); }))
+            if (!std::any_of(arguments.begin(), arguments.end(), [](auto && arg) { return arg->is_constant(); }))
             {
                 return make_ready_future<expression *>(nullptr);
             }
 
             return [&] {
-                if (args.size())
+                if (arguments.size())
                 {
-                    auto body = _body->clone_with_replacement(_arguments, args);
+                    auto body = _body->clone_with_replacement(_parameters, arguments);
 
                     auto simplify = [ctx = std::make_shared<simplification_context>()](auto self, auto body)
                     {
-                        return body->simplify(*ctx).then([&, old_body = body, ctx, self](auto && body)->future<block *> {
+                        return body->simplify(*ctx).then([old_body = body, ctx, self](auto && body)->future<block *> {
                             if (!ctx->did_something_happen())
                             {
                                 return make_ready_future<block *>(dynamic_cast<block *>(body));
@@ -78,34 +78,42 @@ inline namespace _v1
                 }
 
                 return make_ready_future(_body);
-            }().then([&](auto && body) {
-                auto returns = body->get_returns();
+            }()
+                .then([&](auto && body) {
+                    auto returns = body->get_returns();
 
-                assert(body->has_return_expression() || returns.size());
-                auto var = body->has_return_expression() ? body->get_return_expression()->get_variable() : returns.front()->get_returned_variable();
-                auto begin = body->has_return_expression() ? returns.begin() : returns.begin() + 1;
+                    assert(body->has_return_expression() || returns.size());
+                    auto var = body->has_return_expression() ? body->get_return_expression()->get_variable() : returns.front()->get_returned_variable();
+                    auto begin = body->has_return_expression() ? returns.begin() : returns.begin() + 1;
 
-                if (!var->is_constant())
-                {
+                    if (!var->is_constant())
+                    {
+                        return make_ready_future<expression *>(nullptr);
+                    }
+
+                    if (std::all_of(begin, returns.end(), [](auto && ret) { return ret->get_returned_variable()->is_constant(); })
+                        && std::all_of(begin, returns.end(), [&](auto && ret) { return ret->get_returned_variable()->is_equal(var); }))
+                    {
+                        return make_ready_future(make_variable_ref_expression(var).release());
+                    }
+
                     return make_ready_future<expression *>(nullptr);
-                }
-
-                if (std::all_of(begin, returns.end(), [](auto && ret) { return ret->get_returned_variable()->is_constant(); })
-                    && std::all_of(begin, returns.end(), [&](auto && ret) { return ret->get_returned_variable()->is_equal(var); }))
-                {
-                    return make_ready_future(make_variable_ref_expression(var).release());
-                }
-
-                return make_ready_future<expression *>(nullptr);
-            });
+                });
         }
 
         if (_compile_time_eval)
         {
-            return make_ready_future((*_compile_time_eval)(ctx, args));
+            return (*_compile_time_eval)(ctx, arguments);
         }
 
         assert(0);
+    }
+
+    future<> function::run_analysis_hooks(analysis_context & ctx, call_expression * expr, std::vector<variable *> args)
+    {
+        return foldl(_analysis_hooks, make_ready_future(), [&ctx, expr, args](auto && prev, auto && hook) {
+            return prev.then([&hook, &ctx, expr, args] { return hook(ctx, expr, args); });
+        });
     }
 }
 }

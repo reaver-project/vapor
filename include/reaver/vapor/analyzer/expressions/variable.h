@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016 Michał "Griwes" Dominiak
+ * Copyright © 2014-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -50,6 +50,7 @@ inline namespace _v1
     public:
         variable_ref_expression(variable * var) : _referenced(var)
         {
+            assert(var);
         }
 
         virtual variable * get_variable() const final override
@@ -86,6 +87,11 @@ inline namespace _v1
 
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
         {
+            if (auto ref = _referenced->get_expression())
+            {
+                return ref->codegen_ir(ctx);
+            }
+
             return { codegen::ir::instruction{
                 none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, get<codegen::ir::value>(_referenced->codegen_ir(ctx)) } };
         }
@@ -135,6 +141,11 @@ inline namespace _v1
 
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
         {
+            if (auto ref = get_variable()->get_expression())
+            {
+                return ref->codegen_ir(ctx);
+            }
+
             return { codegen::ir::instruction{ none,
                 none,
                 { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },

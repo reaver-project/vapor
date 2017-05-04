@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -61,20 +61,31 @@ inline namespace _v1
                     assert(0);
                 }
 
+                auto simplify_block = [&](auto && block) {
+                    auto released = block.release();
+                    return released->simplify(ctx).then([released, &ctx](auto && simpl) {
+                        if (released != simpl)
+                        {
+                            ctx.keep_alive(released);
+                        }
+                        return simpl;
+                    });
+                };
+
                 auto condition = dynamic_cast<boolean_constant *>(var)->get_value();
                 if (condition)
                 {
-                    return _then_block.release()->simplify(ctx);
+                    return simplify_block(_then_block);
                 }
 
                 else
                 {
                     if (_else_block)
                     {
-                        return _else_block.get().release()->simplify(ctx);
+                        return simplify_block(_else_block.get());
                     }
 
-                    return make_null_statement().release()->simplify(ctx);
+                    return make_ready_future<statement *>(make_null_statement().release());
                 }
             }
 

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,38 +22,41 @@
 
 #include "vapor/analyzer/variables/variable.h"
 #include "vapor/analyzer/expressions/expression.h"
+#include "vapor/analyzer/scope.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/types/type.h"
+#include "vapor/analyzer/variables/member.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    variable_ir expression_variable::_codegen_ir(ir_generation_context & ctx) const
+    variable * variable::get_member(const member_variable * member) const
     {
-        return { _expression->codegen_ir(ctx).back().result };
+        return get_member(member->get_name());
     }
 
-    future<variable *> expression_variable::_simplify(simplification_context & ctx)
+    variable * variable::get_member(const std::u32string & name) const
     {
-        return _expression->simplify_expr(ctx).then([&](auto && simplified) -> variable * { return simplified->get_variable(); });
+        if (auto symbol = get_type()->get_scope()->try_get(name))
+        {
+            return symbol.get()->get_variable();
+        }
+
+        return nullptr;
     }
 
-    std::unique_ptr<variable> expression_variable::_clone_with_replacement(replacements & repl) const
+    void variable::set_default_value(expression * expr)
     {
-        auto it = repl.expressions.find(_expression);
-        assert(it != repl.expressions.end());
-
-        return make_expression_variable(it->second, _type);
+        assert(!_default_value);
+        assert(expr);
+        assert(expr->get_type() == get_type());
+        _default_value = expr;
     }
 
-    bool expression_variable::is_constant() const
+    std::unique_ptr<expression> variable::release_owned_expression()
     {
-        return false;
-    }
-
-    bool expression_variable::is_equal(const variable * ptr) const
-    {
-        return false;
+        return nullptr;
     }
 }
 }

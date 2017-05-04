@@ -36,7 +36,13 @@ inline namespace _v1
         range_type range;
         lexer::token identifier;
         optional<expression> type_expression;
-        expression rhs;
+        optional<expression> rhs;
+    };
+
+    enum class declaration_mode
+    {
+        variable_declaration,
+        member_declaration
     };
 
     inline bool operator==(const declaration & lhs, const declaration & rhs)
@@ -44,7 +50,7 @@ inline namespace _v1
         return lhs.range == rhs.range && lhs.identifier == rhs.identifier && lhs.type_expression == rhs.type_expression && lhs.rhs == rhs.rhs;
     }
 
-    declaration parse_declaration(context & ctx);
+    declaration parse_declaration(context & ctx, declaration_mode mode = declaration_mode::variable_declaration);
 
     void print(const declaration & decl, std::ostream & os, std::size_t indent = 0);
 }

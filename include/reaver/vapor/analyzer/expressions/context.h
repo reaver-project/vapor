@@ -20,25 +20,17 @@
  *
  **/
 
-#include "vapor/analyzer/expressions/id.h"
-#include "vapor/analyzer/expressions/variable.h"
-#include "vapor/parser.h"
+#pragma once
+
+#include <reaver/variant.h>
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void id_expression::print(std::ostream & os, std::size_t indent) const
-    {
-        auto in = std::string(indent, ' ');
-        os << in << "id expression `" << utf8(name()) << "` at " << _parse.range << '\n';
-        os << in << "referenced variable type: " << get_variable()->get_type()->explain() << '\n';
-    }
+    class postfix_expression;
+    class binary_expression;
 
-    statement_ir id_expression::_codegen_ir(ir_generation_context & ctx) const
-    {
-        return { codegen::ir::instruction{
-            none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, { get<codegen::ir::value>(_referenced->codegen_ir(ctx)) } } };
-    }
+    using expression_context = std::vector<variant<postfix_expression *, binary_expression *>>;
 }
 }

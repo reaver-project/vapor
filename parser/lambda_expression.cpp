@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2016 Michał "Griwes" Dominiak
+ * Copyright © 2015-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,6 +22,7 @@
 
 #include "vapor/parser/lambda_expression.h"
 #include "vapor/parser/block.h"
+#include "vapor/parser/expr.h"
 
 namespace reaver::vapor::parser
 {
@@ -47,7 +48,7 @@ inline namespace _v1
             expect(ctx, lexer::token_type::round_bracket_open);
             if (!peek(ctx, lexer::token_type::round_bracket_close))
             {
-                ret.arguments = parse_argument_list(ctx);
+                ret.parameters = parse_parameter_list(ctx);
             }
             expect(ctx, lexer::token_type::round_bracket_close);
         }
@@ -81,8 +82,8 @@ inline namespace _v1
         assert(!expr.captures);
 
         os << in << "{\n";
-        fmap(expr.arguments, [&](auto && arguments) {
-            print(arguments, os, indent + 4);
+        fmap(expr.parameters, [&](auto && parameters) {
+            print(parameters, os, indent + 4);
             return unit{};
         });
         print(expr.body, os, indent + 4);

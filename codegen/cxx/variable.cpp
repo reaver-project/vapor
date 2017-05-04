@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,10 +20,12 @@
  *
  **/
 
-#include "vapor/codegen/ir/variable.h"
+#include <boost/algorithm/string/join.hpp>
+
 #include "vapor/codegen/cxx.h"
 #include "vapor/codegen/cxx/names.h"
 #include "vapor/codegen/ir/type.h"
+#include "vapor/codegen/ir/variable.h"
 
 #include <cassert>
 
@@ -35,8 +37,18 @@ inline namespace _v1
     {
         std::u32string ret;
 
-        ret += ctx.declare_if_necessary(var.type);
-        ret += U"extern " + cxx::type_name(var.type, ctx) + U" " + cxx::declaration_variable_name(var, ctx) + U";\n";
+        if (var.type == ir::builtin_types().type)
+        {
+            assert(var.refers_to);
+            ctx.put_into_global_before += ctx.declare_if_necessary(var.refers_to);
+            ret += U"using " + cxx::declaration_variable_name(var, ctx) + U" = " + var.refers_to->name + U";\n";
+        }
+
+        else
+        {
+            ret += ctx.declare_if_necessary(var.type);
+            ret += U"extern " + cxx::type_name(var.type, ctx) + U" " + cxx::declaration_variable_name(var, ctx) + U";\n";
+        }
 
         var.declared = true;
 
@@ -47,8 +59,30 @@ inline namespace _v1
     {
         std::u32string ret;
 
-        ret += ctx.define_if_necessary(var.type);
+        if (var.type == ir::builtin_types().type)
+        {
+            assert(var.refers_to);
+            ctx.put_into_global_before += ctx.define_if_necessary(var.refers_to);
+            return U"";
+        }
+
+        ctx.put_into_global_before += ctx.define_if_necessary(var.type);
         ret += cxx::type_name(var.type, ctx) + U" " + cxx::variable_name(var, ctx) + U"{};\n";
+
+        return ret;
+    }
+
+    std::u32string cxx_generator::generate_definition(const ir::member_variable & member, codegen_context & ctx) const
+    {
+        std::u32string ret;
+
+        if (member.type == ir::builtin_types().type)
+        {
+            assert(0);
+        }
+
+        ctx.put_into_global_before += ctx.define_if_necessary(member.type);
+        ret += cxx::type_name(member.type, ctx) + U" " + member.name + U"{};\n";
 
         return ret;
     }
@@ -69,6 +103,10 @@ inline namespace _v1
                 [&](const codegen::ir::label & label) {
                     assert(label.scopes.empty());
                     return label.name;
+                },
+                [&](const codegen::ir::struct_value & struct_val) {
+                    std::vector<std::u32string> subvalues = fmap(struct_val.fields, [&](auto && val) { return value_of(val, ctx); });
+                    return type_name(struct_val.type, ctx) + U"::constructor(" + boost::algorithm::join(subvalues, ", ") + U")";
                 },
                 [&](auto &&) {
                     assert(0);

@@ -21,9 +21,9 @@
  **/
 
 #include "vapor/parser/postfix_expression.h"
+#include "vapor/parser/expr.h"
 #include "vapor/parser/expression_list.h"
 #include "vapor/parser/helpers.h"
-#include "vapor/parser/lambda_expression.h"
 
 namespace reaver::vapor::parser
 {
@@ -41,8 +41,10 @@ inline namespace _v1
                     return token_type::square_bracket_close;
                 case token_type::curly_bracket_open:
                     return token_type::curly_bracket_close;
+                case token_type::dot:
+                    return token_type::none;
                 default:
-                    throw exception(logger::crash) << "invalid opening bracket type";
+                    throw exception(logger::crash) << "invalid modifier type";
             }
         };
 
@@ -60,13 +62,14 @@ inline namespace _v1
 
         else
         {
-            ret.base_expression = parse_id_expression(ctx);
-            auto & range = get<id_expression>(ret.base_expression).range;
+            ret.base_expression = parse_literal<lexer::token_type::identifier>(ctx);
+            auto & range = get<identifier>(ret.base_expression).range;
             start = range.start();
             end = range.end();
         }
 
-        for (auto && type : { lexer::token_type::round_bracket_open, lexer::token_type::square_bracket_open, lexer::token_type::curly_bracket_open })
+        for (auto && type :
+            { lexer::token_type::round_bracket_open, lexer::token_type::square_bracket_open, lexer::token_type::curly_bracket_open, lexer::token_type::dot })
         {
             if (type == lexer::token_type::curly_bracket_open && mode == expression_special_modes::brace)
             {
@@ -75,29 +78,38 @@ inline namespace _v1
 
             if (peek(ctx, type))
             {
-                ret.bracket_type = type;
+                ret.modifier_type = type;
                 expect(ctx, type);
 
                 break;
             }
         }
 
-        if (ret.bracket_type)
+        if (ret.modifier_type)
         {
-            if (!peek(ctx, closing(*ret.bracket_type)))
+            if (ret.modifier_type == lexer::token_type::dot)
             {
-                auto old_stack = std::move(ctx.operator_stack);
-
-                ret.arguments.push_back(parse_expression(ctx));
-                while (peek(ctx, lexer::token_type::comma))
-                {
-                    expect(ctx, lexer::token_type::comma);
-                    ret.arguments.push_back(parse_expression(ctx));
-                }
-
-                ctx.operator_stack = std::move(old_stack);
+                ret.accessed_member = parse_literal<lexer::token_type::identifier>(ctx);
+                end = ret.accessed_member->range.end();
             }
-            end = expect(ctx, closing(*ret.bracket_type)).range.end();
+
+            else
+            {
+                if (!peek(ctx, closing(*ret.modifier_type)))
+                {
+                    auto old_stack = std::move(ctx.operator_stack);
+
+                    ret.arguments.push_back(parse_expression(ctx));
+                    while (peek(ctx, lexer::token_type::comma))
+                    {
+                        expect(ctx, lexer::token_type::comma);
+                        ret.arguments.push_back(parse_expression(ctx));
+                    }
+
+                    ctx.operator_stack = std::move(old_stack);
+                }
+                end = expect(ctx, closing(*ret.modifier_type)).range.end();
+            }
         }
 
         ret.range = { start, end };
@@ -110,9 +122,14 @@ inline namespace _v1
         auto in = std::string(indent, ' ');
 
         os << in << "`postfix-expression` at " << expr.range << '\n';
-        if (expr.bracket_type)
+        if (expr.modifier_type)
         {
-            os << in << "bracket type: `" << lexer::token_types[+*expr.bracket_type] << "`\n";
+            os << in << "modifier type: `" << lexer::token_types[+*expr.modifier_type] << "`\n";
+
+            if (expr.modifier_type == lexer::token_type::dot)
+            {
+                os << in << "accessed member: `" << utf8(expr.accessed_member->value.string) << "`\n";
+            }
         }
 
         os << in << "{\n";

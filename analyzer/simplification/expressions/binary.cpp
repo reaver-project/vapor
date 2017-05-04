@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -38,6 +38,7 @@ inline namespace _v1
 
         ret->_lhs = _lhs->clone_expr_with_replacement(repl);
         ret->_rhs = _rhs->clone_expr_with_replacement(repl);
+        ret->_call_expression = _call_expression->clone_expr_with_replacement(repl);
 
         return ret;
     }
@@ -48,14 +49,10 @@ inline namespace _v1
             .then([&](auto && simplified) {
                 replace_uptr(_lhs, get<0>(simplified), ctx);
                 replace_uptr(_rhs, get<1>(simplified), ctx);
-                return _overload->simplify(ctx, { _lhs->get_variable(), _rhs->get_variable() });
+                return _call_expression->simplify_expr(ctx);
             })
-            .then([&](auto && simplified) -> expression * {
-                if (simplified)
-                {
-                    return simplified;
-                }
-
+            .then([&](auto && repl) -> expression * {
+                replace_uptr(_call_expression, repl, ctx);
                 return this;
             });
     }

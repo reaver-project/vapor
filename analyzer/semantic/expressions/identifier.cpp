@@ -20,7 +20,7 @@
  *
  **/
 
-#include "vapor/analyzer/expressions/id.h"
+#include "vapor/analyzer/expressions/identifier.h"
 #include "vapor/analyzer/expressions/variable.h"
 #include "vapor/parser.h"
 
@@ -28,27 +28,10 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<expression> id_expression::_clone_expr_with_replacement(replacements & repl) const
+    reaver::future<> identifier::_analyze(analysis_context & ctx)
     {
-        auto referenced = _referenced;
-
-        auto it = repl.variables.find(referenced);
-        if (it != repl.variables.end())
-        {
-            referenced = it->second;
-        }
-
-        return make_variable_ref_expression(referenced);
-    }
-
-    reaver::future<expression *> id_expression::_simplify_expr(simplification_context & ctx)
-    {
-        return _referenced->simplify(ctx).then([&](auto && simplified) -> expression * {
-            if (simplified && simplified != _referenced)
-            {
-                _referenced = simplified;
-            }
-            return this;
+        return _lex_scope->resolve(_parse.value.string).then([](auto && symbol) { return symbol->get_variable_future(); }).then([this](auto && variable) {
+            _referenced = variable;
         });
     }
 }

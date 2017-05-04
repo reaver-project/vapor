@@ -53,6 +53,11 @@ inline namespace _v1
         {
             *this << "expected `" << lexer::token_types[+expected] << "`, got end of file";
         }
+
+        expectation_failure(const std::string & str) : exception{ logger::fatal }
+        {
+            *this << "expected " << str << ", got end of file";
+        }
     };
 
     enum class operator_type

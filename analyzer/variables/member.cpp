@@ -20,26 +20,16 @@
  *
  **/
 
-#include "vapor/analyzer/expressions/id.h"
-#include "vapor/analyzer/expressions/variable.h"
-#include "vapor/parser.h"
+#include "vapor/analyzer/variables/member.h"
+#include "vapor/analyzer/symbol.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    reaver::future<> id_expression::_analyze(analysis_context & ctx)
+    codegen::ir::member_variable member_variable::member_codegen_ir(ir_generation_context & ctx) const
     {
-        return std::accumulate(_parse.id_expression_value.begin() + 1,
-            _parse.id_expression_value.end(),
-            _lex_scope->resolve(_parse.id_expression_value.front().string),
-            [&](auto fut, auto && ident) {
-                return fut.then([&ident](auto && symbol) { return symbol->get_variable_future(); }).then([&ident](auto && var) {
-                    return var->get_type()->get_scope()->get_future(ident.string);
-                });
-            })
-            .then([](auto && symbol) { return symbol->get_variable_future(); })
-            .then([this](auto && variable) { _referenced = variable; });
+        return codegen::ir::member_variable{ _name, _wrapped->get_type()->codegen_type(ctx), 0 };
     }
 }
 }

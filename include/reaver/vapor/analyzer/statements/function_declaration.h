@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -26,7 +26,8 @@
 
 #include "../../parser/function.h"
 #include "../expressions/expression.h"
-#include "../semantic/argument_list.h"
+#include "../function.h"
+#include "../semantic/parameter_list.h"
 #include "../statements/block.h"
 #include "../statements/statement.h"
 #include "../symbol.h"
@@ -62,13 +63,14 @@ inline namespace _v1
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
         const parser::function & _parse;
-        argument_list _argument_list;
+        parameter_list _parameter_list;
 
         optional<std::unique_ptr<expression>> _return_type;
         std::unique_ptr<block> _body;
         std::unique_ptr<scope> _scope;
         std::unique_ptr<function> _function;
         std::shared_ptr<overload_set> _overload_set;
+        std::unique_ptr<variable> _self;
     };
 
     inline std::unique_ptr<function_declaration> preanalyze_function(const parser::function & func, scope *& lex_scope)

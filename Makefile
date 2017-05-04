@@ -1,12 +1,13 @@
 CXX = c++
 LD = c++
-CXXFLAGS += -Os -Wall -std=c++1z -MP -MD -fPIC -Wno-unused-parameter -g -Wno-unused-private-field -Wnon-virtual-dtor
+CXXFLAGS += -O0 -Wall -std=c++1z -MP -MD -fPIC -Wno-unused-parameter -g -Wno-unused-private-field -Wnon-virtual-dtor -fno-omit-frame-pointer \
+	-Wno-unused-lambda-capture -Wno-unknown-warning-option # clang 5.0 trunk is retarded
 SOFLAGS += -shared
 LDFLAGS +=
 LIBRARIES += -pthread -lboost_system -lboost_filesystem -ldl
 
 SOURCES := $(shell find . -name "*.cpp" ! -wholename "./tests/*" ! -name "main.cpp" ! -wholename "./main/*" ! -wholename "./output/*")
-MAINSRC := $(shell find ./main/ -name "*.cpp") main.cpp
+MAINSRC := $(shell find ./main/ -name "*.cpp" 2>/dev/null) main.cpp
 TESTSRC := $(shell find ./tests/ -name "*.cpp")
 OBJECTS := $(SOURCES:.cpp=.o)
 MAINOBJ := $(MAINSRC:.cpp=.o)

@@ -21,9 +21,7 @@
  **/
 
 #include "vapor/parser/expression.h"
-#include "vapor/parser/binary_expression.h"
-#include "vapor/parser/lambda_expression.h"
-#include "vapor/parser/unary_expression.h"
+#include "vapor/parser/expr.h"
 
 namespace reaver::vapor::parser
 {
@@ -32,75 +30,90 @@ inline namespace _v1
     expression parse_expression(context & ctx, expression_special_modes mode)
     {
         expression ret;
+
+        if (!peek(ctx))
+        {
+            throw expectation_failure{ "expression" };
+        }
+
         auto type = peek(ctx)->type;
 
-        if (peek(ctx, lexer::token_type::string))
+        switch (auto type = peek(ctx)->type)
         {
-            ret.expression_value = parse_literal<lexer::token_type::string>(ctx);
+            case lexer::token_type::string:
+                ret.expression_value = parse_literal<lexer::token_type::string>(ctx);
+                break;
+
+            case lexer::token_type::integer:
+                ret.expression_value = parse_literal<lexer::token_type::integer>(ctx);
+                break;
+
+            case lexer::token_type::boolean:
+                ret.expression_value = parse_literal<lexer::token_type::boolean>(ctx);
+                break;
+
+            case lexer::token_type::identifier:
+                ret.expression_value = parse_postfix_expression(ctx, mode);
+                break;
+
+            case lexer::token_type::import:
+                ret.expression_value = parse_import_expression(ctx);
+                break;
+
+            case lexer::token_type::lambda:
+                ret.expression_value = parse_lambda_expression(ctx);
+                break;
+
+            case lexer::token_type::struct_:
+                ret.expression_value = parse_struct_literal(ctx);
+                break;
+
+            case lexer::token_type::dot:
+                ret.expression_value = parse_member_expression(ctx);
+                break;
+
+            default:
+                if (is_unary_operator(type))
+                {
+                    ret.expression_value = parse_unary_expression(ctx);
+                }
+
+                else
+                {
+                    throw expectation_failure{ "expression", ctx.begin->string, ctx.begin->range };
+                }
         }
 
-        else if (peek(ctx, lexer::token_type::integer))
+        if (peek(ctx))
         {
-            ret.expression_value = parse_literal<lexer::token_type::integer>(ctx);
-        }
-
-        else if (peek(ctx, lexer::token_type::boolean))
-        {
-            ret.expression_value = parse_literal<lexer::token_type::boolean>(ctx);
-        }
-
-        else if (peek(ctx, lexer::token_type::identifier))
-        {
-            ret.expression_value = parse_postfix_expression(ctx, mode);
-        }
-
-        else if (peek(ctx, lexer::token_type::import))
-        {
-            ret.expression_value = parse_import_expression(ctx);
-        }
-
-        else if (peek(ctx, lexer::token_type::lambda))
-        {
-            ret.expression_value = parse_lambda_expression(ctx);
-        }
-
-        else if (is_unary_operator(type))
-        {
-            ret.expression_value = parse_unary_expression(ctx);
-        }
-
-        else
-        {
-            throw expectation_failure{ "expression", ctx.begin->string, ctx.begin->range };
-        }
-
-        type = peek(ctx)->type;
-        if (is_binary_operator(type) && !(mode == expression_special_modes::assignment && type == lexer::token_type::assign))
-        {
-            auto p1 = precedence({ type, operator_type::binary });
-            auto p2 = ctx.operator_stack.size() ? make_optional(precedence(ctx.operator_stack.back())) : none;
-            while (ctx.operator_stack.empty() || p1 < *p2 || (p1 == *p2 && associativity(type) == assoc::right))
+            type = peek(ctx)->type;
+            if (is_binary_operator(type) && !(mode == expression_special_modes::assignment && type == lexer::token_type::assign))
             {
-                visit(
-                    [&](const auto & value) -> unit {
-                        ret.range = value.range;
-                        return {};
-                    },
-                    ret.expression_value);
-                ret.expression_value = parse_binary_expression(ctx, std::move(ret));
-
-                if (!peek(ctx))
+                auto p1 = precedence({ type, operator_type::binary });
+                auto p2 = ctx.operator_stack.size() ? make_optional(precedence(ctx.operator_stack.back())) : none;
+                while (ctx.operator_stack.empty() || p1 < *p2 || (p1 == *p2 && associativity(type) == assoc::right))
                 {
-                    break;
-                }
+                    visit(
+                        [&](const auto & value) -> unit {
+                            ret.range = value.range;
+                            return {};
+                        },
+                        ret.expression_value);
+                    ret.expression_value = parse_binary_expression(ctx, std::move(ret));
 
-                type = peek(ctx)->type;
-                if (!is_binary_operator(type))
-                {
-                    break;
-                }
+                    if (!peek(ctx))
+                    {
+                        break;
+                    }
 
-                p1 = precedence({ type, operator_type::binary });
+                    type = peek(ctx)->type;
+                    if (!is_binary_operator(type))
+                    {
+                        break;
+                    }
+
+                    p1 = precedence({ type, operator_type::binary });
+                }
             }
         }
 

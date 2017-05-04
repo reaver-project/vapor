@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -35,15 +35,35 @@ inline namespace _v1
     {
     public:
         binary_expression(const parser::binary_expression & parse, scope * lex_scope)
-            : _parse{ parse }, _scope{ lex_scope }, _op{ _parse.op }, _lhs{ preanalyze_expression(_parse.lhs, lex_scope) },
+            : _parse{ parse },
+              _scope{ lex_scope },
+              _op{ _parse.op },
+              _lhs{ preanalyze_expression(_parse.lhs, lex_scope) },
               _rhs{ preanalyze_expression(_parse.rhs, lex_scope) }
         {
         }
 
         virtual void print(std::ostream & os, std::size_t indent) const override;
 
+        virtual variable * get_variable() const override;
+
+        const expression * get_lhs() const
+        {
+            return _lhs.get();
+        }
+
+        const expression * get_rhs() const
+        {
+            return _rhs.get();
+        }
+
+        lexer::token_type get_operator() const
+        {
+            return _op.type;
+        }
+
     private:
-        binary_expression(const binary_expression & other) : _parse{ other._parse }, _op{ other._op }, _overload{ other._overload }
+        binary_expression(const binary_expression & other) : _parse{ other._parse }, _op{ other._op }
         {
         }
 
@@ -57,7 +77,7 @@ inline namespace _v1
         lexer::token _op;
         std::unique_ptr<expression> _lhs;
         std::unique_ptr<expression> _rhs;
-        function * _overload;
+        std::unique_ptr<expression> _call_expression;
     };
 
     inline std::unique_ptr<binary_expression> preanalyze_binary_expression(const parser::binary_expression & parse, scope * lex_scope)

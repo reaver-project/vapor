@@ -22,36 +22,26 @@
 
 #pragma once
 
-#include "../../parser/argument_list.h"
-#include "../expressions/expression.h"
-#include "../symbol.h"
-#include "../variables/unresolved.h"
+#include "helpers.h"
+#include "literal.h"
 
-namespace reaver::vapor::analyzer
+namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
-    struct argument
+    struct member_expression
     {
-        std::u32string name;
-        std::unique_ptr<expression> type_expression;
-        std::unique_ptr<unresolved_variable> variable;
+        range_type range;
+        identifier member_name;
     };
 
-    using argument_list = std::vector<argument>;
-
-    inline argument_list preanalyze_argument_list(const parser::argument_list & arglist, scope * lex_scope)
+    inline bool operator==(const member_expression & lhs, const member_expression & rhs)
     {
-        return fmap(arglist.arguments, [&](auto && arg) {
-            auto expr = preanalyze_expression(arg.type, lex_scope);
-            auto var = make_unresolved_variable(arg.name.string);
-            var->mark_local();
-
-            auto symb = make_symbol(arg.name.string, var.get());
-            lex_scope->init(arg.name.string, std::move(symb));
-
-            return argument{ arg.name.string, std::move(expr), std::move(var) };
-        });
+        return lhs.range == rhs.range && lhs.member_name == rhs.member_name;
     }
+
+    member_expression parse_member_expression(context & ctx);
+
+    void print(const member_expression &, std::ostream &, std::size_t = 0);
 }
 }

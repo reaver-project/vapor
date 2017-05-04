@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,6 +23,7 @@
 #include "vapor/codegen/cxx.h"
 #include "vapor/codegen/cxx/names.h"
 #include "vapor/codegen/ir/instruction.h"
+#include "vapor/codegen/ir/type.h"
 
 namespace reaver::vapor::codegen
 {
@@ -49,11 +50,20 @@ inline namespace _v1
             std::u32string base_variable;
             if (actual_argument_offset == 2) // member call
             {
-                base_variable = variable_of(inst.operands.front(), ctx) + U".";
+                auto is_type = get<0>(inst.operands.front())->type == ir::builtin_types().type;
+                base_variable = variable_of(inst.operands.front(), ctx) + (is_type ? U"::" : U".");
             }
 
-            return variable_of(inst.result, ctx) + U".emplace(" + base_variable + get<codegen::ir::label>(inst.operands[actual_argument_offset - 1]).name + U"("
-                + arguments + U"));\n";
+            auto call_operand = get<codegen::ir::label>(inst.operands[actual_argument_offset - 1]);
+            std::u32string call_operand_str;
+
+            for (auto && scope : call_operand.scopes)
+            {
+                call_operand_str += scope.name + U"::";
+            }
+            call_operand_str += call_operand.name;
+
+            return variable_of(inst.result, ctx) + U".emplace(" + base_variable + call_operand_str + U"(" + arguments + U"));\n";
         }
     }
 }

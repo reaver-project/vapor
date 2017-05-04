@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include "../simplification/context.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -31,6 +33,12 @@ inline namespace _v1
 
     class analysis_context
     {
+    public:
+        analysis_context() : simplification_ctx{ std::make_shared<simplification_context>() }
+        {
+        }
+
+        std::shared_ptr<simplification_context> simplification_ctx;
     };
 }
 }

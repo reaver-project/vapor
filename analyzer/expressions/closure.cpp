@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -31,9 +31,8 @@ inline namespace _v1
 {
     closure::closure(const parser::lambda_expression & parse, scope * lex_scope) : _parse{ parse }, _scope{ lex_scope->clone_local() }
     {
-        fmap(parse.arguments, [&](auto && arglist) {
-            _argument_list = preanalyze_argument_list(arglist, _scope.get());
-            ;
+        fmap(parse.parameters, [&](auto && param_list) {
+            _parameter_list = preanalyze_parameter_list(param_list, _scope.get());
             return unit{};
         });
         _scope->close();
@@ -47,10 +46,12 @@ inline namespace _v1
         auto in = std::string(indent, ' ');
         os << in << "closure at " << _parse.range << '\n';
         assert(!_parse.captures);
-        fmap(_argument_list, [&, in = std::string(indent + 4, ' ')](auto && argument) {
+        os << in << "{\n";
+        fmap(_parameter_list, [&, in = std::string(indent + 4, ' ')](auto && argument) {
             os << in << "argument `" << utf8(argument.name) << "` of type `" << argument.variable->get_type()->explain() << "`\n";
             return unit{};
         });
+        os << in << "}\n";
         os << in << "return type: " << _body->return_type()->explain() << '\n';
         os << in << "{\n";
         _body->print(os, indent + 4);

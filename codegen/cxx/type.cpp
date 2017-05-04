@@ -35,7 +35,7 @@ inline namespace _v1
         if (type == ir::builtin_types().integer)
         {
             ctx.put_into_global_before += UR"code(#include <boost/multiprecision/cpp_int.hpp>
-    )code";
+)code";
             return {};
         }
 
@@ -44,7 +44,22 @@ inline namespace _v1
             return {};
         }
 
-        return U"struct " + cxx::declaration_type_name(type, ctx) + U";\n";
+        std::u32string declaration;
+
+        fmap(type->scopes, [&](auto && scope) {
+            assert(scope.type == ir::scope_type::module);
+            declaration += U"namespace " + scope.name + U"\n{\n";
+            return unit{};
+        });
+        declaration += U"struct " + cxx::declaration_type_name(type, ctx) + U";\n";
+        fmap(type->scopes, [&](auto &&) {
+            declaration += U"}\n";
+            return unit{};
+        });
+
+        ctx.put_into_global_before += declaration;
+
+        return U"";
     }
 
     std::u32string cxx_generator::generate_definition(const std::shared_ptr<ir::variable_type> & type, codegen_context & ctx) const
@@ -65,8 +80,22 @@ inline namespace _v1
             fmap(member,
                 make_overload_set(
                     [&](codegen::ir::function & fn) {
+                        auto old_generated = ctx.declaring_members_for;
+                        ctx.declaring_members_for = type;
+
+                        if (!fn.is_member)
+                        {
+                            members += U"static ";
+                        }
                         members += this->generate_declaration(fn, ctx);
                         ctx.put_into_global += this->generate_definition(fn, ctx);
+
+                        ctx.declaring_members_for = old_generated;
+
+                        return unit{};
+                    },
+                    [&](codegen::ir::member_variable & member) {
+                        members += this->generate_definition(member, ctx);
                         return unit{};
                     },
                     [&](auto &&) {

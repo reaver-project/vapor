@@ -31,6 +31,7 @@
 #include "helpers.h"
 #include "import_expression.h"
 #include "literal.h"
+#include "member_expression.h"
 #include "postfix_expression.h"
 
 namespace reaver::vapor::parser
@@ -40,6 +41,7 @@ inline namespace _v1
     struct lambda_expression;
     struct unary_expression;
     struct binary_expression;
+    struct struct_literal;
 
     void print(const unary_expression & expr, std::ostream & os, std::size_t indent);
     void print(const binary_expression & expr, std::ostream & os, std::size_t indent);
@@ -50,11 +52,14 @@ inline namespace _v1
         variant<literal<lexer::token_type::string>,
             literal<lexer::token_type::integer>,
             literal<lexer::token_type::boolean>,
+            member_expression, // this might need to be pulled into postfix expressions later on
+                               // (if I want to make this work more like complex lenses)
             postfix_expression,
             import_expression,
             recursive_wrapper<lambda_expression>,
             recursive_wrapper<unary_expression>,
-            recursive_wrapper<binary_expression>>
+            recursive_wrapper<binary_expression>,
+            recursive_wrapper<struct_literal>>
             expression_value = postfix_expression();
     };
 

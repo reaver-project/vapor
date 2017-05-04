@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016 Michał "Griwes" Dominiak
+ * Copyright © 2016 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,41 +20,31 @@
  *
  **/
 
-#pragma once
+#include "vapor/analyzer/expressions/struct.h"
+#include "vapor/analyzer/symbol.h"
 
-#include "../range.h"
-#include "expression.h"
-#include "helpers.h"
-
-namespace reaver::vapor::parser
+namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    struct argument
+    struct_literal::struct_literal(const parser::struct_literal & parse, scope * lex_scope) : _parse{ parse }, _type{ make_struct_type(parse, lex_scope) }
     {
-        range_type range;
-        lexer::token name;
-        expression type;
-    };
-
-    struct argument_list
-    {
-        range_type range;
-        std::vector<argument> arguments;
-    };
-
-    inline bool operator==(const argument & lhs, const argument & rhs)
-    {
-        return lhs.range == rhs.range && lhs.name == rhs.name && lhs.type == rhs.type;
     }
 
-    inline bool operator==(const argument_list & lhs, const argument_list & rhs)
+    void struct_literal::print(std::ostream & os, std::size_t indent) const
     {
-        return lhs.range == rhs.range && lhs.arguments == rhs.arguments;
+        auto in = std::string(indent, ' ');
+
+        os << in << "structure at " << _parse.range << '\n';
+        os << in << "members:\n";
+        os << in << "{\n";
+        os << in << "TODO: print this shit\n";
+        os << in << "}\n";
     }
 
-    argument_list parse_argument_list(context & ctx);
-
-    void print(const argument_list &, std::ostream &, std::size_t indent);
+    statement_ir struct_literal::_codegen_ir(ir_generation_context & ctx) const
+    {
+        return {};
+    }
 }
 }

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -90,7 +90,7 @@ inline namespace _v1
         std::vector<std::unique_ptr<module>> _modules;
     };
 
-    std::ostream & operator<<(std::ostream & os, std::reference_wrapper<ast> tree)
+    inline std::ostream & operator<<(std::ostream & os, std::reference_wrapper<ast> tree)
     {
         for (auto && module : tree.get())
         {

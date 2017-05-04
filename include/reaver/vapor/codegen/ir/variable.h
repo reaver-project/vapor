@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -29,6 +29,7 @@
 #include "boolean.h"
 #include "integer.h"
 #include "scope.h"
+#include "struct.h"
 
 namespace reaver::vapor::codegen
 {
@@ -53,6 +54,8 @@ inline namespace _v1
             bool argument = false;
             bool temporary = true;
             std::vector<scope> scopes = {};
+
+            std::shared_ptr<variable_type> refers_to; // this is a huge hack
 
             virtual bool is_move() const
             {
@@ -81,7 +84,10 @@ inline namespace _v1
 
         std::ostream & operator<<(std::ostream & os, const variable & var);
 
-        using value = variant<std::shared_ptr<variable>, integer_value, boolean_value, label>;
+        struct value : public variant<std::shared_ptr<variable>, integer_value, boolean_value, struct_value, label>
+        {
+            using variant::variant;
+        };
 
         std::ostream & operator<<(std::ostream & os, const value & val);
         std::shared_ptr<variable_type> get_type(const value &);

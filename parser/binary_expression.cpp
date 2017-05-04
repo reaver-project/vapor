@@ -21,8 +21,7 @@
  **/
 
 #include "vapor/parser/binary_expression.h"
-#include "vapor/parser/lambda_expression.h"
-#include "vapor/parser/unary_expression.h"
+#include "vapor/parser/expr.h"
 
 namespace reaver::vapor::parser
 {

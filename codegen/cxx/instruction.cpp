@@ -97,6 +97,9 @@ inline namespace _v1
                           ir::phi_instruction,
                           ir::noop_instruction,
 
+                          ir::aggregate_init_instruction,
+                          ir::member_access_instruction,
+
                           ir::integer_addition_instruction,
                           ir::integer_subtraction_instruction,
                           ir::integer_multiplication_instruction,

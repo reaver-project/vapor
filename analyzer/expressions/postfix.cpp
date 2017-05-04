@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,7 +23,7 @@
 #include <reaver/prelude/fold.h>
 
 #include "vapor/analyzer/expressions/expression_list.h"
-#include "vapor/analyzer/expressions/id.h"
+#include "vapor/analyzer/expressions/identifier.h"
 #include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
@@ -34,7 +34,7 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     postfix_expression::postfix_expression(const parser::postfix_expression & parse, scope * lex_scope)
-        : _parse{ parse }, _scope{ lex_scope }, _brace{ parse.bracket_type }
+        : _parse{ parse }, _scope{ lex_scope }, _modifier{ parse.modifier_type }
     {
         fmap(_parse.base_expression,
             make_overload_set(
@@ -42,12 +42,20 @@ inline namespace _v1
                     _base_expr = preanalyze_expression_list(expr_list, lex_scope);
                     return unit{};
                 },
-                [&](const parser::id_expression & id_expr) {
-                    _base_expr = preanalyze_id_expression(id_expr, lex_scope);
+                [&](const parser::identifier & ident) {
+                    _base_expr = preanalyze_identifier(ident, lex_scope);
                     return unit{};
                 }));
 
-        _arguments = fmap(_parse.arguments, [&](auto && expr) { return preanalyze_expression(expr, lex_scope); });
+        if (_parse.arguments.size())
+        {
+            _arguments = fmap(_parse.arguments, [&](auto && expr) { return preanalyze_expression(expr, lex_scope); });
+        }
+
+        fmap(_parse.accessed_member, [&](auto && member) {
+            _accessed_member = member.value.string;
+            return unit{};
+        });
     }
 
     void postfix_expression::print(std::ostream & os, std::size_t indent) const
@@ -60,10 +68,19 @@ inline namespace _v1
         _base_expr->print(os, indent + 4);
         os << in << "}\n";
 
-        if (_parse.bracket_type)
+        if (_modifier)
         {
-            os << in << "selected overload: " << _overload->explain() << '\n';
-            os << in << "bracket type: " << lexer::token_types[+_brace] << '\n';
+            if (_modifier == lexer::token_type::dot)
+            {
+                os << in << "referenced member: " << utf8(*_accessed_member) << '\n';
+                return;
+            }
+
+            os << in << "selected call expression:\n";
+            os << in << "{\n";
+            _call_expression->print(os, indent + 4);
+            os << in << "}\n";
+            os << in << "modifier type: " << lexer::token_types[+_modifier] << '\n';
 
             os << in << "arguments:\n";
             fmap(_arguments, [&](auto && arg) {
@@ -80,49 +97,43 @@ inline namespace _v1
     {
         auto base_expr_instructions = _base_expr->codegen_ir(ctx);
 
-        if (!_parse.bracket_type)
+        if (!_modifier)
         {
             return base_expr_instructions;
         }
 
         auto base_variable_value = get<codegen::ir::value>(_base_expr->get_variable()->codegen_ir(ctx));
         auto base_variable = get<std::shared_ptr<codegen::ir::variable>>(base_variable_value);
-        auto arguments_instructions = fmap(_arguments, [&](auto && arg) { return arg->codegen_ir(ctx); });
 
-        auto base_expr_variable = base_expr_instructions.back().result;
-        auto arguments_values = fmap(arguments_instructions, [](auto && insts) { return insts.back().result; });
-        arguments_values.insert(arguments_values.begin(), _overload->call_operand_ir(ctx));
-        arguments_values.insert(arguments_values.begin(), std::move(base_variable));
+        if (_modifier == lexer::token_type::dot)
+        {
+            auto access_instruction = codegen::ir::instruction{ none,
+                none,
+                { boost::typeindex::type_id<codegen::ir::member_access_instruction>() },
+                { base_variable, codegen::ir::label{ _accessed_member.get(), {} } },
+                { codegen::ir::make_variable(_referenced_variable.get()->get_type()->codegen_type(ctx)) } };
 
-        auto postfix_expr_instruction = codegen::ir::instruction{ none,
-            none,
-            { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
-            std::move(arguments_values),
-            { codegen::ir::make_variable((*_overload->return_type().try_get())->codegen_type(ctx)) } };
+            base_expr_instructions.push_back(std::move(access_instruction));
 
-        ctx.add_function_to_generate(_overload);
+            return base_expr_instructions;
+        }
 
-        statement_ir ret;
-        ret.reserve(base_expr_instructions.size()
-            + std::accumulate(arguments_instructions.begin(), arguments_instructions.end(), 1, [](std::size_t i, auto && insts) { return i + insts.size(); }));
-        std::move(base_expr_instructions.begin(), base_expr_instructions.end(), std::back_inserter(ret));
-        fmap(arguments_instructions, [&](auto && insts) {
-            std::move(insts.begin(), insts.end(), std::back_inserter(ret));
-            return unit{};
-        });
-        ret.push_back(std::move(postfix_expr_instruction));
-
-        return ret;
+        return _call_expression->codegen_ir(ctx);
     }
 
     variable * postfix_expression::get_variable() const
     {
-        if (!_parse.bracket_type)
+        if (!_modifier)
         {
             return _base_expr->get_variable();
         }
 
-        return expression::get_variable();
+        if (_referenced_variable)
+        {
+            return *_referenced_variable;
+        }
+
+        return _call_expression->get_variable();
     }
 }
 }

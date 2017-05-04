@@ -57,9 +57,11 @@ inline namespace _v1
             return std::make_unique<type_variable>(_type);
         }
 
-        virtual variable_ir _codegen_ir(ir_generation_context &) const override
+        virtual variable_ir _codegen_ir(ir_generation_context & ctx) const override
         {
-            return none;
+            auto ret = codegen::ir::make_variable(codegen::ir::builtin_types().type);
+            ret->refers_to = _type->codegen_type(ctx);
+            return ret;
         }
 
         type * _type;

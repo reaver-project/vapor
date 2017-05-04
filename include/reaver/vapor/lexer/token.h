@@ -49,10 +49,10 @@ inline namespace _v1
 
         module,
         import,
-        auto_,
         let,
         return_,
         function,
+        struct_,
 
         if_,
         else_,
@@ -143,6 +143,8 @@ inline namespace _v1
             case token_type::integer:
                 return token_type::integer_suffix;
             case token_type::boolean:
+                return token_type::none;
+            case token_type::identifier:
                 return token_type::none;
             default:
                 throw invalid_suffix_requested{};

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -38,7 +38,7 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     class type;
-    class expression;
+    class member_variable;
 
     using variable_ir = variant<none_t, codegen::ir::value, std::vector<codegen::ir::function>>;
 
@@ -93,6 +93,16 @@ inline namespace _v1
             return false;
         }
 
+        virtual bool is_member() const
+        {
+            return false;
+        }
+
+        virtual bool is_member_assignment() const
+        {
+            return get_type()->is_member_assignment();
+        }
+
         bool is_local() const
         {
             return _is_local;
@@ -102,6 +112,32 @@ inline namespace _v1
         {
             _is_local = true;
         }
+
+        virtual variable * get_member(const member_variable *) const;
+        virtual variable * get_member(const std::u32string &) const;
+
+        // used for function arguments
+        void set_default_value(expression * expr);
+
+        expression * get_default_value() const
+        {
+            return _default_value;
+        }
+
+        virtual std::unique_ptr<expression> release_owned_expression();
+
+        virtual expression * get_expression() const
+        {
+            return nullptr;
+        }
+
+        void do_give_expression()
+        {
+            _do_give_expression = true;
+        }
+
+    protected:
+        bool _do_give_expression = false;
 
     private:
         virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const = 0;
@@ -115,36 +151,9 @@ inline namespace _v1
 
         mutable optional<variable_ir> _ir;
         bool _is_local = false;
+
+        expression * _default_value = nullptr;
     };
-
-    class expression_variable : public variable
-    {
-    public:
-        expression_variable(expression * expr, type * type) : _expression{ expr }, _type{ type }
-        {
-        }
-
-        virtual type * get_type() const override
-        {
-            return _type;
-        }
-
-        virtual bool is_constant() const override;
-        virtual bool is_equal(const variable *) const override;
-
-    private:
-        virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override;
-        virtual future<variable *> _simplify(simplification_context & ctx) override;
-        virtual variable_ir _codegen_ir(ir_generation_context &) const override;
-
-        expression * _expression;
-        type * _type;
-    };
-
-    inline std::unique_ptr<variable> make_expression_variable(expression * expr, type * type)
-    {
-        return std::make_unique<expression_variable>(expr, type);
-    }
 
     class blank_variable : public variable
     {

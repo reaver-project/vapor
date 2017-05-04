@@ -38,6 +38,7 @@ inline namespace _v1
         struct variable;
         struct function;
         struct instruction;
+        struct member_variable;
     }
 
     class code_generator;
@@ -66,6 +67,8 @@ inline namespace _v1
         std::u32string put_into_global;
         std::u32string put_into_function_header;
 
+        std::shared_ptr<ir::variable_type> declaring_members_for;
+
     private:
         std::unordered_set<std::shared_ptr<ir::variable_type>> _declared_types;
         std::unordered_set<std::shared_ptr<ir::variable_type>> _defined_types;
@@ -85,6 +88,7 @@ inline namespace _v1
         virtual std::u32string generate_definition(const ir::variable &, codegen_context &) const = 0;
         virtual std::u32string generate_definition(const ir::function &, codegen_context &) const = 0;
         virtual std::u32string generate_definition(const std::shared_ptr<ir::variable_type> &, codegen_context &) const = 0;
+        virtual std::u32string generate_definition(const ir::member_variable &, codegen_context &) const = 0;
 
         virtual std::u32string generate(const ir::instruction &, codegen_context &) const = 0;
     };

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,9 +21,11 @@
  **/
 
 #include "vapor/analyzer/expressions/closure.h"
+#include "vapor/analyzer/expressions/variable.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/closure.h"
+#include "vapor/analyzer/variables/expression.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -45,10 +47,10 @@ inline namespace _v1
             return make_ready_future();
         }();
 
-        return initial_future.then([&] { return when_all(fmap(_argument_list, [&](auto && arg) { return arg.type_expression->analyze(ctx); })); })
+        return initial_future.then([&] { return when_all(fmap(_parameter_list, [&](auto && param) { return param.type_expression->analyze(ctx); })); })
             .then([&] {
-                fmap(_argument_list, [&](auto && arg) {
-                    arg.variable->set_type(arg.type_expression->get_variable());
+                fmap(_parameter_list, [&](auto && param) {
+                    param.variable->set_type(param.type_expression->get_variable());
                     return unit{};
                 });
 
@@ -64,22 +66,26 @@ inline namespace _v1
                     return unit{};
                 });
 
-                auto arg_variables = fmap(_argument_list, [&](auto && arg) -> variable * { return arg.variable.get(); });
+                auto param_variables = fmap(_parameter_list, [&](auto && param) -> variable * { return param.variable.get(); });
+
+                auto ret_expr = _return_type ? _return_type->get() : _body->return_type()->get_expression();
 
                 auto function = make_function("closure",
-                    _body->return_type(),
-                    std::move(arg_variables),
+                    ret_expr,
+                    std::move(param_variables),
                     [this](ir_generation_context & ctx) {
-                        return codegen::ir::function{
+                        auto ret = codegen::ir::function{
                             U"operator()",
                             {},
-                            fmap(_argument_list,
-                                [&](auto && arg) {
-                                    return get<std::shared_ptr<codegen::ir::variable>>(get<codegen::ir::value>(arg.variable->codegen_ir(ctx)));
+                            fmap(_parameter_list,
+                                [&](auto && param) {
+                                    return get<std::shared_ptr<codegen::ir::variable>>(get<codegen::ir::value>(param.variable->codegen_ir(ctx)));
                                 }),
                             _body->codegen_return(ctx),
                             _body->codegen_ir(ctx),
                         };
+                        ret.is_member = true;
+                        return ret;
                     },
                     _parse.range);
 
@@ -87,7 +93,7 @@ inline namespace _v1
                 function->set_body(_body.get());
 
                 _type = std::make_unique<closure_type>(_scope.get(), this, std::move(function));
-                _set_variable(make_expression_variable(this, _type.get()));
+                _set_variable(make_expression_ref_variable(this, _type.get()));
             });
     }
 }

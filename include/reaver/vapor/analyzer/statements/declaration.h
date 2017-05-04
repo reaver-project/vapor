@@ -24,9 +24,9 @@
 
 #include <memory>
 
-#include "../../parser/declaration.h"
 #include "../expressions/expression.h"
 #include "../symbol.h"
+#include "../variables/type.h"
 #include "../variables/variable.h"
 #include "statement.h"
 
@@ -34,24 +34,16 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    enum class declaration_type
+    {
+        variable,
+        member
+    };
+
     class declaration : public statement
     {
     public:
-        declaration(const parser::declaration & parse, scope * old_scope, scope * new_scope) : _parse{ parse }, _name{ parse.identifier.string }
-        {
-            _init_expr = preanalyze_expression(_parse.rhs, old_scope);
-            auto symbol = make_symbol(_name);
-            _declared_symbol = symbol.get();
-            if (!new_scope->init(_name, std::move(symbol)))
-            {
-                assert(0);
-            }
-
-            if (old_scope != new_scope)
-            {
-                new_scope->close();
-            }
-        }
+        declaration(const parser::declaration & parse, scope * old_scope, scope * new_scope, declaration_type decl_type);
 
         const auto & name() const
         {
@@ -70,64 +62,38 @@ inline namespace _v1
 
         auto initializer_expression() const
         {
-            return _init_expr.get();
+            return fmap(_init_expr, [](auto && expr) { return expr.get(); });
         }
 
-        virtual void print(std::ostream & os, std::size_t indent) const override
-        {
-            auto in = std::string(indent, ' ');
-            os << in << "declaration of `" << utf8(_name) << "` at " << _parse.range << '\n';
-            os << in << "type of symbol: " << _declared_symbol->get_type()->explain() << '\n';
-            os << in << "initializer expression:\n";
-            os << in << "{\n";
-            _init_expr->print(os, indent + 4);
-            os << in << "}\n";
-        }
+        virtual void print(std::ostream & os, std::size_t indent) const override;
 
     private:
-        virtual future<> _analyze(analysis_context & ctx) override
-        {
-            return _init_expr->analyze(ctx).then([&] { _declared_symbol->set_variable(_init_expr->get_variable()); });
-        }
-
-        virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const override
-        {
-            return _init_expr->clone_expr_with_replacement(repl);
-        }
-
-        virtual future<statement *> _simplify(simplification_context & ctx) override
-        {
-            return _init_expr->simplify_expr(ctx)
-                .then([&](auto && simplified) { replace_uptr(_init_expr, simplified, ctx); })
-                .then([&]() { return _declared_symbol->simplify(ctx); })
-                .then([&]() -> statement * { return this; });
-        }
-
-        virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
-        {
-            auto ir = _init_expr->codegen_ir(ctx);
-
-            if (ir.back().result.index() == 0)
-            {
-                auto var = get<std::shared_ptr<codegen::ir::variable>>(ir.back().result);
-                ir.back().declared_variable = var;
-                var->name = _name;
-                var->temporary = false;
-            }
-            return ir;
-        }
+        virtual future<> _analyze(analysis_context & ctx) override;
+        virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const override;
+        virtual future<statement *> _simplify(simplification_context & ctx) override;
+        virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
 
         const parser::declaration & _parse;
         std::u32string _name;
         symbol * _declared_symbol;
-        std::unique_ptr<expression> _init_expr;
+        optional<std::unique_ptr<expression>> _type_specifier;
+        optional<std::unique_ptr<expression>> _init_expr;
+        declaration_type _type;
+
+        std::unique_ptr<variable> _blank_variable;
+        std::unique_ptr<variable> _variable_wrapper;
     };
 
     inline std::unique_ptr<declaration> preanalyze_declaration(const parser::declaration & parse, scope *& lex_scope)
     {
         auto old_scope = lex_scope;
         lex_scope = old_scope->clone_for_decl();
-        return std::make_unique<declaration>(parse, old_scope, lex_scope);
+        return std::make_unique<declaration>(parse, old_scope, lex_scope, declaration_type::variable);
+    }
+
+    inline std::unique_ptr<declaration> preanalyze_member_declaration(const parser::declaration & parse, scope * lex_scope)
+    {
+        return std::make_unique<declaration>(parse, lex_scope, lex_scope, declaration_type::member);
     }
 }
 }

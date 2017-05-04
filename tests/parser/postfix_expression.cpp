@@ -31,14 +31,14 @@ MAYFLY_BEGIN_SUITE("parser");
 MAYFLY_BEGIN_SUITE("postfix_expression");
 
 MAYFLY_ADD_TESTCASE("basic postfix-expression",
-    test(UR"(foo;)",
-        postfix_expression{ { 0, 3 }, id_expression{ { 0, 3 }, { { lexer::token_type::identifier, UR"(foo)", { 0, 3 } } } }, {}, {} },
-        [](auto && ctx) { return parse_postfix_expression(ctx); }));
+    test(UR"(foo;)", postfix_expression{ { 0, 3 }, identifier{ { 0, 3 }, { lexer::token_type::identifier, UR"(foo)", { 0, 3 } } }, {}, {} }, [](auto && ctx) {
+        return parse_postfix_expression(ctx);
+    }));
 
 MAYFLY_ADD_TESTCASE("argumentless",
     test(UR"(foo();)",
         postfix_expression{ { 0, 5 },
-            id_expression{ { 0, 3 }, { { lexer::token_type::identifier, UR"(foo)", { 0, 3 } } } },
+            identifier{ { 0, 3 }, { lexer::token_type::identifier, UR"(foo)", { 0, 3 } } },
             lexer::token_type::round_bracket_open,
             {} },
         [](auto && ctx) { return parse_postfix_expression(ctx); }));
@@ -46,7 +46,7 @@ MAYFLY_ADD_TESTCASE("argumentless",
 MAYFLY_ADD_TESTCASE("one argument",
     test(UR"(foo[1];)",
         postfix_expression{ { 0, 6 },
-            id_expression{ { 0, 3 }, { { lexer::token_type::identifier, UR"(foo)", { 0, 3 } } } },
+            identifier{ { 0, 3 }, { lexer::token_type::identifier, UR"(foo)", { 0, 3 } } },
             lexer::token_type::square_bracket_open,
             { { { 4, 5 }, integer_literal{ { 4, 5 }, { lexer::token_type::integer, UR"(1)", { 4, 5 } }, {} } } } },
         [](auto && ctx) { return parse_postfix_expression(ctx); }));
@@ -54,12 +54,11 @@ MAYFLY_ADD_TESTCASE("one argument",
 MAYFLY_ADD_TESTCASE("more arguments",
     test(UR"(foo{ a, b, c };)",
         postfix_expression{ { 0, 14 },
-            id_expression{ { 0, 3 }, { { lexer::token_type::identifier, UR"(foo)", { 0, 3 } } } },
+            identifier{ { 0, 3 }, { lexer::token_type::identifier, UR"(foo)", { 0, 3 } } },
             lexer::token_type::curly_bracket_open,
-            { { { 5, 6 }, postfix_expression{ { 5, 6 }, id_expression{ { 5, 6 }, { { lexer::token_type::identifier, UR"(a)", { 5, 6 } } } }, {}, {} } },
-                { { 8, 9 }, postfix_expression{ { 8, 9 }, id_expression{ { 8, 9 }, { { lexer::token_type::identifier, UR"(b)", { 8, 9 } } } }, {}, {} } },
-                { { 11, 12 },
-                    postfix_expression{ { 11, 12 }, id_expression{ { 11, 12 }, { { lexer::token_type::identifier, UR"(c)", { 11, 12 } } } }, {}, {} } } } },
+            { { { 5, 6 }, postfix_expression{ { 5, 6 }, identifier{ { 5, 6 }, { lexer::token_type::identifier, UR"(a)", { 5, 6 } } }, {}, {} } },
+                { { 8, 9 }, postfix_expression{ { 8, 9 }, identifier{ { 8, 9 }, { lexer::token_type::identifier, UR"(b)", { 8, 9 } } }, {}, {} } },
+                { { 11, 12 }, postfix_expression{ { 11, 12 }, identifier{ { 11, 12 }, { lexer::token_type::identifier, UR"(c)", { 11, 12 } } }, {}, {} } } } },
         [](auto && ctx) { return parse_postfix_expression(ctx); }));
 
 MAYFLY_END_SUITE;

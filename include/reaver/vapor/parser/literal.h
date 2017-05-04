@@ -36,7 +36,7 @@ inline namespace _v1
     {
         range_type range;
         lexer::token value;
-        optional<lexer::token> suffix;
+        optional<lexer::token> suffix = {};
     };
 
     template<lexer::token_type TokenType>
@@ -48,6 +48,8 @@ inline namespace _v1
     using string_literal = literal<lexer::token_type::string>;
     using integer_literal = literal<lexer::token_type::integer>;
     using boolean_literal = literal<lexer::token_type::boolean>;
+
+    using identifier = literal<lexer::token_type::identifier>;
 
     template<lexer::token_type TokenType>
     auto parse_literal(context & ctx)

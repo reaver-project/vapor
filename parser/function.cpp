@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2016 Michał "Griwes" Dominiak
+ * Copyright © 2015-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,7 +22,7 @@
 
 #include "vapor/parser/function.h"
 #include "vapor/parser/block.h"
-#include "vapor/parser/lambda_expression.h"
+#include "vapor/parser/expr.h"
 
 namespace reaver::vapor::parser
 {
@@ -38,7 +38,7 @@ inline namespace _v1
         expect(ctx, lexer::token_type::round_bracket_open);
         if (peek(ctx) && peek(ctx)->type != lexer::token_type::round_bracket_close)
         {
-            ret.arguments = parse_argument_list(ctx);
+            ret.parameters = parse_parameter_list(ctx);
         }
         expect(ctx, lexer::token_type::round_bracket_close);
 
@@ -65,19 +65,20 @@ inline namespace _v1
     void print(const function & f, std::ostream & os, std::size_t indent)
     {
         auto in = std::string(indent, ' ');
+        auto in4 = std::string(indent + 4, ' ');
 
         os << in << "`function` at " << f.range << '\n';
         os << in << "{\n";
-        os << std::string(indent + 4, ' ') << f.name << '\n';
-        fmap(f.arguments, [&](auto && arguments) {
-            print(arguments, os, indent + 4);
+        os << in4 << f.name << '\n';
+        fmap(f.parameters, [&](auto && parameters) {
+            print(parameters, os, indent + 4);
             return unit{};
         });
         fmap(f.return_type, [&](auto && ret_type) {
-            os << in << "return type:\n";
-            os << in << "{\n";
-            print(ret_type, os, indent + 4);
-            os << in << "}\n";
+            os << in4 << "return type:\n";
+            os << in4 << "{\n";
+            print(ret_type, os, indent + 8);
+            os << in4 << "}\n";
             return unit{};
         });
         print(*f.body, os, indent + 4);

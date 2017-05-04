@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -36,7 +36,7 @@ inline namespace _v1
     {
         std::unique_lock<std::mutex> lock{ _functions_lock };
 
-        if (std::find_if(_functions.begin(), _functions.end(), [&](auto && f) { return f->arguments() == fn->arguments(); }) != _functions.end())
+        if (std::find_if(_functions.begin(), _functions.end(), [&](auto && f) { return f->parameters() == fn->parameters(); }) != _functions.end())
         {
             assert(0);
         }
@@ -44,27 +44,18 @@ inline namespace _v1
         _functions.push_back(fn);
     }
 
-    future<function *> overload_set_type::get_overload(lexer::token_type bracket, std::vector<const type *> args) const
+    future<std::vector<function *>> overload_set_type::get_candidates(lexer::token_type bracket) const
     {
         std::unique_lock<std::mutex> lock{ _functions_lock };
 
         if (bracket == lexer::token_type::round_bracket_open)
         {
-            auto it = std::find_if(_functions.begin(), _functions.end(), [&](auto && f) {
-                // you apparently can't compare `vector<T>` and `vector<const T>`...
-                return args.size() == f->arguments().size()
-                    && std::equal(args.begin(), args.end(), f->arguments().begin(), [](auto && type, auto && var) { return type == var->get_type(); });
-            });
-
-            if (it != _functions.end())
-            {
-                auto ret = *it;
-                return make_ready_future(ret);
-            }
+            assert(_functions.size());
+            return make_ready_future([&] { return _functions; }());
         }
 
         assert(0);
-        return make_ready_future(static_cast<function *>(nullptr));
+        return make_ready_future(std::vector<function *>{});
     }
 
     void overload_set_type::_codegen_type(ir_generation_context & ctx) const

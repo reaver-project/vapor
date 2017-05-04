@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,10 +23,12 @@
 #include <reaver/prelude/fold.h>
 
 #include "vapor/analyzer/expressions/expression_list.h"
-#include "vapor/analyzer/expressions/id.h"
+#include "vapor/analyzer/expressions/identifier.h"
 #include "vapor/analyzer/expressions/postfix.h"
+#include "vapor/analyzer/expressions/variable.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
+#include "vapor/analyzer/variables/member.h"
 #include "vapor/parser.h"
 
 namespace reaver::vapor::analyzer
@@ -35,10 +37,24 @@ inline namespace _v1
 {
     std::unique_ptr<expression> postfix_expression::_clone_expr_with_replacement(replacements & repl) const
     {
+        if (_call_expression)
+        {
+            return _call_expression->clone_expr_with_replacement(repl);
+        }
+
         auto ret = std::unique_ptr<postfix_expression>(new postfix_expression(*this));
 
         ret->_base_expr = _base_expr->clone_expr_with_replacement(repl);
         ret->_arguments = fmap(_arguments, [&](auto && arg) { return arg->clone_expr_with_replacement(repl); });
+
+        ret->_referenced_variable = fmap(_referenced_variable, [&](auto && var) {
+            auto it = repl.variables.find(var);
+            if (it != repl.variables.end())
+            {
+                return repl.variables[var];
+            }
+            return var;
+        });
 
         return ret;
     }
@@ -53,18 +69,34 @@ inline namespace _v1
             .then([&](auto && simplified) {
                 replace_uptr(_base_expr, simplified, ctx);
 
-                if (!_parse.bracket_type)
+                if (!_modifier)
                 {
                     return make_ready_future(_base_expr.release());
                 }
 
-                auto args = fmap(_arguments, [&](auto && expr) { return expr->get_variable(); });
-                return _overload->simplify(ctx, std::move(args)).then([&](auto && simplified) -> expression * {
-                    if (simplified)
+                if (_accessed_member)
+                {
+                    auto var = _base_expr->get_variable();
+                    if (!var->is_constant())
                     {
-                        return simplified;
+                        return make_ready_future<expression *>(this);
                     }
 
+                    assert(_referenced_variable.get()->is_member());
+                    auto member = var->get_member(static_cast<member_variable *>(*_referenced_variable));
+                    assert(member);
+
+                    if (!member->is_constant())
+                    {
+                        return make_ready_future<expression *>(nullptr);
+                    }
+
+                    auto repl = replacements{};
+                    return make_ready_future<expression *>(make_variable_expression(member->clone_with_replacement(repl)).release());
+                }
+
+                return _call_expression->simplify_expr(ctx).then([&](auto && repl) -> expression * {
+                    replace_uptr(_call_expression, repl, ctx);
                     return this;
                 });
             });

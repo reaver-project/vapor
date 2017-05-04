@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,10 +27,12 @@
 
 #include <reaver/function.h>
 #include <reaver/optional.h>
+#include <reaver/prelude/fold.h>
 
 #include "../codegen/ir/function.h"
 #include "../range.h"
 #include "ir_context.h"
+#include "semantic/context.h"
 #include "simplification/context.h"
 
 namespace reaver::vapor::analyzer
@@ -39,15 +41,21 @@ inline namespace _v1
 {
     class type;
     class block;
+    class call_expression;
 
     using function_codegen = reaver::function<codegen::ir::function(ir_generation_context &)>;
-    using function_eval = reaver::function<expression *(simplification_context &, std::vector<variable *>)>;
+    using function_hook = reaver::function<reaver::future<>(analysis_context &, call_expression *, std::vector<variable *>)>;
+    using function_eval = reaver::function<future<expression *>(simplification_context &, std::vector<variable *>)>;
+    using scopes_generator = reaver::function<std::vector<codegen::ir::scope>(ir_generation_context &)>;
 
     class function
     {
     public:
-        function(std::string explanation, type * ret, std::vector<variable *> args, function_codegen codegen, optional<range_type> range = none)
-            : _explanation{ std::move(explanation) }, _range{ std::move(range) }, _return_type{ ret }, _arguments{ std::move(args) },
+        function(std::string explanation, expression * ret, std::vector<variable *> params, function_codegen codegen, optional<range_type> range = none)
+            : _explanation{ std::move(explanation) },
+              _range{ std::move(range) },
+              _return_type_expression{ ret },
+              _parameters{ std::move(params) },
               _codegen{ std::move(codegen) }
         {
             if (ret)
@@ -56,19 +64,25 @@ inline namespace _v1
                 return;
             }
 
-            auto pair = make_promise<type *>();
+            auto pair = make_promise<expression *>();
             _return_type_promise = std::move(pair.promise);
             _return_type_future = std::move(pair.future);
         }
 
-        future<type *> return_type() const
+        future<expression *> return_type_expression(analysis_context &) const
         {
             return *_return_type_future;
         }
 
-        std::vector<variable *> arguments() const
+        expression * return_type_expression() const
         {
-            return _arguments;
+            assert(_return_type_expression);
+            return _return_type_expression;
+        }
+
+        const std::vector<variable *> & parameters() const
+        {
+            return _parameters;
         }
 
         std::string explain() const
@@ -95,6 +109,10 @@ inline namespace _v1
             if (!_ir)
             {
                 _ir = _codegen(ctx);
+                if (_is_member)
+                {
+                    _ir->is_member = true;
+                }
             }
 
             if (state)
@@ -109,18 +127,45 @@ inline namespace _v1
 
         codegen::ir::value call_operand_ir(ir_generation_context & ctx) const
         {
-            assert(_name);
-            return { codegen::ir::label{ *_name, {} } };
+            auto scopes = [&]() -> std::vector<codegen::ir::scope> {
+                if (!_is_member && _scopes_generator)
+                {
+                    return _scopes_generator.get()(ctx);
+                }
+                return {};
+            }();
+            return { codegen::ir::label{ *_name, scopes } };
         }
 
-        void set_return_type(type * ret)
+        void set_return_type(std::shared_ptr<expression> ret)
+        {
+            _owned_expression = ret;
+            set_return_type(_owned_expression.get());
+        }
+
+        void set_return_type(expression * ret)
         {
             std::unique_lock<std::mutex> lock{ _ret_lock };
-            _return_type = ret;
+            assert(!_return_type_expression);
+            assert(ret);
+            _return_type_expression = ret;
             fmap(_return_type_promise, [ret](auto && promise) {
                 promise.set(ret);
                 return unit{};
             });
+        }
+
+        future<expression *> get_return_type() const
+        {
+            std::unique_lock<std::mutex> lock{ _ret_lock };
+
+            if (_return_type_expression)
+            {
+                return make_ready_future(+_return_type_expression);
+            }
+
+            assert(_return_type_future);
+            return _return_type_future.get();
         }
 
         void set_name(std::u32string name)
@@ -138,14 +183,36 @@ inline namespace _v1
             return _body;
         }
 
+        void add_analysis_hook(function_hook hook)
+        {
+            _analysis_hooks.push_back(std::move(hook));
+        }
+
+        future<> run_analysis_hooks(analysis_context & ctx, call_expression * expr, std::vector<variable *> args);
+
         void set_eval(function_eval eval)
         {
             _compile_time_eval = std::move(eval);
         }
 
-        void set_arguments(std::vector<variable *> args)
+        void set_parameters(std::vector<variable *> params)
         {
-            _arguments = std::move(args);
+            _parameters = std::move(params);
+        }
+
+        bool is_member() const
+        {
+            return _is_member;
+        }
+
+        void make_member()
+        {
+            _is_member = true;
+        }
+
+        void set_scopes_generator(scopes_generator generator)
+        {
+            _scopes_generator = std::move(generator);
         }
 
     private:
@@ -153,26 +220,31 @@ inline namespace _v1
         optional<range_type> _range;
 
         block * _body = nullptr;
-        type * _return_type;
         mutable std::mutex _ret_lock;
-        optional<future<type *>> _return_type_future;
-        optional<manual_promise<type *>> _return_type_promise;
+        expression * _return_type_expression;
+        optional<future<expression *>> _return_type_future;
+        optional<manual_promise<expression *>> _return_type_promise;
+        // this is shared ONLY because unique_ptr would require the definition of `expression`
+        std::shared_ptr<expression> _owned_expression;
 
-        std::vector<variable *> _arguments;
+        bool _is_member = false;
+        std::vector<variable *> _parameters;
         optional<std::u32string> _name;
         function_codegen _codegen;
         mutable optional<codegen::ir::function> _ir;
 
+        std::vector<function_hook> _analysis_hooks;
         optional<function_eval> _compile_time_eval;
+        optional<scopes_generator> _scopes_generator;
     };
 
     inline std::unique_ptr<function> make_function(std::string expl,
-        type * return_type,
-        std::vector<variable *> arguments,
+        expression * return_type,
+        std::vector<variable *> parameters,
         function_codegen codegen,
         optional<range_type> range = none)
     {
-        return std::make_unique<function>(std::move(expl), std::move(return_type), std::move(arguments), std::move(codegen), std::move(range));
+        return std::make_unique<function>(std::move(expl), std::move(return_type), std::move(parameters), std::move(codegen), std::move(range));
     }
 }
 }
