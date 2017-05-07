@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2016 Michał "Griwes" Dominiak
+ * Copyright © 2015-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -63,15 +63,13 @@ inline namespace _v1
         return ret;
     }
 
-    void print(const unary_expression & expr, std::ostream & os, std::size_t indent)
+    void print(const unary_expression & expr, std::ostream & os, print_context ctx)
     {
-        auto in = std::string(indent, ' ');
-
-        os << in << "`unary-expression` at " << expr.range << '\n';
-        os << in << "{\n";
-        print(expr.op, os, indent + 4);
-        print(expr.operand, os, indent + 4);
-        os << in << "}\n";
+        os << ctx << "`unary-expression` at " << expr.range << '\n';
+        os << ctx << "{\n";
+        print(expr.op, os, ctx.make_branch(false));
+        print(expr.operand, os, ctx.make_branch(true));
+        os << ctx << "}\n";
     }
 }
 }

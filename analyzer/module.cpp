@@ -118,7 +118,7 @@ inline namespace _v1
         auto ctx = ir_generation_context{};
 
         codegen::ir::module mod;
-        mod.name = fmap(_parse.name.id_expression_value, [&](auto && token) { return token.string; });
+        mod.name = fmap(_parse.name.id_expression_value, [&](auto && ident) { return ident.value.string; });
         mod.symbols = mbind(as_vector(_scope->declared_symbols()), [&](auto && symbol) {
             auto ir = symbol.second->codegen_ir(ctx);
             return get<0>(fmap(ir,

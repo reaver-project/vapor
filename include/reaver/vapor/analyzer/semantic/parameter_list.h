@@ -44,13 +44,13 @@ inline namespace _v1
     {
         return fmap(arglist.parameters, [&](auto && arg) {
             auto expr = preanalyze_expression(arg.type, lex_scope);
-            auto var = make_unresolved_variable(arg.name.string);
+            auto var = make_unresolved_variable(arg.name.value.string);
             var->mark_local();
 
-            auto symb = make_symbol(arg.name.string, var.get());
-            lex_scope->init(arg.name.string, std::move(symb));
+            auto symb = make_symbol(arg.name.value.string, var.get());
+            lex_scope->init(arg.name.value.string, std::move(symb));
 
-            return parameter{ arg.name.string, std::move(expr), std::move(var) };
+            return parameter{ arg.name.value.string, std::move(expr), std::move(var) };
         });
     }
 }

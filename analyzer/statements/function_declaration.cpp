@@ -44,9 +44,9 @@ inline namespace _v1
         _return_type = fmap(_parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, _scope.get()); });
         _body = preanalyze_block(*_parse.body, _scope.get(), true);
         std::shared_ptr<overload_set> keep_count;
-        auto symbol = parent_scope->get_or_init(_parse.name.string, [&] {
+        auto symbol = parent_scope->get_or_init(_parse.name.value.string, [&] {
             keep_count = std::make_shared<overload_set>(_scope.get());
-            return make_symbol(_parse.name.string, keep_count.get());
+            return make_symbol(_parse.name.value.string, keep_count.get());
         });
 
         _overload_set = dynamic_cast<overload_set *>(symbol->get_variable())->shared_from_this();
@@ -55,7 +55,7 @@ inline namespace _v1
     void function_declaration::print(std::ostream & os, std::size_t indent) const
     {
         auto in = std::string(indent, ' ');
-        os << in << "function declaration of `" << utf8(_parse.name.string) << "` at " << _parse.range << '\n';
+        os << in << "function declaration of `" << utf8(_parse.name.value.string) << "` at " << _parse.range << '\n';
         os << in << "parameters:\n";
         os << in << "{\n";
         fmap(_parameter_list, [&, in = std::string(indent + 4, ' ')](auto && argument) {

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -60,7 +60,7 @@ inline namespace _v1
                 if (_type == declaration_type::member)
                 {
                     _blank_variable = make_blank_variable(variable->get_type());
-                    _variable_wrapper = make_member_variable(_blank_variable.get(), _parse.identifier.string);
+                    _variable_wrapper = make_member_variable(_blank_variable.get(), _parse.identifier.value.string);
                     _variable_wrapper->set_default_value(_init_expr.get().get());
                     variable = _variable_wrapper.get();
                 }
@@ -78,7 +78,7 @@ inline namespace _v1
                 auto type_var = _type_specifier.get()->get_variable();
                 auto type = static_cast<type_variable *>(type_var)->get_value();
                 _blank_variable = make_blank_variable(type);
-                _variable_wrapper = make_member_variable(_blank_variable.get(), _parse.identifier.string);
+                _variable_wrapper = make_member_variable(_blank_variable.get(), _parse.identifier.value.string);
 
                 _declared_symbol->set_variable(_variable_wrapper.get());
             });

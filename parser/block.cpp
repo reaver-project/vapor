@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2016 Michał "Griwes" Dominiak
+ * Copyright © 2015-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -72,37 +72,31 @@ inline namespace _v1
         return ret;
     }
 
-    void print(const block & bl, std::ostream & os, std::size_t indent)
+    void print(const block & bl, std::ostream & os, print_context ctx)
     {
-        auto in = std::string(indent, ' ');
+        os << styles::def << ctx << styles::rule_name << "block";
+        print_address_range(os, bl);
+        os << '\n';
 
-        os << in << "`block` at " << bl.range << '\n';
+        auto statements_ctx = ctx.make_branch(!bl.value_expression);
+        os << statements_ctx << styles::subrule_name << "statements:\n";
 
-        os << in << "{\n";
+        std::size_t idx = 0;
+        for (auto && element : bl.block_value)
         {
-            auto in = std::string(indent + 4, ' ');
-            for (auto && element : bl.block_value)
-            {
-                os << in << "{\n";
-                visit(
-                    [&](const auto & value) -> unit {
-                        print(value, os, indent + 8);
-                        return {};
-                    },
-                    element);
-                os << in << "}\n";
-            }
-
-            if (bl.value_expression)
-            {
-                os << in << "value_expression:\n";
-                os << in << "{\n";
-                print(*bl.value_expression, os, indent + 8);
-                os << in << "}\n";
-            }
+            fmap(element, [&](const auto & value) -> unit {
+                print(value, os, statements_ctx.make_branch(++idx == bl.block_value.size()));
+                return {};
+            });
         }
 
-        os << in << "}\n";
+        if (bl.value_expression)
+        {
+            auto value_ctx = ctx.make_branch(true);
+            os << styles::def << value_ctx << styles::subrule_name << "value-expression:\n";
+
+            print(*bl.value_expression, os, value_ctx.make_branch(true));
+        }
     }
 }
 }

@@ -33,7 +33,7 @@ inline namespace _v1
     struct parameter
     {
         range_type range;
-        lexer::token name;
+        identifier name;
         expression type;
     };
 
@@ -55,6 +55,6 @@ inline namespace _v1
 
     parameter_list parse_parameter_list(context & ctx);
 
-    void print(const parameter_list &, std::ostream &, std::size_t indent);
+    void print(const parameter_list &, std::ostream &, print_context ctx);
 }
 }

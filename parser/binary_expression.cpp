@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2016 Michał "Griwes" Dominiak
+ * Copyright © 2015-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -138,16 +138,15 @@ inline namespace _v1
         return ret;
     }
 
-    void print(const binary_expression & expr, std::ostream & os, std::size_t indent)
+    void print(const binary_expression & expr, std::ostream & os, print_context ctx)
     {
-        auto in = std::string(indent, ' ');
+        os << styles::def << ctx << styles::rule_name << "binary-expression";
+        print_address_range(os, expr);
+        os << '\n';
 
-        os << in << "`binary-expression` at " << expr.range << '\n';
-        os << in << "{\n";
-        print(expr.lhs, os, indent + 4);
-        print(expr.op, os, indent + 4);
-        print(expr.rhs, os, indent + 4);
-        os << in << "}\n";
+        print(expr.lhs, os, ctx.make_branch(false));
+        os << styles::def << ctx.make_branch(false) << styles::subrule_name << "operator: " << styles::def << utf8(expr.op.string) << '\n';
+        print(expr.rhs, os, ctx.make_branch(true));
     }
 }
 }

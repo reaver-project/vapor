@@ -38,7 +38,7 @@ inline namespace _v1
     struct function
     {
         range_type range;
-        lexer::token name;
+        identifier name;
         optional<parameter_list> parameters;
         optional<expression> return_type;
         recursive_wrapper<block> body;
@@ -52,6 +52,6 @@ inline namespace _v1
 
     function parse_function(context & ctx);
 
-    void print(const function & f, std::ostream & os, std::size_t indent = 0);
+    void print(const function & f, std::ostream & os, print_context ctx);
 }
 }

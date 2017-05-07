@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016 Michał "Griwes" Dominiak
+ * Copyright © 2014-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -26,8 +26,10 @@
 #include <vector>
 
 #include "../lexer/token.h"
+#include "../print_helpers.h"
 #include "../range.h"
 #include "helpers.h"
+#include "literal.h"
 
 namespace reaver::vapor::parser
 {
@@ -36,7 +38,7 @@ inline namespace _v1
     struct id_expression
     {
         range_type range;
-        std::vector<lexer::token> id_expression_value;
+        std::vector<identifier> id_expression_value;
     };
 
     inline bool operator==(const id_expression & lhs, const id_expression & rhs)
@@ -46,6 +48,6 @@ inline namespace _v1
 
     id_expression parse_id_expression(context & ctx);
 
-    void print(const id_expression & ide, std::ostream & os, std::size_t indent = 0);
+    void print(const id_expression & ide, std::ostream & os, print_context ctx);
 }
 }

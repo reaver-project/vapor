@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2016 Michał "Griwes" Dominiak
+ * Copyright © 2015-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -54,17 +54,15 @@ inline namespace _v1
         return ret;
     }
 
-    void print(const expression_list & list, std::ostream & os, std::size_t indent)
+    void print(const expression_list & list, std::ostream & os, print_context ctx)
     {
-        auto in = std::string(indent, ' ');
-
-        os << in << "`expression-list` at " << list.range << '\n';
+        os << ctx << "`expression-list` at " << list.range << '\n';
 
         for (auto && expression : list.expressions)
         {
-            os << in << "{\n";
-            print(expression, os, indent + 4);
-            os << in << "}\n";
+            os << ctx << "{\n";
+            print(expression, os, ctx.make_branch(false));
+            os << ctx << "}\n";
         }
     }
 }

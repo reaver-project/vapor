@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -42,6 +42,6 @@ inline namespace _v1
 
     member_expression parse_member_expression(context & ctx);
 
-    void print(const member_expression &, std::ostream &, std::size_t = 0);
+    void print(const member_expression &, std::ostream &, print_context ctx);
 }
 }

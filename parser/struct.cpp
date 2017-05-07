@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -31,7 +31,7 @@ inline namespace _v1
     {
         struct named_struct
         {
-            optional<lexer::token> name;
+            optional<identifier> name;
             struct_literal definition;
         };
 
@@ -49,7 +49,7 @@ inline namespace _v1
 
             if (type == struct_type::named)
             {
-                ret.name = expect(ctx, lexer::token_type::identifier);
+                ret.name = parse_literal<lexer::token_type::identifier>(ctx);
             }
 
             expect(ctx, lexer::token_type::curly_bracket_open);
@@ -86,23 +86,20 @@ inline namespace _v1
         return decl;
     }
 
-    void print(const struct_literal & lit, std::ostream & os, std::size_t indent)
+    void print(const struct_literal & lit, std::ostream & os, print_context ctx)
     {
-        auto in = std::string(indent, ' ');
+        os << styles::def << ctx << styles::rule_name << "struct-literal";
+        print_address_range(os, lit);
+        os << '\n';
 
-        os << in << "`struct-literal` at " << lit.range << '\n';
-        os << in << "{\n";
-        fmap(lit.members, [&, in = std::string(indent + 4, ' ')](auto && member) {
-            os << in << "{\n";
+        std::size_t idx = 0;
+        for (auto && member : lit.members)
+        {
             fmap(member, [&](auto && decl) {
-                print(decl, os, indent + 8);
+                print(decl, os, ctx.make_branch(++idx == lit.members.size()));
                 return unit{};
             });
-            os << in << "}\n";
-            return unit{};
-        });
-
-        os << in << "}\n";
+        }
     }
 }
 }

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2016 Michał "Griwes" Dominiak
+ * Copyright © 2015-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -117,39 +117,40 @@ inline namespace _v1
         return ret;
     }
 
-    void print(const postfix_expression & expr, std::ostream & os, std::size_t indent)
+    void print(const postfix_expression & expr, std::ostream & os, print_context ctx)
     {
-        auto in = std::string(indent, ' ');
+        os << styles::def << ctx << styles::rule_name << "postfix-expression";
+        print_address_range(os, expr);
 
-        os << in << "`postfix-expression` at " << expr.range << '\n';
+        auto base_expression_ctx = ctx.make_branch(!expr.modifier_type);
+        os << '\n' << base_expression_ctx << styles::subrule_name << "base-expression:\n";
+        fmap(expr.base_expression, [&](const auto & value) -> unit {
+            print(value, os, base_expression_ctx.make_branch(true));
+            return {};
+        });
+
         if (expr.modifier_type)
         {
-            os << in << "modifier type: `" << lexer::token_types[+*expr.modifier_type] << "`\n";
+            auto modifier_ctx = ctx.make_branch(false);
+            os << modifier_ctx << styles::subrule_name << "modifier-type: " << styles::def << lexer::token_types[+*expr.modifier_type] << '\n';
 
             if (expr.modifier_type == lexer::token_type::dot)
             {
-                os << in << "accessed member: `" << utf8(expr.accessed_member->value.string) << "`\n";
+                os << ctx.make_branch(true) << styles::subrule_name << "accessed-member: " << styles::def << utf8(expr.accessed_member->value.string) << '\n';
+            }
+
+            else if (!expr.arguments.empty())
+            {
+                auto arguments_ctx = ctx.make_branch(true);
+                os << arguments_ctx << styles::subrule_name << "arguments:\n";
+
+                std::size_t idx = 0;
+                for (auto && arg : expr.arguments)
+                {
+                    print(arg, os, arguments_ctx.make_branch(++idx == expr.arguments.size()));
+                }
             }
         }
-
-        os << in << "{\n";
-
-        fmap(expr.base_expression, [&](const auto & value) -> unit {
-            print(value, os, indent + 4);
-            return {};
-        });
-        if (expr.arguments.size())
-        {
-            auto in = std::string(indent + 4, ' ');
-            os << in << "{\n";
-            fmap(expr.arguments, [&](auto && arg) -> unit {
-                print(arg, os, indent + 8);
-                return {};
-            });
-            os << in << "}\n";
-        }
-
-        os << in << "}\n";
     }
 }
 }

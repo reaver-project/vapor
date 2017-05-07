@@ -40,7 +40,7 @@ inline namespace _v1
         _function = make_function("overloadable function",
             nullptr,
             {},
-            [=, name = _parse.name.string](ir_generation_context & ctx) {
+            [=, name = _parse.name.value.string](ir_generation_context & ctx) {
                 auto ret = codegen::ir::function{ U"operator()",
                     {},
                     fmap(_parameter_list,

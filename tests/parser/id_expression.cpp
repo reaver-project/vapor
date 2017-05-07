@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -31,14 +31,14 @@ MAYFLY_BEGIN_SUITE("parser");
 MAYFLY_BEGIN_SUITE("id_expression");
 
 MAYFLY_ADD_TESTCASE("simple id-expression",
-    test(UR"(foo)", id_expression{ { 0, 3 }, { { lexer::token_type::identifier, UR"(foo)", { 0, 3 } } } }, &parse_id_expression));
+    test(UR"(foo)", id_expression{ { 0, 3 }, { identifier{ { 0, 3 }, { lexer::token_type::identifier, UR"(foo)", { 0, 3 } } } } }, &parse_id_expression));
 
 MAYFLY_ADD_TESTCASE("complex id-expression",
     test(UR"(foo.bar.baz)",
         id_expression{ { 0, 11 },
-            { { lexer::token_type::identifier, UR"(foo)", { 0, 3 } },
-                { lexer::token_type::identifier, UR"(bar)", { 4, 7 } },
-                { lexer::token_type::identifier, UR"(baz)", { 8, 11 } } } },
+            { identifier{ { 0, 3 }, { lexer::token_type::identifier, UR"(foo)", { 0, 3 } } },
+                identifier{ { 4, 7 }, { lexer::token_type::identifier, UR"(bar)", { 4, 7 } } },
+                identifier{ { 8, 11 }, { lexer::token_type::identifier, UR"(baz)", { 8, 11 } } } } },
         &parse_id_expression));
 
 MAYFLY_ADD_TESTCASE("invalid id-expression", test(UR"(.foo.bar)", 0, [](auto && ctx) {

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -28,7 +28,7 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     declaration::declaration(const parser::declaration & parse, scope * old_scope, scope * new_scope, declaration_type decl_type)
-        : _parse{ parse }, _name{ parse.identifier.string }, _type{ decl_type }
+        : _parse{ parse }, _name{ parse.identifier.value.string }, _type{ decl_type }
     {
         switch (_type)
         {

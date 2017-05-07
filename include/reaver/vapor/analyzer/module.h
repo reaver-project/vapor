@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -55,7 +55,7 @@ inline namespace _v1
 
         std::u32string name() const
         {
-            return boost::join(fmap(_parse.name.id_expression_value, [](auto && elem) -> decltype(auto) { return elem.string; }), ".");
+            return boost::join(fmap(_parse.name.id_expression_value, [](auto && elem) -> decltype(auto) { return elem.value.string; }), ".");
         }
 
         void print(std::ostream & os, std::size_t indent = 0) const;

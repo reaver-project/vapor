@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016 Michał "Griwes" Dominiak
+ * Copyright © 2014-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,6 +24,7 @@
 
 #include <reaver/optional.h>
 
+#include "../print_helpers.h"
 #include "../range.h"
 #include "helpers.h"
 
@@ -56,40 +57,37 @@ inline namespace _v1
     {
         literal<TokenType> ret;
 
-        if (peek(ctx, TokenType))
+        ret.value = expect(ctx, TokenType);
+
+        auto start = ret.value.range.start();
+        auto end = ret.value.range.end();
+
+        if (peek(ctx, lexer::suffix(TokenType)))
         {
-            ret.value = expect(ctx, TokenType);
-
-            auto start = ret.value.range.start();
-            auto end = ret.value.range.end();
-
-            if (peek(ctx, lexer::suffix(TokenType)))
-            {
-                ret.suffix = expect(ctx, lexer::suffix(TokenType));
-                end = ret.suffix->range.end();
-            }
-
-            ret.range = { start, end };
+            ret.suffix = expect(ctx, lexer::suffix(TokenType));
+            end = ret.suffix->range.end();
         }
+
+        ret.range = { start, end };
 
         return ret;
     }
 
     template<lexer::token_type TokenType>
-    void print(const literal<TokenType> & lit, std::ostream & os, std::size_t indent = 0)
+    void print(const literal<TokenType> & lit, std::ostream & os, print_context ctx)
     {
-        auto in = std::string(indent, ' ');
-        os << in << '`' << lexer::token_types[+lit.value.type] << "` literal value: " << lit.value << '\n';
-        if (lit.suffix)
-        {
-            os << in << "literal suffix: " << *lit.suffix << '\n';
-        }
+        os << styles::def << ctx << styles::rule_name << lexer::token_types[+lit.value.type];
+        print_address_range(os, lit);
+        os << " '" << styles::string_value << utf8(lit.value.string) << styles::def << "'";
+
+        assert(!lit.suffix);
+
+        os << '\n';
     }
 
-    inline void print(const lexer::token & tok, std::ostream & os, std::size_t indent = 0)
+    inline void print(const lexer::token & tok, std::ostream & os, print_context ctx)
     {
-        auto in = std::string(indent, ' ');
-        os << in << tok << '\n';
+        os << ctx << tok << '\n';
     }
 }
 }
