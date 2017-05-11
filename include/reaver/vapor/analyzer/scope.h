@@ -122,7 +122,7 @@ inline namespace _v1
         {
             _shlock lock{ _lock };
             auto it = _symbols.find(name);
-            return it != _symbols.end() ? make_optional(it->second) : none;
+            return it != _symbols.end() ? make_optional(it->second.get()) : none;
         }
 
         bool init(const std::u32string & name, std::unique_ptr<symbol> symb);

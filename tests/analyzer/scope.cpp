@@ -41,7 +41,7 @@ MAYFLY_ADD_TESTCASE("init and get", [] {
     MAYFLY_REQUIRE(s.init(U"present", std::move(present)));
     MAYFLY_CHECK(s.get(U"present") == present_ptr);
     auto tried = s.try_get(U"present");
-    MAYFLY_CHECK(tried && tried.get().get() == present_ptr);
+    MAYFLY_CHECK(tried && tried.get() == present_ptr);
     MAYFLY_CHECK(s.get_or_init(U"present", []() -> std::unique_ptr<symbol> {
         MAYFLY_REQUIRE(!"the init function shouldn't be called!");
         __builtin_unreachable();
