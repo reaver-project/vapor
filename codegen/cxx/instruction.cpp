@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -54,7 +54,7 @@ inline namespace _v1
         }
     }
 
-    std::u32string cxx_generator::generate(const ir::instruction & inst, codegen_context & ctx) const
+    std::u32string cxx_generator::generate(const ir::instruction & inst, codegen_context & ctx)
     {
         std::u32string base;
         if (inst.label)
@@ -83,32 +83,33 @@ inline namespace _v1
             if (!var.declared)
             {
                 var.declared = true;
-                var.name = ctx.get_storage_for(var.type);
+                var.name = get_storage_for(var.type, ctx);
             }
         }
 
-        return base + generate_helper<ir::function_call_instruction,
-                          ir::materialization_instruction,
-                          ir::destruction_instruction,
-                          ir::temporary_destruction_instruction,
-                          ir::pass_value_instruction,
-                          ir::return_instruction,
-                          ir::jump_instruction,
-                          ir::phi_instruction,
-                          ir::noop_instruction,
+        return base
+            + generate_helper<ir::function_call_instruction,
+                  ir::materialization_instruction,
+                  ir::destruction_instruction,
+                  ir::temporary_destruction_instruction,
+                  ir::pass_value_instruction,
+                  ir::return_instruction,
+                  ir::jump_instruction,
+                  ir::phi_instruction,
+                  ir::noop_instruction,
 
-                          ir::aggregate_init_instruction,
-                          ir::member_access_instruction,
+                  ir::aggregate_init_instruction,
+                  ir::member_access_instruction,
 
-                          ir::integer_addition_instruction,
-                          ir::integer_subtraction_instruction,
-                          ir::integer_multiplication_instruction,
-                          ir::integer_equal_comparison_instruction,
-                          ir::integer_less_comparison_instruction,
-                          ir::integer_less_equal_comparison_instruction,
+                  ir::integer_addition_instruction,
+                  ir::integer_subtraction_instruction,
+                  ir::integer_multiplication_instruction,
+                  ir::integer_equal_comparison_instruction,
+                  ir::integer_less_comparison_instruction,
+                  ir::integer_less_equal_comparison_instruction,
 
-                          ir::boolean_equal_comparison_instruction,
-                          ir::boolean_negation_instruction>(inst, ctx);
+                  ir::boolean_equal_comparison_instruction,
+                  ir::boolean_negation_instruction>(inst, ctx);
     }
 
     namespace cxx

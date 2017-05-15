@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,33 +22,32 @@
 
 #include "vapor/codegen/cxx.h"
 #include "vapor/codegen/cxx/names.h"
-#include "vapor/codegen/generator.h"
-#include "vapor/codegen/ir/instruction.h"
 
 namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    namespace cxx
+    std::u32string cxx_generator::get_storage_for(std::shared_ptr<ir::variable_type> type, codegen_context & ctx)
     {
-        template<>
-        std::u32string generate<ir::phi_instruction>(const ir::instruction & inst, codegen_context & ctx)
+        auto it = _unallocated_variables.find(type);
+        if (it != _unallocated_variables.end())
         {
-            assert(inst.label);
-            auto this_phi_var = U"__phi_variable" + *inst.label;
-
-            auto type_string = type_name(get_type(inst.result), ctx);
-            ctx.put_into_function_header += U"::reaver::manual_object<" + type_string + U"> " + this_phi_var + U";\n";
-
-            if (variable_of(inst.result, ctx) != this_phi_var)
+            if (!it->second.empty())
             {
-                auto cxxgen = dynamic_cast<cxx_generator &>(ctx.generator());
-                cxxgen.free_storage_for(this_phi_var, get<std::shared_ptr<ir::variable>>(inst.result)->type, ctx);
-                return variable_of(inst.result, ctx) + U".emplace(" + this_phi_var + U".move());\n";
+                auto ret = std::move(it->second.back());
+                it->second.pop_back();
+                return ret;
             }
-
-            return {};
         }
+
+        auto var = U"__pseudoregister_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.storage_object_index++));
+        ctx.put_into_function_header += U"::reaver::manual_object<" + cxx::type_name(type, ctx) + U"> " + var + U";\n";
+        return var;
+    }
+
+    void cxx_generator::free_storage_for(std::u32string name, std::shared_ptr<ir::variable_type> type, codegen_context &)
+    {
+        _unallocated_variables[std::move(type)].push_back(std::move(name));
     }
 }
 }

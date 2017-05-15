@@ -78,7 +78,7 @@ inline namespace _v1
         return ret;
     }
 
-    std::u32string cxx_generator::generate_definition(const ir::function & fn, codegen_context & ctx) const
+    std::u32string cxx_generator::generate_definition(const ir::function & fn, codegen_context & ctx)
     {
         std::u32string header;
 
@@ -147,7 +147,8 @@ inline namespace _v1
 
         auto ret = header + ctx.put_into_function_header + body;
         ctx.put_into_function_header.clear();
-        ctx.clear_storage();
+        auto cxxgen = dynamic_cast<cxx_generator &>(ctx.generator());
+        cxxgen.clear_storage();
         return ret;
     }
 }
