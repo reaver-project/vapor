@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -32,7 +32,12 @@ inline namespace _v1
     public:
         struct_literal(const parser::struct_literal & parse, scope * lex_scope);
 
-        virtual void print(std::ostream &, std::size_t indent) const override;
+        virtual void print(std::ostream &, print_context) const override;
+
+        const auto & parse() const
+        {
+            return _parse;
+        }
 
     private:
         virtual future<> _analyze(analysis_context &) override;

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -26,6 +26,7 @@
 
 #include "../../codegen/ir/instruction.h"
 #include "../../codegen/ir/variable.h"
+#include "../../print_helpers.h"
 #include "../ir_context.h"
 #include "../semantic/context.h"
 #include "../simplification/context.h"
@@ -123,7 +124,7 @@ inline namespace _v1
             return false;
         }
 
-        virtual void print(std::ostream &, std::size_t indent) const = 0;
+        virtual void print(std::ostream &, print_context) const = 0;
 
         statement_ir codegen_ir(ir_generation_context & ctx) const
         {
@@ -150,7 +151,7 @@ inline namespace _v1
     class null_statement : public statement
     {
     public:
-        virtual void print(std::ostream &, std::size_t) const override
+        virtual void print(std::ostream &, print_context) const override
         {
         }
 

@@ -42,9 +42,14 @@ inline namespace _v1
     public:
         member_expression(const parser::member_expression & parse);
 
-        virtual void print(std::ostream & os, std::size_t indent) const override;
+        virtual void print(std::ostream & os, print_context) const override;
 
         virtual variable * get_variable() const override;
+
+        const auto & parse() const
+        {
+            return _parse;
+        }
 
     private:
         member_expression(const parser::member_expression & parse, variable * referenced) : _parse{ parse }, _referenced{ referenced }

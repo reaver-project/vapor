@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -47,26 +47,26 @@ inline namespace _v1
         return ret;
     }
 
-    void print(const module & mod, std::ostream & os, std::size_t indent)
+    void print(const module & mod, std::ostream & os, print_context ctx)
     {
-        auto in = std::string(indent, ' ');
+        os << styles::def << ctx << styles::rule_name << "module";
+        print_address_range(os, mod);
 
-        os << in << "`module` at " << mod.range << '\n';
-        os << in << "{\n";
-        print(mod.name, os, indent + 4);
-        os << in << "}\n";
+        auto name_ctx = ctx.make_branch(mod.statements.empty());
+        os << '\n' << name_ctx << styles::subrule_name << "name:\n";
+        print(mod.name, os, name_ctx.make_branch(true));
 
-        os << in << "{\n";
+        if (mod.statements.size())
         {
-            auto in = std::string(indent + 4, ' ');
+            auto stmts_ctx = ctx.make_branch(true);
+            os << styles::def << stmts_ctx << styles::subrule_name << "statements:\n";
+
+            std::size_t idx = 0;
             for (auto && statement : mod.statements)
             {
-                os << in << "{\n";
-                print(statement, os, indent + 8);
-                os << in << "}\n";
+                print(statement, os, stmts_ctx.make_branch(++idx == mod.statements.size()));
             }
         }
-        os << in << "}\n";
     }
 }
 }

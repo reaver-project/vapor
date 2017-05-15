@@ -40,12 +40,12 @@ inline namespace _v1
     public:
         closure(const parser::lambda_expression & parse, scope * lex_scope);
 
-        auto & parse() const
+        const auto & parse() const
         {
             return _parse;
         }
 
-        virtual void print(std::ostream & os, std::size_t indent) const override;
+        virtual void print(std::ostream & os, print_context ctx) const override;
 
     private:
         virtual future<> _analyze(analysis_context &) override;

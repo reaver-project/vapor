@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -68,28 +68,25 @@ inline namespace _v1
         return ret;
     }
 
-    void print(const if_statement & stmt, std::ostream & os, std::size_t indent)
+    void print(const if_statement & stmt, std::ostream & os, print_context ctx)
     {
-        auto in = std::string(indent, ' ');
+        os << styles::def << ctx << styles::rule_name << "if-statement";
+        print_address_range(os, stmt);
+        os << '\n';
 
-        os << in << "`if-statement`  at " << stmt.range << '\n';
+        auto condition_ctx = ctx.make_branch(false);
+        os << styles::def << condition_ctx << styles::subrule_name << "condition:\n";
+        print(stmt.condition, os, condition_ctx.make_branch(true));
 
-        os << in << "`condition`:\n";
-        os << in << "{\n";
-        print(stmt.condition, os, indent + 4);
-        os << in << "}\n";
-
-        os << in << "`then` block:\n";
-        os << in << "{\n";
-        print(stmt.then_block, os, indent + 4);
-        os << in << "}\n";
+        auto then_ctx = ctx.make_branch(!stmt.else_block);
+        os << styles::def << then_ctx << styles::subrule_name << "then-block:\n";
+        print(stmt.then_block, os, then_ctx.make_branch(true));
 
         if (stmt.else_block)
         {
-            os << in << "`else` block:\n";
-            os << in << "{\n";
-            print(*stmt.else_block, os, indent + 4);
-            os << in << "}\n";
+            auto else_ctx = ctx.make_branch(true);
+            os << styles::def << else_ctx << styles::subrule_name << "else-block:\n";
+            print(*stmt.else_block, os, ctx.make_branch(true));
         }
     }
 }

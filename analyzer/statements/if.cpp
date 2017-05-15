@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -30,27 +30,26 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void if_statement::print(std::ostream & os, std::size_t indent) const
+    void if_statement::print(std::ostream & os, print_context ctx) const
     {
-        auto in = std::string(indent, ' ');
-        os << in << "if statement at " << _parse.range << '\n';
-        os << in << "condition:\n";
-        os << in << "{\n";
-        _condition->print(os, indent + 4);
-        os << in << "}\n";
+        os << styles::def << ctx << styles::rule_name << "if-statement";
+        print_address_range(os, this);
+        os << '\n';
 
-        os << in << "then-block:\n";
-        os << in << "{\n";
-        _then_block->print(os, indent + 4);
-        os << in << "}\n";
+        auto condition_ctx = ctx.make_branch(false);
+        os << styles::def << condition_ctx << styles::subrule_name << "condition:\n";
+        _condition->print(os, condition_ctx.make_branch(true));
 
-        fmap(_else_block, [&](auto && block) {
-            os << in << "else-block:\n";
-            os << in << "{\n";
-            block->print(os, indent + 4);
-            os << in << "}\n";
-            return unit{};
-        });
+        auto then_ctx = ctx.make_branch(!_else_block);
+        os << styles::def << then_ctx << styles::subrule_name << "then block:\n";
+        _then_block->print(os, then_ctx.make_branch(true));
+
+        if (_else_block)
+        {
+            auto else_ctx = ctx.make_branch(true);
+            os << styles::def << else_ctx << styles::subrule_name << "else block:\n";
+            _else_block.get()->print(os, ctx.make_branch(true));
+        }
     }
 
     statement_ir if_statement::_codegen_ir(ir_generation_context & ctx) const

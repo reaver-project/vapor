@@ -51,6 +51,6 @@ inline namespace _v1
 
     lambda_expression parse_lambda_expression(context & ctx);
 
-    void print(const lambda_expression & expr, std::ostream & os, std::size_t indent = 0);
+    void print(const lambda_expression & expr, std::ostream & os, print_context ctx);
 }
 }

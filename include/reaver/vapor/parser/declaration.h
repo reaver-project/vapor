@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016 Michał "Griwes" Dominiak
+ * Copyright © 2014-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -31,10 +31,12 @@ namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
+    using ident_type = identifier;
+
     struct declaration
     {
         range_type range;
-        lexer::token identifier;
+        ident_type identifier;
         optional<expression> type_expression;
         optional<expression> rhs;
     };
@@ -52,6 +54,6 @@ inline namespace _v1
 
     declaration parse_declaration(context & ctx, declaration_mode mode = declaration_mode::variable_declaration);
 
-    void print(const declaration & decl, std::ostream & os, std::size_t indent = 0);
+    void print(const declaration & decl, std::ostream & os, print_context ctx);
 }
 }

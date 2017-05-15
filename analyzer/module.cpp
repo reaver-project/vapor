@@ -88,17 +88,23 @@ inline namespace _v1
         logger::dlog() << "Simplification of module " << utf8(name()) << " finished.";
     }
 
-    void module::print(std::ostream & os, std::size_t indent) const
+    void module::print(std::ostream & os, print_context ctx) const
     {
-        auto in = std::string(indent, ' ');
-        os << in << "module `" << utf8(name()) << "` at " << _parse.range << '\n';
-        fmap(_statements, [&](auto && stmt) {
-            os << in << "{\n";
-            stmt->print(os, indent + 4);
-            os << in << "}\n";
+        os << styles::def << ctx << styles::rule_name << "module";
+        print_address_range(os, this);
+        os << '\n';
 
-            return unit{};
-        });
+        if (_statements.size())
+        {
+            auto stmts_ctx = ctx.make_branch(true);
+            os << styles::def << stmts_ctx << styles::subrule_name << "statements\n";
+
+            std::size_t idx = 0;
+            for (auto && stmt : _statements)
+            {
+                stmt->print(os, stmts_ctx.make_branch(++idx == _statements.size()));
+            }
+        }
     }
 
     namespace
@@ -118,7 +124,7 @@ inline namespace _v1
         auto ctx = ir_generation_context{};
 
         codegen::ir::module mod;
-        mod.name = fmap(_parse.name.id_expression_value, [&](auto && token) { return token.string; });
+        mod.name = fmap(_parse.name.id_expression_value, [&](auto && ident) { return ident.value.string; });
         mod.symbols = mbind(as_vector(_scope->declared_symbols()), [&](auto && symbol) {
             auto ir = symbol.second->codegen_ir(ctx);
             return get<0>(fmap(ir,

@@ -57,6 +57,8 @@ inline namespace _v1
             return "overload set (TODO: add location and member info)";
         }
 
+        virtual void print(std::ostream & os, print_context ctx) const override;
+
         virtual future<std::vector<function *>> get_candidates(lexer::token_type bracket) const override;
 
     private:

@@ -32,28 +32,30 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void binary_expression::print(std::ostream & os, std::size_t indent) const
+    void binary_expression::print(std::ostream & os, print_context ctx) const
     {
-        auto in = std::string(indent, ' ');
-        os << in << "binary expression at " << _parse.range << '\n';
-        os << in << "type: " << get_variable()->get_type()->explain() << '\n';
+        os << styles::def << ctx << styles::rule_name << "binary-expression";
+        print_address_range(os, this);
+        os << '\n';
 
-        os << in << "selected call expression:\n";
-        os << in << "{\n";
-        _call_expression->print(os, indent + 4);
-        os << in << "}\n";
+        auto type_ctx = ctx.make_branch(false);
+        os << styles::def << type_ctx << styles::subrule_name << "type:\n";
+        get_type()->print(os, type_ctx.make_branch(true));
 
-        os << in << "lhs:\n";
-        os << in << "{\n";
-        _lhs->print(os, indent + 4);
-        os << in << "}\n";
+        auto lhs_ctx = ctx.make_branch(false);
+        os << styles::def << lhs_ctx << styles::subrule_name << "lhs:\n";
+        _lhs->print(os, lhs_ctx.make_branch(true));
 
-        os << in << "operator: " << lexer::token_types[+_op.type] << '\n';
+        auto operator_ctx = ctx.make_branch(false);
+        os << styles::def << operator_ctx << styles::subrule_name << "operator: " << styles::string_value << lexer::token_types[+_op.type] << '\n';
 
-        os << in << "rhs:\n";
-        os << in << "{\n";
-        _rhs->print(os, indent + 4);
-        os << in << "}\n";
+        auto rhs_ctx = ctx.make_branch(false);
+        os << styles::def << rhs_ctx << styles::subrule_name << "rhs:\n";
+        _rhs->print(os, rhs_ctx.make_branch(true));
+
+        auto call_expr_ctx = ctx.make_branch(true);
+        os << styles::def << call_expr_ctx << styles::subrule_name << "resolved expression:\n";
+        _call_expression->print(os, call_expr_ctx.make_branch(true));
     }
 
     statement_ir binary_expression::_codegen_ir(ir_generation_context & ctx) const

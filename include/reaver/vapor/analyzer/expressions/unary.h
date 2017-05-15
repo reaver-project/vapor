@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -37,7 +37,7 @@ inline namespace _v1
             assert(0);
         }
 
-        virtual void print(std::ostream &, std::size_t) const override
+        virtual void print(std::ostream &, print_context) const override
         {
             assert(0);
         }

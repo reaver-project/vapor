@@ -31,12 +31,18 @@ inline namespace _v1
     {
     }
 
-    void member_expression::print(std::ostream & os, std::size_t indent) const
+    void member_expression::print(std::ostream & os, print_context ctx) const
     {
-        auto in = std::string(indent, ' ');
-        os << in << "member expression at " << _parse.range << '\n';
-        os << in << "referenced member name: " << utf8(_parse.member_name.value.string) << '\n';
-        os << in << "referenced variable type: " << get_variable()->get_type()->explain() << '\n';
+        os << styles::def << ctx << styles::rule_name << "member-expression";
+        print_address_range(os, this);
+        os << '\n';
+
+        os << styles::def << ctx.make_branch(false) << styles::subrule_name << "referenced member name: " << styles::string_value
+           << utf8(_parse.member_name.value.string) << '\n';
+
+        auto type_ctx = ctx.make_branch(true);
+        os << styles::def << type_ctx << styles::subrule_name << "referenced variable type:\n";
+        get_type()->print(os, type_ctx.make_branch(true));
     }
 
     variable * member_expression::get_variable() const

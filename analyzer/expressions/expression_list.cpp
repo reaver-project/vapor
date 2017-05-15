@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -32,18 +32,24 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void expression_list::print(std::ostream & os, std::size_t indent) const
+    void expression_list::print(std::ostream & os, print_context ctx) const
     {
-        auto in = std::string(indent, ' ');
-        os << in << "expression list at " << range << '\n';
-        os << in << "type: " << value.back()->get_type()->explain() << '\n';
-        fmap(value, [&](auto && expr) {
-            os << in << "{\n";
-            expr->print(os, indent + 4);
-            os << in << "}\n";
+        os << styles::def << ctx << styles::rule_name << "expression-list";
+        print_address_range(os, this);
+        os << '\n';
 
-            return unit{};
-        });
+        auto type_ctx = ctx.make_branch(false);
+        os << styles::def << type_ctx << styles::subrule_name << "type:\n";
+        get_type()->print(os, type_ctx.make_branch(true));
+
+        auto exprs_ctx = ctx.make_branch(true);
+        os << styles::def << exprs_ctx << styles::subrule_name << "value:\n";
+
+        std::size_t idx = 0;
+        for (auto && expr : value)
+        {
+            expr->print(os, exprs_ctx.make_branch(++idx == value.size()));
+        }
     }
 
     std::unique_ptr<expression> preanalyze_expression_list(const parser::expression_list & expr, scope * lex_scope)
@@ -53,11 +59,8 @@ inline namespace _v1
             return preanalyze_expression(expr.expressions.front(), lex_scope);
         }
 
-        auto ret = std::make_unique<expression_list>();
-        ret->value.reserve(expr.expressions.size());
-        std::transform(expr.expressions.begin(), expr.expressions.end(), std::back_inserter(ret->value), [&](auto && expr) {
-            return preanalyze_expression(expr, lex_scope);
-        });
+        auto ret = std::make_unique<expression_list>(expr);
+        ret->value = fmap(expr.expressions, [&](auto && expr) { return preanalyze_expression(expr, lex_scope); });
         ret->range = expr.range;
         return ret;
     }

@@ -28,6 +28,7 @@
 
 #include "../../codegen/ir/type.h"
 #include "../../lexer/token.h"
+#include "../../print_helpers.h"
 #include "../ir_context.h"
 #include "../scope.h"
 
@@ -96,6 +97,7 @@ inline namespace _v1
         }
 
         virtual std::string explain() const = 0;
+        virtual void print(std::ostream & os, print_context ctx) const = 0;
 
         virtual const scope * get_scope() const
         {
@@ -163,6 +165,11 @@ inline namespace _v1
         }
 
         virtual future<std::vector<function *>> get_candidates(lexer::token_type token) const override;
+
+        virtual void print(std::ostream & os, print_context ctx) const override
+        {
+            os << styles::def << ctx << styles::type << "type" << styles::def << " @ " << styles::address << this << styles::def << ": builtin type\n";
+        }
 
     private:
         virtual void _codegen_type(ir_generation_context &) const override;

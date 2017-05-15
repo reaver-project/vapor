@@ -34,7 +34,7 @@ inline namespace _v1
 
         auto start = expect(ctx, lexer::token_type::function).range.start();
 
-        ret.name = expect(ctx, lexer::token_type::identifier);
+        ret.name = parse_literal<lexer::token_type::identifier>(ctx);
         expect(ctx, lexer::token_type::round_bracket_open);
         if (peek(ctx) && peek(ctx)->type != lexer::token_type::round_bracket_close)
         {
@@ -62,27 +62,21 @@ inline namespace _v1
         return ret;
     }
 
-    void print(const function & f, std::ostream & os, std::size_t indent)
+    void print(const function & f, std::ostream & os, print_context ctx)
     {
-        auto in = std::string(indent, ' ');
-        auto in4 = std::string(indent + 4, ' ');
+        os << styles::def << ctx << styles::rule_name << "function";
+        print_address_range(os, f);
 
-        os << in << "`function` at " << f.range << '\n';
-        os << in << "{\n";
-        os << in4 << f.name << '\n';
-        fmap(f.parameters, [&](auto && parameters) {
-            print(parameters, os, indent + 4);
+        auto name_ctx = ctx.make_branch(false);
+        os << '\n' << name_ctx << styles::subrule_name << "name:\n";
+        print(f.name, os, name_ctx.make_branch(true));
+
+        fmap(f.parameters, [&](auto && params) {
+            print(params, os, ctx.make_branch(false));
             return unit{};
         });
-        fmap(f.return_type, [&](auto && ret_type) {
-            os << in4 << "return type:\n";
-            os << in4 << "{\n";
-            print(ret_type, os, indent + 8);
-            os << in4 << "}\n";
-            return unit{};
-        });
-        print(*f.body, os, indent + 4);
-        os << in << "}\n";
+
+        print(*f.body, os, ctx.make_branch(true));
     }
 }
 }

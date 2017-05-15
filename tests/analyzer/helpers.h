@@ -98,7 +98,7 @@ inline namespace _v1
             _set_variable(std::make_unique<test_variable>(t));
         }
 
-        virtual void print(std::ostream &, std::size_t) const override
+        virtual void print(std::ostream &, print_context) const override
         {
             throw unexpected_call{ __PRETTY_FUNCTION__ };
         }
@@ -175,6 +175,11 @@ inline namespace _v1
         virtual std::string explain() const override
         {
             return "test type";
+        }
+
+        virtual void print(std::ostream & os, print_context ctx) const override
+        {
+            os << styles::def << ctx << styles::rule_name << "test-type\n";
         }
 
     private:

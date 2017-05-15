@@ -58,38 +58,47 @@ inline namespace _v1
         });
     }
 
-    void postfix_expression::print(std::ostream & os, std::size_t indent) const
+    void postfix_expression::print(std::ostream & os, print_context ctx) const
     {
-        auto in = std::string(indent, ' ');
-        os << in << "postfix expression at " << _parse.range << '\n';
-        os << in << "type: " << get_variable()->get_type()->explain() << '\n';
-        os << in << "base expression:\n";
-        os << in << "{\n";
-        _base_expr->print(os, indent + 4);
-        os << in << "}\n";
+        os << styles::def << ctx << styles::rule_name << "postfix-expression";
+        print_address_range(os, this);
+        os << '\n';
+
+        auto type_ctx = ctx.make_branch(false);
+        os << styles::def << type_ctx << styles::subrule_name << "type:\n";
+        get_type()->print(os, type_ctx.make_branch(true));
+
+        auto base_expr_ctx = ctx.make_branch(!_modifier);
+        os << styles::def << base_expr_ctx << styles::subrule_name << "base expression:\n";
+        _base_expr->print(os, base_expr_ctx.make_branch(true));
 
         if (_modifier)
         {
             if (_modifier == lexer::token_type::dot)
             {
-                os << in << "referenced member: " << utf8(*_accessed_member) << '\n';
+                auto referenced_ctx = ctx.make_branch(true);
+                os << styles::def << referenced_ctx << styles::subrule_name << "referenced member: " << styles::string_value << utf8(*_accessed_member) << '\n';
                 return;
             }
 
-            os << in << "selected call expression:\n";
-            os << in << "{\n";
-            _call_expression->print(os, indent + 4);
-            os << in << "}\n";
-            os << in << "modifier type: " << lexer::token_types[+_modifier] << '\n';
+            auto modifier_ctx = ctx.make_branch(false);
+            os << styles::def << modifier_ctx << styles::subrule_name << "modifier type: " << styles::string_value << lexer::token_types[+_modifier] << '\n';
 
-            os << in << "arguments:\n";
-            fmap(_arguments, [&](auto && arg) {
-                os << in << "{\n";
-                arg->print(os, indent + 4);
-                os << in << "}\n";
+            if (_arguments.size())
+            {
+                auto arguments_ctx = ctx.make_branch(false);
+                os << styles::def << arguments_ctx << styles::subrule_name << "arguments:\n";
 
-                return unit{};
-            });
+                std::size_t idx = 0;
+                for (auto && argument : _arguments)
+                {
+                    argument->print(os, arguments_ctx.make_branch(++idx == _arguments.size()));
+                }
+            }
+
+            auto call_expr_ctx = ctx.make_branch(true);
+            os << styles::def << call_expr_ctx << styles::subrule_name << "resolved expression:\n";
+            _call_expression->print(os, call_expr_ctx.make_branch(true));
         }
     }
 

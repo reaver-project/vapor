@@ -53,6 +53,13 @@ inline namespace _v1
             return "member assignment type for member " + utf8(_member_name);
         }
 
+        virtual void print(std::ostream & os, print_context ctx) const override
+        {
+            os << styles::def << ctx << styles::type << "member assignment type";
+            os << styles::def << " @ " << styles::address << this;
+            os << styles::def << ": " << styles::string_value << utf8(_member_name) << '\n';
+        }
+
         const std::u32string & member_name() const
         {
             return _member_name;

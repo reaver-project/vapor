@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -43,7 +43,7 @@ inline namespace _v1
 
     std::unique_ptr<expression> expression_list::_clone_expr_with_replacement(replacements & repl) const
     {
-        auto ret = std::make_unique<expression_list>();
+        auto ret = std::make_unique<expression_list>(parse_);
         ret->range = range;
 
         ret->value = fmap(value, [&](auto && expr) { return expr->clone_expr_with_replacement(repl); });

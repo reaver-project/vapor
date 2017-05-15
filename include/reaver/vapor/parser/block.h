@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016 Michał "Griwes" Dominiak
+ * Copyright © 2014-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -48,7 +48,7 @@ inline namespace _v1
     block parse_block(context & ctx);
     block parse_single_statement_block(context & ctx);
 
-    void print(const expression_list & list, std::ostream & os, std::size_t indent);
-    void print(const block & bl, std::ostream & os, std::size_t indent);
+    void print(const expression_list & list, std::ostream & os, print_context ctx);
+    void print(const block & bl, std::ostream & os, print_context ctx);
 }
 }

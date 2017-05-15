@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2016 Michał "Griwes" Dominiak
+ * Copyright © 2015-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -32,7 +32,7 @@ inline namespace _v1
         declaration ret;
 
         auto start = expect(ctx, lexer::token_type::let).range.start();
-        ret.identifier = expect(ctx, lexer::token_type::identifier);
+        ret.identifier = parse_literal<lexer::token_type::identifier>(ctx);
 
         if (peek(ctx, lexer::token_type::colon))
         {
@@ -67,31 +67,25 @@ inline namespace _v1
         return ret;
     }
 
-    void print(const declaration & decl, std::ostream & os, std::size_t indent)
+    void print(const declaration & decl, std::ostream & os, print_context ctx)
     {
-        auto in = std::string(indent, ' ');
+        os << styles::def << ctx << styles::rule_name << "declaration";
+        print_address_range(os, decl);
 
-        os << in << "`declaration` at " << decl.range << '\n';
+        auto name_ctx = ctx.make_branch(!decl.type_expression && !decl.rhs);
+        os << '\n' << name_ctx << styles::subrule_name << "name:\n";
+        print(decl.identifier, os, name_ctx.make_branch(true));
 
-        os << in << "{\n";
-        print(decl.identifier, os, indent + 4);
-        fmap(decl.type_expression, [&](auto && expr) {
-            auto in = std::string(indent + 4, ' ');
-            os << in << "`type-specifier`:\n";
-            os << in << "{\n";
-            print(expr, os, indent + 8);
-            os << in << "}\n";
+        fmap(decl.type_expression, [&, ctx = ctx.make_branch(!decl.rhs)](auto && expr) {
+            os << styles::def << ctx << styles::subrule_name << "type-specifier:\n";
+            print(expr, os, ctx.make_branch(true));
             return unit{};
         });
-        fmap(decl.rhs, [&](auto && rhs) {
-            auto in = std::string(indent + 4, ' ');
-            os << in << "`initializer-expression`:\n";
-            os << in << "{\n";
-            print(rhs, os, indent + 8);
-            os << in << "}\n";
+        fmap(decl.rhs, [&, ctx = ctx.make_branch(true)](auto && rhs) {
+            os << styles::def << ctx << styles::subrule_name << "initializer-expression:\n";
+            print(rhs, os, ctx.make_branch(true));
             return unit{};
         });
-        os << in << "}\n";
     }
 }
 }

@@ -73,21 +73,19 @@ inline namespace _v1
         return ret;
     }
 
-    void print(const lambda_expression & expr, std::ostream & os, std::size_t indent)
+    void print(const lambda_expression & expr, std::ostream & os, print_context ctx)
     {
-        auto in = std::string(indent, ' ');
-
-        os << in << "`lambda-expression` at " << expr.range << '\n';
+        os << styles::def << ctx << styles::rule_name << "lambda-expression";
+        print_address_range(os, expr);
+        os << '\n';
 
         assert(!expr.captures);
 
-        os << in << "{\n";
         fmap(expr.parameters, [&](auto && parameters) {
-            print(parameters, os, indent + 4);
+            print(parameters, os, ctx.make_branch(false));
             return unit{};
         });
-        print(expr.body, os, indent + 4);
-        os << in << "}\n";
+        print(expr.body, os, ctx.make_branch(true));
     }
 }
 }

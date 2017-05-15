@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/expressions/struct.h"
+#include "vapor/analyzer/statements/declaration.h"
 #include "vapor/analyzer/symbol.h"
 
 namespace reaver::vapor::analyzer
@@ -31,15 +32,24 @@ inline namespace _v1
     {
     }
 
-    void struct_literal::print(std::ostream & os, std::size_t indent) const
+    void struct_literal::print(std::ostream & os, print_context ctx) const
     {
-        auto in = std::string(indent, ' ');
+        os << styles::def << ctx << styles::rule_name << "struct-literal";
+        print_address_range(os, this);
+        os << '\n';
 
-        os << in << "structure at " << _parse.range << '\n';
-        os << in << "members:\n";
-        os << in << "{\n";
-        os << in << "TODO: print this shit\n";
-        os << in << "}\n";
+        auto type_ctx = ctx.make_branch(_type->get_data_member_decls().empty());
+        os << styles::def << type_ctx << styles::subrule_name << "defined type:\n";
+        _type->print(os, type_ctx.make_branch(true));
+
+        auto data_members_ctx = ctx.make_branch(true);
+        os << styles::def << data_members_ctx << styles::subrule_name << "data member definitions:\n";
+
+        std::size_t idx = 0;
+        for (auto && member : _type->get_data_member_decls())
+        {
+            member->print(os, data_members_ctx.make_branch(++idx == _type->get_data_member_decls().size()));
+        }
     }
 
     statement_ir struct_literal::_codegen_ir(ir_generation_context & ctx) const

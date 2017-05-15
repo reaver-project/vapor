@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2016 Michał "Griwes" Dominiak
+ * Copyright © 2015-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -49,19 +49,17 @@ inline namespace _v1
         return ret;
     }
 
-    void print(const import_expression & expr, std::ostream & os, std::size_t indent)
+    void print(const import_expression & expr, std::ostream & os, print_context ctx)
     {
-        auto in = std::string(indent, ' ');
-
-        os << in << "`import-expression` at " << expr.range << '\n';
-        os << in << "{\n";
+        os << ctx << "`import-expression` at " << expr.range << '\n';
+        os << ctx << "{\n";
         visit(
             [&](const auto & elem) {
-                print(elem, os, indent + 4);
+                print(elem, os, ctx.make_branch(false));
                 return unit{};
             },
             expr.module_name);
-        os << in << "}\n";
+        os << ctx << "}\n";
     }
 }
 }

@@ -40,6 +40,12 @@ inline namespace _v1
             return _pattern->explain() + "...";
         }
 
+        virtual void print(std::ostream & os, print_context ctx) const override
+        {
+            os << styles::def << ctx << styles::rule_name << "pack type of:\n";
+            _pattern->print(os, ctx.make_branch(true));
+        }
+
         virtual bool matches(type * other) const override
         {
             return _pattern->matches(other);

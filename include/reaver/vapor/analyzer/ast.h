@@ -94,9 +94,7 @@ inline namespace _v1
     {
         for (auto && module : tree.get())
         {
-            os << "{\n";
-            module->print(os, 4);
-            os << "}\n";
+            module->print(os, {});
         }
 
         return os;

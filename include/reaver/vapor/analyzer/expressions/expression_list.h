@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016 Michał "Griwes" Dominiak
+ * Copyright © 2014-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -58,15 +58,23 @@ inline namespace _v1
         }
 
     public:
-        expression_list() = default;
+        expression_list(const parser::expression_list & parse) : parse_{ parse }
+        {
+        }
 
-        virtual void print(std::ostream & os, std::size_t indent) const override;
+        virtual void print(std::ostream & os, print_context ctx) const override;
 
         virtual variable * get_variable() const override
         {
             return value.back()->get_variable();
         }
 
+        const auto & parse() const
+        {
+            return parse_;
+        }
+
+        const parser::expression_list & parse_;
         range_type range;
         std::vector<std::unique_ptr<expression>> value;
     };

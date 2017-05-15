@@ -25,6 +25,7 @@
 #include <memory>
 #include <numeric>
 
+#include "../expressions/closure.h"
 #include "../function.h"
 #include "type.h"
 
@@ -35,7 +36,7 @@ inline namespace _v1
     class closure_type : public type
     {
     public:
-        closure_type(scope * lex_scope, expression * closure, std::unique_ptr<function> fn)
+        closure_type(scope * lex_scope, class closure * closure, std::unique_ptr<function> fn)
             : type{ lex_scope }, _closure{ std::move(closure) }, _function{ std::move(fn) }
         {
         }
@@ -45,12 +46,19 @@ inline namespace _v1
             return "closure (TODO: location)";
         }
 
+        virtual void print(std::ostream & os, print_context ctx) const override;
+
         virtual future<std::vector<function *>> get_candidates(lexer::token_type bracket) const override;
+
+        const auto & parse() const
+        {
+            return _closure->parse();
+        }
 
     private:
         virtual void _codegen_type(ir_generation_context &) const override;
 
-        expression * _closure;
+        closure * _closure;
         std::unique_ptr<function> _function;
     };
 }

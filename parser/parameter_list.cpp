@@ -33,7 +33,7 @@ inline namespace _v1
 
         while (!peek(ctx, lexer::token_type::round_bracket_close))
         {
-            auto name = expect(ctx, lexer::token_type::identifier);
+            auto name = parse_literal<lexer::token_type::identifier>(ctx);
             expect(ctx, lexer::token_type::colon);
             auto type_expr = parse_expression(ctx);
 
@@ -52,20 +52,21 @@ inline namespace _v1
         return ret;
     }
 
-    void print(const parameter_list & arglist, std::ostream & os, std::size_t indent)
+    void print(const parameter_list & arglist, std::ostream & os, print_context ctx)
     {
-        auto in = std::string(indent, ' ');
+        os << styles::def << ctx << styles::rule_name << "parameter-list";
+        print_address_range(os, arglist);
+        os << '\n';
 
-        os << in << "`parameter-list` at " << arglist.range << '\n';
-        os << in << "{\n";
-        fmap(arglist.parameters, [&, in = std::string(indent + 4, ' ')](auto && parameter) {
-            os << in << "{\n";
-            print(parameter.name, os, indent + 8);
-            print(parameter.type, os, indent + 8);
-            os << in << "}\n";
-            return unit{};
-        });
-        os << in << "}\n";
+        std::size_t idx = 0;
+        for (auto && parameter : arglist.parameters)
+        {
+            auto param_ctx = ctx.make_branch(++idx == arglist.parameters.size());
+            os << styles::def << param_ctx << styles::subrule_name << "parameter:\n";
+
+            print(parameter.name, os, param_ctx.make_branch(false));
+            print(parameter.type, os, param_ctx.make_branch(true));
+        }
     }
 }
 }

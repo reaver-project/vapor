@@ -36,6 +36,18 @@ inline namespace _v1
         std::u32string name;
         std::unique_ptr<expression> type_expression;
         std::unique_ptr<unresolved_variable> variable;
+
+        void print(std::ostream & os, print_context ctx) const
+        {
+            os << styles::def << ctx << styles::rule_name << "parameter: " << styles::string_value << utf8(name) << '\n';
+
+            auto type_expr_ctx = ctx.make_branch(false);
+            os << styles::def << type_expr_ctx << styles::subrule_name << "type expression:\n";
+            type_expression->print(os, type_expr_ctx.make_branch(true));
+
+            auto var_ctx = ctx.make_branch(true);
+            os << styles::def << var_ctx << styles::subrule_name << "variable: @ " << styles::address << variable.get() << '\n';
+        }
     };
 
     using parameter_list = std::vector<parameter>;
@@ -44,13 +56,13 @@ inline namespace _v1
     {
         return fmap(arglist.parameters, [&](auto && arg) {
             auto expr = preanalyze_expression(arg.type, lex_scope);
-            auto var = make_unresolved_variable(arg.name.string);
+            auto var = make_unresolved_variable(arg.name.value.string);
             var->mark_local();
 
-            auto symb = make_symbol(arg.name.string, var.get());
-            lex_scope->init(arg.name.string, std::move(symb));
+            auto symb = make_symbol(arg.name.value.string, var.get());
+            lex_scope->init(arg.name.value.string, std::move(symb));
 
-            return parameter{ arg.name.string, std::move(expr), std::move(var) };
+            return parameter{ arg.name.value.string, std::move(expr), std::move(var) };
         });
     }
 }

@@ -28,27 +28,40 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void call_expression::print(std::ostream & os, std::size_t indent) const
+    void call_expression::print(std::ostream & os, print_context ctx) const
     {
+        os << styles::def << ctx << styles::rule_name << "call-expression";
+        print_address_range(os, this);
+        os << '\n';
+
         if (_replacement_expr)
         {
-            _replacement_expr->print(os, indent);
+            auto replacement_ctx = ctx.make_branch(true);
+
+            os << styles::def << replacement_ctx << styles::subrule_name << "replacement expression:\n";
+            _replacement_expr->print(os, replacement_ctx.make_branch(true));
             return;
         }
 
-        auto in = std::string(indent, ' ');
-        os << in << "call expression at " << _range << '\n';
-        os << in << "type: " << _var->get_type()->explain() << '\n';
-        os << in << "function: " << _function->explain() << '\n';
-        os << in << "arguments:\n";
+        auto type_ctx = ctx.make_branch(false);
+        os << styles::def << type_ctx << styles::subrule_name << "type:\n";
+        get_type()->print(os, type_ctx.make_branch(true));
 
-        fmap(_args, [&](auto && arg) {
-            os << in << "{\n";
-            arg->print(os, indent + 4);
-            os << in << "}\n";
+        auto function_ctx = ctx.make_branch(_args.empty());
+        os << styles::def << function_ctx << styles::subrule_name << "function:\n";
+        _function->print(os, function_ctx.make_branch(true));
 
-            return unit{};
-        });
+        if (_args.size())
+        {
+            auto args_ctx = ctx.make_branch(true);
+            os << styles::def << args_ctx << styles::subrule_name << "arguments:\n";
+
+            std::size_t idx = 0;
+            for (auto && arg : _args)
+            {
+                arg->print(os, args_ctx.make_branch(++idx == _args.size()));
+            }
+        }
     }
 
     variable * call_expression::get_variable() const

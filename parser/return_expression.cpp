@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2016 Michał "Griwes" Dominiak
+ * Copyright © 2015-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -40,14 +40,13 @@ inline namespace _v1
         return ret;
     }
 
-    void print(const return_expression & ret, std::ostream & os, std::size_t indent)
+    void print(const return_expression & ret, std::ostream & os, print_context ctx)
     {
-        auto in = std::string(indent, ' ');
+        os << styles::def << ctx << styles::rule_name << "return-expression";
+        print_address_range(os, ret);
+        os << '\n';
 
-        os << in << "`return-expression` at " << ret.range << '\n';
-        os << in << "{\n";
-        print(ret.return_value, os, indent + 4);
-        os << in << "}\n";
+        print(ret.return_value, os, ctx.make_branch(true));
     }
 }
 }

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -37,14 +37,13 @@ inline namespace _v1
         return ret;
     }
 
-    void print(const member_expression & mexpr, std::ostream & os, std::size_t indent)
+    void print(const member_expression & mexpr, std::ostream & os, print_context ctx)
     {
-        auto in = std::string(indent, ' ');
+        os << styles::def << ctx << styles::rule_name << "member-expression";
+        print_address_range(os, mexpr);
+        os << '\n';
 
-        os << in << "`member-expression` at " << mexpr.range << '\n';
-        os << in << "{\n";
-        print(mexpr.member_name, os, indent + 4);
-        os << in << "}\n";
+        print(mexpr.member_name, os, ctx.make_branch(true));
     }
 }
 }

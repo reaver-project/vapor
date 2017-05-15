@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -28,11 +28,15 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void identifier::print(std::ostream & os, std::size_t indent) const
+    void identifier::print(std::ostream & os, print_context ctx) const
     {
-        auto in = std::string(indent, ' ');
-        os << in << "identifier `" << utf8(name()) << "` at " << _parse.range << '\n';
-        os << in << "referenced variable type: " << get_variable()->get_type()->explain() << '\n';
+        os << styles::def << ctx << styles::rule_name << "identifier";
+        print_address_range(os, this);
+        os << ' ' << styles::string_value << utf8(_parse.value.string) << '\n';
+
+        auto type_ctx = ctx.make_branch(true);
+        os << styles::def << type_ctx << styles::subrule_name << "referenced variable's type:\n";
+        get_type()->print(os, type_ctx.make_branch(true));
     }
 
     statement_ir identifier::_codegen_ir(ir_generation_context & ctx) const
