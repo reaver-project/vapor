@@ -58,8 +58,13 @@ inline namespace _v1
             return boost::join(fmap(_parse.name.id_expression_value, [](auto && elem) -> decltype(auto) { return elem.value.string; }), ".");
         }
 
-        void print(std::ostream & os, std::size_t indent = 0) const;
+        void print(std::ostream & os, print_context ctx) const;
         codegen::ir::module codegen_ir() const;
+
+        const auto & parse() const
+        {
+            return _parse;
+        }
 
     private:
         const parser::module & _parse;

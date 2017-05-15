@@ -206,5 +206,12 @@ inline namespace _v1
 
         *actual_type = std::move(type);
     }
+
+    void struct_type::print(std::ostream & os, print_context ctx) const
+    {
+        os << styles::def << ctx << styles::type << "struct type";
+        print_address_range(os, this);
+        os << '\n';
+    }
 }
 }

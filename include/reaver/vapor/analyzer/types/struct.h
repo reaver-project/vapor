@@ -54,6 +54,8 @@ inline namespace _v1
             return "struct type (TODO: trace information!)";
         }
 
+        virtual void print(std::ostream & os, print_context ctx) const override;
+
         std::vector<declaration *> get_data_member_decls() const
         {
             return fmap(_data_members_declarations, [](auto && ptr) { return ptr.get(); });
@@ -77,6 +79,11 @@ inline namespace _v1
             }
 
             return _aggregate_copy_ctor_future->then([](auto && ctor) { return std::vector<function *>{ ctor }; });
+        }
+
+        const auto & parse() const
+        {
+            return _parse;
         }
 
     private:

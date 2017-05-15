@@ -57,18 +57,22 @@ inline namespace _v1
         }
     }
 
-    void declaration::print(std::ostream & os, std::size_t indent) const
+    void declaration::print(std::ostream & os, print_context ctx) const
     {
-        auto in = std::string(indent, ' ');
-        os << in << "declaration of `" << utf8(_name) << "` at " << _parse.range << '\n';
-        os << in << "type of symbol: " << _declared_symbol->get_type()->explain() << '\n';
-        os << in << "initializer expression:\n";
-        os << in << "{\n";
-        fmap(_init_expr, [&](auto && expr) {
-            expr->print(os, indent + 4);
-            return unit{};
-        });
-        os << in << "}\n";
+        os << styles::def << ctx << styles::rule_name << "declaration";
+        print_address_range(os, this);
+        os << ' ' << styles::string_value << utf8(_name) << '\n';
+
+        auto type_ctx = ctx.make_branch(!_init_expr);
+        os << styles::def << type_ctx << styles::subrule_name << "type of symbol:\n";
+        _declared_symbol->get_type()->print(os, type_ctx.make_branch(true));
+
+        if (_init_expr)
+        {
+            auto init_expr_ctx = ctx.make_branch(true);
+            os << styles::def << init_expr_ctx << styles::subrule_name << "initializer expression:\n";
+            _init_expr.get()->print(os, init_expr_ctx.make_branch(true));
+        }
     }
 
     statement_ir declaration::_codegen_ir(ir_generation_context & ctx) const

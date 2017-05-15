@@ -58,7 +58,7 @@ inline namespace _v1
             return _referenced;
         }
 
-        virtual void print(std::ostream & os, std::size_t indent) const override;
+        virtual void print(std::ostream & os, print_context) const override;
 
     private:
         virtual future<> _analyze(analysis_context &) override
@@ -112,7 +112,7 @@ inline namespace _v1
             _set_variable(std::move(var));
         }
 
-        virtual void print(std::ostream & os, std::size_t indent) const override;
+        virtual void print(std::ostream & os, print_context) const override;
 
     private:
         virtual future<> _analyze(analysis_context &) override

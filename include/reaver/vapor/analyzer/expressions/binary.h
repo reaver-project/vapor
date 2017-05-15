@@ -43,7 +43,7 @@ inline namespace _v1
         {
         }
 
-        virtual void print(std::ostream & os, std::size_t indent) const override;
+        virtual void print(std::ostream & os, print_context ctx) const override;
 
         virtual variable * get_variable() const override;
 
@@ -60,6 +60,11 @@ inline namespace _v1
         lexer::token_type get_operator() const
         {
             return _op.type;
+        }
+
+        const auto & parse() const
+        {
+            return _parse;
         }
 
     private:

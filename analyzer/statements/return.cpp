@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -29,14 +29,15 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void return_statement::print(std::ostream & os, std::size_t indent) const
+    void return_statement::print(std::ostream & os, print_context ctx) const
     {
-        auto in = std::string(indent, ' ');
-        os << in << "return statement at " << _parse.range << '\n';
-        os << in << "return value expression:\n";
-        os << in << "{\n";
-        _value_expr->print(os, indent + 4);
-        os << in << "}\n";
+        os << styles::def << ctx << styles::rule_name << "return-statement";
+        print_address_range(os, this);
+        os << '\n';
+
+        auto value_ctx = ctx.make_branch(true);
+        os << styles::def << value_ctx << styles::subrule_name << "return value expression:\n";
+        _value_expr->print(os, value_ctx.make_branch(true));
     }
 
     statement_ir return_statement::_codegen_ir(ir_generation_context & ctx) const

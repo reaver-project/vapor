@@ -30,6 +30,7 @@
 #include <reaver/prelude/fold.h>
 
 #include "../codegen/ir/function.h"
+#include "../print_helpers.h"
 #include "../range.h"
 #include "ir_context.h"
 #include "semantic/context.h"
@@ -97,6 +98,8 @@ inline namespace _v1
             });
             return ret;
         }
+
+        void print(std::ostream & os, print_context ctx) const;
 
         future<> simplify(simplification_context &);
         future<expression *> simplify(simplification_context &, std::vector<variable *>);

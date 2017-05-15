@@ -44,12 +44,17 @@ inline namespace _v1
     public:
         postfix_expression(const parser::postfix_expression & parse, scope * lex_scope);
 
-        virtual void print(std::ostream & os, std::size_t indent) const override;
+        virtual void print(std::ostream & os, print_context ctx) const override;
         virtual variable * get_variable() const override;
 
         future<variable *> get_base_variable(analysis_context & ctx) const
         {
             return _base_expr->analyze(ctx).then([&] { return _base_expr->get_variable(); });
+        }
+
+        const auto & parse() const
+        {
+            return _parse;
         }
 
     private:

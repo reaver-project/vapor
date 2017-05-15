@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -44,10 +44,16 @@ inline namespace _v1
             _set_variable(std::move(val));
         }
 
-        virtual void print(std::ostream & os, std::size_t indent) const override
+        virtual void print(std::ostream & os, print_context ctx) const override
         {
-            auto in = std::string(indent, ' ');
-            os << in << "boolean literal with value of " << _value->get_value() << " at " << _parse.range << '\n';
+            os << styles::def << ctx << styles::rule_name << "boolean-literal";
+            print_address_range(os, this);
+            os << ' ' << styles::string_value << std::boolalpha << _value->get_value() << '\n';
+        }
+
+        const auto & parse() const
+        {
+            return _parse;
         }
 
     private:

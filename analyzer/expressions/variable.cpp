@@ -28,16 +28,30 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void variable_expression::print(std::ostream & os, std::size_t indent) const
+    void variable_expression::print(std::ostream & os, print_context ctx) const
     {
-        auto in = std::string(indent, ' ');
-        os << in << "variable expression of type: " << get_variable()->get_type()->explain() << '\n';
+        os << styles::def << ctx << styles::rule_name << "variable-expression";
+        os << styles::def << " @ " << styles::address << this << styles::def << ":\n";
+
+        auto type_ctx = ctx.make_branch(false);
+        os << styles::def << type_ctx << styles::subrule_name << "type:\n";
+        get_type()->print(os, type_ctx.make_branch(true));
+
+        auto var_ctx = ctx.make_branch(true);
+        os << styles::def << var_ctx << styles::subrule_name << "variable: @ " << styles::address << get_variable() << '\n';
     }
 
-    void variable_ref_expression::print(std::ostream & os, std::size_t indent) const
+    void variable_ref_expression::print(std::ostream & os, print_context ctx) const
     {
-        auto in = std::string(indent, ' ');
-        os << in << "variable ref expression of type: " << get_variable()->get_type()->explain() << '\n';
+        os << styles::def << ctx << styles::rule_name << "variable-ref-expression";
+        os << styles::def << " @ " << styles::address << this << styles::def << ":\n";
+
+        auto type_ctx = ctx.make_branch(false);
+        os << styles::def << type_ctx << styles::subrule_name << "type:\n";
+        get_type()->print(os, type_ctx.make_branch(true));
+
+        auto var_ctx = ctx.make_branch(true);
+        os << styles::def << var_ctx << styles::subrule_name << "variable: @ " << styles::address << get_variable() << '\n';
     }
 }
 }

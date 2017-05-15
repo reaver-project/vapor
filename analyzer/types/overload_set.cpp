@@ -91,5 +91,17 @@ inline namespace _v1
 
         *actual_type = std::move(type);
     }
+
+    void overload_set_type::print(std::ostream & os, print_context ctx) const
+    {
+        os << styles::def << ctx << styles::type << "overload set type";
+        os << styles::def << " @ " << styles::address << this << styles::def << ":\n";
+
+        std::size_t idx = 0;
+        for (auto && function : _functions)
+        {
+            function->print(os, ctx.make_branch(++idx == _functions.size()));
+        }
+    }
 }
 }

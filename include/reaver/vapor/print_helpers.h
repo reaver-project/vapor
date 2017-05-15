@@ -36,6 +36,8 @@ using experimental::string_view;
 #include <reaver/optional.h>
 #include <reaver/style.h>
 
+#include "range.h"
+
 namespace reaver::vapor
 {
 inline namespace _v1
@@ -48,6 +50,7 @@ inline namespace _v1
         static const style::style range = { style::colors::brown };
         static const style::style string_value = { style::colors::green };
         static const style::style address = { style::colors::red };
+        static const style::style type = { style::colors::bmagenta, style::colors::def, style::styles::bold };
     }
 
     class print_context
@@ -106,10 +109,36 @@ inline namespace _v1
         return os << ctx.prefix();
     }
 
+    // parser
     template<typename T>
     void print_address_range(std::ostream & os, const T & ref)
     {
         os << styles::def << " @ " << styles::address << &ref;
+        os << styles::def << " (" << styles::range << ref.range << styles::def << "):";
+    }
+
+    // analyzer
+    template<typename T>
+    void print_address_range(std::ostream & os, const T * ptr)
+    {
+        os << styles::def << " @ " << styles::address << ptr;
+        os << styles::def << ", AST node";
+
+        print_address_range(os, ptr->parse());
+    }
+
+    // support for "synthesized" parse nodes (for example from call_expression
+    template<typename T>
+    struct synthesized_node
+    {
+        const T * address;
+        range_type range;
+    };
+
+    template<typename T>
+    void print_address_range(std::ostream & os, const synthesized_node<T> & ref)
+    {
+        os << styles::def << " @ " << styles::address << ref.address;
         os << styles::def << " (" << styles::range << ref.range << styles::def << "):";
     }
 }

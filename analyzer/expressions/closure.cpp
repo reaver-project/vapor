@@ -41,21 +41,37 @@ inline namespace _v1
         _body = preanalyze_block(parse.body, _scope.get(), true);
     }
 
-    void closure::print(std::ostream & os, std::size_t indent) const
+    void closure::print(std::ostream & os, print_context ctx) const
     {
-        auto in = std::string(indent, ' ');
-        os << in << "closure at " << _parse.range << '\n';
+        os << styles::def << ctx << styles::rule_name << "closure";
+        print_address_range(os, this);
+        os << '\n';
+
         assert(!_parse.captures);
-        os << in << "{\n";
-        fmap(_parameter_list, [&, in = std::string(indent + 4, ' ')](auto && argument) {
-            os << in << "argument `" << utf8(argument.name) << "` of type `" << argument.variable->get_type()->explain() << "`\n";
-            return unit{};
-        });
-        os << in << "}\n";
-        os << in << "return type: " << _body->return_type()->explain() << '\n';
-        os << in << "{\n";
-        _body->print(os, indent + 4);
-        os << in << "}\n";
+
+        auto type_ctx = ctx.make_branch(false);
+        os << styles::def << type_ctx << styles::subrule_name << "type:\n";
+        get_type()->print(os, type_ctx.make_branch(true));
+
+        if (_parameter_list.size())
+        {
+            auto param_ctx = ctx.make_branch(false);
+            os << styles::def << param_ctx << styles::subrule_name << "parameters:\n";
+
+            std::size_t idx = 0;
+            for (auto && param : _parameter_list)
+            {
+                param.print(os, param_ctx.make_branch(++idx == _parameter_list.size()));
+            }
+        }
+
+        auto return_type_ctx = ctx.make_branch(false);
+        os << styles::def << return_type_ctx << styles::subrule_name << "return type:\n";
+        _body->return_type()->print(os, return_type_ctx.make_branch(true));
+
+        auto body_ctx = ctx.make_branch(true);
+        os << styles::def << body_ctx << styles::subrule_name << "body:\n";
+        _body->print(os, body_ctx.make_branch(true));
     }
 
     statement_ir closure::_codegen_ir(ir_generation_context & ctx) const

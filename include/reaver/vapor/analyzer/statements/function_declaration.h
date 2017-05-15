@@ -49,7 +49,12 @@ inline namespace _v1
             return _function.get();
         }
 
-        virtual void print(std::ostream & os, std::size_t indent) const override;
+        virtual void print(std::ostream & os, print_context ctx) const override;
+
+        const auto & parse() const
+        {
+            return _parse;
+        }
 
     private:
         virtual future<> _analyze(analysis_context &) override;

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -76,26 +76,28 @@ inline namespace _v1
         return return_types.front();
     }
 
-    void block::print(std::ostream & os, std::size_t indent) const
+    void block::print(std::ostream & os, print_context ctx) const
     {
-        auto in = std::string(indent, ' ');
-        os << in << "block at " << _parse.range << '\n';
-        os << in << "statements:\n";
-        fmap(_statements, [&](auto && stmt) {
-            os << in << "{\n";
-            stmt->print(os, indent + 4);
-            os << in << "}\n";
+        os << styles::def << ctx << styles::rule_name << "block";
+        print_address_range(os, this);
+        os << '\n';
 
-            return unit{};
-        });
-        fmap(_value_expr, [&](auto && expr) {
-            os << in << "value expression:\n";
-            os << in << "{\n";
-            expr->print(os, indent + 4);
-            os << in << "}\n";
+        auto stmts_ctx = ctx.make_branch(!_value_expr);
+        os << styles::def << stmts_ctx << styles::subrule_name << "statements:\n";
 
-            return unit{};
-        });
+        std::size_t idx = 0;
+        for (auto && stmt : _statements)
+        {
+            stmt->print(os, stmts_ctx.make_branch(++idx == _statements.size()));
+        }
+
+        if (_value_expr)
+        {
+            auto value_ctx = ctx.make_branch(true);
+            os << styles::def << value_ctx << styles::subrule_name << "value expression:\n";
+
+            _value_expr.get()->print(os, value_ctx.make_branch(true));
+        }
     }
 
     std::vector<codegen::_v1::ir::instruction> block::_codegen_ir(ir_generation_context & ctx) const

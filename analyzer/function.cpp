@@ -79,26 +79,26 @@ inline namespace _v1
 
                 return make_ready_future(_body);
             }()
-                .then([&](auto && body) {
-                    auto returns = body->get_returns();
+                       .then([&](auto && body) {
+                           auto returns = body->get_returns();
 
-                    assert(body->has_return_expression() || returns.size());
-                    auto var = body->has_return_expression() ? body->get_return_expression()->get_variable() : returns.front()->get_returned_variable();
-                    auto begin = body->has_return_expression() ? returns.begin() : returns.begin() + 1;
+                           assert(body->has_return_expression() || returns.size());
+                           auto var = body->has_return_expression() ? body->get_return_expression()->get_variable() : returns.front()->get_returned_variable();
+                           auto begin = body->has_return_expression() ? returns.begin() : returns.begin() + 1;
 
-                    if (!var->is_constant())
-                    {
-                        return make_ready_future<expression *>(nullptr);
-                    }
+                           if (!var->is_constant())
+                           {
+                               return make_ready_future<expression *>(nullptr);
+                           }
 
-                    if (std::all_of(begin, returns.end(), [](auto && ret) { return ret->get_returned_variable()->is_constant(); })
-                        && std::all_of(begin, returns.end(), [&](auto && ret) { return ret->get_returned_variable()->is_equal(var); }))
-                    {
-                        return make_ready_future(make_variable_ref_expression(var).release());
-                    }
+                           if (std::all_of(begin, returns.end(), [](auto && ret) { return ret->get_returned_variable()->is_constant(); })
+                               && std::all_of(begin, returns.end(), [&](auto && ret) { return ret->get_returned_variable()->is_equal(var); }))
+                           {
+                               return make_ready_future(make_variable_ref_expression(var).release());
+                           }
 
-                    return make_ready_future<expression *>(nullptr);
-                });
+                           return make_ready_future<expression *>(nullptr);
+                       });
         }
 
         if (_compile_time_eval)
@@ -114,6 +114,19 @@ inline namespace _v1
         return foldl(_analysis_hooks, make_ready_future(), [&ctx, expr, args](auto && prev, auto && hook) {
             return prev.then([&hook, &ctx, expr, args] { return hook(ctx, expr, args); });
         });
+    }
+
+    void function::print(std::ostream & os, print_context ctx) const
+    {
+        os << styles::def << ctx << styles::rule_name << "function";
+        os << styles::def << " @ " << styles::address << this << styles::def;
+
+        if (_range)
+        {
+            os << " (" << styles::range << _range.get() << styles::def << ')';
+        }
+
+        os << ": " << _explanation << '\n';
     }
 }
 }

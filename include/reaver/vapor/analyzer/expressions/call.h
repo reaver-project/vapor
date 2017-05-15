@@ -44,7 +44,7 @@ inline namespace _v1
             _range = range;
         }
 
-        virtual void print(std::ostream &, std::size_t indent) const override;
+        virtual void print(std::ostream &, print_context ctx) const override;
         virtual variable * get_variable() const override;
 
         void replace_with(std::unique_ptr<expression> expr)
@@ -53,12 +53,21 @@ inline namespace _v1
             assert(!_replacement_expr);
 
             _replacement_expr = std::move(expr);
+            if (auto * replacement_call_expr = dynamic_cast<call_expression *>(_replacement_expr.get()))
+            {
+                replacement_call_expr->set_parse_range(_range.get());
+            }
         }
 
         const range_type & get_range() const
         {
             assert(_range);
             return *_range;
+        }
+
+        auto parse() const
+        {
+            return synthesized_node<call_expression>{ this, get_range() };
         }
 
     private:

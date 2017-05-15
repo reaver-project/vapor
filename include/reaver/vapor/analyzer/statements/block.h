@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -84,7 +84,12 @@ inline namespace _v1
             return !_statements.empty() && _statements.back()->always_returns();
         }
 
-        virtual void print(std::ostream & os, std::size_t indent) const override;
+        virtual void print(std::ostream & os, print_context) const override;
+
+        const auto & parse() const
+        {
+            return _parse;
+        }
 
         codegen::ir::value codegen_return(ir_generation_context &) const;
 

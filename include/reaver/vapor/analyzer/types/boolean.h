@@ -54,6 +54,11 @@ inline namespace _v1
             return "boolean";
         }
 
+        virtual void print(std::ostream & os, print_context ctx) const override
+        {
+            os << styles::def << ctx << styles::type << "boolean" << styles::def << " @ " << styles::address << this << styles::def << ": builtin type\n";
+        }
+
     private:
         virtual void _codegen_type(ir_generation_context &) const override;
 
