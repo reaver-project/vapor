@@ -21,7 +21,17 @@
  **/
 
 #include "vapor/analyzer/scope.h"
+
+#include <reaver/future_get.h>
+
+#include "vapor/analyzer/expressions/call.h"
+#include "vapor/analyzer/expressions/expression_ref.h"
+#include "vapor/analyzer/expressions/function.h"
+#include "vapor/analyzer/expressions/integer.h"
+#include "vapor/analyzer/expressions/type.h"
+#include "vapor/analyzer/function.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/types/sized_integer.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -196,6 +206,29 @@ inline namespace _v1
         static auto boolean_type_expr = builtin_types().boolean->get_expression();
         static auto type_type_expr = builtin_types().type->get_expression();
 
+        static auto sized_int =
+            make_function("sized_int", builtin_types().type->get_expression(), { integer_type_expr }, [](auto && ctx) -> codegen::ir::function {
+                assert(!"trying to codegen sized_int");
+            });
+
+        sized_int->add_analysis_hook([](analysis_context & ctx, call_expression * expr, std::vector<expression *> args) {
+            assert(args.size() == 2 && args[1]->get_type() == builtin_types().integer.get());
+            auto int_var = static_cast<integer_constant *>(args[1]);
+            auto size = int_var->get_value().convert_to<std::size_t>();
+
+            auto & type = ctx.sized_integers[size];
+            if (!type)
+            {
+                type = make_sized_integer_type(size);
+            }
+
+            expr->replace_with(make_expression_ref(type->get_expression()));
+
+            return make_ready_future();
+        });
+
+        static auto sized_int_expr = std::unique_ptr<expression>{ reaver::get(make_function_expression(sized_int.get())) };
+
         static auto symbols = [&] {
             std::unordered_map<std::u32string, std::unique_ptr<symbol>> symbols;
 
@@ -204,6 +237,8 @@ inline namespace _v1
             add_symbol(U"int", integer_type_expr);
             add_symbol(U"bool", boolean_type_expr);
             add_symbol(U"type", type_type_expr);
+
+            add_symbol(U"sized_int", sized_int_expr.get());
 
             return symbols;
         }();

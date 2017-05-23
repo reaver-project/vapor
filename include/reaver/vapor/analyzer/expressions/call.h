@@ -47,7 +47,7 @@ inline namespace _v1
 
         void replace_with(std::unique_ptr<expression> expr)
         {
-            assert(!_replacement_expr);
+            // assert(!_replacement_expr);
 
             _replacement_expr = std::move(expr);
             if (auto * replacement_call_expr = _replacement_expr->as<call_expression>())

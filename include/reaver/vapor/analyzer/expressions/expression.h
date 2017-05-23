@@ -198,7 +198,7 @@ inline namespace _v1
             return make_ready_future();
         }
 
-        virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const override
+        virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const final
         {
             return _clone_expr_with_replacement(repl);
         }
