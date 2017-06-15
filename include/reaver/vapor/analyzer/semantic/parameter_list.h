@@ -44,7 +44,7 @@ inline namespace _v1
         {
             os << styles::def << ctx << styles::rule_name << "parameter";
             print_address_range(os, this);
-            os << styles::string_value << utf8(_name) << '\n';
+            os << ' ' << styles::string_value << utf8(_name) << '\n';
 
             auto type_expr_ctx = ctx.make_branch(true);
             os << styles::def << type_expr_ctx << styles::subrule_name << "type expression:\n";

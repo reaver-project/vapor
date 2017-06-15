@@ -26,4 +26,7 @@
 #include <reaver/future.h>
 #include <reaver/once.h>
 
-auto init = reaver::once([]() { reaver::default_executor(reaver::make_executor<reaver::thread_pool>(1)); });
+auto init = reaver::once([]() {
+    reaver::default_executor(reaver::make_executor<reaver::thread_pool>(1));
+    reaver::logger::default_logger().set_level(reaver::logger::trace);
+});

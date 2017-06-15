@@ -33,8 +33,12 @@ inline namespace _v1
         print_address_range(os, this);
         os << ' ' << styles::string_value << utf8(_parse.value.string) << '\n';
 
+        auto expr_ctx = ctx.make_branch(false);
+        os << styles::def << expr_ctx << styles::subrule_name << "referenced expression";
+        os << styles::def << " @ " << styles::address << _referenced << '\n';
+
         auto type_ctx = ctx.make_branch(true);
-        os << styles::def << type_ctx << styles::subrule_name << "referenced variable's type:\n";
+        os << styles::def << type_ctx << styles::subrule_name << "referenced expression type:\n";
         get_type()->print(os, type_ctx.make_branch(true));
     }
 }

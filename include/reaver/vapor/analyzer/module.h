@@ -50,7 +50,7 @@ inline namespace _v1
     public:
         module(const parser::module & parse);
 
-        void analyze();
+        void analyze(analysis_context &);
         void simplify();
 
         std::u32string name() const

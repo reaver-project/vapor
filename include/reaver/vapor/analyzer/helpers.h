@@ -58,6 +58,7 @@ inline namespace _v1
         {
             ctx.keep_alive(uptr.release());
             uptr.reset(ptr);
+            ctx.something_happened();
         }
     }
 

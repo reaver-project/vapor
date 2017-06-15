@@ -47,10 +47,8 @@ inline namespace _v1
         _scope->close();
     }
 
-    void module::analyze()
+    void module::analyze(analysis_context & ctx)
     {
-        analysis_context ctx;
-
         _analysis_futures = fmap(_statements, [&](auto && stmt) { return stmt->analyze(ctx); });
 
         auto all = when_all(_analysis_futures);
@@ -83,6 +81,11 @@ inline namespace _v1
             cont = ctx.did_something_happen();
 
             logger::dlog() << "Simplification run of module " << utf8(name()) << " finished.";
+
+            std::stringstream ss;
+            print(ss, {});
+            logger::dlog() << ss.str();
+            logger::default_logger().sync();
         }
 
         logger::dlog() << "Simplification of module " << utf8(name()) << " finished.";

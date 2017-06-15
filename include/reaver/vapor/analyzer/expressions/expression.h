@@ -67,14 +67,15 @@ inline namespace _v1
             return _type;
         }
 
+        friend class replacements;
+
+    private:
         std::unique_ptr<expression> clone_expr_with_replacement(replacements & repl) const
         {
-            auto ret = _get_replacement()->_clone_expr_with_replacement(repl);
-            repl.expressions[this] = ret.get();
-            repl.statements[this] = ret.get();
-            return ret;
+            return _clone_expr_with_replacement(repl);
         }
 
+    public:
         future<expression *> simplify_expr(simplification_context & ctx)
         {
             return ctx.get_future_or_init(this, [&]() { return make_ready_future().then([this, &ctx]() { return _simplify_expr(ctx); }); });

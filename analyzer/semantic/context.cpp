@@ -21,5 +21,6 @@
  **/
 
 #include "vapor/analyzer/semantic/context.h"
+#include "vapor/analyzer/expressions/expression.h"
 #include "vapor/analyzer/statements/statement.h"
 #include "vapor/analyzer/symbol.h"

@@ -38,10 +38,9 @@ inline namespace _v1
         {
             try
             {
-                _modules = fmap(_original_ast, [](auto && m) {
+                _modules = fmap(_original_ast, [this](auto && m) {
                     auto ret = std::make_unique<module>(m);
-                    ret->analyze();
-                    ret->simplify();
+                    ret->analyze(_ctx);
                     return ret;
                 });
             }
@@ -80,6 +79,14 @@ inline namespace _v1
             return _modules.end();
         }
 
+        void simplify()
+        {
+            for (auto && module : _modules)
+            {
+                module->simplify();
+            }
+        }
+
         std::vector<codegen::ir::module> codegen_ir() const
         {
             return fmap(_modules, [](auto && mod) { return mod->codegen_ir(); });
@@ -88,6 +95,7 @@ inline namespace _v1
     private:
         parser::ast _original_ast;
         std::vector<std::unique_ptr<module>> _modules;
+        analysis_context _ctx;
     };
 
     inline std::ostream & operator<<(std::ostream & os, std::reference_wrapper<ast> tree)

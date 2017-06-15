@@ -50,9 +50,12 @@ inline namespace _v1
             assert(fun_expr->is_constant());
             auto function = fun_expr->get_value();
             assert(function);
-            expr->replace_with(make_call_expression(function, std::move(args)));
 
-            return make_ready_future();
+            auto replacement = make_call_expression(function, std::move(args));
+            auto repl_ptr = replacement.get();
+            expr->replace_with(std::move(replacement));
+
+            return repl_ptr->analyze(ctx);
         });
     }
 

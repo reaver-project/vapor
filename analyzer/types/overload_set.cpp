@@ -22,6 +22,7 @@
 
 #include <numeric>
 
+#include "vapor/analyzer/expressions/expression.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"

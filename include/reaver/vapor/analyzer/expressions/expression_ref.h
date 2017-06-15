@@ -42,7 +42,14 @@ inline namespace _v1
         {
             os << styles::def << ctx << styles::rule_name << "expression-ref";
             os << styles::def << " @ " << styles::address << this << styles::def << ":\n";
-            _referenced->print(os, ctx.make_branch(true));
+
+            auto expr_ctx = ctx.make_branch(false);
+            os << styles::def << expr_ctx << styles::subrule_name << "referenced expression";
+            os << styles::def << " @ " << styles::address << _referenced << '\n';
+
+            auto type_ctx = ctx.make_branch(true);
+            os << styles::def << type_ctx << styles::subrule_name << "referenced expression type:\n";
+            get_type()->print(os, type_ctx.make_branch(true));
         }
 
     private:
@@ -56,14 +63,18 @@ inline namespace _v1
             return _referenced->_get_replacement();
         }
 
+        virtual future<> _analyze(analysis_context & ctx) override
+        {
+            return _referenced->analyze(ctx).then([&] { _referenced = _referenced->_get_replacement(); });
+        }
+
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
             auto referenced = _referenced;
 
-            auto it = repl.expressions.find(referenced);
-            if (it != repl.expressions.end())
+            if (auto replaced = repl.try_get_replacement(referenced->_get_replacement()))
             {
-                referenced = it->second;
+                referenced = replaced;
             }
 
             return std::make_unique<expression_ref>(referenced);
@@ -76,6 +87,8 @@ inline namespace _v1
                 {
                     _referenced = simplified;
                 }
+                _referenced = _referenced->_get_replacement();
+
                 return this;
             });
         }

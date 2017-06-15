@@ -158,6 +158,11 @@ inline namespace _v1
             return false;
         }
 
+        virtual bool needs_conversion(type * other) const
+        {
+            return false;
+        }
+
     private:
         virtual void _codegen_type(ir_generation_context &) const = 0;
 

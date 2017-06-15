@@ -42,11 +42,9 @@ inline namespace _v1
         }
         else
         {
-            os << styles::def << " @ " << styles::address << this << styles::def << ':';
+            os << styles::def << " @ " << styles::address << this << styles::def << ": ";
         }
         os << styles::string_value << utf8(_name) << '\n';
-
-        os << styles::def << ctx.make_branch(false) << styles::subrule_name << "referenced member name: " << styles::string_value << utf8(_name) << '\n';
 
         auto type_ctx = ctx.make_branch(true);
         os << styles::def << type_ctx << styles::subrule_name << "referenced member type:\n";

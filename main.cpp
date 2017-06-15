@@ -96,6 +96,12 @@ int main() try
 
     reaver::logger::default_logger().sync();
 
+    reaver::logger::dlog() << "Simplified AAST:";
+    analyzed_ast.simplify();
+    reaver::logger::dlog() << std::ref(analyzed_ast);
+
+    reaver::logger::default_logger().sync();
+
     auto ir = analyzed_ast.codegen_ir();
     reaver::vapor::codegen::result generated_code{ ir, reaver::vapor::codegen::make_cxx() };
 

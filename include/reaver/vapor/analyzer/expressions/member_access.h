@@ -76,7 +76,7 @@ inline namespace _v1
         {
             if (_referenced)
             {
-                return make_expression_ref(repl.expressions.at(_referenced));
+                return make_expression_ref(repl.get_replacement(_referenced));
             }
 
             if (!_base)
@@ -84,7 +84,7 @@ inline namespace _v1
                 return std::unique_ptr<member_access_expression>{ new member_access_expression{ _name, get_type() } };
             }
 
-            auto replaced_base = repl.expressions.at(_base);
+            auto replaced_base = repl.try_get_replacement(_base);
             if (auto repl = replaced_base->get_member(_name))
             {
                 return make_expression_ref(repl);

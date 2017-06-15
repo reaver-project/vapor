@@ -48,7 +48,7 @@ inline namespace _v1
                     replacements repl;
                     std::vector<std::shared_ptr<expression>> var_space;
                     std::vector<std::shared_ptr<expression>> expr_space = fmap(_args, [&](auto && arg) {
-                        std::shared_ptr<expression> cloned = arg->clone_expr_with_replacement(repl);
+                        std::shared_ptr<expression> cloned = repl.claim(arg);
                         return cloned;
                     });
 
@@ -77,7 +77,7 @@ inline namespace _v1
                             }
 
                             auto empty_pack = make_pack_expression();
-                            repl.expressions[*param_begin] = empty_pack.get();
+                            repl.add_replacement(*param_begin, empty_pack.get());
                             var_space.push_back(std::move(empty_pack));
 
                             ++param_begin;
@@ -113,18 +113,15 @@ inline namespace _v1
                                 return make_ready_future();
                             }
 
-                            var_space.push_back(matching_expressions.front()->clone_expr_with_replacement(repl));
+                            var_space.push_back(repl.claim(matching_expressions.front()));
 
                             ++arg_begin;
                             ++param_begin;
                             continue;
                         }
 
-                        auto range = &*_range;
-                        (void)range;
-                        auto pack = make_pack_expression(
-                            fmap(matching_expressions, [&](auto && var) { return var->clone_expr_with_replacement(repl); }), (*param_begin)->get_type());
-                        repl.expressions[*param_begin] = pack.get();
+                        auto pack = make_pack_expression(fmap(matching_expressions, [&](auto && var) { return repl.claim(var); }), (*param_begin)->get_type());
+                        repl.add_replacement(*param_begin, pack.get());
                         var_space.push_back(std::move(pack));
 
                         ++param_begin;
@@ -133,7 +130,7 @@ inline namespace _v1
                     assert(arg_begin == arg_end);
                     assert(param_begin == param_end);
 
-                    _cloned_type_expr = type_expr->clone_expr_with_replacement(repl);
+                    _cloned_type_expr = repl.claim(type_expr);
 
                     auto cont = [this, ctx = std::make_shared<simplification_context>()](auto self)->future<expression *>
                     {

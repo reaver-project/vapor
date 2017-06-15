@@ -99,6 +99,9 @@ inline namespace _v1
         ADD_OPERATION(equal_comparison, U"__builtin_integer_operator_equals", ==, builtin_types().boolean.get(), boolean, ());
         ADD_OPERATION(less_comparison, U"__builtin_integer_operator_less", <, builtin_types().boolean.get(), boolean, ());
         ADD_OPERATION(less_equal_comparison, U"__builtin_integer_operator_less_equal", <, builtin_types().boolean.get(), boolean, ());
+
+        _max_value = (boost::multiprecision::cpp_int(1) << _size) - 1;
+        _min_value = -_max_value - 1;
     }
 }
 }

@@ -125,7 +125,7 @@ inline namespace _v1
             }
 
             auto repl = replacements{};
-            auto arg_copies = fmap(args, [&](auto && arg) { return arg->clone_expr_with_replacement(repl); });
+            auto arg_copies = fmap(args, [&](auto && arg) { return repl.claim(arg); });
             return make_ready_future<expression *>(make_struct_expression(this->shared_from_this(), std::move(arg_copies)).release());
         });
 
@@ -200,9 +200,9 @@ inline namespace _v1
             auto repl = replacements{};
             for (std::size_t i = 0; i < _data_members.size(); ++i)
             {
-                repl.expressions[base->get_member(_data_members[i]->get_name())] = args[i];
+                repl.add_replacement(base->get_member(_data_members[i]->get_name()), args[i]);
             }
-            return make_ready_future(base->clone_expr_with_replacement(repl).release());
+            return make_ready_future(repl.claim(base->_get_replacement()).release());
         });
 
         _aggregate_copy_ctor->set_name(U"replacing_copy_constructor");

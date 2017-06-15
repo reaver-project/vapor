@@ -34,13 +34,13 @@ inline namespace _v1
     {
         auto ret = std::unique_ptr<if_statement>(new if_statement(*this));
 
-        ret->_condition = _condition->clone_expr_with_replacement(repl);
+        ret->_condition = repl.claim(_condition.get());
 
-        auto then = _then_block->clone_with_replacement(repl).release();
+        auto then = repl.claim(_then_block.get()).release();
         ret->_then_block.reset(static_cast<block *>(then));
 
         fmap(_else_block, [&](auto && block) {
-            auto else_ = block->clone_with_replacement(repl).release();
+            auto else_ = repl.claim(block.get()).release();
             ret->_else_block = std::unique_ptr<class block>(static_cast<class block *>(else_));
             return unit{};
         });

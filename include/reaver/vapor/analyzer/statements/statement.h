@@ -31,6 +31,7 @@
 #include "../ir_context.h"
 #include "../semantic/context.h"
 #include "../simplification/context.h"
+#include "../simplification/replacements.h"
 
 namespace reaver::vapor::parser
 {
@@ -44,12 +45,6 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    struct replacements
-    {
-        std::unordered_map<statement const *, statement *> statements = {};
-        std::unordered_map<expression const *, expression *> expressions = {};
-    };
-
     class return_statement;
     class scope;
 
@@ -90,12 +85,25 @@ inline namespace _v1
             return *_analysis_future;
         }
 
-        std::unique_ptr<statement> clone_with_replacement(const std::vector<expression *> & params, const std::vector<expression *> & args) const;
+        friend class replacements;
+
+    private:
         std::unique_ptr<statement> clone_with_replacement(replacements & repl) const
         {
-            auto ret = _clone_with_replacement(repl);
-            repl.statements[this] = ret.get();
-            return ret;
+            return _clone_with_replacement(repl);
+        }
+
+    public:
+        std::unique_ptr<statement> clone_with_replacement(const std::vector<expression *> & to_replace, const std::vector<expression *> & replacements) const
+        {
+            assert(to_replace.size() == replacements.size());
+            class replacements repl;
+            for (std::size_t i = 0; i < to_replace.size(); ++i)
+            {
+                repl.add_replacement(to_replace[i], replacements[i]);
+            }
+
+            return _clone_with_replacement(repl);
         }
 
         future<statement *> simplify(simplification_context & ctx)

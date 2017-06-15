@@ -29,7 +29,7 @@ inline namespace _v1
     std::unique_ptr<statement> declaration::_clone_with_replacement(replacements & repl) const
     {
         assert(_type == declaration_type::variable);
-        return _init_expr.get()->clone_expr_with_replacement(repl);
+        return repl.claim(_init_expr.get().get());
     }
 
     future<statement *> declaration::_simplify(simplification_context & ctx)

@@ -35,7 +35,7 @@ inline namespace _v1
 
     future<expression *> struct_literal::_simplify_expr(simplification_context & ctx)
     {
-        return make_ready_future<expression *>(std::make_unique<type_expression>(_type.get()).release());
+        return make_ready_future<expression *>(this);
     }
 }
 }

@@ -32,14 +32,16 @@ inline namespace _v1
     {
         if (_replacement_expr)
         {
-            return _replacement_expr->clone_expr_with_replacement(repl);
+            return repl.claim(_replacement_expr.get());
         }
 
-        auto ret = std::make_unique<owning_call_expression>(_function, fmap(_args, [&](auto && arg) { return arg->clone_expr_with_replacement(repl); }));
+        auto ret = std::make_unique<owning_call_expression>(_function, fmap(_args, [&](auto arg) { return repl.copy_claim(arg); }));
+
+        ret->_range = _range;
 
         if (_cloned_type_expr)
         {
-            ret->_cloned_type_expr = _cloned_type_expr->clone_expr_with_replacement(repl);
+            ret->_cloned_type_expr = repl.claim(_cloned_type_expr.get());
             auto type = ret->_cloned_type_expr->as<type_expression>();
             assert(type);
             ret->_set_type(type->get_value());
@@ -47,6 +49,7 @@ inline namespace _v1
         }
 
         ret->_set_type(get_type());
+
         return ret;
     }
 
@@ -54,10 +57,7 @@ inline namespace _v1
     {
         if (_replacement_expr)
         {
-            return _replacement_expr->simplify_expr(ctx).then([&](auto && simplified) {
-                replace_uptr(_replacement_expr, simplified, ctx);
-                return _replacement_expr.release();
-            });
+            return make_ready_future(_replacement_expr.release());
         }
 
         return when_all(fmap(_args, [&](auto && arg) { return arg->simplify_expr(ctx); })).then([&](auto && repl) {
@@ -87,7 +87,7 @@ inline namespace _v1
 
         return when_all(fmap(_var_exprs, [&](auto && arg) { return arg->simplify_expr(ctx); })).then([&](auto && repl) {
             replace_uptrs(_var_exprs, repl, ctx);
-            return _function->simplify(ctx, fmap(_var_exprs, [](auto && arg) { return arg.get(); }));
+            return call_expression::_simplify_expr(ctx);
         });
     }
 }

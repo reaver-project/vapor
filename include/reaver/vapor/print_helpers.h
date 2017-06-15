@@ -40,6 +40,13 @@ using experimental::string_view;
 
 namespace reaver::vapor
 {
+namespace analyzer
+{
+    inline namespace _v1
+    {
+        class expression;
+    }
+}
 inline namespace _v1
 {
     namespace styles
@@ -138,7 +145,7 @@ inline namespace _v1
         }
     }
 
-    // support for "synthesized" parse nodes (for example from call_expression
+    // support for "synthesized" parse nodes (for example from call_expression)
     template<typename T>
     struct synthesized_node
     {
