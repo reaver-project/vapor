@@ -64,10 +64,5 @@ inline namespace _v1
         // (...probably)
         return _call_expression->codegen_ir(ctx);
     }
-
-    variable * binary_expression::get_variable() const
-    {
-        return _call_expression->get_variable();
-    }
 }
 }

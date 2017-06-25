@@ -22,29 +22,19 @@
 
 #pragma once
 
-#include "../expressions/variable.h"
 #include "../types/member_assignment.h"
-#include "variable.h"
+#include "expression.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class member_assignment_variable : public variable
+    class member_assignment_expression : public expression
     {
     public:
-        member_assignment_variable(std::u32string member_name) : _type{ make_member_assignment_type(std::move(member_name), this) }
+        member_assignment_expression(std::u32string member_name) : _type{ make_member_assignment_type(std::move(member_name), this) }
         {
-        }
-
-        virtual type * get_type() const override
-        {
-            if (!_rhs)
-            {
-                return _type.get();
-            }
-
-            return _rhs->get_type();
+            _set_type(_type.get());
         }
 
         const std::u32string member_name() const
@@ -58,18 +48,12 @@ inline namespace _v1
             return _rhs->get_type();
         }
 
-        void set_rhs(variable * rhs)
+        void set_rhs(expression * rhs)
         {
             assert(!_rhs);
             _rhs = rhs;
-            _rhs->do_give_expression();
-
-            _rhs_expr = make_variable_ref_expression(_rhs);
-        }
-
-        virtual std::unique_ptr<expression> release_owned_expression() override
-        {
-            return std::move(_rhs_expr);
+            _reset_type(_rhs->get_type());
+            _type.reset();
         }
 
         auto get_rhs() const
@@ -78,29 +62,24 @@ inline namespace _v1
             return _rhs;
         }
 
-        virtual expression * get_expression() const override
-        {
-            assert(_rhs);
-            if (auto expr = _rhs->get_expression())
-            {
-                return expr;
-            }
-            return _rhs_expr.get();
-        }
-
         virtual bool is_member_assignment() const override
         {
             return !_rhs;
         }
 
-    private:
-        virtual std::unique_ptr<variable> _clone_with_replacement(replacements & repl) const override
+        virtual void print(std::ostream & os, print_context ctx) const override
         {
-            auto ret = std::make_unique<member_assignment_variable>(_type->member_name());
+            assert(0);
+        }
+
+    private:
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
+        {
+            auto ret = std::make_unique<member_assignment_expression>(_type->member_name());
             ret->_rhs = _rhs;
 
-            auto it = repl.variables.find(_rhs);
-            if (it != repl.variables.end())
+            auto it = repl.expressions.find(_rhs);
+            if (it != repl.expressions.end())
             {
                 ret->_rhs = it->second;
             }
@@ -108,20 +87,21 @@ inline namespace _v1
             return ret;
         }
 
-        virtual variable_ir _codegen_ir(ir_generation_context & ctx) const override
+        virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
         {
-            return _rhs->codegen_ir(ctx);
+            assert(0);
+            // return _rhs->codegen_ir(ctx);
         }
 
-        variable * _rhs = nullptr;
-        std::unique_ptr<expression> _rhs_expr;
+        expression * _rhs = nullptr;
+        std::unique_ptr<expression> _owned_expr;
 
         std::unique_ptr<member_assignment_type> _type;
     };
 
-    inline auto make_member_assignment_variable(std::u32string member_name)
+    inline auto make_member_assignment_expression(std::u32string member_name)
     {
-        return std::make_unique<member_assignment_variable>(std::move(member_name));
+        return std::make_unique<member_assignment_expression>(std::move(member_name));
     }
 }
 }

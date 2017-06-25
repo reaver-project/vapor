@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,17 +20,38 @@
  *
  **/
 
-#include "vapor/analyzer/variables/boolean.h"
+#include <numeric>
+
+#include "vapor/analyzer/expressions/overload_set.h"
+#include "vapor/analyzer/function.h"
+#include "vapor/analyzer/helpers.h"
+#include "vapor/analyzer/statements/function_declaration.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/codegen/ir/variable.h"
+#include "vapor/codegen/ir/function.h"
+#include "vapor/codegen/ir/type.h"
+#include "vapor/parser.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    variable_ir boolean_constant::_codegen_ir(ir_generation_context &) const
+    std::unique_ptr<expression> overload_set::_clone_expr_with_replacement(replacements & repl) const
     {
-        return { codegen::ir::value{ codegen::ir::boolean_value{ _value } } };
+        assert(0);
+    }
+
+    statement_ir overload_set::_codegen_ir(ir_generation_context & ctx) const
+    {
+        auto var = codegen::ir::make_variable(_type->codegen_type(ctx));
+        var->scopes = _type->get_scope()->codegen_ir(ctx);
+        // return { std::move(var) };
+        assert(!"do a pass value instruction here");
+    }
+
+    void overload_set::add_function(function_declaration * decl)
+    {
+        _function_decls.push_back(decl);
+        _type->add_function(decl->get_function());
     }
 }
 }

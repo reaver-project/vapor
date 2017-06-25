@@ -22,56 +22,51 @@
 
 #pragma once
 
-#include <memory>
-
-#include <boost/multiprecision/integer.hpp>
-
-#include "../../parser/literal.h"
+#include "../../parser/member_expression.h"
 #include "expression.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class integer_constant : public expression
+    class member_access_expression : public expression
     {
     public:
-        integer_constant(const parser::integer_literal & parse) : _value{ utf8(parse.value.string) }
-        {
-            _parse.address = &parse;
-            _parse.range = parse.range;
-        }
+        member_access_expression(const parser::member_expression & parse);
 
-        integer_constant(boost::multiprecision::cpp_int value, synthesized_node<void> parse = {}) : _parse{ parse }, _value{ std::move(value) }
-        {
-        }
-
-        virtual void print(std::ostream & os, print_context ctx) const override
-        {
-            os << styles::def << ctx << styles::rule_name << "integer-constant";
-            print_address_range(os, this);
-            os << ' ' << styles::string_value << _value << '\n';
-        }
+        virtual void print(std::ostream & os, print_context) const override;
 
         const auto & parse() const
         {
             return _parse;
         }
 
-        const auto & get_value() const
+        auto get_name() const
         {
-            return _value;
+            return _parse.member_name.value.string;
+        }
+
+        virtual bool is_member_access() const override
+        {
+            return true;
         }
 
     private:
-        virtual future<> _analyze(analysis_context &) override
+        member_access_expression(const parser::member_expression & parse, expression * referenced) : _parse{ parse }, _referenced{ referenced }
         {
-            return make_ready_future();
         }
+
+        virtual future<> _analyze(analysis_context &) override;
 
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
-            return std::make_unique<integer_constant>(_value, _parse);
+            assert(0);
+            /*if (_referenced)
+            {
+                return make_variable_expression(_referenced->clone_with_replacement(repl));
+            }
+
+            assert(!"tried to clone_expr_with_replacement a member expression that refers to a member assignment; this shouldn't've survived analysis!");*/
         }
 
         virtual future<expression *> _simplify_expr(simplification_context &) override
@@ -81,14 +76,15 @@ inline namespace _v1
 
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-        virtual bool _is_equal(const expression * rhs) const override
-        {
-            auto rhs_int = dynamic_cast<const integer_constant *>(rhs);
-            return rhs_int && _value == rhs_int->_value;
-        }
+        const parser::member_expression & _parse;
 
-        synthesized_node<void> _parse;
-        boost::multiprecision::cpp_int _value;
+        expression * _referenced = nullptr;
+        expression * _base = nullptr;
     };
+
+    inline std::unique_ptr<member_access_expression> preanalyze_member_access_expression(const parser::member_expression & parse, scope *)
+    {
+        return std::make_unique<member_access_expression>(parse);
+    }
 }
 }

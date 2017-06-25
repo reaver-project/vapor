@@ -125,9 +125,12 @@ inline namespace _v1
 
         codegen::ir::module mod;
         mod.name = fmap(_parse.name.id_expression_value, [&](auto && ident) { return ident.value.string; });
-        mod.symbols = mbind(as_vector(_scope->declared_symbols()), [&](auto && symbol) {
+
+        assert(0);
+
+        /*mod.symbols = mbind(as_vector(_scope->declared_symbols()), [&](auto && symbol) {
             auto ir = symbol.second->codegen_ir(ctx);
-            return get<0>(fmap(ir,
+            return get<0>(fmap(ir.back().result,
                 make_overload_set([](none_t) -> codegen::ir::module_symbols_t { assert(0); },
                     [&](std::shared_ptr<codegen::ir::variable> symb) {
                         symb->name = symbol.second->get_name();
@@ -138,8 +141,8 @@ inline namespace _v1
                             symb.name = symbol.second->get_name();
                             return symb;
                         });
-                    })));
-        });
+                    })));*/
+        //});
 
         while (auto fn = ctx.function_to_generate())
         {

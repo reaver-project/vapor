@@ -26,4 +26,3 @@
 #include "analyzer/expressions/expression.h"
 #include "analyzer/statements/statement.h"
 #include "analyzer/types/type.h"
-#include "analyzer/variables/variable.h"

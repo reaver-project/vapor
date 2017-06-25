@@ -20,17 +20,17 @@
  *
  **/
 
-#include "vapor/analyzer/expressions/member.h"
 #include "vapor/analyzer/expressions/binary.h"
+#include "vapor/analyzer/expressions/member_access.h"
+#include "vapor/analyzer/expressions/member_assignment.h"
 #include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/analyzer/variables/member_assignment.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    future<> member_expression::_analyze(analysis_context & ctx)
+    future<> member_access_expression::_analyze(analysis_context & ctx)
     {
         auto & expr_ctx = get_context();
         assert(!expr_ctx.empty());
@@ -52,14 +52,15 @@ inline namespace _v1
             // and hence we need to do a Special Thing
             if (top_level->get_lhs() == this && top_level->get_operator() == lexer::token_type::assign)
             {
-                _set_variable(make_member_assignment_variable(_parse.member_name.value.string));
+                assert(!"how do I replace this? will probably need a smilar trick to call expression");
+                // make_member_assignment_expression(_parse.member_name.value.string);
                 return make_ready_future();
             }
         }
 
-        return get<postfix_expression *>(*last_postfix)->get_base_variable(ctx).then([&](auto && base_var) {
-            _referenced = base_var->get_member(_parse.member_name.value.string);
-            _base = base_var;
+        return get<postfix_expression *>(*last_postfix)->get_base_expression(ctx).then([&](auto && base_expr) {
+            _referenced = base_expr->get_member(_parse.member_name.value.string);
+            _base = base_expr;
             assert(_referenced && "this should be a nice error");
         });
     }

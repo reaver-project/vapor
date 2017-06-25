@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -44,13 +44,6 @@ inline namespace _v1
     {
         std::lock_guard<std::mutex> lock{ _keep_alive_lock };
         auto inserted = _keep_alive_stmt.emplace(ptr).second;
-        assert(inserted);
-    }
-
-    void simplification_context::keep_alive(variable * ptr)
-    {
-        std::lock_guard<std::mutex> lock{ _keep_alive_lock };
-        auto inserted = _keep_alive_var.emplace(ptr).second;
         assert(inserted);
     }
 }

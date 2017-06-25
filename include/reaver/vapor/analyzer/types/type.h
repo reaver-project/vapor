@@ -49,7 +49,6 @@ inline namespace _v1
 {
     class function;
     class expression;
-    class variable;
 
     class type
     {
@@ -91,7 +90,7 @@ inline namespace _v1
             return make_ready_future(std::vector<function *>{});
         }
 
-        virtual future<function *> get_constructor(std::vector<const variable *>) const
+        virtual future<function *> get_constructor(std::vector<const expression *>) const
         {
             return make_ready_future(static_cast<function *>(nullptr));
         }
@@ -176,8 +175,8 @@ inline namespace _v1
 
         mutable std::mutex _generic_ctor_lock;
         mutable std::shared_ptr<function> _generic_ctor;
-        mutable std::shared_ptr<variable> _generic_ctor_first_arg;
-        mutable std::shared_ptr<variable> _generic_ctor_pack_arg;
+        mutable std::unique_ptr<expression> _generic_ctor_first_arg;
+        mutable std::unique_ptr<expression> _generic_ctor_pack_arg;
     };
 
     std::unique_ptr<type> make_integer_type();

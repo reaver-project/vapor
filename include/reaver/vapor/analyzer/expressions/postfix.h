@@ -45,11 +45,10 @@ inline namespace _v1
         postfix_expression(const parser::postfix_expression & parse, scope * lex_scope);
 
         virtual void print(std::ostream & os, print_context ctx) const override;
-        virtual variable * get_variable() const override;
 
-        future<variable *> get_base_variable(analysis_context & ctx) const
+        future<expression *> get_base_expression(analysis_context & ctx) const
         {
-            return _base_expr->analyze(ctx).then([&] { return _base_expr->get_variable(); });
+            return _base_expr->analyze(ctx).then([&] { return _base_expr.get(); });
         }
 
         const auto & parse() const
@@ -67,6 +66,21 @@ inline namespace _v1
         virtual future<expression *> _simplify_expr(simplification_context &) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
+        virtual bool _is_equal(const expression * rhs) const override
+        {
+            if (_referenced_expression)
+            {
+                return _referenced_expression.get()->is_equal(rhs);
+            }
+
+            if (_call_expression)
+            {
+                return _call_expression->is_equal(rhs);
+            }
+
+            return _base_expr->is_equal(rhs);
+        }
+
         const parser::postfix_expression & _parse;
         scope * _scope = nullptr;
         std::unique_ptr<expression> _base_expr;
@@ -75,7 +89,7 @@ inline namespace _v1
         std::unique_ptr<expression> _call_expression;
 
         optional<std::u32string> _accessed_member;
-        optional<variable *> _referenced_variable;
+        optional<expression *> _referenced_expression;
     };
 
     inline std::unique_ptr<postfix_expression> preanalyze_postfix_expression(const parser::postfix_expression & parse, scope * lex_scope)

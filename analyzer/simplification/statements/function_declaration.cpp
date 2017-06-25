@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,11 +22,11 @@
 
 #include <numeric>
 
+#include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/function_declaration.h"
-#include "vapor/analyzer/variables/overload_set.h"
 #include "vapor/parser/lambda_expression.h"
 
 namespace reaver::vapor::analyzer

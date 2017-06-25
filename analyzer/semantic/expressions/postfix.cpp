@@ -56,8 +56,8 @@ inline namespace _v1
                     return _base_expr->get_type()
                         ->get_scope()
                         ->get_future(*_accessed_member)
-                        .then([](auto && symb) { return symb->get_variable_future(); })
-                        .then([&](auto && var) { _referenced_variable = var; });
+                        .then([](auto && symb) { return symb->get_expression_future(); })
+                        .then([&](auto && var) { _referenced_expression = var; });
                 }
 
                 return resolve_overload(ctx, _parse.range, _base_expr.get(), *_modifier, fmap(_arguments, [](auto && arg) { return arg.get(); }))

@@ -45,8 +45,6 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
-        virtual variable * get_variable() const override;
-
         const expression * get_lhs() const
         {
             return _lhs.get();

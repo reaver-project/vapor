@@ -37,10 +37,7 @@ MAYFLY_ADD_TESTCASE("analysis", [] {
     test_type t1{};
     test_expression expr{};
 
-    auto var = make_blank_variable(&t1);
-    auto var_ptr = var.get();
-
-    expr.set_analysis_variable(std::move(var));
+    expr.set_analysis_type(&t1);
 
     analysis_context ctx;
     auto analysis_future = expr.analyze(ctx);
@@ -49,7 +46,6 @@ MAYFLY_ADD_TESTCASE("analysis", [] {
     auto reanalysis_future = expr.analyze(ctx);
     MAYFLY_REQUIRE_NOTHROW(reaver::get(reanalysis_future));
 
-    MAYFLY_CHECK(expr.get_variable() == var_ptr);
     MAYFLY_CHECK(expr.get_type() == &t1);
 });
 

@@ -25,7 +25,7 @@
 
 #include "../helpers.h"
 #include "vapor/analyzer/expressions/struct.h"
-#include "vapor/analyzer/variables/type.h"
+#include "vapor/analyzer/expressions/type.h"
 
 using namespace reaver::vapor;
 using namespace reaver::vapor::analyzer;
@@ -45,7 +45,7 @@ MAYFLY_ADD_TESTCASE("empty struct", [] {
     analysis_context ctx;
     reaver::get(struct_lit->analyze(ctx));
 
-    auto type_var = dynamic_cast<type_variable *>(struct_lit->get_variable());
+    auto type_var = dynamic_cast<type_expression *>(struct_lit.get());
     MAYFLY_REQUIRE(type_var);
 
     auto type = type_var->get_value();
@@ -77,7 +77,7 @@ MAYFLY_ADD_TESTCASE("struct with members", [] {
     analysis_context ctx;
     reaver::get(struct_lit->analyze(ctx));
 
-    auto type_var = dynamic_cast<type_variable *>(struct_lit->get_variable());
+    auto type_var = dynamic_cast<type_expression *>(struct_lit.get());
     MAYFLY_REQUIRE(type_var);
 
     auto type = type_var->get_value();

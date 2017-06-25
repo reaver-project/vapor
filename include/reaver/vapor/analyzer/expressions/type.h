@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,23 +22,18 @@
 
 #pragma once
 
-#include "type.h"
-#include "variable.h"
+#include "../types/type.h"
+#include "expression.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class type_variable : public variable
+    class type_expression : public expression
     {
     public:
-        type_variable(type * t) : _type{ t }
+        type_expression(type * t) : expression{ builtin_types().type.get() }, _type{ t }
         {
-        }
-
-        virtual type * get_type() const override
-        {
-            return builtin_types().type.get();
         }
 
         type * get_value() const
@@ -51,25 +46,37 @@ inline namespace _v1
             return _type;
         }
 
-    private:
-        virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override
+        virtual void print(std::ostream &, print_context) const override
         {
-            return std::make_unique<type_variable>(_type);
+            assert(0);
         }
 
-        virtual variable_ir _codegen_ir(ir_generation_context & ctx) const override
+    private:
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
         {
-            auto ret = codegen::ir::make_variable(codegen::ir::builtin_types().type);
-            ret->refers_to = _type->codegen_type(ctx);
-            return ret;
+            return std::make_unique<type_expression>(_type);
+        }
+
+        virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
+        {
+            // auto ret = codegen::ir::make_variable(codegen::ir::builtin_types().type);
+            // ret->refers_to = _type->codegen_type(ctx);
+            // return ret;
+            assert(0);
+        }
+
+        virtual bool _is_equal(const expression * rhs) const override
+        {
+            auto type_rhs = dynamic_cast<const type_expression *>(rhs);
+            return type_rhs && _type == type_rhs->_type;
         }
 
         type * _type;
     };
 
-    inline auto make_type_variable(type * t)
+    inline auto make_type_expression(type * t)
     {
-        return std::make_unique<type_variable>(t);
+        return std::make_unique<type_expression>(t);
     }
 }
 }

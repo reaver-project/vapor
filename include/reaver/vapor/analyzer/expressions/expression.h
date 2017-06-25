@@ -29,7 +29,7 @@
 #include "../../parser/expr.h"
 #include "../helpers.h"
 #include "../statements/statement.h"
-#include "../variables/variable.h"
+#include "../types/type.h"
 #include "context.h"
 
 namespace reaver::vapor::parser
@@ -53,30 +53,19 @@ inline namespace _v1
         expression() = default;
         virtual ~expression() = default;
 
-        expression(std::unique_ptr<variable> var) : _variable{ std::move(var) }
+        expression(type * t) : _type{ t }
         {
-        }
-
-        virtual variable * get_variable() const
-        {
-            if (!_variable)
-            {
-                assert(!"someone tried to get variable before analyzing... or forgot to set variable from analyze");
-            }
-
-            return _variable.get();
         }
 
         type * get_type() const
         {
-            auto var = get_variable();
-
-            if (!var)
+            // TODO: use ownership erasure
+            if (!_type)
             {
-                assert(!"someone tried to get type before analyzing... or forgot to set variable from analyze");
+                assert(!"tried to get an unset type");
             }
 
-            return var->get_type();
+            return _type;
         }
 
         std::unique_ptr<expression> clone_expr_with_replacement(replacements & repl) const
@@ -102,7 +91,68 @@ inline namespace _v1
             return _expr_ctx;
         }
 
+        expression * get_default_value() const
+        {
+            return _default_value;
+        }
+
+        void set_default_value(expression * expr)
+        {
+            assert(!_default_value);
+            _default_value = expr;
+        }
+
+        virtual bool is_constant() const
+        {
+            return false;
+        }
+
+        bool is_equal(const expression * rhs) const
+        {
+            return (this == rhs && _is_pure()) || _is_equal(rhs) || rhs->is_equal(this);
+        }
+
+        virtual bool is_member() const
+        {
+            return false;
+        }
+
+        virtual bool is_member_assignment() const
+        {
+            return false;
+        }
+
+        virtual bool is_member_access() const
+        {
+            return false;
+        }
+
+        virtual expression * get_member(const std::u32string &) const
+        {
+            assert(0);
+        }
+
     protected:
+        void _set_type(type * t)
+        {
+            assert(!_type);
+            assert(t);
+            _type = t;
+        }
+
+        void _reset_type(type * t)
+        {
+            assert(_type);
+            assert(t);
+            _type = t;
+        }
+
+        virtual future<> _analyze(analysis_context &) override
+        {
+            assert(_type);
+            return make_ready_future();
+        }
+
         virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const override
         {
             return _clone_expr_with_replacement(repl);
@@ -115,22 +165,24 @@ inline namespace _v1
             return simplify_expr(ctx).then([&](auto && simplified) -> statement * { return simplified; });
         }
 
-        virtual future<expression *> _simplify_expr(simplification_context &) = 0;
-
-        void _set_variable(std::unique_ptr<variable> var)
+        virtual future<expression *> _simplify_expr(simplification_context &)
         {
-            assert(var);
-            assert(!_variable);
-            _variable = std::move(var);
+            return make_ready_future(this);
         }
 
-        void _set_variable(variable * ptr, simplification_context & ctx)
+        virtual bool _is_equal(const expression * expr) const
         {
-            replace_uptr(_variable, ptr, ctx);
+            return false;
+        }
+
+        bool _is_pure() const
+        {
+            return true;
         }
 
     private:
-        std::unique_ptr<variable> _variable;
+        type * _type = nullptr;
+        expression * _default_value = nullptr;
 
         expression_context _expr_ctx;
     };

@@ -22,12 +22,12 @@
 
 #include <numeric>
 
-#include "vapor/analyzer/expressions/variable.h"
+#include "vapor/analyzer/expressions/overload_set.h"
+#include "vapor/analyzer/expressions/type.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/function_declaration.h"
-#include "vapor/analyzer/variables/overload_set.h"
 #include "vapor/codegen/ir/function.h"
 #include "vapor/parser/lambda_expression.h"
 
@@ -43,8 +43,7 @@ inline namespace _v1
             [=, name = _parse.name.value.string](ir_generation_context & ctx) {
                 auto ret = codegen::ir::function{ U"operator()",
                     {},
-                    fmap(_parameter_list,
-                        [&](auto && arg) { return get<std::shared_ptr<codegen::ir::variable>>(get<codegen::ir::value>(arg.variable->codegen_ir(ctx))); }),
+                    fmap(_parameter_list, [&](auto && param) { return get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
                     _body->codegen_return(ctx),
                     _body->codegen_ir(ctx) };
                 ret.is_member = true;
@@ -59,10 +58,10 @@ inline namespace _v1
             if (_return_type)
             {
                 return (*_return_type)->analyze(ctx).then([&] {
-                    auto var = (*_return_type)->get_variable();
+                    auto & type_expr = *_return_type;
 
-                    assert(var->get_type() == builtin_types().type.get());
-                    assert(var->is_constant());
+                    assert(type_expr->get_type() == builtin_types().type.get());
+                    assert(type_expr->is_constant());
 
                     _function->set_return_type(_return_type->get());
                 });
@@ -71,26 +70,19 @@ inline namespace _v1
             return make_ready_future();
         }();
 
-        return initial_future.then([&] { return when_all(fmap(_parameter_list, [&](auto && arg) { return arg.type_expression->analyze(ctx); })); })
+        return initial_future.then([&] { return when_all(fmap(_parameter_list, [&](auto && param) { return param->analyze(ctx); })); })
             .then([&] {
-                auto param_variables = fmap(_parameter_list, [&](auto && arg) -> variable * {
-                    arg.variable->set_type(arg.type_expression->get_variable());
-                    return arg.variable.get();
-                });
+                auto params = fmap(_parameter_list, [](auto && param) -> expression * { return param.get(); });
+                params.insert(params.begin(), _overload_set.get());
 
-                _self = make_blank_variable(_overload_set->get_type());
-                param_variables.insert(param_variables.begin(), _self.get());
-
-                _function->set_parameters(std::move(param_variables));
+                _function->set_parameters(std::move(params));
 
                 return _body->analyze(ctx);
             })
             .then([&] {
                 fmap(_return_type, [&](auto && ret_type) {
-                    auto explicit_type = ret_type->get_variable();
-                    auto type_var = static_cast<type_variable *>(explicit_type);
-
-                    assert(type_var->get_value() == _body->return_type());
+                    auto type_expr = static_cast<type_expression *>(ret_type.get());
+                    assert(type_expr->get_value() == _body->return_type());
 
                     return unit{};
                 });
@@ -99,7 +91,7 @@ inline namespace _v1
 
                 if (!_return_type)
                 {
-                    _function->set_return_type(make_variable_expression(make_type_variable(_body->return_type())));
+                    _function->set_return_type(make_type_expression(_body->return_type()));
                 }
             });
     }

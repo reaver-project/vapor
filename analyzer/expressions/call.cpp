@@ -21,8 +21,8 @@
  **/
 
 #include "vapor/analyzer/expressions/call.h"
+#include "vapor/analyzer/expressions/member_assignment.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/analyzer/variables/member_assignment.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -64,17 +64,6 @@ inline namespace _v1
         }
     }
 
-    variable * call_expression::get_variable() const
-    {
-        if (_replacement_expr)
-        {
-            return _replacement_expr->get_variable();
-        }
-
-        assert(_var);
-        return _var.get();
-    }
-
     statement_ir call_expression::_codegen_ir(ir_generation_context & ctx) const
     {
         if (_replacement_expr)
@@ -105,7 +94,7 @@ inline namespace _v1
             none,
             { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
             std::move(arguments_values),
-            { codegen::ir::make_variable(_var->get_type()->codegen_type(ctx)) } };
+            { codegen::ir::make_variable(get_type()->codegen_type(ctx)) } };
 
         ctx.add_function_to_generate(_function);
 

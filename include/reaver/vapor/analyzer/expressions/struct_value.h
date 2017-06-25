@@ -23,16 +23,16 @@
 #pragma once
 
 #include "../types/struct.h"
-#include "variable.h"
+#include "expression.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class struct_variable : public variable
+    class struct_expression : public expression
     {
     public:
-        struct_variable(std::shared_ptr<struct_type> type, std::vector<std::unique_ptr<variable>> fields) : _type{ type }
+        struct_expression(std::shared_ptr<struct_type> type, std::vector<std::unique_ptr<expression>> fields) : expression{ type.get() }, _type{ type }
         {
             auto members = _type->get_data_members();
 
@@ -41,7 +41,7 @@ inline namespace _v1
             std::transform(members.begin() + fields.size(), members.end(), std::back_inserter(fields), [&](auto && member) {
                 auto def = member->get_default_value();
                 assert(def);
-                return def->get_variable()->clone_with_replacement(repl);
+                return def->clone_expr_with_replacement(repl);
             });
 
             assert(fields.size() == members.size());
@@ -55,28 +55,12 @@ inline namespace _v1
             }
         }
 
-        virtual type * get_type() const override
-        {
-            return _type.get();
-        }
-
         virtual bool is_constant() const override
         {
             return std::all_of(_fields_in_order.begin(), _fields_in_order.end(), [](auto && field) { return field->is_constant(); });
         }
 
-        virtual variable * get_member(const member_variable * var) const override
-        {
-            auto it = _fields.find(var);
-            if (it != _fields.end())
-            {
-                return it->second.get();
-            }
-
-            return nullptr;
-        }
-
-        virtual variable * get_member(const std::u32string & name) const override
+        virtual expression * get_member(const std::u32string & name) const override
         {
             auto it = std::find_if(_fields.begin(), _fields.end(), [&](auto && elem) { return elem.first->get_name() == name; });
             if (it == _fields.end())
@@ -87,27 +71,34 @@ inline namespace _v1
             return it->second.get();
         }
 
-    private:
-        virtual std::unique_ptr<variable> _clone_with_replacement(replacements & repl) const override
+        virtual void print(std::ostream &, print_context) const override
         {
-            return std::make_unique<struct_variable>(
-                _type, fmap(_fields_in_order, [&](auto && field) { return repl.variables.at(field)->clone_with_replacement(repl); }));
+            assert(0);
         }
 
-        virtual variable_ir _codegen_ir(ir_generation_context & ctx) const override
+    private:
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
-            return codegen::ir::struct_value{ _type->codegen_type(ctx),
-                fmap(_fields_in_order, [&](auto && field) { return get<codegen::ir::value>(field->codegen_ir(ctx)); }) };
+            return std::make_unique<struct_expression>(
+                _type, fmap(_fields_in_order, [&](auto && field) { return repl.expressions.at(field)->clone_expr_with_replacement(repl); }));
+        }
+
+        virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
+        {
+            auto ir = fmap(_fields_in_order, [&](auto && field) { return field->codegen_ir(ctx); });
+            auto result = codegen::ir::struct_value{ _type->codegen_type(ctx), fmap(ir, [&](auto && field_ir) { return field_ir.back().result; }) };
+
+            assert(!"pass the struct value here");
         }
 
         std::shared_ptr<struct_type> _type;
-        std::unordered_map<const member_variable *, std::unique_ptr<variable>> _fields;
-        std::vector<variable *> _fields_in_order;
+        std::unordered_map<const member_expression *, std::unique_ptr<expression>> _fields;
+        std::vector<expression *> _fields_in_order;
     };
 
-    inline auto make_struct_variable(std::shared_ptr<struct_type> type, std::vector<std::unique_ptr<variable>> fields)
+    inline auto make_struct_expression(std::shared_ptr<struct_type> type, std::vector<std::unique_ptr<expression>> fields)
     {
-        return std::make_unique<struct_variable>(type, std::move(fields));
+        return std::make_unique<struct_expression>(type, std::move(fields));
     }
 }
 }

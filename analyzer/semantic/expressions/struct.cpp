@@ -23,7 +23,6 @@
 #include "vapor/analyzer/expressions/struct.h"
 #include "vapor/analyzer/statements/declaration.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/analyzer/variables/type.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -33,7 +32,6 @@ inline namespace _v1
     {
         return when_all(fmap(_type->get_data_member_decls(), [&](auto && member) { return member->analyze(ctx); })).then([this] {
             _type->generate_constructors();
-            this->_set_variable(make_type_variable(_type.get()));
         });
     }
 }

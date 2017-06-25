@@ -24,9 +24,9 @@
 #include <reaver/mayfly.h>
 
 #include "../helpers.h"
+#include "vapor/analyzer/expressions/integer.h"
 #include "vapor/analyzer/statements/if.h"
 #include "vapor/analyzer/statements/return.h"
-#include "vapor/analyzer/variables/integer.h"
 
 using namespace reaver::vapor;
 using namespace reaver::vapor::analyzer;
@@ -110,7 +110,7 @@ MAYFLY_ADD_TESTCASE("two branches, true", [] {
 
     auto returns = simplified->get_returns();
     MAYFLY_REQUIRE(returns.size() == 1);
-    MAYFLY_REQUIRE(returns.front()->get_returned_variable()->is_equal(&constant));
+    MAYFLY_REQUIRE(returns.front()->get_returned_expression()->is_equal(&constant));
 });
 
 MAYFLY_ADD_TESTCASE("two branches, false", [] {
@@ -138,14 +138,14 @@ MAYFLY_ADD_TESTCASE("two branches, false", [] {
 
     auto returns = simplified->get_returns();
     MAYFLY_REQUIRE(returns.size() == 1);
-    MAYFLY_REQUIRE(returns.front()->get_returned_variable()->is_equal(&constant));
+    MAYFLY_REQUIRE(returns.front()->get_returned_expression()->is_equal(&constant));
 });
 
 MAYFLY_ADD_TESTCASE("runtime condition", [] {
     scope s;
     auto current_scope = &s;
-    auto var = make_blank_variable(builtin_types().boolean.get());
-    s.init(U"condition", make_symbol(U"condition", var.get()));
+    test_expression expr;
+    s.init(U"condition", make_symbol(U"condition", &expr));
     s.close();
 
     auto ast_single = parse(U"if (condition) { return 0; }", parser::parse_if_statement);

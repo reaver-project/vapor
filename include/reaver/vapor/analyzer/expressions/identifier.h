@@ -48,11 +48,6 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
-        virtual variable * get_variable() const override
-        {
-            return _referenced;
-        }
-
         const auto & parse() const
         {
             return _parse;
@@ -64,9 +59,14 @@ inline namespace _v1
         virtual future<expression *> _simplify_expr(simplification_context &) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
+        virtual bool _is_equal(const expression * rhs) const override
+        {
+            return _referenced->is_equal(rhs);
+        }
+
         const parser::identifier & _parse;
         scope * _lex_scope;
-        variable * _referenced;
+        expression * _referenced;
     };
 
     inline std::unique_ptr<identifier> preanalyze_identifier(const parser::identifier & parse, scope * lex_scope)

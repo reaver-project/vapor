@@ -34,7 +34,6 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     class expression;
-    class variable;
     class scope;
     class analysis_context;
     class function;
@@ -44,12 +43,6 @@ inline namespace _v1
         std::vector<expression *> arguments,
         std::vector<function *> possible_overloads,
         expression * base = nullptr);
-
-    future<std::unique_ptr<expression>> select_overload(analysis_context & ctx,
-        const range_type & range,
-        std::vector<variable *> arguments,
-        std::vector<function *> possible_overloads,
-        variable * base = nullptr);
 
     future<std::unique_ptr<expression>> resolve_overload(analysis_context & ctx,
         const range_type & range,

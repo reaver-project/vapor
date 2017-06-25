@@ -75,7 +75,7 @@ inline namespace _v1
         std::unique_ptr<scope> _scope;
         std::unique_ptr<function> _function;
         std::shared_ptr<overload_set> _overload_set;
-        std::unique_ptr<variable> _self;
+        std::unique_ptr<expression> _self;
     };
 
     inline std::unique_ptr<function_declaration> preanalyze_function(const parser::function & func, scope *& lex_scope)

@@ -45,7 +45,6 @@ inline namespace _v1
 {
     struct replacements
     {
-        std::unordered_map<variable const *, variable *> variables;
         std::unordered_map<statement const *, statement *> statements = {};
         std::unordered_map<expression const *, expression *> expressions = {};
     };
@@ -89,24 +88,12 @@ inline namespace _v1
             return *_analysis_future;
         }
 
+        std::unique_ptr<statement> clone_with_replacement(const std::vector<expression *> & params, const std::vector<expression *> & args) const;
         std::unique_ptr<statement> clone_with_replacement(replacements & repl) const
         {
             auto ret = _clone_with_replacement(repl);
             repl.statements[this] = ret.get();
             return ret;
-        }
-
-        std::unique_ptr<statement> clone_with_replacement(const std::vector<variable *> & to_replace, const std::vector<variable *> & replacements) const
-        {
-            assert(to_replace.size() == replacements.size());
-            std::unordered_map<const variable *, variable *> replacement_map;
-            for (std::size_t i = 0; i < to_replace.size(); ++i)
-            {
-                replacement_map.emplace(to_replace[i], replacements[i]);
-            }
-
-            struct replacements repl = { std::move(replacement_map) };
-            return _clone_with_replacement(repl);
         }
 
         future<statement *> simplify(simplification_context & ctx)
@@ -137,9 +124,18 @@ inline namespace _v1
         }
 
     private:
-        virtual future<> _analyze(analysis_context &) = 0;
+        virtual future<> _analyze(analysis_context &)
+        {
+            return make_ready_future();
+        }
+
         virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const = 0;
-        virtual future<statement *> _simplify(simplification_context &) = 0;
+
+        virtual future<statement *> _simplify(simplification_context &)
+        {
+            return make_ready_future(this);
+        }
+
         virtual statement_ir _codegen_ir(ir_generation_context &) const = 0;
 
         std::mutex _future_lock;

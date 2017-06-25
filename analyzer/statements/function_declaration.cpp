@@ -22,11 +22,11 @@
 
 #include <numeric>
 
+#include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/function_declaration.h"
-#include "vapor/analyzer/variables/overload_set.h"
 #include "vapor/parser/expr.h"
 
 namespace reaver::vapor::analyzer
@@ -49,7 +49,7 @@ inline namespace _v1
             return make_symbol(_parse.name.value.string, keep_count.get());
         });
 
-        _overload_set = dynamic_cast<overload_set *>(symbol->get_variable())->shared_from_this();
+        _overload_set = dynamic_cast<overload_set *>(symbol->get_expression())->shared_from_this();
     }
 
     void function_declaration::print(std::ostream & os, print_context ctx) const
@@ -66,7 +66,7 @@ inline namespace _v1
             std::size_t idx = 0;
             for (auto && param : _parameter_list)
             {
-                param.print(os, params_ctx.make_branch(++idx == _parameter_list.size()));
+                param->print(os, params_ctx.make_branch(++idx == _parameter_list.size()));
             }
         }
 

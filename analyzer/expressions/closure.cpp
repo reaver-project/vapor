@@ -61,7 +61,7 @@ inline namespace _v1
             std::size_t idx = 0;
             for (auto && param : _parameter_list)
             {
-                param.print(os, param_ctx.make_branch(++idx == _parameter_list.size()));
+                param->print(os, param_ctx.make_branch(++idx == _parameter_list.size()));
             }
         }
 
@@ -76,7 +76,7 @@ inline namespace _v1
 
     statement_ir closure::_codegen_ir(ir_generation_context & ctx) const
     {
-        auto var = codegen::ir::make_variable(get_variable()->get_type()->codegen_type(ctx));
+        auto var = codegen::ir::make_variable(get_type()->codegen_type(ctx));
         var->scopes = _type->get_scope()->codegen_ir(ctx);
         return { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::materialization_instruction>() }, {}, { std::move(var) } } };
     }

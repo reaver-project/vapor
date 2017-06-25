@@ -20,7 +20,7 @@
  *
  **/
 
-#include <reaver/future_get.h>
+/*#include <reaver/future_get.h>
 #include <reaver/mayfly.h>
 
 #include "../helpers.h"
@@ -125,4 +125,4 @@ MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
 
 MAYFLY_END_SUITE;
 MAYFLY_END_SUITE;
-MAYFLY_END_SUITE;
+MAYFLY_END_SUITE;*/

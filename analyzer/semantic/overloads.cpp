@@ -26,10 +26,11 @@
 
 #include "vapor/analyzer/expressions/call.h"
 #include "vapor/analyzer/expressions/expression.h"
+#include "vapor/analyzer/expressions/member.h"
+#include "vapor/analyzer/expressions/member_access.h"
+#include "vapor/analyzer/expressions/member_assignment.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/analyzer/variables/member.h"
-#include "vapor/analyzer/variables/member_assignment.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -78,7 +79,7 @@ inline namespace _v1
             ++param_begin;
         }
 
-        std::vector<variable *> provided_params;
+        std::vector<expression *> provided_params;
 
         auto it = arg_begin;
         if ((it = std::find_if(it, arg_end, [](auto && arg) { return arg->get_type()->is_member_assignment(); })) != arg_end)
@@ -106,13 +107,13 @@ inline namespace _v1
             {
                 auto arg_type = dynamic_cast<member_assignment_type *>((*arg_begin)->get_type());
                 assert(arg_type);
-                auto arg = arg_type->get_associated_variable();
+                auto arg = arg_type->get_associated_expression();
 
                 auto it = param_begin;
                 if ((it = std::find_if(param_begin,
                          param_end,
                          [&](auto && param) {
-                             auto member_param = dynamic_cast<member_variable *>(param);
+                             auto member_param = dynamic_cast<member_expression *>(param);
                              if (!member_param)
                              {
                                  return false;
@@ -213,54 +214,30 @@ inline namespace _v1
         return ret;
     }
 
-    // TODO FIXME: this is horrendeously inefficient
-    // making these var_ref_expressions really needs to happen in select_overload_impl
-    // but I don't know how to do that elegantly
-    bool is_valid(function * overload, const std::vector<variable *> & arguments, variable * base = nullptr)
+    void process_member_arguments(std::vector<expression *> & arguments, expression * base)
     {
-        auto arg_exprs = fmap(arguments, [](auto && arg) { return make_variable_ref_expression(arg); });
-        auto base_expr = base ? make_variable_ref_expression(base) : nullptr;
-
-        return is_valid(overload, fmap(arg_exprs, [](auto && expr) { return expr.get(); }), base_expr.get());
-    }
-
-    template<typename Pointer>
-    void process_member_arguments(std::vector<Pointer> & arguments, Pointer base)
-    {
-        auto get_variable = make_overload_set([](variable * var) { return var; }, [](expression * expr) { return expr->get_variable(); });
-
-        auto set_variable = make_overload_set([](variable *& var, variable * actual) { var = actual; },
-            [](expression *& expr, variable * actual) {
-                // FIXME: this is a dumb-ass leak
-                auto var_expr = make_variable_ref_expression(actual);
-                expr = var_expr.release();
-            });
-
         for (auto && arg : arguments)
         {
-            auto var = get_variable(arg);
-
-            if (var->is_member())
+            if (arg->is_member_access())
             {
-                auto member_var = dynamic_cast<member_variable *>(var);
-                assert(member_var);
-                auto actual = get_variable(base)->get_member(member_var);
+                auto member_expr = dynamic_cast<member_access_expression *>(arg);
+                assert(member_expr);
+                auto actual = base->get_member(member_expr->get_name());
                 assert(actual);
 
-                set_variable(arg, actual);
+                arg = actual;
             }
         }
     }
 
-    template<typename Pointer>
-    auto prepare_actual_arguments(function * overload, std::vector<Pointer> arguments, Pointer base = nullptr)
+    auto prepare_actual_arguments(function * overload, std::vector<expression *> arguments, expression * base = nullptr)
     {
-        std::vector<Pointer> ret;
+        std::vector<expression *> ret;
 
-        std::vector<Pointer> matched;
+        std::vector<expression *> matched;
 
         std::vector<type *> matching_space;
-        std::vector<Pointer> used_args;
+        std::vector<expression *> used_args;
 
         auto arg_begin = arguments.begin();
         auto arg_end = arguments.end();
@@ -273,9 +250,6 @@ inline namespace _v1
             ret.push_back(base);
             ++param_begin;
         }
-
-        auto is_member_assignment = make_overload_set(
-            [](variable * var) { return var->is_member_assignment(); }, [](expression * expr) { return expr->get_variable()->is_member_assignment(); });
 
         while (arg_begin != arg_end)
         {
@@ -290,7 +264,7 @@ inline namespace _v1
             {
                 if (!param_type->matches(matching_space))
                 {
-                    if (is_member_assignment(*arg_begin))
+                    if ((*arg_begin)->is_member_assignment())
                     {
                         break;
                     }
@@ -320,26 +294,16 @@ inline namespace _v1
             ++param_begin;
         }
 
-        auto get_rhs = make_overload_set(
-            [](variable * arg) {
-                auto arg_type = static_cast<member_assignment_type *>(arg->get_type());
-                return arg_type->get_associated_variable();
-            },
-            [](expression * arg) {
-                auto arg_type = static_cast<member_assignment_type *>(arg->get_type());
-                return arg_type->get_associated_variable()->get_expression();
-            });
-
-        auto get_variable = make_overload_set([](variable * arg) { return arg; }, [](expression * arg) { return arg->get_variable(); });
-
-        auto get_default_value = make_overload_set([](id<variable *>, variable * param) { return param->get_default_value()->get_variable(); },
-            [](id<expression *>, variable * param) { return param->get_default_value(); });
+        auto get_rhs = [](expression * arg) {
+            auto arg_type = static_cast<member_assignment_type *>(arg->get_type());
+            return arg_type->get_associated_expression();
+        };
 
         while (param_begin != param_end)
         {
             auto param = *param_begin;
 
-            if (auto member_param = dynamic_cast<member_variable *>(param))
+            if (auto member_param = dynamic_cast<member_expression *>(param))
             {
                 auto it = std::find_if(arg_begin, arg_end, [&member_param](auto && arg) {
                     if (!arg->get_type()->is_member_assignment())
@@ -355,15 +319,15 @@ inline namespace _v1
                 if (it != arg_end)
                 {
                     ret.push_back(get_rhs(*it));
-                    assert(!get_variable(ret.back())->is_member_assignment());
+                    assert(!ret.back()->is_member_assignment());
                     ++param_begin;
                     continue;
                 }
             }
 
             assert(param->get_default_value());
-            ret.push_back(get_default_value(id<Pointer>(), param));
-            assert(!get_variable(ret.back())->is_member_assignment());
+            ret.push_back(param->get_default_value());
+            assert(!ret.back()->is_member_assignment());
             ++param_begin;
         }
 
@@ -375,13 +339,11 @@ inline namespace _v1
         return ret;
     }
 
-    template<typename ArgumentPointer, typename MakeExpression>
-    future<std::unique_ptr<expression>> select_overload_impl(analysis_context & ctx,
+    future<std::unique_ptr<expression>> select_overload(analysis_context & ctx,
         const range_type & range,
-        std::vector<ArgumentPointer> & arguments,
+        std::vector<expression *> arguments,
         std::vector<function *> possible_overloads,
-        ArgumentPointer base,
-        MakeExpression && expr_maker)
+        expression * base)
     {
         auto original = possible_overloads;
 
@@ -434,28 +396,8 @@ inline namespace _v1
 
         auto overload = best_matches.front();
         auto actual_arguments = prepare_actual_arguments(overload, arguments, base);
-        auto ret = expr_maker(overload, std::move(actual_arguments));
+        auto ret = make_call_expression(overload, std::move(actual_arguments));
         return make_ready_future<std::unique_ptr<expression>>(std::move(ret));
-    }
-
-    future<std::unique_ptr<expression>> select_overload(analysis_context & ctx,
-        const range_type & range,
-        std::vector<expression *> arguments,
-        std::vector<function *> possible_overloads,
-        expression * base)
-    {
-        return select_overload_impl(
-            ctx, range, arguments, possible_overloads, base, [](auto &&... args) { return make_call_expression(std::forward<decltype(args)>(args)...); });
-    }
-
-    future<std::unique_ptr<expression>> select_overload(analysis_context & ctx,
-        const range_type & range,
-        std::vector<variable *> arguments,
-        std::vector<function *> possible_overloads,
-        variable * base)
-    {
-        return select_overload_impl(
-            ctx, range, arguments, possible_overloads, base, [](auto &&... args) { return make_call_expression(std::forward<decltype(args)>(args)...); });
     }
 
     future<std::unique_ptr<expression>> resolve_overload(analysis_context & ctx,

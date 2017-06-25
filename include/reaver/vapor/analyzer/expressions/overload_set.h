@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,16 +20,40 @@
  *
  **/
 
-#include "vapor/analyzer/variables/member.h"
-#include "vapor/analyzer/symbol.h"
+#pragma once
+
+#include <memory>
+
+#include "../types/overload_set.h"
+#include "expression.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    codegen::ir::member_variable member_variable::member_codegen_ir(ir_generation_context & ctx) const
+    class function_declaration;
+
+    class overload_set : public expression, public std::enable_shared_from_this<overload_set>
     {
-        return codegen::ir::member_variable{ _name, _wrapped->get_type()->codegen_type(ctx), 0 };
-    }
+    public:
+        overload_set(scope * lex_scope) : _type{ std::make_unique<overload_set_type>(lex_scope) }
+        {
+            _set_type(_type.get());
+        }
+
+        void add_function(function_declaration * fn);
+
+        virtual void print(std::ostream & os, print_context) const override
+        {
+            assert(0);
+        }
+
+    private:
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
+        virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+
+        std::vector<function_declaration *> _function_decls;
+        std::unique_ptr<overload_set_type> _type;
+    };
 }
 }

@@ -21,14 +21,14 @@
  **/
 
 #include "vapor/analyzer/types/type.h"
+#include "vapor/analyzer/expressions/blank.h"
 #include "vapor/analyzer/expressions/call.h"
-#include "vapor/analyzer/expressions/variable.h"
+#include "vapor/analyzer/expressions/type.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/semantic/overloads.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/pack.h"
 #include "vapor/analyzer/types/unconstrained.h"
-#include "vapor/analyzer/variables/type.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -38,7 +38,7 @@ inline namespace _v1
 
     void type::_init_expr()
     {
-        _self_expression = make_variable_expression(make_type_variable(this));
+        _self_expression = make_type_expression(this);
     }
 
     void type::_init_pack_type()
@@ -67,15 +67,15 @@ inline namespace _v1
                 return;
             }
 
-            _generic_ctor_first_arg = make_blank_variable(builtin_types().type.get());
-            _generic_ctor_pack_arg = make_blank_variable(builtin_types().unconstrained->get_pack_type());
+            _generic_ctor_first_arg = make_blank_expression(builtin_types().type.get());
+            _generic_ctor_pack_arg = make_blank_expression(builtin_types().unconstrained->get_pack_type());
 
             _generic_ctor = make_function(
                 "generic constructor", nullptr, { _generic_ctor_first_arg.get(), _generic_ctor_pack_arg.get() }, [](auto &&) -> codegen::ir::function {
                     assert(!"tried to codegen the generic constructor!");
                 });
 
-            _generic_ctor->set_return_type(make_variable_ref_expression(_generic_ctor_first_arg.get()));
+            _generic_ctor->set_return_type(_generic_ctor_first_arg.get());
 
             _generic_ctor->make_member();
 
@@ -83,10 +83,10 @@ inline namespace _v1
                 assert(args.size() != 0);
                 assert(args.front()->get_type() == builtin_types().type.get());
 
-                auto type_var = static_cast<type_variable *>(args.front());
-                auto actual_type = type_var->get_value();
+                auto type_expr = dynamic_cast<type_expression *>(args.front());
+                auto actual_type = type_expr->get_value();
                 args.erase(args.begin());
-                auto actual_ctor = actual_type->get_constructor(fmap(args, [](auto && arg) -> const variable * { return arg; }));
+                auto actual_ctor = actual_type->get_constructor(fmap(args, [](auto && arg) -> const expression * { return arg; }));
 
                 return actual_ctor.then([&ctx, args, call_expr](auto && ctor) { return select_overload(ctx, call_expr->get_range(), args, { ctor }); })
                     .then([call_expr](auto && expr) { call_expr->replace_with(std::move(expr)); });

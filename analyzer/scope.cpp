@@ -22,7 +22,6 @@
 
 #include "vapor/analyzer/scope.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/analyzer/variables/type.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -193,18 +192,18 @@ inline namespace _v1
 
     const std::unordered_map<std::u32string, std::unique_ptr<symbol>> & non_overridable()
     {
-        static auto integer_type_var = make_type_variable(builtin_types().integer.get());
-        static auto boolean_type_var = make_type_variable(builtin_types().boolean.get());
-        static auto type_type_var = make_type_variable(builtin_types().type.get());
+        static auto integer_type_expr = builtin_types().integer->get_expression();
+        static auto boolean_type_expr = builtin_types().boolean->get_expression();
+        static auto type_type_expr = builtin_types().type->get_expression();
 
         static auto symbols = [&] {
             std::unordered_map<std::u32string, std::unique_ptr<symbol>> symbols;
 
-            auto add_symbol = [&](auto name, auto && variable) { symbols.emplace(name, make_symbol(name, variable.get())); };
+            auto add_symbol = [&](auto name, auto && expr) { symbols.emplace(name, make_symbol(name, expr)); };
 
-            add_symbol(U"int", integer_type_var);
-            add_symbol(U"bool", boolean_type_var);
-            add_symbol(U"type", type_type_var);
+            add_symbol(U"int", integer_type_expr);
+            add_symbol(U"bool", boolean_type_expr);
+            add_symbol(U"type", type_type_expr);
 
             return symbols;
         }();

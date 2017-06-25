@@ -21,9 +21,9 @@
  **/
 
 #include "vapor/analyzer/statements/if.h"
+#include "vapor/analyzer/expressions/boolean.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/analyzer/variables/boolean.h"
 #include "vapor/parser/lambda_expression.h"
 
 namespace reaver::vapor::analyzer
@@ -53,10 +53,9 @@ inline namespace _v1
         return _condition->simplify_expr(ctx).then([&](auto && simplified) {
             replace_uptr(_condition, simplified, ctx);
 
-            auto var = _condition->get_variable();
-            if (var->is_constant())
+            if (_condition->is_constant())
             {
-                if (var->get_type() != builtin_types().boolean.get())
+                if (_condition->get_type() != builtin_types().boolean.get())
                 {
                     assert(0);
                 }
@@ -72,7 +71,7 @@ inline namespace _v1
                     });
                 };
 
-                auto condition = dynamic_cast<boolean_constant *>(var)->get_value();
+                auto condition = dynamic_cast<boolean_constant *>(_condition.get())->get_value();
                 if (condition)
                 {
                     return simplify_block(_then_block);

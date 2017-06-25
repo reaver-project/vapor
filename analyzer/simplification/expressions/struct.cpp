@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/expressions/struct.h"
+#include "vapor/analyzer/expressions/type.h"
 #include "vapor/analyzer/symbol.h"
 
 namespace reaver::vapor::analyzer
@@ -34,7 +35,7 @@ inline namespace _v1
 
     future<expression *> struct_literal::_simplify_expr(simplification_context & ctx)
     {
-        return make_ready_future<expression *>(this);
+        return make_ready_future<expression *>(std::make_unique<type_expression>(_type.get()).release());
     }
 }
 }

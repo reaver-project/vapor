@@ -25,44 +25,57 @@
 #include "../../parser/parameter_list.h"
 #include "../expressions/expression.h"
 #include "../symbol.h"
-#include "../variables/unresolved.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    struct parameter
+    class parameter : public expression
     {
-        std::u32string name;
-        std::unique_ptr<expression> type_expression;
-        std::unique_ptr<unresolved_variable> variable;
-
-        void print(std::ostream & os, print_context ctx) const
+    public:
+        parameter(const parser::parameter & parse, scope * lex_scope)
+            : _parse{ parse }, _name{ parse.name.value.string }, _type_expression{ preanalyze_expression(parse.type, lex_scope) }
         {
-            os << styles::def << ctx << styles::rule_name << "parameter: " << styles::string_value << utf8(name) << '\n';
+        }
+
+        virtual void print(std::ostream & os, print_context ctx) const override
+        {
+            assert(!"add printing of parameter range");
+            os << styles::def << ctx << styles::rule_name << "parameter: " << styles::string_value << utf8(_name) << '\n';
 
             auto type_expr_ctx = ctx.make_branch(false);
             os << styles::def << type_expr_ctx << styles::subrule_name << "type expression:\n";
-            type_expression->print(os, type_expr_ctx.make_branch(true));
-
-            auto var_ctx = ctx.make_branch(true);
-            os << styles::def << var_ctx << styles::subrule_name << "variable: @ " << styles::address << variable.get() << '\n';
+            _type_expression->print(os, type_expr_ctx.make_branch(true));
         }
+
+    private:
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
+        {
+            assert(0);
+        }
+
+        virtual statement_ir _codegen_ir(ir_generation_context &) const override
+        {
+            assert(0);
+        }
+
+        const parser::parameter & _parse;
+
+        std::u32string _name;
+        std::unique_ptr<expression> _type_expression;
     };
 
-    using parameter_list = std::vector<parameter>;
+    using parameter_list = std::vector<std::unique_ptr<parameter>>;
 
     inline parameter_list preanalyze_parameter_list(const parser::parameter_list & arglist, scope * lex_scope)
     {
         return fmap(arglist.parameters, [&](auto && arg) {
-            auto expr = preanalyze_expression(arg.type, lex_scope);
-            auto var = make_unresolved_variable(arg.name.value.string);
-            var->mark_local();
+            auto param = std::make_unique<parameter>(arg, lex_scope);
 
-            auto symb = make_symbol(arg.name.value.string, var.get());
+            auto symb = make_symbol(arg.name.value.string, param.get());
             lex_scope->init(arg.name.value.string, std::move(symb));
 
-            return parameter{ arg.name.value.string, std::move(expr), std::move(var) };
+            return param;
         });
     }
 }

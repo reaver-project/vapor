@@ -45,6 +45,11 @@ inline namespace _v1
         virtual future<expression *> _simplify_expr(simplification_context &) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
+        virtual bool _is_equal(const expression * rhs) const override
+        {
+            assert(0);
+        }
+
         const parser::struct_literal & _parse;
 
         std::shared_ptr<struct_type> _type;

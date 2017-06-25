@@ -21,11 +21,10 @@
  **/
 
 #include "vapor/analyzer/expressions/closure.h"
-#include "vapor/analyzer/expressions/variable.h"
+#include "vapor/analyzer/expressions/type.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/closure.h"
-#include "vapor/analyzer/variables/expression.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -37,50 +36,37 @@ inline namespace _v1
             if (_return_type)
             {
                 return (*_return_type)->analyze(ctx).then([&] {
-                    auto var = (*_return_type)->get_variable();
+                    auto & type_expr = *_return_type;
 
-                    assert(var->get_type() == builtin_types().type.get());
-                    assert(var->is_constant());
+                    assert(type_expr->get_type() == builtin_types().type.get());
+                    assert(type_expr->is_constant());
                 });
             }
 
             return make_ready_future();
         }();
 
-        return initial_future.then([&] { return when_all(fmap(_parameter_list, [&](auto && param) { return param.type_expression->analyze(ctx); })); })
-            .then([&] {
-                fmap(_parameter_list, [&](auto && param) {
-                    param.variable->set_type(param.type_expression->get_variable());
-                    return unit{};
-                });
-
-                return _body->analyze(ctx);
-            })
+        return initial_future.then([&] { return when_all(fmap(_parameter_list, [&](auto && param) { return param->analyze(ctx); })); })
+            .then([&] { return _body->analyze(ctx); })
             .then([&] {
                 fmap(_return_type, [&](auto && ret_type) {
-                    auto explicit_type = ret_type->get_variable();
-                    auto type_var = dynamic_cast<type_variable *>(explicit_type);
-
-                    assert(type_var->get_value() == _body->return_type());
+                    auto type_expr = dynamic_cast<type_expression *>(ret_type.get());
+                    assert(type_expr->get_value() == _body->return_type());
 
                     return unit{};
                 });
-
-                auto param_variables = fmap(_parameter_list, [&](auto && param) -> variable * { return param.variable.get(); });
 
                 auto ret_expr = _return_type ? _return_type->get() : _body->return_type()->get_expression();
 
                 auto function = make_function("closure",
                     ret_expr,
-                    std::move(param_variables),
+                    fmap(_parameter_list, [](auto && param) -> expression * { return param.get(); }),
                     [this](ir_generation_context & ctx) {
                         auto ret = codegen::ir::function{
                             U"operator()",
                             {},
                             fmap(_parameter_list,
-                                [&](auto && param) {
-                                    return get<std::shared_ptr<codegen::ir::variable>>(get<codegen::ir::value>(param.variable->codegen_ir(ctx)));
-                                }),
+                                [&](auto && param) { return get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
                             _body->codegen_return(ctx),
                             _body->codegen_ir(ctx),
                         };
@@ -93,7 +79,7 @@ inline namespace _v1
                 function->set_body(_body.get());
 
                 _type = std::make_unique<closure_type>(_scope.get(), this, std::move(function));
-                _set_variable(make_expression_ref_variable(this, _type.get()));
+                _set_type(_type.get());
             });
     }
 }

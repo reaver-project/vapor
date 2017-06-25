@@ -22,9 +22,9 @@
 
 #pragma once
 
+#include "../expressions/member.h"
 #include "../function.h"
 #include "../statements/statement.h"
-#include "../variables/member.h"
 #include "type.h"
 
 namespace reaver::vapor::parser
@@ -61,12 +61,12 @@ inline namespace _v1
             return fmap(_data_members_declarations, [](auto && ptr) { return ptr.get(); });
         }
 
-        const std::vector<member_variable *> & get_data_members() const
+        const std::vector<member_expression *> & get_data_members() const
         {
             return _data_members;
         }
 
-        virtual future<function *> get_constructor(std::vector<const variable *>) const override
+        virtual future<function *> get_constructor(std::vector<const expression *>) const override
         {
             return _aggregate_ctor_future.get();
         }
@@ -92,7 +92,7 @@ inline namespace _v1
         const parser::struct_literal & _parse;
 
         std::vector<std::unique_ptr<declaration>> _data_members_declarations;
-        std::vector<member_variable *> _data_members;
+        std::vector<member_expression *> _data_members;
 
         std::unique_ptr<function> _aggregate_ctor;
         mutable optional<future<function *>> _aggregate_ctor_future;
@@ -101,8 +101,8 @@ inline namespace _v1
         std::unique_ptr<function> _aggregate_copy_ctor;
         mutable optional<future<function *>> _aggregate_copy_ctor_future;
         optional<manual_promise<function *>> _aggregate_copy_ctor_promise;
-        std::unique_ptr<variable> _this_argument;
-        std::vector<std::unique_ptr<variable>> _member_copy_arguments;
+        std::unique_ptr<expression> _this_argument;
+        std::vector<std::unique_ptr<expression>> _member_copy_arguments;
         std::vector<std::unique_ptr<expression>> _member_copy_defaults;
 
         mutable optional<std::u32string> _codegen_type_name_value;

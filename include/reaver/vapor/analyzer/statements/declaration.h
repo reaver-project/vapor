@@ -25,9 +25,9 @@
 #include <memory>
 
 #include "../expressions/expression.h"
+#include "../expressions/member.h"
+#include "../expressions/type.h"
 #include "../symbol.h"
-#include "../variables/type.h"
-#include "../variables/variable.h"
 #include "statement.h"
 
 namespace reaver::vapor::analyzer
@@ -60,6 +60,12 @@ inline namespace _v1
             return _declared_symbol;
         }
 
+        auto declared_member() const
+        {
+            assert(_declared_member);
+            return _declared_member.get().get();
+        }
+
         auto initializer_expression() const
         {
             return fmap(_init_expr, [](auto && expr) { return expr.get(); });
@@ -78,10 +84,8 @@ inline namespace _v1
         symbol * _declared_symbol;
         optional<std::unique_ptr<expression>> _type_specifier;
         optional<std::unique_ptr<expression>> _init_expr;
+        optional<std::unique_ptr<member_expression>> _declared_member;
         declaration_type _type;
-
-        std::unique_ptr<variable> _blank_variable;
-        std::unique_ptr<variable> _variable_wrapper;
     };
 
     inline std::unique_ptr<declaration> preanalyze_declaration(const parser::declaration & parse, scope *& lex_scope)

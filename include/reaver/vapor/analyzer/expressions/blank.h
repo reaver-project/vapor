@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,14 +22,37 @@
 
 #pragma once
 
-#include "variable.h"
+#include "expression.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class literal : public variable
+    class blank_expression : public expression
     {
+    public:
+        using expression::expression;
+
+        virtual void print(std::ostream &, print_context) const override
+        {
+            assert(0);
+        }
+
+    private:
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+        {
+            return std::make_unique<blank_expression>(get_type());
+        }
+
+        virtual statement_ir _codegen_ir(ir_generation_context &) const override
+        {
+            assert(0);
+        }
     };
+
+    inline std::unique_ptr<expression> make_blank_expression(type * t)
+    {
+        return std::make_unique<blank_expression>(t);
+    }
 }
 }

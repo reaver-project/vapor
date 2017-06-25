@@ -25,7 +25,6 @@
 #include "../../range.h"
 #include "../function.h"
 #include "expression.h"
-#include "variable.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -45,11 +44,9 @@ inline namespace _v1
         }
 
         virtual void print(std::ostream &, print_context ctx) const override;
-        virtual variable * get_variable() const override;
 
         void replace_with(std::unique_ptr<expression> expr)
         {
-            assert(!_var);
             assert(!_replacement_expr);
 
             _replacement_expr = std::move(expr);
@@ -83,7 +80,6 @@ inline namespace _v1
 
     private:
         std::vector<expression *> _args;
-        std::unique_ptr<variable> _var;
         std::unique_ptr<expression> _cloned_type_expr;
     };
 
@@ -104,11 +100,6 @@ inline namespace _v1
     inline auto make_call_expression(function * fun, std::vector<expression *> args)
     {
         return std::make_unique<call_expression>(fun, args);
-    }
-
-    inline auto make_call_expression(function * fun, std::vector<variable *> args)
-    {
-        return std::make_unique<owning_call_expression>(fun, fmap(args, [](auto && arg) { return make_variable_ref_expression(arg); }));
     }
 }
 }

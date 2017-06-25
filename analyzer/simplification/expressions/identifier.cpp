@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,7 +21,6 @@
  **/
 
 #include "vapor/analyzer/expressions/identifier.h"
-#include "vapor/analyzer/expressions/variable.h"
 #include "vapor/parser.h"
 
 namespace reaver::vapor::analyzer
@@ -32,18 +31,19 @@ inline namespace _v1
     {
         auto referenced = _referenced;
 
-        auto it = repl.variables.find(referenced);
-        if (it != repl.variables.end())
+        auto it = repl.expressions.find(referenced);
+        if (it != repl.expressions.end())
         {
             referenced = it->second;
         }
 
-        return make_variable_ref_expression(referenced);
+        assert(0);
+        // return make_variable_ref_expression(referenced);
     }
 
     reaver::future<expression *> identifier::_simplify_expr(simplification_context & ctx)
     {
-        return _referenced->simplify(ctx).then([&](auto && simplified) -> expression * {
+        return _referenced->simplify_expr(ctx).then([&](auto && simplified) -> expression * {
             if (simplified && simplified != _referenced)
             {
                 _referenced = simplified;
