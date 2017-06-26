@@ -36,7 +36,7 @@ inline namespace _v1
     class integer_constant : public expression
     {
     public:
-        integer_constant(const parser::integer_literal & parse) : _value{ utf8(parse.value.string) }
+        integer_constant(const parser::integer_literal & parse) : expression{ builtin_types().integer.get() }, _value{ utf8(parse.value.string) }
         {
             _parse.address = &parse;
             _parse.range = parse.range;
@@ -61,6 +61,11 @@ inline namespace _v1
         const auto & get_value() const
         {
             return _value;
+        }
+
+        virtual bool is_constant() const override
+        {
+            return true;
         }
 
     private:

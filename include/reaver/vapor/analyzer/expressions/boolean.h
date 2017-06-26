@@ -34,7 +34,7 @@ inline namespace _v1
     class boolean_constant : public expression
     {
     public:
-        boolean_constant(const parser::boolean_literal & parse) : _value{ parse.value.string == U"true" }
+        boolean_constant(const parser::boolean_literal & parse) : expression{ builtin_types().boolean.get() }, _value{ parse.value.string == U"true" }
         {
             _parse.address = &parse;
             _parse.range = parse.range;
@@ -59,6 +59,11 @@ inline namespace _v1
         auto get_value() const
         {
             return _value;
+        }
+
+        virtual bool is_constant() const override
+        {
+            return true;
         }
 
     private:
