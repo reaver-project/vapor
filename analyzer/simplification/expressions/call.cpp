@@ -40,7 +40,7 @@ inline namespace _v1
         if (_cloned_type_expr)
         {
             ret->_cloned_type_expr = _cloned_type_expr->clone_expr_with_replacement(repl);
-            auto type = dynamic_cast<type_expression *>(ret->_cloned_type_expr.get());
+            auto type = ret->_cloned_type_expr->as<type_expression>();
             assert(type);
             ret->_set_type(type->get_value());
             return ret;

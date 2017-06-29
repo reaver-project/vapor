@@ -47,7 +47,7 @@ inline namespace _v1
 
             fmap(_type_specifier, [&](auto && expr) {
                 fut = fut.then([&]() {
-                    auto && type_var = static_cast<type_expression *>(expr.get());
+                    auto type_var = expr->template as<type_expression>();
                     assert(_init_expr.get()->get_type() == type_var->get_value());
                 });
 
@@ -74,7 +74,7 @@ inline namespace _v1
         {
             fut = fut.then([&]() {
                 assert(_type_specifier);
-                auto type = static_cast<type_expression *>(_type_specifier.get().get())->get_value();
+                auto type = _type_specifier.get()->as<type_expression>()->get_value();
                 _declared_member = make_member_expression(nullptr, _parse.identifier.value.string, type);
 
                 _declared_symbol->set_expression(_declared_member.get().get());

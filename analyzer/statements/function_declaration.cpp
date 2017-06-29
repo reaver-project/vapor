@@ -49,7 +49,7 @@ inline namespace _v1
             return make_symbol(_parse.name.value.string, keep_count.get());
         });
 
-        _overload_set = dynamic_cast<overload_set *>(symbol->get_expression())->shared_from_this();
+        _overload_set = symbol->get_expression()->as<overload_set>()->shared_from_this();
     }
 
     void function_declaration::print(std::ostream & os, print_context ctx) const

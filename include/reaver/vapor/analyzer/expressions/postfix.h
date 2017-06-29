@@ -61,6 +61,33 @@ inline namespace _v1
         {
         }
 
+        static auto _get_replacement_helper()
+        {
+            return [](auto && self) {
+                if (self->_referenced_expression)
+                {
+                    return self->_referenced_expression.get()->_get_replacement();
+                }
+
+                if (self->_call_expression)
+                {
+                    return self->_call_expression->_get_replacement();
+                }
+
+                return self->_base_expr->_get_replacement();
+            };
+        }
+
+        virtual expression * _get_replacement() override
+        {
+            return _get_replacement_helper()(this);
+        }
+
+        virtual const expression * _get_replacement() const override
+        {
+            return _get_replacement_helper()(this);
+        }
+
         virtual future<> _analyze(analysis_context &) override;
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
         virtual future<expression *> _simplify_expr(simplification_context &) override;

@@ -86,8 +86,8 @@ inline namespace _v1
 
         virtual bool _is_equal(const expression * rhs) const override
         {
-            auto rhs_int = dynamic_cast<const boolean_constant *>(rhs);
-            return rhs_int && _value == rhs_int->_value;
+            auto rhs_bool = rhs->as<boolean_constant>();
+            return rhs_bool && _value == rhs_bool->_value;
         }
 
         synthesized_node<void> _parse;

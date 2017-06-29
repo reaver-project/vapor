@@ -71,7 +71,7 @@ inline namespace _v1
                     });
                 };
 
-                auto condition = dynamic_cast<boolean_constant *>(_condition.get())->get_value();
+                auto condition = _condition->as<boolean_constant>()->get_value();
                 if (condition)
                 {
                     return simplify_block(_then_block);

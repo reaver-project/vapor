@@ -112,8 +112,8 @@ inline namespace _v1
                 auto it = param_begin;
                 if ((it = std::find_if(param_begin,
                          param_end,
-                         [&](auto && param) {
-                             auto member_param = dynamic_cast<member_expression *>(param);
+                         [&](expression * param) {
+                             auto member_param = param->as<member_expression>();
                              if (!member_param)
                              {
                                  return false;
@@ -220,7 +220,7 @@ inline namespace _v1
         {
             if (arg->is_member_access())
             {
-                auto member_expr = dynamic_cast<member_access_expression *>(arg);
+                auto member_expr = arg->as<member_access_expression>();
                 assert(member_expr);
                 auto actual = base->get_member(member_expr->get_name());
                 assert(actual);
@@ -303,7 +303,7 @@ inline namespace _v1
         {
             auto param = *param_begin;
 
-            if (auto member_param = dynamic_cast<member_expression *>(param))
+            if (auto member_param = param->as<member_expression>())
             {
                 auto it = std::find_if(arg_begin, arg_end, [&member_param](auto && arg) {
                     if (!arg->get_type()->is_member_assignment())

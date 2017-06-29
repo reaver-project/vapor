@@ -67,7 +67,7 @@ inline namespace _v1
 
         virtual bool _is_equal(const expression * rhs) const override
         {
-            auto type_rhs = dynamic_cast<const type_expression *>(rhs);
+            auto type_rhs = rhs->as<type_expression>();
             return type_rhs && _type == type_rhs->_type;
         }
 

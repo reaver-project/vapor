@@ -83,7 +83,7 @@ inline namespace _v1
                 assert(args.size() != 0);
                 assert(args.front()->get_type() == builtin_types().type.get());
 
-                auto type_expr = dynamic_cast<type_expression *>(args.front());
+                auto type_expr = args.front()->template as<type_expression>();
                 auto actual_type = type_expr->get_value();
                 args.erase(args.begin());
                 auto actual_ctor = actual_type->get_constructor(fmap(args, [](auto && arg) -> const expression * { return arg; }));

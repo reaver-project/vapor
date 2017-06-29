@@ -104,7 +104,8 @@ inline namespace _v1
 
         virtual bool is_constant() const
         {
-            return false;
+            auto repl = _get_replacement();
+            return repl != this && repl->is_constant();
         }
 
         bool is_equal(const expression * rhs) const
@@ -130,6 +131,33 @@ inline namespace _v1
         virtual expression * get_member(const std::u32string &) const
         {
             assert(0);
+        }
+
+        template<typename T>
+        T * as()
+        {
+            return dynamic_cast<T *>(_get_replacement());
+        }
+
+        template<typename T>
+        const T * as() const
+        {
+            return dynamic_cast<const T *>(_get_replacement());
+        }
+
+        // this ought to be protected
+        // but then derived classes wouldn't be able to recurse
+        // so let's just mark it as "protected interface"
+        // these aren't mutators, so nothing bad should ever happen
+        // but I know these are famous last words
+        virtual expression * _get_replacement()
+        {
+            return this;
+        }
+
+        virtual const expression * _get_replacement() const
+        {
+            return this;
         }
 
     protected:

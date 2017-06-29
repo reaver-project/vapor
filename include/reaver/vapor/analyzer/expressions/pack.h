@@ -57,7 +57,7 @@ inline namespace _v1
 
         virtual bool _is_equal(const expression * rhs) const override
         {
-            auto rhs_pack = dynamic_cast<const pack_expression *>(rhs);
+            auto rhs_pack = rhs->as<pack_expression>();
             return _exprs.size() == rhs_pack->_exprs.size()
                 && std::equal(_exprs.begin(), _exprs.end(), rhs_pack->_exprs.begin(), [](auto && lhs, auto && rhs) { return lhs->is_equal(rhs); });
         }

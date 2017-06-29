@@ -65,6 +65,27 @@ inline namespace _v1
             _init_pack_type();
         }
 
+        static constexpr struct dont_init_expr_t
+        {
+        } dont_init_expr{};
+
+        type(dont_init_expr_t) : _member_scope{ std::make_unique<scope>() }
+        {
+        }
+
+        void init_expr()
+        {
+            if (!_self_expression)
+            {
+                if (!_expression_initialization)
+                {
+                    _expression_initialization = true;
+                    _init_expr();
+                    _init_pack_type();
+                }
+            }
+        }
+
     protected:
         // this is virtually only for `pack_type`
         // don't abuse, please
@@ -147,6 +168,7 @@ inline namespace _v1
         std::unique_ptr<scope> _member_scope;
         // only shared to not require a complete definition of expression to be visible
         // (unique_ptr would require that unless I moved all ctors and dtors out of the header)
+        bool _expression_initialization = false;
         std::shared_ptr<expression> _self_expression;
         void _init_expr();
         std::unique_ptr<type> _pack_type;
@@ -158,6 +180,10 @@ inline namespace _v1
     class type_type : public type
     {
     public:
+        type_type() : type{ dont_init_expr }
+        {
+        }
+
         virtual std::string explain() const override
         {
             return "type";
@@ -205,6 +231,11 @@ inline namespace _v1
 
             return builtins;
         }();
+
+        builtins.type->init_expr();
+        builtins.integer->init_expr();
+        builtins.boolean->init_expr();
+        builtins.unconstrained->init_expr();
 
         return builtins;
     }

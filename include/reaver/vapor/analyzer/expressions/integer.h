@@ -88,7 +88,7 @@ inline namespace _v1
 
         virtual bool _is_equal(const expression * rhs) const override
         {
-            auto rhs_int = dynamic_cast<const integer_constant *>(rhs);
+            auto rhs_int = rhs->as<integer_constant>();
             return rhs_int && _value == rhs_int->_value;
         }
 

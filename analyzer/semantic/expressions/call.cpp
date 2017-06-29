@@ -104,7 +104,7 @@ inline namespace _v1
                                 auto expr = matching_expressions.front();
                                 assert(expr->get_type() == builtin_types().type.get());
 
-                                auto type_expr = dynamic_cast<type_expression *>(expr);
+                                auto type_expr = expr->as<type_expression>();
                                 assert(type_expr);
                                 assert(type_expr->get_value() != builtin_types().type.get());
 
@@ -151,11 +151,11 @@ inline namespace _v1
                         });
                     };
 
-                    return cont(cont).then([this, var_space, expr_space](auto && type_expr) {
+                    return cont(cont).then([this, var_space, expr_space](expression * type_expr) {
                         assert(type_expr);
                         assert(type_expr->get_type() == builtin_types().type.get());
 
-                        auto expr = dynamic_cast<type_expression *>(type_expr);
+                        auto expr = type_expr->as<type_expression>();
                         assert(expr);
                         assert(expr->get_value() != builtin_types().type.get());
 
@@ -163,7 +163,7 @@ inline namespace _v1
                     });
                 }
 
-                auto expr = dynamic_cast<type_expression *>(type_expr);
+                auto expr = type_expr->as<type_expression>();
                 assert(expr->get_value() != builtin_types().type.get());
 
                 _set_type(expr->get_value());

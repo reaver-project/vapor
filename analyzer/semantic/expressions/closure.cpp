@@ -50,7 +50,7 @@ inline namespace _v1
             .then([&] { return _body->analyze(ctx); })
             .then([&] {
                 fmap(_return_type, [&](auto && ret_type) {
-                    auto type_expr = dynamic_cast<type_expression *>(ret_type.get());
+                    auto type_expr = ret_type->template as<type_expression>();
                     assert(type_expr->get_value() == _body->return_type());
 
                     return unit{};

@@ -45,7 +45,7 @@ MAYFLY_ADD_TESTCASE("empty struct", [] {
     analysis_context ctx;
     reaver::get(struct_lit->analyze(ctx));
 
-    auto type_var = dynamic_cast<type_expression *>(struct_lit.get());
+    auto type_var = struct_lit->as<type_expression>();
     MAYFLY_REQUIRE(type_var);
 
     auto type = type_var->get_value();
@@ -77,7 +77,7 @@ MAYFLY_ADD_TESTCASE("struct with members", [] {
     analysis_context ctx;
     reaver::get(struct_lit->analyze(ctx));
 
-    auto type_var = dynamic_cast<type_expression *>(struct_lit.get());
+    auto type_var = struct_lit->as<type_expression>();
     MAYFLY_REQUIRE(type_var);
 
     auto type = type_var->get_value();

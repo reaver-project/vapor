@@ -31,7 +31,9 @@ inline namespace _v1
     class unconstrained_type : public type
     {
     public:
-        unconstrained_type() = default;
+        unconstrained_type() : type{ dont_init_expr }
+        {
+        }
 
         virtual std::string explain() const override
         {

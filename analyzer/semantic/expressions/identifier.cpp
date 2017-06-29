@@ -31,6 +31,7 @@ inline namespace _v1
     {
         return _lex_scope->resolve(_parse.value.string).then([](auto && symbol) { return symbol->get_expression_future(); }).then([this](auto && expression) {
             _referenced = expression;
+            _set_type(_referenced->get_type());
         });
     }
 }

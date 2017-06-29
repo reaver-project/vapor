@@ -81,7 +81,7 @@ inline namespace _v1
                     }
 
                     assert(_referenced_expression.get()->is_member());
-                    auto member = _base_expr->get_member(dynamic_cast<member_expression *>(*_referenced_expression)->get_name());
+                    auto member = _base_expr->get_member(_referenced_expression.get()->as<member_expression>()->get_name());
                     assert(member);
 
                     if (!member->is_constant())

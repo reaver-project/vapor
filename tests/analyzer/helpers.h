@@ -52,7 +52,7 @@ inline namespace _v1
     class test_expression : public expression
     {
     public:
-        test_expression()
+        test_expression(type * t = nullptr) : expression{ t }
         {
         }
 

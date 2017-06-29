@@ -44,8 +44,8 @@ inline namespace _v1
 
         return when_all(_lhs->analyze(ctx), _rhs->analyze(ctx))
             .then([&](auto) { return resolve_overload(ctx, _parse.range, _lhs.get(), _rhs.get(), _op.type); })
-            .then([&](auto && call_expr) {
-                if (auto call_expr_downcasted = dynamic_cast<call_expression *>(call_expr.get()))
+            .then([&](std::unique_ptr<expression> call_expr) {
+                if (auto call_expr_downcasted = call_expr->as<call_expression>())
                 {
                     call_expr_downcasted->set_parse_range(_parse.range);
                 }

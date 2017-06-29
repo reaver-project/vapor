@@ -48,7 +48,7 @@ MAYFLY_ADD_TESTCASE("single branch, true", [] {
     auto analysis_future = if_stmt->analyze(ctx);
     reaver::get(analysis_future);
 
-    MAYFLY_CHECK(if_stmt->get_returns().size() == 2);
+    MAYFLY_CHECK(if_stmt->get_returns().size() == 1);
 
     replacements repl;
     simplification_context simpl_ctx;
@@ -75,7 +75,7 @@ MAYFLY_ADD_TESTCASE("single branch, false", [] {
     auto analysis_future = if_stmt->analyze(ctx);
     reaver::get(analysis_future);
 
-    MAYFLY_CHECK(if_stmt->get_returns().size() == 2);
+    MAYFLY_CHECK(if_stmt->get_returns().size() == 1);
 
     replacements repl;
     simplification_context simpl_ctx;
@@ -150,7 +150,8 @@ MAYFLY_ADD_TESTCASE("two branches, false", [] {
 MAYFLY_ADD_TESTCASE("runtime condition", [] {
     scope s;
     auto current_scope = &s;
-    test_expression expr;
+    test_expression expr{ builtin_types().boolean.get() };
+    expr.set_simplified_expression(std::unique_ptr<expression>{ &expr });
     s.init(U"condition", make_symbol(U"condition", &expr));
     s.close();
 

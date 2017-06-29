@@ -87,8 +87,8 @@ inline namespace _v1
                 return make_ready_future<expression *>(nullptr);                                                                                               \
             }                                                                                                                                                  \
                                                                                                                                                                \
-            auto lhs = static_cast<integer_constant *>(args[0]);                                                                                               \
-            auto rhs = static_cast<integer_constant *>(args[1]);                                                                                               \
+            auto lhs = args[0]->as<integer_constant>();                                                                                                        \
+            auto rhs = args[1]->as<integer_constant>();                                                                                                        \
             return make_ready_future<expression *>(std::make_unique<RESULT_TYPE##_constant>(lhs->get_value() OPERATOR rhs->get_value()).release());            \
         };                                                                                                                                                     \
         static auto NAME = _generate_function<codegen::ir::integer_##NAME##_instruction>(                                                                      \

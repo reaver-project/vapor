@@ -70,6 +70,16 @@ inline namespace _v1
         {
         }
 
+        virtual expression * _get_replacement() override
+        {
+            return _call_expression->_get_replacement();
+        }
+
+        virtual const expression * _get_replacement() const override
+        {
+            return _call_expression->_get_replacement();
+        }
+
         virtual future<> _analyze(analysis_context &) override;
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
         virtual future<expression *> _simplify_expr(simplification_context &) override;

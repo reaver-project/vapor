@@ -50,7 +50,7 @@ inline namespace _v1
             assert(!_replacement_expr);
 
             _replacement_expr = std::move(expr);
-            if (auto * replacement_call_expr = dynamic_cast<call_expression *>(_replacement_expr.get()))
+            if (auto * replacement_call_expr = _replacement_expr->as<call_expression>())
             {
                 replacement_call_expr->set_parse_range(_range.get());
             }
@@ -68,6 +68,16 @@ inline namespace _v1
         }
 
     private:
+        virtual expression * _get_replacement() override
+        {
+            return _replacement_expr ? _replacement_expr->_get_replacement() : this;
+        }
+
+        virtual const expression * _get_replacement() const override
+        {
+            return _replacement_expr ? _replacement_expr->_get_replacement() : this;
+        }
+
         virtual future<> _analyze(analysis_context &) override;
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
         virtual future<expression *> _simplify_expr(simplification_context &) override;
