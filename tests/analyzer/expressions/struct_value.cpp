@@ -20,19 +20,19 @@
  *
  **/
 
-/*#include <reaver/future_get.h>
+#include <reaver/future_get.h>
 #include <reaver/mayfly.h>
 
 #include "../helpers.h"
-#include "vapor/analyzer/variables/integer.h"
-#include "vapor/analyzer/variables/struct.h"
+#include "vapor/analyzer/expressions/integer.h"
+#include "vapor/analyzer/expressions/struct_value.h"
 
 using namespace reaver::vapor;
 using namespace reaver::vapor::analyzer;
 
 MAYFLY_BEGIN_SUITE("analyzer");
-MAYFLY_BEGIN_SUITE("variables");
-MAYFLY_BEGIN_SUITE("struct");
+MAYFLY_BEGIN_SUITE("expressions");
+MAYFLY_BEGIN_SUITE("struct value");
 
 MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
     scope s;
@@ -62,10 +62,10 @@ MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
     simplification_context simpl_ctx;
     replace_uptr(declaration, reaver::get(declaration->simplify(simpl_ctx)), simpl_ctx);
 
-    auto type_var = dynamic_cast<type_variable *>(struct_decl->declared_symbol()->get_variable());
-    MAYFLY_CHECK(type_var);
+    auto type_expr = struct_decl->declared_symbol()->get_expression()->as<type_expression>();
+    MAYFLY_CHECK(type_expr);
 
-    auto type = type_var->get_value();
+    auto type = type_expr->get_value();
     auto struct_type = dynamic_cast<class struct_type *>(type);
     MAYFLY_REQUIRE(struct_type);
 
@@ -75,12 +75,12 @@ MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
     integer_constant const_one{ 1 };
     integer_constant const_two{ 2 };
 
-    auto struct_var = current_scope->get(U"bar")->get_variable();
-    MAYFLY_CHECK(struct_var->get_type() == struct_type);
-    MAYFLY_REQUIRE(struct_var->is_constant());
+    auto struct_expr = current_scope->get(U"bar")->get_expression();
+    MAYFLY_CHECK(struct_expr->get_type() == struct_type);
+    MAYFLY_REQUIRE(struct_expr->is_constant());
 
-    MAYFLY_CHECK(struct_var->get_member(data_members[0])->is_equal(&const_one));
-    MAYFLY_CHECK(struct_var->get_member(data_members[1])->is_equal(&const_two));
+    MAYFLY_CHECK(struct_expr->get_member(data_members[0]->get_name())->is_equal(&const_one));
+    MAYFLY_CHECK(struct_expr->get_member(data_members[1]->get_name())->is_equal(&const_two));
 
     // replacement
 
@@ -96,12 +96,11 @@ MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
 
     integer_constant const_three{ 3 };
 
-    auto replaced_var = replaced_expr->get_variable();
-    MAYFLY_CHECK(replaced_var->get_type() == struct_type);
-    MAYFLY_REQUIRE(replaced_var->is_constant());
+    MAYFLY_CHECK(replaced_expr->get_type() == struct_type);
+    MAYFLY_REQUIRE(replaced_expr->is_constant());
 
-    MAYFLY_CHECK(replaced_var->get_member(data_members[0])->is_equal(&const_three));
-    MAYFLY_CHECK(replaced_var->get_member(data_members[1])->is_equal(&const_two));
+    MAYFLY_CHECK(replaced_expr->get_member(data_members[0]->get_name())->is_equal(&const_three));
+    MAYFLY_CHECK(replaced_expr->get_member(data_members[1]->get_name())->is_equal(&const_two));
 
     // designated replacement
 
@@ -115,14 +114,13 @@ MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
     reaver::get(designated_repl_expr->analyze(ctx));
     replace_uptr(designated_repl_expr, reaver::get(designated_repl_expr->simplify_expr(simpl_ctx)), simpl_ctx);
 
-    auto designated_repl_var = designated_repl_expr->get_variable();
-    MAYFLY_CHECK(designated_repl_var->get_type() == struct_type);
-    MAYFLY_REQUIRE(designated_repl_var->is_constant());
+    MAYFLY_CHECK(designated_repl_expr->get_type() == struct_type);
+    MAYFLY_REQUIRE(designated_repl_expr->is_constant());
 
-    MAYFLY_CHECK(designated_repl_var->get_member(data_members[0])->is_equal(&const_one));
-    MAYFLY_CHECK(designated_repl_var->get_member(data_members[1])->is_equal(&const_three));
+    MAYFLY_CHECK(designated_repl_expr->get_member(data_members[0]->get_name())->is_equal(&const_one));
+    MAYFLY_CHECK(designated_repl_expr->get_member(data_members[1]->get_name())->is_equal(&const_three));
 });
 
 MAYFLY_END_SUITE;
 MAYFLY_END_SUITE;
-MAYFLY_END_SUITE;*/
+MAYFLY_END_SUITE;
