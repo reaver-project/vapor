@@ -22,6 +22,8 @@
 
 #include "vapor/analyzer/types/member_assignment.h"
 #include "vapor/analyzer/expressions/blank.h"
+#include "vapor/analyzer/expressions/call.h"
+#include "vapor/analyzer/expressions/expression_ref.h"
 #include "vapor/analyzer/expressions/member_assignment.h"
 #include "vapor/analyzer/expressions/type.h"
 #include "vapor/analyzer/symbol.h"
@@ -49,10 +51,12 @@ inline namespace _v1
             assert(!"trying to codegen a member-assignment expression");
         });
         overload->set_return_type(assigned_type()->get_expression());
-        overload->add_analysis_hook([this](auto &&, auto &&, std::vector<expression *> args) {
+        overload->add_analysis_hook([this](auto &&, auto && call_expr, std::vector<expression *> args) {
             assert(args.size() == 2);
-            assert(args.front() == _expr);
+            assert(args.front()->_get_replacement() == _expr);
             _expr->set_rhs(args.back());
+            call_expr->replace_with(make_expression_ref(_expr));
+            logger::dlog() << ((expression *)call_expr)->_get_replacement();
 
             return make_ready_future();
         });

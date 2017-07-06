@@ -53,7 +53,6 @@ inline namespace _v1
             assert(!_rhs);
             _rhs = rhs;
             _reset_type(_rhs->get_type());
-            _type.reset();
         }
 
         auto get_rhs() const

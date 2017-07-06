@@ -36,7 +36,7 @@ inline namespace _v1
         return _function->run_analysis_hooks(ctx, this, _args).then([&]() {
             if (_replacement_expr)
             {
-                return _replacement_expr->analyze(ctx);
+                return _replacement_expr->analyze(ctx).then([&] { _set_type(_replacement_expr->get_type()); });
             }
 
             return _function->get_return_type().then([&](expression * type_expr) {

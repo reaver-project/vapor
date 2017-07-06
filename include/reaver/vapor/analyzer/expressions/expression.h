@@ -59,7 +59,6 @@ inline namespace _v1
 
         type * get_type() const
         {
-            // TODO: use ownership erasure
             if (!_type)
             {
                 assert(!"tried to get an unset type");
@@ -105,12 +104,30 @@ inline namespace _v1
         virtual bool is_constant() const
         {
             auto repl = _get_replacement();
+            assert(repl);
             return repl != this && repl->is_constant();
         }
 
         bool is_equal(const expression * rhs) const
         {
-            return (this == rhs && _is_pure()) || _is_equal(rhs) || rhs->is_equal(this);
+            if (this == rhs && _is_pure())
+            {
+                return true;
+            }
+
+            if (_is_equal(rhs) || rhs->_is_equal(this))
+            {
+                return true;
+            }
+
+            auto this_replacement = _get_replacement();
+            auto rhs_replacement = rhs->_get_replacement();
+            if (this != this_replacement || rhs != rhs_replacement)
+            {
+                return this_replacement->_is_equal(rhs_replacement) || rhs_replacement->_is_equal(this_replacement);
+            }
+
+            return false;
         }
 
         virtual bool is_member() const
@@ -120,7 +137,8 @@ inline namespace _v1
 
         virtual bool is_member_assignment() const
         {
-            return false;
+            auto repl = _get_replacement();
+            return repl != this && repl->is_member_assignment();
         }
 
         virtual bool is_member_access() const
@@ -128,9 +146,15 @@ inline namespace _v1
             return false;
         }
 
-        virtual expression * get_member(const std::u32string &) const
+        virtual expression * get_member(const std::u32string & name) const
         {
-            assert(0);
+            auto repl = _get_replacement();
+            if (repl == this)
+            {
+                assert(0);
+            }
+
+            return repl->get_member(name);
         }
 
         template<typename T>

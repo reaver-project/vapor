@@ -51,7 +51,8 @@ inline namespace _v1
                 }
                 _call_expression = std::move(call_expr);
                 return _call_expression->analyze(ctx);
-            });
+            })
+            .then([&] { _set_type(_call_expression->get_type()); });
     }
 }
 }

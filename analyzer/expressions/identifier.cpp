@@ -37,12 +37,5 @@ inline namespace _v1
         os << styles::def << type_ctx << styles::subrule_name << "referenced variable's type:\n";
         get_type()->print(os, type_ctx.make_branch(true));
     }
-
-    statement_ir identifier::_codegen_ir(ir_generation_context & ctx) const
-    {
-        auto referenced_ir = _referenced->codegen_ir(ctx);
-        return { codegen::ir::instruction{
-            none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, { referenced_ir.back().result } } };
-    }
 }
 }

@@ -103,7 +103,6 @@ inline namespace _v1
         optional<manual_promise<function *>> _aggregate_copy_ctor_promise;
         std::unique_ptr<expression> _this_argument;
         std::vector<std::unique_ptr<expression>> _member_copy_arguments;
-        std::vector<std::unique_ptr<expression>> _member_copy_defaults;
 
         mutable optional<std::u32string> _codegen_type_name_value;
 

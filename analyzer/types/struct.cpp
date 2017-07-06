@@ -120,16 +120,12 @@ inline namespace _v1
         _aggregate_ctor_promise->set(_aggregate_ctor.get());
 
         auto data_members = fmap(_data_members, [&](auto && member) -> expression * {
-            /*auto param = make_member_variable(member->get_original(), member->get_name());
-            auto expr = make_variable_ref_expression(member);
-            param->set_default_value(expr.get());
+            auto param = make_member_expression(this, member->get_name(), member->get_type());
+            param->set_default_value(member);
 
-            auto ret = param.get();
+            auto param_ptr = param.get();
             _member_copy_arguments.push_back(std::move(param));
-            _member_copy_defaults.push_back(std::move(expr));
-            return ret;*/
-
-            assert(0); // need to clone everything to give alternative default values
+            return param_ptr;
         });
 
         _this_argument = make_blank_expression(this);
@@ -161,6 +157,14 @@ inline namespace _v1
                 }))
             {
                 assert(0);
+            }
+
+            for (auto && arg : args)
+            {
+                if (auto member_arg = arg->as<member_expression>())
+                {
+                    arg = base->get_member(member_arg->get_name());
+                }
             }
 
             if (!std::all_of(args.begin(), args.end(), [](auto && arg) { return arg->is_constant(); }))

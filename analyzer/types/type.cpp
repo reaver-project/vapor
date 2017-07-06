@@ -46,6 +46,11 @@ inline namespace _v1
         _pack_type = make_pack_type(this);
     }
 
+    expression * type::get_expression() const
+    {
+        return _self_expression->_get_replacement();
+    }
+
     void type_type::_codegen_type(ir_generation_context &) const
     {
         assert(0);

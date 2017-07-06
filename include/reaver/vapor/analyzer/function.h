@@ -160,14 +160,6 @@ inline namespace _v1
 
         future<expression *> get_return_type() const
         {
-            std::unique_lock<std::mutex> lock{ _ret_lock };
-
-            if (_return_type_expression)
-            {
-                return make_ready_future(+_return_type_expression);
-            }
-
-            assert(_return_type_future);
             return _return_type_future.get();
         }
 

@@ -24,6 +24,7 @@
 
 #include "../../parser/member_expression.h"
 #include "expression.h"
+#include "member_assignment.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -56,6 +57,28 @@ inline namespace _v1
         {
         }
 
+        virtual expression * _get_replacement() override
+        {
+            if (_assignment_expr)
+            {
+                return _assignment_expr.get();
+            }
+
+            assert(_referenced);
+            return _referenced;
+        }
+
+        virtual const expression * _get_replacement() const override
+        {
+            if (_assignment_expr)
+            {
+                return _assignment_expr.get();
+            }
+
+            assert(_referenced);
+            return _referenced;
+        }
+
         virtual future<> _analyze(analysis_context &) override;
 
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
@@ -80,6 +103,8 @@ inline namespace _v1
 
         expression * _referenced = nullptr;
         expression * _base = nullptr;
+
+        std::unique_ptr<member_assignment_expression> _assignment_expr;
     };
 
     inline std::unique_ptr<member_access_expression> preanalyze_member_access_expression(const parser::member_expression & parse, scope *)

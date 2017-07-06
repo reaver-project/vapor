@@ -80,12 +80,16 @@ inline namespace _v1
 
         virtual expression * _get_replacement() override
         {
-            return _get_replacement_helper()(this);
+            auto repl = _get_replacement_helper()(this);
+            assert(repl);
+            return repl;
         }
 
         virtual const expression * _get_replacement() const override
         {
-            return _get_replacement_helper()(this);
+            auto repl = _get_replacement_helper()(this);
+            assert(repl);
+            return repl;
         }
 
         virtual future<> _analyze(analysis_context &) override;

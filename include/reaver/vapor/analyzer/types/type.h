@@ -135,10 +135,7 @@ inline namespace _v1
             return *_codegen_t;
         }
 
-        expression * get_expression() const
-        {
-            return _self_expression.get();
-        }
+        expression * get_expression() const;
 
         virtual type * get_pack_type() const
         {

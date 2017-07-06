@@ -20,8 +20,8 @@
  *
  **/
 
-#include "vapor/analyzer/expressions/binary.h"
 #include "vapor/analyzer/expressions/member_access.h"
+#include "vapor/analyzer/expressions/binary.h"
 #include "vapor/analyzer/expressions/member_assignment.h"
 #include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/symbol.h"
@@ -52,8 +52,8 @@ inline namespace _v1
             // and hence we need to do a Special Thing
             if (top_level->get_lhs() == this && top_level->get_operator() == lexer::token_type::assign)
             {
-                assert(!"how do I replace this? will probably need a smilar trick to call expression");
-                // make_member_assignment_expression(_parse.member_name.value.string);
+                _assignment_expr = make_member_assignment_expression(_parse.member_name.value.string);
+                _set_type(_assignment_expr->get_type());
                 return make_ready_future();
             }
         }
@@ -61,6 +61,7 @@ inline namespace _v1
         return get<postfix_expression *>(*last_postfix)->get_base_expression(ctx).then([&](auto && base_expr) {
             _referenced = base_expr->get_member(_parse.member_name.value.string);
             _base = base_expr;
+            _set_type(_referenced->get_type());
             assert(_referenced && "this should be a nice error");
         });
     }
