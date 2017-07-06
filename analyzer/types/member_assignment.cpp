@@ -56,7 +56,6 @@ inline namespace _v1
             assert(args.front()->_get_replacement() == _expr);
             _expr->set_rhs(args.back());
             call_expr->replace_with(make_expression_ref(_expr));
-            logger::dlog() << ((expression *)call_expr)->_get_replacement();
 
             return make_ready_future();
         });

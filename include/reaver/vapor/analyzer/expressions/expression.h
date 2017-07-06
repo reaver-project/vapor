@@ -69,7 +69,7 @@ inline namespace _v1
 
         std::unique_ptr<expression> clone_expr_with_replacement(replacements & repl) const
         {
-            auto ret = _clone_expr_with_replacement(repl);
+            auto ret = _get_replacement()->_clone_expr_with_replacement(repl);
             repl.expressions[this] = ret.get();
             repl.statements[this] = ret.get();
             return ret;

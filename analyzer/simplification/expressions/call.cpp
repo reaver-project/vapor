@@ -54,7 +54,10 @@ inline namespace _v1
     {
         if (_replacement_expr)
         {
-            return _replacement_expr.release()->simplify_expr(ctx);
+            return _replacement_expr->simplify_expr(ctx).then([&](auto && simplified) {
+                replace_uptr(_replacement_expr, simplified, ctx);
+                return _replacement_expr.release();
+            });
         }
 
         return when_all(fmap(_args, [&](auto && arg) { return arg->simplify_expr(ctx); })).then([&](auto && repl) {

@@ -64,12 +64,12 @@ inline namespace _v1
         static auto _get_replacement_helper()
         {
             return [](auto && self) {
-                if (self->_referenced_expression)
+                if (self->_accessed_member)
                 {
                     return self->_referenced_expression.get()->_get_replacement();
                 }
 
-                if (self->_call_expression)
+                if (self->_modifier)
                 {
                     return self->_call_expression->_get_replacement();
                 }
