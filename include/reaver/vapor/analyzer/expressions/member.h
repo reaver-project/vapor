@@ -44,9 +44,9 @@ inline namespace _v1
             return _name;
         }
 
-        virtual void print(std::ostream & os, print_context) const override
+        virtual void print(std::ostream & os, print_context ctx) const override
         {
-            assert(0);
+            os << ctx << "member expression @ " << this << ": " << utf8(_name) << '\n';
         }
 
         virtual bool is_member() const override

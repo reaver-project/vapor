@@ -57,28 +57,6 @@ inline namespace _v1
         {
         }
 
-        virtual expression * _get_replacement() override
-        {
-            if (_assignment_expr)
-            {
-                return _assignment_expr.get();
-            }
-
-            assert(_referenced);
-            return _referenced;
-        }
-
-        virtual const expression * _get_replacement() const override
-        {
-            if (_assignment_expr)
-            {
-                return _assignment_expr.get();
-            }
-
-            assert(_referenced);
-            return _referenced;
-        }
-
         virtual future<> _analyze(analysis_context &) override;
 
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override

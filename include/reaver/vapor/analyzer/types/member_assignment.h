@@ -65,22 +65,12 @@ inline namespace _v1
             return _member_name;
         }
 
-        virtual bool is_member_assignment() const override
-        {
-            return _assigned;
-        }
-
         type * assigned_type() const
         {
             return _assigned_type.get();
         }
 
         virtual future<std::vector<function *>> get_candidates(lexer::token_type) const override;
-
-        auto get_associated_expression() const
-        {
-            return _expr;
-        }
 
     private:
         virtual void _codegen_type(ir_generation_context &) const override

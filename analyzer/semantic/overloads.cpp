@@ -82,12 +82,12 @@ inline namespace _v1
         std::vector<expression *> provided_params;
 
         auto it = arg_begin;
-        if ((it = std::find_if(it, arg_end, [](auto && arg) { return arg->get_type()->is_member_assignment(); })) != arg_end)
+        if ((it = std::find_if(it, arg_end, [](auto && arg) { return arg->is_member_assignment(); })) != arg_end)
         {
             auto arg_begin = it;
             auto possible_arg_end = it;
 
-            if ((it = std::find_if(it, arg_end, [](auto && arg) { return !arg->get_type()->is_member_assignment(); })) != arg_end)
+            if ((it = std::find_if(it, arg_end, [](auto && arg) { return !arg->is_member_assignment(); })) != arg_end)
             {
                 assert(!"a non-mem-assignment argument after a mem-assignment argument");
             }
@@ -105,9 +105,8 @@ inline namespace _v1
 
             while (arg_begin != arguments.end())
             {
-                auto arg_type = dynamic_cast<member_assignment_type *>((*arg_begin)->get_type());
-                assert(arg_type);
-                auto arg = arg_type->get_associated_expression();
+                auto arg = (*arg_begin)->as<member_assignment_expression>();
+                assert(arg);
 
                 auto it = param_begin;
                 if ((it = std::find_if(param_begin,
@@ -294,33 +293,31 @@ inline namespace _v1
             ++param_begin;
         }
 
-        auto get_rhs = [](expression * arg) {
-            auto arg_type = static_cast<member_assignment_type *>(arg->get_type());
-            return arg_type->get_associated_expression();
-        };
-
         while (param_begin != param_end)
         {
             auto param = *param_begin;
 
             if (auto member_param = param->as<member_expression>())
             {
-                auto it = std::find_if(arg_begin, arg_end, [&member_param](auto && arg) {
-                    if (!arg->get_type()->is_member_assignment())
+                auto it = arg_begin;
+
+                while (it != arg_end)
+                {
+                    auto assignment = (*it)->as<member_assignment_expression>();
+                    if (!assignment || assignment->member_name() != member_param->get_name())
                     {
-                        return false;
+                        ++it;
+                        continue;
                     }
 
-                    auto arg_type = dynamic_cast<member_assignment_type *>(arg->get_type());
-                    assert(arg_type);
-                    return arg_type->member_name() == member_param->get_name();
-                });
+                    ret.push_back(assignment->get_rhs());
+                    assert(!ret.back()->is_member_assignment());
+                    ++param_begin;
+                    break;
+                }
 
                 if (it != arg_end)
                 {
-                    ret.push_back(get_rhs(*it));
-                    assert(!ret.back()->is_member_assignment());
-                    ++param_begin;
                     continue;
                 }
             }
@@ -335,6 +332,8 @@ inline namespace _v1
         {
             process_member_arguments(ret, base);
         }
+
+        assert(overload->parameters().size() <= ret.size());
 
         return ret;
     }

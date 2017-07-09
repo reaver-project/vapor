@@ -192,13 +192,6 @@ inline namespace _v1
             _type = t;
         }
 
-        void _reset_type(type * t)
-        {
-            assert(_type);
-            assert(t);
-            _type = t;
-        }
-
         virtual future<> _analyze(analysis_context &) override
         {
             assert(_type);

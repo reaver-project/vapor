@@ -38,9 +38,10 @@ inline namespace _v1
         {
         }
 
-        virtual void print(std::ostream &, print_context) const override
+        virtual void print(std::ostream & os, print_context ctx) const override
         {
-            assert(0);
+            os << ctx << "expression ref for\n";
+            _referenced->print(os, ctx.make_branch(true));
         }
 
     private:

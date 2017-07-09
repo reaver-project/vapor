@@ -52,7 +52,6 @@ inline namespace _v1
         {
             assert(!_rhs);
             _rhs = rhs;
-            _reset_type(_rhs->get_type());
         }
 
         auto get_rhs() const
@@ -63,12 +62,14 @@ inline namespace _v1
 
         virtual bool is_member_assignment() const override
         {
-            return !_rhs;
+            return true;
         }
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            assert(0);
+            os << ctx << "member assignment expression @ " << this << '\n';
+            _type->print(os, ctx.make_branch(false));
+            _rhs->print(os, ctx.make_branch(true));
         }
 
     private:

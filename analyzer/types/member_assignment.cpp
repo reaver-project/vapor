@@ -53,7 +53,6 @@ inline namespace _v1
         overload->set_return_type(assigned_type()->get_expression());
         overload->add_analysis_hook([this](auto &&, auto && call_expr, std::vector<expression *> args) {
             assert(args.size() == 2);
-            assert(args.front()->_get_replacement() == _expr);
             _expr->set_rhs(args.back());
             call_expr->replace_with(make_expression_ref(_expr));
 

@@ -41,7 +41,7 @@ inline namespace _v1
            << utf8(_parse.member_name.value.string) << '\n';
 
         auto type_ctx = ctx.make_branch(true);
-        os << styles::def << type_ctx << styles::subrule_name << "referenced variable type:\n";
+        os << styles::def << type_ctx << styles::subrule_name << "referenced member type:\n";
         get_type()->print(os, type_ctx.make_branch(true));
     }
 
