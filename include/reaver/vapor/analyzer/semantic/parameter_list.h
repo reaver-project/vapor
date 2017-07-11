@@ -24,6 +24,7 @@
 
 #include "../../parser/parameter_list.h"
 #include "../expressions/expression.h"
+#include "../expressions/type.h"
 #include "../symbol.h"
 
 namespace reaver::vapor::analyzer
@@ -49,6 +50,15 @@ inline namespace _v1
         }
 
     private:
+        virtual future<> _analyze(analysis_context & ctx) override
+        {
+            return _type_expression->analyze(ctx).then([&] {
+                auto type_value = _type_expression->as<type_expression>();
+                assert(type_value);
+                _set_type(type_value->get_value());
+            });
+        }
+
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
             assert(0);
