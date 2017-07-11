@@ -86,6 +86,17 @@ inline namespace _v1
             return _parse;
         }
 
+        virtual type * get_member_type(const std::u32string & name) const override
+        {
+            auto it = std::find_if(_data_members.begin(), _data_members.end(), [&](auto && member) { return member->get_name() == name; });
+            if (it == _data_members.end())
+            {
+                return nullptr;
+            }
+
+            return (*it)->get_type();
+        }
+
     private:
         virtual void _codegen_type(ir_generation_context &) const override;
 

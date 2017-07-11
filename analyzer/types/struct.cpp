@@ -163,7 +163,8 @@ inline namespace _v1
             {
                 if (auto member_arg = arg->as<member_expression>())
                 {
-                    arg = base->get_member(member_arg->get_name());
+                    auto actual_arg = base->get_member(member_arg->get_name());
+                    arg = actual_arg ? actual_arg : arg;
                 }
             }
 

@@ -22,6 +22,7 @@
 
 #include <numeric>
 
+#include "vapor/analyzer/expressions/expression_ref.h"
 #include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
@@ -37,7 +38,8 @@ inline namespace _v1
 {
     std::unique_ptr<expression> overload_set::_clone_expr_with_replacement(replacements & repl) const
     {
-        assert(0);
+        // icky
+        return make_expression_ref(const_cast<overload_set *>(this));
     }
 
     statement_ir overload_set::_codegen_ir(ir_generation_context & ctx) const

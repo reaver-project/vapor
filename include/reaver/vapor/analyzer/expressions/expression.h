@@ -151,7 +151,7 @@ inline namespace _v1
             auto repl = _get_replacement();
             if (repl == this)
             {
-                assert(0);
+                return nullptr;
             }
 
             return repl->get_member(name);

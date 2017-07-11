@@ -124,6 +124,11 @@ inline namespace _v1
             return _member_scope.get();
         }
 
+        virtual type * get_member_type(const std::u32string &) const
+        {
+            return nullptr;
+        }
+
         std::shared_ptr<codegen::ir::variable_type> codegen_type(ir_generation_context & ctx) const
         {
             if (!_codegen_t)

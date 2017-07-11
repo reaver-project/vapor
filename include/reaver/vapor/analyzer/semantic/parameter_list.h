@@ -24,6 +24,7 @@
 
 #include "../../parser/parameter_list.h"
 #include "../expressions/expression.h"
+#include "../expressions/expression_ref.h"
 #include "../expressions/type.h"
 #include "../symbol.h"
 
@@ -61,7 +62,7 @@ inline namespace _v1
 
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
-            assert(0);
+            return make_expression_ref(const_cast<parameter *>(this));
         }
 
         virtual statement_ir _codegen_ir(ir_generation_context &) const override

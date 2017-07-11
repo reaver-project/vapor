@@ -40,7 +40,8 @@ inline namespace _v1
             _parse.range = parse.range;
         }
 
-        boolean_constant(bool value, synthesized_node<void> parse = {}) : _parse{ parse }, _value{ std::move(value) }
+        boolean_constant(bool value, synthesized_node<void> parse = {})
+            : expression{ builtin_types().boolean.get() }, _parse{ parse }, _value{ std::move(value) }
         {
         }
 

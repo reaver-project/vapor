@@ -59,10 +59,13 @@ inline namespace _v1
         }
 
         return get<postfix_expression *>(*last_postfix)->get_base_expression(ctx).then([&](auto && base_expr) {
+            auto referenced_type = base_expr->get_type()->get_member_type(_parse.member_name.value.string);
+            assert(referenced_type && "no member found for whatever reason");
+
             _referenced = base_expr->get_member(_parse.member_name.value.string);
             _base = base_expr;
-            _set_type(_referenced->get_type());
-            assert(_referenced && "this should be a nice error");
+
+            _set_type(referenced_type);
         });
     }
 }

@@ -42,7 +42,8 @@ inline namespace _v1
             _parse.range = parse.range;
         }
 
-        integer_constant(boost::multiprecision::cpp_int value, synthesized_node<void> parse = {}) : _parse{ parse }, _value{ std::move(value) }
+        integer_constant(boost::multiprecision::cpp_int value, synthesized_node<void> parse = {})
+            : expression{ builtin_types().integer.get() }, _parse{ parse }, _value{ std::move(value) }
         {
         }
 
