@@ -67,9 +67,16 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            os << ctx << "member assignment expression @ " << this << '\n';
-            _type->print(os, ctx.make_branch(false));
-            _rhs->print(os, ctx.make_branch(true));
+            os << styles::def << ctx << styles::rule_name << "member-assignment-expression";
+            os << styles::def << " @ " << styles::address << this << styles::def << ":\n";
+
+            auto type_ctx = ctx.make_branch(false);
+            os << styles::def << type_ctx << styles::subrule_name << "assignment-type:\n";
+            _type->print(os, type_ctx.make_branch(true));
+
+            auto rhs_ctx = ctx.make_branch(true);
+            os << styles::def << rhs_ctx << styles::subrule_name << "right-hand side:\n";
+            _rhs->print(os, rhs_ctx.make_branch(true));
         }
 
     private:
@@ -85,6 +92,14 @@ inline namespace _v1
             }
 
             return ret;
+        }
+
+        virtual future<expression *> _simplify_expr(simplification_context & ctx) override
+        {
+            return _rhs->simplify_expr(ctx).then([&](auto && simpl) -> expression * {
+                _rhs = simpl;
+                return this;
+            });
         }
 
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override

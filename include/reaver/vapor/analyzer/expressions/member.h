@@ -46,7 +46,24 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            os << ctx << "member expression @ " << this << ": " << utf8(_name) << '\n';
+            os << styles::def << ctx << styles::rule_name << "member-expression";
+            os << styles::def << " @ " << styles::address << this << styles::def << ": ";
+            os << styles::string_value << utf8(_name) << styles::def << '\n';
+
+            auto type_ctx = ctx.make_branch(false);
+            os << styles::def << type_ctx << styles::subrule_name << "type:\n";
+            get_type()->print(os, type_ctx.make_branch(true));
+
+            auto parent_ctx = ctx.make_branch(true);
+            if (_parent)
+            {
+                os << styles::def << parent_ctx << styles::subrule_name << "parent type:\n";
+                _parent->print(os, parent_ctx.make_branch(true));
+            }
+            else
+            {
+                os << styles::def << parent_ctx << styles::subrule_name << "unknown parent type\n";
+            }
         }
 
         virtual bool is_member() const override

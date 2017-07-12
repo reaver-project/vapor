@@ -46,9 +46,20 @@ inline namespace _v1
             return _type;
         }
 
-        virtual void print(std::ostream &, print_context) const override
+        virtual void print(std::ostream & os, print_context ctx) const override
         {
-            assert(0);
+            os << styles::def << ctx << styles::rule_name << "type-expression";
+            print_address_optional_range(os, this);
+            os << '\n';
+
+            auto type_ctx = ctx.make_branch(true);
+            os << styles::def << type_ctx << styles::subrule_name << "value:\n";
+            _type->print(os, type_ctx.make_branch(true));
+        }
+
+        auto parse() const
+        {
+            return optional<synthesized_node<void>>{};
         }
 
     private:

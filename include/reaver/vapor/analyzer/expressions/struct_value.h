@@ -71,9 +71,26 @@ inline namespace _v1
             return it->second.get();
         }
 
-        virtual void print(std::ostream &, print_context) const override
+        virtual void print(std::ostream & os, print_context ctx) const override
         {
-            assert(0);
+            os << styles::def << ctx << styles::rule_name << "struct-expression";
+            os << styles::def << " @ " << styles::address << this << styles::def << ":\n";
+
+            auto type_ctx = ctx.make_branch(_fields_in_order.empty());
+            os << styles::def << type_ctx << styles::subrule_name << "type:\n";
+            _type->print(os, type_ctx.make_branch(true));
+
+            if (!_fields_in_order.empty())
+            {
+                auto members_ctx = ctx.make_branch(true);
+                os << styles::def << members_ctx << styles::subrule_name << "member values:\n";
+
+                std::size_t idx = 0;
+                for (auto && member : _fields_in_order)
+                {
+                    member->print(os, members_ctx.make_branch(++idx == _fields_in_order.size()));
+                }
+            }
         }
 
     private:

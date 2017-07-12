@@ -42,12 +42,18 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            assert(!"add printing of parameter range");
-            os << styles::def << ctx << styles::rule_name << "parameter: " << styles::string_value << utf8(_name) << '\n';
+            os << styles::def << ctx << styles::rule_name << "parameter";
+            print_address_range(os, this);
+            os << styles::string_value << utf8(_name) << '\n';
 
-            auto type_expr_ctx = ctx.make_branch(false);
+            auto type_expr_ctx = ctx.make_branch(true);
             os << styles::def << type_expr_ctx << styles::subrule_name << "type expression:\n";
             _type_expression->print(os, type_expr_ctx.make_branch(true));
+        }
+
+        auto parse() const
+        {
+            return _parse;
         }
 
     private:

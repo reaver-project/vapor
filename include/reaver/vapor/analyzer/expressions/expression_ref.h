@@ -40,7 +40,8 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            os << ctx << "expression ref for\n";
+            os << styles::def << ctx << styles::rule_name << "expression-ref";
+            os << styles::def << " @ " << styles::address << this << styles::def << ":\n";
             _referenced->print(os, ctx.make_branch(true));
         }
 
