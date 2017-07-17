@@ -24,6 +24,7 @@
 
 #include <reaver/future.h>
 
+#include "../../codegen/ir/function.h"
 #include "../../codegen/ir/instruction.h"
 #include "../../codegen/ir/variable.h"
 #include "../../print_helpers.h"
@@ -53,6 +54,7 @@ inline namespace _v1
     class scope;
 
     using statement_ir = std::vector<codegen::ir::instruction>;
+    using declaration_ir = std::vector<variant<std::shared_ptr<codegen::ir::variable>, codegen::ir::function>>;
 
     class statement
     {
@@ -117,10 +119,20 @@ inline namespace _v1
         {
             if (!_ir)
             {
-                _ir = _codegen_ir(ctx);
+                auto ir = _codegen_ir(ctx);
+
+                if (!_ir)
+                {
+                    _ir = std::move(ir);
+                }
             }
 
             return *_ir;
+        }
+
+        virtual declaration_ir declaration_codegen_ir(ir_generation_context &) const
+        {
+            return {};
         }
 
     private:

@@ -125,24 +125,21 @@ inline namespace _v1
 
         codegen::ir::module mod;
         mod.name = fmap(_parse.name.id_expression_value, [&](auto && ident) { return ident.value.string; });
-
-        assert(0);
-
-        /*mod.symbols = mbind(as_vector(_scope->declared_symbols()), [&](auto && symbol) {
-            auto ir = symbol.second->codegen_ir(ctx);
-            return get<0>(fmap(ir.back().result,
-                make_overload_set([](none_t) -> codegen::ir::module_symbols_t { assert(0); },
-                    [&](std::shared_ptr<codegen::ir::variable> symb) {
-                        symb->name = symbol.second->get_name();
-                        return codegen::ir::module_symbols_t{ symb };
-                    },
-                    [&](auto && symb) {
-                        return fmap(symb, [&](auto && symb) -> typename codegen::ir::module_symbols_t::value_type {
+        mod.symbols = mbind(as_vector(_scope->declared_symbols()), [&](auto && symbol) {
+            return mbind(symbol.second->codegen_ir(ctx), [&](auto && decl) {
+                return get<0>(fmap(decl,
+                    make_overload_set(
+                        [&](std::shared_ptr<codegen::ir::variable> symb) {
+                            symb->declared = true;
+                            symb->name = symbol.second->get_name();
+                            return codegen::ir::module_symbols_t{ symb };
+                        },
+                        [&](auto && symb) {
                             symb.name = symbol.second->get_name();
                             return symb;
-                        });
-                    })));*/
-        //});
+                        })));
+            });
+        });
 
         while (auto fn = ctx.function_to_generate())
         {

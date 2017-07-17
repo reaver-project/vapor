@@ -21,8 +21,8 @@
  **/
 
 #include "vapor/analyzer/types/type.h"
-#include "vapor/analyzer/expressions/blank.h"
 #include "vapor/analyzer/expressions/call.h"
+#include "vapor/analyzer/expressions/runtime_value.h"
 #include "vapor/analyzer/expressions/type.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/semantic/overloads.h"
@@ -72,8 +72,8 @@ inline namespace _v1
                 return;
             }
 
-            _generic_ctor_first_arg = make_blank_expression(builtin_types().type.get());
-            _generic_ctor_pack_arg = make_blank_expression(builtin_types().unconstrained->get_pack_type());
+            _generic_ctor_first_arg = make_runtime_value(builtin_types().type.get());
+            _generic_ctor_pack_arg = make_runtime_value(builtin_types().unconstrained->get_pack_type());
 
             _generic_ctor = make_function(
                 "generic constructor", nullptr, { _generic_ctor_first_arg.get(), _generic_ctor_pack_arg.get() }, [](auto &&) -> codegen::ir::function {

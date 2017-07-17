@@ -68,7 +68,7 @@ inline namespace _v1
             return fmap(operand,
                 make_overload_set(
                     [&](const std::shared_ptr<ir::variable> & var) {
-                        if (!var->argument && var->is_move())
+                        if (!var->parameter && var->is_move())
                         {
                             cxx::mark_destroyed(var, ctx);
                         }

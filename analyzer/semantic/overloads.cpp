@@ -333,8 +333,6 @@ inline namespace _v1
             process_member_arguments(ret, base);
         }
 
-        assert(overload->parameters().size() <= ret.size());
-
         return ret;
     }
 

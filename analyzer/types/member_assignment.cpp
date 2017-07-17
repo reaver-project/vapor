@@ -21,10 +21,10 @@
  **/
 
 #include "vapor/analyzer/types/member_assignment.h"
-#include "vapor/analyzer/expressions/blank.h"
 #include "vapor/analyzer/expressions/call.h"
 #include "vapor/analyzer/expressions/expression_ref.h"
 #include "vapor/analyzer/expressions/member_assignment.h"
+#include "vapor/analyzer/expressions/runtime_value.h"
 #include "vapor/analyzer/expressions/type.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/unconstrained.h"
@@ -45,7 +45,7 @@ inline namespace _v1
             return make_ready_future(std::vector<function *>{});
         }
 
-        auto expr = make_blank_expression(builtin_types().unconstrained.get());
+        auto expr = make_runtime_value(builtin_types().unconstrained.get());
 
         auto overload = make_function("member assignment", nullptr, { _expr, expr.get() }, [](auto &&) -> codegen::ir::function {
             assert(!"trying to codegen a member-assignment expression");

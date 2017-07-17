@@ -51,7 +51,7 @@ inline namespace _v1
             optional<std::u32string> name;
             bool declared = false;
             bool destroyed = false;
-            bool argument = false;
+            bool parameter = false;
             bool temporary = true;
             std::vector<scope> scopes = {};
 

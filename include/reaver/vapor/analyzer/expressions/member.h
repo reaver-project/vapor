@@ -86,7 +86,13 @@ inline namespace _v1
 
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
         {
-            assert(0);
+            auto retvar = codegen::ir::make_variable(ctx.get_current_base()->get_type()->get_member_type(_name)->codegen_type(ctx));
+
+            return { codegen::ir::instruction{ none,
+                none,
+                { boost::typeindex::type_id<codegen::ir::member_access_instruction>() },
+                { ctx.get_current_base()->codegen_ir(ctx).back().result, codegen::ir::label{ _name, {} } },
+                retvar } };
         }
 
         virtual bool _is_equal(const expression * rhs) const override

@@ -21,7 +21,7 @@
  **/
 
 #include "vapor/analyzer/types/struct.h"
-#include "vapor/analyzer/expressions/blank.h"
+#include "vapor/analyzer/expressions/runtime_value.h"
 #include "vapor/analyzer/expressions/struct.h"
 #include "vapor/analyzer/expressions/struct_value.h"
 #include "vapor/analyzer/statements/declaration.h"
@@ -51,6 +51,7 @@ inline namespace _v1
                         auto scope = _member_scope.get();
                         auto decl_stmt = preanalyze_member_declaration(decl, scope);
                         assert(scope == _member_scope.get());
+
                         _data_members_declarations.push_back(std::move(decl_stmt));
 
                         return unit{};
@@ -69,14 +70,22 @@ inline namespace _v1
 
     void struct_type::generate_constructors()
     {
-        _data_members = fmap(_data_members_declarations, [&](auto && member) { return member->declared_member(); });
+        _data_members = fmap(_data_members_declarations, [&](auto && member) {
+            auto ret = member->declared_member();
+            ret->set_parent_type(this);
+            return ret;
+        });
 
         _aggregate_ctor = make_function("struct type constructor",
             get_expression(),
             fmap(_data_members, [](auto && member) -> expression * { return member; }),
             [&](auto && ctx) -> codegen::ir::function {
                 auto ir_type = this->codegen_type(ctx);
-                auto args = fmap(_data_members, [&](auto && member) { return member->codegen_ir(ctx).back().result; });
+                auto args = fmap(_data_members, [&](auto && member) {
+                    auto ret = codegen::ir::make_variable(member->get_type()->codegen_type(ctx));
+                    return ret;
+                });
+
                 auto result = codegen::ir::make_variable(ir_type);
 
                 auto scopes = this->get_scope()->codegen_ir(ctx);
@@ -84,9 +93,13 @@ inline namespace _v1
 
                 return { U"constructor",
                     std::move(scopes),
-                    fmap(args, [](auto && arg) { return get<std::shared_ptr<codegen::ir::variable>>(arg); }),
+                    args,
                     result,
-                    { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() }, args, result },
+                    { codegen::ir::instruction{ none,
+                          none,
+                          { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() },
+                          fmap(args, [](auto && arg) -> codegen::ir::value { return arg; }),
+                          result },
                         codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
             });
 
@@ -128,13 +141,16 @@ inline namespace _v1
             return param_ptr;
         });
 
-        _this_argument = make_blank_expression(this);
+        _this_argument = make_runtime_value(this);
         data_members.insert(data_members.begin(), _this_argument.get());
 
         _aggregate_copy_ctor =
             make_function("struct type copy replacement constructor", get_expression(), data_members, [&](auto && ctx) -> codegen::ir::function {
                 auto ir_type = this->codegen_type(ctx);
-                auto args = fmap(_data_members, [&](auto && member) { return member->codegen_ir(ctx).back().result; });
+                auto args = fmap(_data_members, [&](auto && member) {
+                    auto ret = codegen::ir::make_variable(member->get_type()->codegen_type(ctx));
+                    return ret;
+                });
                 auto result = codegen::ir::make_variable(ir_type);
 
                 auto scopes = this->get_scope()->codegen_ir(ctx);
@@ -142,9 +158,13 @@ inline namespace _v1
 
                 return { U"replacing_copy_constructor",
                     std::move(scopes),
-                    fmap(args, [](auto && arg) { return get<std::shared_ptr<codegen::ir::variable>>(arg); }),
+                    args,
                     result,
-                    { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() }, args, result },
+                    { codegen::ir::instruction{ none,
+                          none,
+                          { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() },
+                          fmap(args, [](auto && arg) -> codegen::ir::value { return arg; }),
+                          result },
                         codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
             });
 

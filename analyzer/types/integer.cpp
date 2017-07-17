@@ -21,9 +21,9 @@
  **/
 
 #include "vapor/analyzer/types/integer.h"
-#include "vapor/analyzer/expressions/blank.h"
 #include "vapor/analyzer/expressions/boolean.h"
 #include "vapor/analyzer/expressions/integer.h"
+#include "vapor/analyzer/expressions/runtime_value.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/boolean.h"
 #include "vapor/codegen/ir/instruction.h"
@@ -47,8 +47,8 @@ inline namespace _v1
     template<typename Instruction, typename Eval>
     auto integer_type::_generate_function(const char32_t * name, const char * desc, Eval eval, type * return_type)
     {
-        auto lhs = make_blank_expression(builtin_types().integer.get());
-        auto rhs = make_blank_expression(builtin_types().integer.get());
+        auto lhs = make_runtime_value(builtin_types().integer.get());
+        auto rhs = make_runtime_value(builtin_types().integer.get());
 
         auto lhs_arg = lhs.get();
         auto rhs_arg = rhs.get();

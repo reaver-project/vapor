@@ -71,9 +71,12 @@ inline namespace _v1
             return make_expression_ref(const_cast<parameter *>(this));
         }
 
-        virtual statement_ir _codegen_ir(ir_generation_context &) const override
+        virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
         {
-            assert(0);
+            auto var = codegen::ir::make_variable(get_type()->codegen_type(ctx));
+            var->parameter = true;
+            return { codegen::ir::instruction{
+                none, none, { boost::typeindex::type_id<codegen::ir::materialization_instruction>() }, {}, { std::move(var) } } };
         }
 
         const parser::parameter & _parse;

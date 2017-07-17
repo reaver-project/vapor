@@ -28,7 +28,7 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class blank_expression : public expression
+    class runtime_value_expression : public expression
     {
     public:
         using expression::expression;
@@ -41,18 +41,22 @@ inline namespace _v1
     private:
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
         {
-            return std::make_unique<blank_expression>(get_type());
+            return std::make_unique<runtime_value_expression>(get_type());
         }
 
-        virtual statement_ir _codegen_ir(ir_generation_context &) const override
+        virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
         {
-            assert(0);
+            return { codegen::ir::instruction{ none,
+                none,
+                { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
+                {},
+                codegen::ir::make_variable(get_type()->codegen_type(ctx)) } };
         }
     };
 
-    inline std::unique_ptr<expression> make_blank_expression(type * t)
+    inline std::unique_ptr<expression> make_runtime_value(type * t)
     {
-        return std::make_unique<blank_expression>(t);
+        return std::make_unique<runtime_value_expression>(t);
     }
 }
 }

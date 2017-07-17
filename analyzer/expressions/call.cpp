@@ -71,15 +71,12 @@ inline namespace _v1
             return _replacement_expr->codegen_ir(ctx);
         }
 
-        auto arguments_instructions = fmap(_args, [&](auto && arg) { return arg->codegen_ir(ctx); });
+        if (_function->is_member())
+        {
+            ctx.push_base_expression(_args.front());
+        }
 
-        arguments_instructions.reserve(_function->parameters().size());
-        std::transform(
-            _function->parameters().begin() + _args.size(), _function->parameters().end(), std::back_inserter(arguments_instructions), [&](auto && member) {
-                auto def = member->get_default_value();
-                assert(def);
-                return def->codegen_ir(ctx);
-            });
+        auto arguments_instructions = fmap(_args, [&](auto && arg) { return arg->codegen_ir(ctx); });
 
         auto arguments_values = fmap(arguments_instructions, [](auto && insts) { return insts.back().result; });
         arguments_values.insert(arguments_values.begin(), _function->call_operand_ir(ctx));
@@ -88,6 +85,7 @@ inline namespace _v1
         {
             assert(arguments_values.size() >= 2);
             std::swap(arguments_values[0], arguments_values[1]);
+            auto base = arguments_values[0];
         }
 
         auto call_expr_instruction = codegen::ir::instruction{ none,
@@ -104,6 +102,11 @@ inline namespace _v1
             return unit{};
         });
         ret.push_back(std::move(call_expr_instruction));
+
+        if (_function->is_member())
+        {
+            ctx.pop_base_expression(_args.front());
+        }
 
         return ret;
     }

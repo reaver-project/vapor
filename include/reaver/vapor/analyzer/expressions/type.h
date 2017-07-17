@@ -62,6 +62,11 @@ inline namespace _v1
             return optional<synthesized_node<void>>{};
         }
 
+        virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override
+        {
+            return { { get<std::shared_ptr<codegen::ir::variable>>(_codegen_ir(ctx).back().result) } };
+        }
+
     private:
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
         {
@@ -70,10 +75,10 @@ inline namespace _v1
 
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
         {
-            // auto ret = codegen::ir::make_variable(codegen::ir::builtin_types().type);
-            // ret->refers_to = _type->codegen_type(ctx);
-            // return ret;
-            assert(0);
+            auto ret = codegen::ir::make_variable(codegen::ir::builtin_types().type);
+            ret->refers_to = _type->codegen_type(ctx);
+
+            return { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, std::move(ret) } };
         }
 
         virtual bool _is_equal(const expression * rhs) const override

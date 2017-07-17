@@ -50,13 +50,13 @@ inline namespace _v1
         auto base_variable_value = _base->codegen_ir(ctx).back().result;
         auto base_variable = get<std::shared_ptr<codegen::ir::variable>>(base_variable_value);
 
+        auto retvar = codegen::ir::make_variable(ctx.get_current_base()->get_type()->get_member_type(_parse.member_name.value.string)->codegen_type(ctx));
+
         return { codegen::ir::instruction{ none,
-                     none,
-                     { boost::typeindex::type_id<codegen::ir::member_access_instruction>() },
-                     { base_variable, codegen::ir::label{ _parse.member_name.value.string, {} } },
-                     _referenced->codegen_ir(ctx).back().result },
-            codegen::ir::instruction{
-                none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, _referenced->codegen_ir(ctx).back().result } };
+            none,
+            { boost::typeindex::type_id<codegen::ir::member_access_instruction>() },
+            { base_variable, codegen::ir::label{ _parse.member_name.value.string, {} } },
+            retvar } };
     }
 }
 }

@@ -27,17 +27,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    statement_ir symbol::codegen_ir(ir_generation_context & ctx) const
+    declaration_ir symbol::codegen_ir(ir_generation_context & ctx) const
     {
-        // this actually needs its own type
-        // and needs an expression interface to actually get a proper symbol_ir thing
-        // akin to the old variable_ir thing
-        assert(0);
-
-        /*return fmap(_variable->codegen_ir(ctx),
-            make_overload_set([](none_t) { return std::vector<codegen::ir::function>{}; },
-                [](std::vector<codegen::ir::function> fs) { return fs; },
-                [](codegen::ir::value val) { return get<std::shared_ptr<codegen::ir::variable>>(val); }));*/
+        return get_expression()->declaration_codegen_ir(ctx);
     }
 }
 }

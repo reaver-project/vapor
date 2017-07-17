@@ -46,8 +46,13 @@ inline namespace _v1
     {
         auto var = codegen::ir::make_variable(_type->codegen_type(ctx));
         var->scopes = _type->get_scope()->codegen_ir(ctx);
-        // return { std::move(var) };
-        assert(!"do a pass value instruction here");
+        return { codegen::ir::instruction{
+            none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, codegen::ir::value{ std::move(var) } } };
+    }
+
+    declaration_ir overload_set::declaration_codegen_ir(ir_generation_context & ctx) const
+    {
+        return { { get<std::shared_ptr<codegen::ir::variable>>(codegen_ir(ctx).back().result) } };
     }
 
     void overload_set::add_function(function_declaration * decl)

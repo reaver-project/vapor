@@ -105,7 +105,7 @@ inline namespace _v1
             header += cxx::variable_name(*var, ctx);
             header += U",\n";
 
-            var->argument = true;
+            var->parameter = true;
             return unit{};
         });
         if (!fn.parameters.empty())

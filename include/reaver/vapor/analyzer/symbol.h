@@ -101,7 +101,7 @@ inline namespace _v1
             });
         }
 
-        statement_ir codegen_ir(ir_generation_context &) const;
+        declaration_ir codegen_ir(ir_generation_context &) const;
 
     private:
         mutable std::shared_mutex _lock;

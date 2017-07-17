@@ -98,7 +98,7 @@ inline namespace _v1
                 },
                 [&](const codegen::ir::boolean_value & val) -> std::u32string { return val.value ? U"true" : U"false"; },
                 [&](const std::shared_ptr<ir::variable> & var) {
-                    return variable_name(*var, ctx) + (var->argument || dont_unref ? U"" : var->is_move() ? U".move()" : U".reference()");
+                    return variable_name(*var, ctx) + (var->parameter || dont_unref ? U"" : var->is_move() ? U".move()" : U".reference()");
                 },
                 [&](const codegen::ir::label & label) {
                     assert(label.scopes.empty());

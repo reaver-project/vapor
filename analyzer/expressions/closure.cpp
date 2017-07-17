@@ -80,5 +80,10 @@ inline namespace _v1
         var->scopes = _type->get_scope()->codegen_ir(ctx);
         return { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::materialization_instruction>() }, {}, { std::move(var) } } };
     }
+
+    declaration_ir closure::declaration_codegen_ir(ir_generation_context & ctx) const
+    {
+        return { { get<std::shared_ptr<codegen::ir::variable>>(codegen_ir(ctx).back().result) } };
+    }
 }
 }

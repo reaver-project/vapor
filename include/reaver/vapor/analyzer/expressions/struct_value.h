@@ -105,7 +105,7 @@ inline namespace _v1
             auto ir = fmap(_fields_in_order, [&](auto && field) { return field->codegen_ir(ctx); });
             auto result = codegen::ir::struct_value{ _type->codegen_type(ctx), fmap(ir, [&](auto && field_ir) { return field_ir.back().result; }) };
 
-            assert(!"pass the struct value here");
+            return { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, std::move(result) } };
         }
 
         std::shared_ptr<struct_type> _type;
