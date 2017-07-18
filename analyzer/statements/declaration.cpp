@@ -77,7 +77,7 @@ inline namespace _v1
 
     statement_ir declaration::_codegen_ir(ir_generation_context & ctx) const
     {
-        if (_declared_symbol->get_variable()->get_type() == builtin_types().type.get())
+        if (_declared_symbol->get_type() == builtin_types().type.get())
         {
             return {};
         }

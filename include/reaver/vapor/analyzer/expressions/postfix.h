@@ -45,11 +45,10 @@ inline namespace _v1
         postfix_expression(const parser::postfix_expression & parse, scope * lex_scope);
 
         virtual void print(std::ostream & os, print_context ctx) const override;
-        virtual variable * get_variable() const override;
 
-        future<variable *> get_base_variable(analysis_context & ctx) const
+        future<expression *> get_base_expression(analysis_context & ctx) const
         {
-            return _base_expr->analyze(ctx).then([&] { return _base_expr->get_variable(); });
+            return _base_expr->analyze(ctx).then([&] { return _base_expr.get(); });
         }
 
         const auto & parse() const
@@ -62,10 +61,56 @@ inline namespace _v1
         {
         }
 
+        static auto _get_replacement_helper()
+        {
+            return [](auto && self) {
+                if (self->_accessed_member)
+                {
+                    return self->_referenced_expression.get()->_get_replacement();
+                }
+
+                if (self->_modifier)
+                {
+                    return self->_call_expression->_get_replacement();
+                }
+
+                return self->_base_expr->_get_replacement();
+            };
+        }
+
+        virtual expression * _get_replacement() override
+        {
+            auto repl = _get_replacement_helper()(this);
+            assert(repl);
+            return repl;
+        }
+
+        virtual const expression * _get_replacement() const override
+        {
+            auto repl = _get_replacement_helper()(this);
+            assert(repl);
+            return repl;
+        }
+
         virtual future<> _analyze(analysis_context &) override;
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
         virtual future<expression *> _simplify_expr(simplification_context &) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+
+        virtual bool _is_equal(const expression * rhs) const override
+        {
+            if (_referenced_expression)
+            {
+                return _referenced_expression.get()->is_equal(rhs);
+            }
+
+            if (_call_expression)
+            {
+                return _call_expression->is_equal(rhs);
+            }
+
+            return _base_expr->is_equal(rhs);
+        }
 
         const parser::postfix_expression & _parse;
         scope * _scope = nullptr;
@@ -75,7 +120,7 @@ inline namespace _v1
         std::unique_ptr<expression> _call_expression;
 
         optional<std::u32string> _accessed_member;
-        optional<variable *> _referenced_variable;
+        optional<expression *> _referenced_expression;
     };
 
     inline std::unique_ptr<postfix_expression> preanalyze_postfix_expression(const parser::postfix_expression & parse, scope * lex_scope)

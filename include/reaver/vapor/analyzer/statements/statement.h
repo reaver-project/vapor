@@ -24,6 +24,7 @@
 
 #include <reaver/future.h>
 
+#include "../../codegen/ir/function.h"
 #include "../../codegen/ir/instruction.h"
 #include "../../codegen/ir/variable.h"
 #include "../../print_helpers.h"
@@ -45,7 +46,6 @@ inline namespace _v1
 {
     struct replacements
     {
-        std::unordered_map<variable const *, variable *> variables;
         std::unordered_map<statement const *, statement *> statements = {};
         std::unordered_map<expression const *, expression *> expressions = {};
     };
@@ -54,6 +54,7 @@ inline namespace _v1
     class scope;
 
     using statement_ir = std::vector<codegen::ir::instruction>;
+    using declaration_ir = std::vector<variant<std::shared_ptr<codegen::ir::variable>, codegen::ir::function>>;
 
     class statement
     {
@@ -89,24 +90,12 @@ inline namespace _v1
             return *_analysis_future;
         }
 
+        std::unique_ptr<statement> clone_with_replacement(const std::vector<expression *> & params, const std::vector<expression *> & args) const;
         std::unique_ptr<statement> clone_with_replacement(replacements & repl) const
         {
             auto ret = _clone_with_replacement(repl);
             repl.statements[this] = ret.get();
             return ret;
-        }
-
-        std::unique_ptr<statement> clone_with_replacement(const std::vector<variable *> & to_replace, const std::vector<variable *> & replacements) const
-        {
-            assert(to_replace.size() == replacements.size());
-            std::unordered_map<const variable *, variable *> replacement_map;
-            for (std::size_t i = 0; i < to_replace.size(); ++i)
-            {
-                replacement_map.emplace(to_replace[i], replacements[i]);
-            }
-
-            struct replacements repl = { std::move(replacement_map) };
-            return _clone_with_replacement(repl);
         }
 
         future<statement *> simplify(simplification_context & ctx)
@@ -130,16 +119,45 @@ inline namespace _v1
         {
             if (!_ir)
             {
-                _ir = _codegen_ir(ctx);
+                auto ir = _codegen_ir(ctx);
+
+                if (!_ir)
+                {
+                    _ir = std::move(ir);
+                }
             }
 
-            return *_ir;
+            auto ret = *_ir;
+            if (_invalidate_ir(ctx))
+            {
+                _ir = none;
+            }
+            return ret;
+        }
+
+        virtual declaration_ir declaration_codegen_ir(ir_generation_context &) const
+        {
+            return {};
         }
 
     private:
-        virtual future<> _analyze(analysis_context &) = 0;
+        virtual future<> _analyze(analysis_context &)
+        {
+            return make_ready_future();
+        }
+
         virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const = 0;
-        virtual future<statement *> _simplify(simplification_context &) = 0;
+
+        virtual bool _invalidate_ir(ir_generation_context &) const
+        {
+            return false;
+        }
+
+        virtual future<statement *> _simplify(simplification_context &)
+        {
+            return make_ready_future(this);
+        }
+
         virtual statement_ir _codegen_ir(ir_generation_context &) const = 0;
 
         std::mutex _future_lock;

@@ -29,20 +29,20 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class member_assignment_variable;
+    class member_assignment_expression;
     class member_assignment_type;
 
-    std::unique_ptr<member_assignment_type> make_member_assignment_type(std::u32string member_name, member_assignment_variable * var, bool = false);
+    std::unique_ptr<member_assignment_type> make_member_assignment_type(std::u32string member_name, member_assignment_expression * var, bool = false);
 
     class member_assignment_type : public type
     {
     public:
-        member_assignment_type(std::u32string member_name, member_assignment_variable * var, bool is_assigned = false)
-            : _member_name{ std::move(member_name) }, _var{ var }, _assigned{ is_assigned }
+        member_assignment_type(std::u32string member_name, member_assignment_expression * expr, bool is_assigned = false)
+            : _member_name{ std::move(member_name) }, _expr{ expr }, _assigned{ is_assigned }
         {
             if (!_assigned)
             {
-                _assigned_type = make_member_assignment_type(_member_name, _var, true);
+                _assigned_type = make_member_assignment_type(_member_name, _expr, true);
             }
         }
 
@@ -65,22 +65,12 @@ inline namespace _v1
             return _member_name;
         }
 
-        virtual bool is_member_assignment() const override
-        {
-            return _assigned;
-        }
-
         type * assigned_type() const
         {
             return _assigned_type.get();
         }
 
         virtual future<std::vector<function *>> get_candidates(lexer::token_type) const override;
-
-        auto get_associated_variable() const
-        {
-            return _var;
-        }
 
     private:
         virtual void _codegen_type(ir_generation_context &) const override
@@ -89,17 +79,17 @@ inline namespace _v1
         }
 
         std::u32string _member_name;
-        member_assignment_variable * _var;
+        member_assignment_expression * _expr;
 
         bool _assigned = false;
         std::unique_ptr<type> _assigned_type;
 
         mutable std::mutex _storage_lock;
         mutable std::vector<std::unique_ptr<function>> _fun_storage;
-        mutable std::vector<std::unique_ptr<variable>> _var_storage;
+        mutable std::vector<std::unique_ptr<expression>> _expr_storage;
     };
 
-    inline std::unique_ptr<member_assignment_type> make_member_assignment_type(std::u32string member_name, member_assignment_variable * var, bool is_assigned)
+    inline std::unique_ptr<member_assignment_type> make_member_assignment_type(std::u32string member_name, member_assignment_expression * var, bool is_assigned)
     {
         return std::make_unique<member_assignment_type>(std::move(member_name), var, is_assigned);
     }

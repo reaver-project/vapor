@@ -115,9 +115,8 @@ inline namespace _v1
         for (auto scope = _scope.get(); scope != _original_scope->parent(); scope = scope->parent())
         {
             std::transform(scope->symbols_in_order().rbegin(), scope->symbols_in_order().rend(), std::back_inserter(scope_cleanup), [&ctx](auto && symbol) {
-                auto variable_ir = symbol->get_variable()->codegen_ir(ctx);
-                auto variable = get<codegen::ir::value>(variable_ir);
-                return codegen::ir::instruction{ {}, {}, { boost::typeindex::type_id<codegen::ir::destruction_instruction>() }, { variable }, variable };
+                auto ir = symbol->get_expression()->codegen_ir(ctx).back().result;
+                return codegen::ir::instruction{ {}, {}, { boost::typeindex::type_id<codegen::ir::destruction_instruction>() }, { ir }, ir };
             });
         }
 

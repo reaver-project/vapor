@@ -24,9 +24,9 @@
 #include <reaver/mayfly.h>
 
 #include "../helpers.h"
+#include "vapor/analyzer/expressions/integer.h"
 #include "vapor/analyzer/statements/if.h"
 #include "vapor/analyzer/statements/return.h"
-#include "vapor/analyzer/variables/integer.h"
 
 using namespace reaver::vapor;
 using namespace reaver::vapor::analyzer;
@@ -41,7 +41,8 @@ MAYFLY_ADD_TESTCASE("single branch, true", [] {
 
     auto ast = parse(U"if (true) { return 1; }", parser::parse_if_statement);
 
-    auto if_stmt = preanalyze_if_statement(ast, current_scope);
+    std::unique_ptr<statement> if_stmt = preanalyze_if_statement(ast, current_scope);
+    auto if_stmt_ptr = if_stmt.get();
 
     analysis_context ctx;
     auto analysis_future = if_stmt->analyze(ctx);
@@ -53,12 +54,12 @@ MAYFLY_ADD_TESTCASE("single branch, true", [] {
     simplification_context simpl_ctx;
 
     auto simpl_future = if_stmt->simplify(simpl_ctx);
-    std::unique_ptr<statement> simplified{ reaver::get(simpl_future) };
-    MAYFLY_REQUIRE(simplified.get() != if_stmt.get());
+    replace_uptr(if_stmt, reaver::get(simpl_future), simpl_ctx);
+    MAYFLY_REQUIRE(if_stmt.get() != if_stmt_ptr);
 
-    auto returns = simplified->get_returns();
+    auto returns = if_stmt->get_returns();
     MAYFLY_REQUIRE(returns.size() == 1);
-    MAYFLY_REQUIRE(returns.front() == simplified.get());
+    MAYFLY_REQUIRE(returns.front() == if_stmt.get());
 });
 
 MAYFLY_ADD_TESTCASE("single branch, false", [] {
@@ -67,22 +68,25 @@ MAYFLY_ADD_TESTCASE("single branch, false", [] {
 
     auto ast = parse(U"if (false) { return 1; }", parser::parse_if_statement);
 
-    auto if_stmt = preanalyze_if_statement(ast, current_scope);
+    std::unique_ptr<statement> if_stmt = preanalyze_if_statement(ast, current_scope);
+    auto if_stmt_ptr = if_stmt.get();
 
     analysis_context ctx;
     auto analysis_future = if_stmt->analyze(ctx);
     reaver::get(analysis_future);
 
+    MAYFLY_CHECK(if_stmt->get_returns().size() == 1);
+
     replacements repl;
     simplification_context simpl_ctx;
 
     auto simpl_future = if_stmt->simplify(simpl_ctx);
-    std::unique_ptr<statement> simplified{ reaver::get(simpl_future) };
-    MAYFLY_REQUIRE(simplified.get() != if_stmt.get());
+    replace_uptr(if_stmt, reaver::get(simpl_future), simpl_ctx);
+    MAYFLY_REQUIRE(if_stmt.get() != if_stmt_ptr);
 
-    auto returns = simplified->get_returns();
+    auto returns = if_stmt->get_returns();
     MAYFLY_REQUIRE(returns.size() == 0);
-    MAYFLY_REQUIRE(dynamic_cast<null_statement *>(simplified.get()));
+    MAYFLY_REQUIRE(dynamic_cast<null_statement *>(if_stmt.get()));
 });
 
 MAYFLY_ADD_TESTCASE("two branches, true", [] {
@@ -91,7 +95,8 @@ MAYFLY_ADD_TESTCASE("two branches, true", [] {
 
     auto ast = parse(U"if (true) { return 0; } else { return 1; }", parser::parse_if_statement);
 
-    auto if_stmt = preanalyze_if_statement(ast, current_scope);
+    std::unique_ptr<statement> if_stmt = preanalyze_if_statement(ast, current_scope);
+    auto if_stmt_ptr = if_stmt.get();
 
     analysis_context ctx;
     auto analysis_future = if_stmt->analyze(ctx);
@@ -103,14 +108,14 @@ MAYFLY_ADD_TESTCASE("two branches, true", [] {
     simplification_context simpl_ctx;
 
     auto simpl_future = if_stmt->simplify(simpl_ctx);
-    std::unique_ptr<statement> simplified{ reaver::get(simpl_future) };
-    MAYFLY_REQUIRE(simplified.get() != if_stmt.get());
+    replace_uptr(if_stmt, reaver::get(simpl_future), simpl_ctx);
+    MAYFLY_REQUIRE(if_stmt.get() != if_stmt_ptr);
 
     integer_constant constant{ 0 };
 
-    auto returns = simplified->get_returns();
+    auto returns = if_stmt->get_returns();
     MAYFLY_REQUIRE(returns.size() == 1);
-    MAYFLY_REQUIRE(returns.front()->get_returned_variable()->is_equal(&constant));
+    MAYFLY_REQUIRE(returns.front()->get_returned_expression()->is_equal(&constant));
 });
 
 MAYFLY_ADD_TESTCASE("two branches, false", [] {
@@ -119,7 +124,8 @@ MAYFLY_ADD_TESTCASE("two branches, false", [] {
 
     auto ast = parse(U"if (false) { return 0; } else { return 1; }", parser::parse_if_statement);
 
-    auto if_stmt = preanalyze_if_statement(ast, current_scope);
+    std::unique_ptr<statement> if_stmt = preanalyze_if_statement(ast, current_scope);
+    auto if_stmt_ptr = if_stmt.get();
 
     analysis_context ctx;
     auto analysis_future = if_stmt->analyze(ctx);
@@ -131,21 +137,22 @@ MAYFLY_ADD_TESTCASE("two branches, false", [] {
     simplification_context simpl_ctx;
 
     auto simpl_future = if_stmt->simplify(simpl_ctx);
-    std::unique_ptr<statement> simplified{ reaver::get(simpl_future) };
-    MAYFLY_REQUIRE(simplified.get() != if_stmt.get());
+    replace_uptr(if_stmt, reaver::get(simpl_future), simpl_ctx);
+    MAYFLY_REQUIRE(if_stmt.get() != if_stmt_ptr);
 
     integer_constant constant{ 1 };
 
-    auto returns = simplified->get_returns();
+    auto returns = if_stmt->get_returns();
     MAYFLY_REQUIRE(returns.size() == 1);
-    MAYFLY_REQUIRE(returns.front()->get_returned_variable()->is_equal(&constant));
+    MAYFLY_REQUIRE(returns.front()->get_returned_expression()->is_equal(&constant));
 });
 
 MAYFLY_ADD_TESTCASE("runtime condition", [] {
     scope s;
     auto current_scope = &s;
-    auto var = make_blank_variable(builtin_types().boolean.get());
-    s.init(U"condition", make_symbol(U"condition", var.get()));
+    test_expression expr{ builtin_types().boolean.get() };
+    expr.set_simplified_expression(std::unique_ptr<expression>{ &expr });
+    s.init(U"condition", make_symbol(U"condition", &expr));
     s.close();
 
     auto ast_single = parse(U"if (condition) { return 0; }", parser::parse_if_statement);

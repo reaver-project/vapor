@@ -21,7 +21,6 @@
  **/
 
 #include "vapor/analyzer/function.h"
-#include "vapor/analyzer/expressions/variable.h"
 #include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/return.h"
 #include "vapor/analyzer/symbol.h"
@@ -42,7 +41,7 @@ inline namespace _v1
         return make_ready_future();
     }
 
-    future<expression *> function::simplify(simplification_context & ctx, std::vector<variable *> arguments)
+    future<expression *> function::simplify(simplification_context & ctx, std::vector<expression *> arguments)
     {
         if (_body)
         {
@@ -83,18 +82,18 @@ inline namespace _v1
                            auto returns = body->get_returns();
 
                            assert(body->has_return_expression() || returns.size());
-                           auto var = body->has_return_expression() ? body->get_return_expression()->get_variable() : returns.front()->get_returned_variable();
+                           auto expr = body->has_return_expression() ? body->get_return_expression() : returns.front()->get_returned_expression();
                            auto begin = body->has_return_expression() ? returns.begin() : returns.begin() + 1;
 
-                           if (!var->is_constant())
+                           if (!expr->is_constant())
                            {
                                return make_ready_future<expression *>(nullptr);
                            }
 
-                           if (std::all_of(begin, returns.end(), [](auto && ret) { return ret->get_returned_variable()->is_constant(); })
-                               && std::all_of(begin, returns.end(), [&](auto && ret) { return ret->get_returned_variable()->is_equal(var); }))
+                           if (std::all_of(begin, returns.end(), [](auto && ret) { return ret->get_returned_expression()->is_constant(); })
+                               && std::all_of(begin, returns.end(), [&](auto && ret) { return ret->get_returned_expression()->is_equal(expr); }))
                            {
-                               return make_ready_future(make_variable_ref_expression(var).release());
+                               return make_ready_future(expr);
                            }
 
                            return make_ready_future<expression *>(nullptr);
@@ -109,7 +108,7 @@ inline namespace _v1
         assert(0);
     }
 
-    future<> function::run_analysis_hooks(analysis_context & ctx, call_expression * expr, std::vector<variable *> args)
+    future<> function::run_analysis_hooks(analysis_context & ctx, call_expression * expr, std::vector<expression *> args)
     {
         return foldl(_analysis_hooks, make_ready_future(), [&ctx, expr, args](auto && prev, auto && hook) {
             return prev.then([&hook, &ctx, expr, args] { return hook(ctx, expr, args); });

@@ -27,33 +27,46 @@
 #include <boost/multiprecision/integer.hpp>
 
 #include "../../parser/literal.h"
-#include "../expressions/variable.h"
-#include "../variables/integer.h"
+#include "expression.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class integer_literal : public expression
+    class integer_constant : public expression
     {
     public:
-        integer_literal(const parser::integer_literal & parse) : _parse{ parse }
+        integer_constant(const parser::integer_literal & parse) : expression{ builtin_types().integer.get() }, _value{ utf8(parse.value.string) }
         {
-            auto val = std::make_unique<integer_constant>(parse);
-            _value = val.get();
-            _set_variable(std::move(val));
+            _parse.address = &parse;
+            _parse.range = parse.range;
+        }
+
+        integer_constant(boost::multiprecision::cpp_int value, synthesized_node<void> parse = {})
+            : expression{ builtin_types().integer.get() }, _parse{ parse }, _value{ std::move(value) }
+        {
         }
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            os << styles::def << ctx << styles::rule_name << "integer-literal";
+            os << styles::def << ctx << styles::rule_name << "integer-constant";
             print_address_range(os, this);
-            os << ' ' << styles::string_value << _value->get_value() << '\n';
+            os << ' ' << styles::string_value << _value << '\n';
         }
 
         const auto & parse() const
         {
             return _parse;
+        }
+
+        const auto & get_value() const
+        {
+            return _value;
+        }
+
+        virtual bool is_constant() const override
+        {
+            return true;
         }
 
     private:
@@ -64,7 +77,7 @@ inline namespace _v1
 
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
-            return make_variable_expression(_value->clone_with_replacement(repl));
+            return std::make_unique<integer_constant>(_value, _parse);
         }
 
         virtual future<expression *> _simplify_expr(simplification_context &) override
@@ -74,8 +87,14 @@ inline namespace _v1
 
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-        const parser::integer_literal & _parse;
-        integer_constant * _value;
+        virtual bool _is_equal(const expression * rhs) const override
+        {
+            auto rhs_int = rhs->as<integer_constant>();
+            return rhs_int && _value == rhs_int->_value;
+        }
+
+        synthesized_node<void> _parse;
+        boost::multiprecision::cpp_int _value;
     };
 }
 }

@@ -48,6 +48,7 @@ inline namespace _v1
             .then([&] {
                 if (!_modifier)
                 {
+                    this->_set_type(_base_expr->get_type());
                     return make_ready_future();
                 }
 
@@ -56,19 +57,23 @@ inline namespace _v1
                     return _base_expr->get_type()
                         ->get_scope()
                         ->get_future(*_accessed_member)
-                        .then([](auto && symb) { return symb->get_variable_future(); })
-                        .then([&](auto && var) { _referenced_variable = var; });
+                        .then([](auto && symb) { return symb->get_expression_future(); })
+                        .then([&](auto && var) {
+                            _referenced_expression = var;
+                            this->_set_type(_referenced_expression.get()->get_type());
+                        });
                 }
 
                 return resolve_overload(ctx, _parse.range, _base_expr.get(), *_modifier, fmap(_arguments, [](auto && arg) { return arg.get(); }))
-                    .then([&](auto && call_expr) {
-                        if (auto call_expr_downcasted = dynamic_cast<call_expression *>(call_expr.get()))
+                    .then([&](std::unique_ptr<expression> call_expr) {
+                        if (auto call_expr_downcasted = call_expr->as<call_expression>())
                         {
                             call_expr_downcasted->set_parse_range(_parse.range);
                         }
                         _call_expression = std::move(call_expr);
                         return _call_expression->analyze(ctx);
-                    });
+                    })
+                    .then([&] { this->_set_type(_call_expression->get_type()); });
             });
     }
 }

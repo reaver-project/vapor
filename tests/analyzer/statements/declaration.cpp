@@ -24,8 +24,8 @@
 
 #include <reaver/future_get.h>
 
+#include "vapor/analyzer/expressions/integer.h"
 #include "vapor/analyzer/statements/declaration.h"
-#include "vapor/analyzer/variables/integer.h"
 #include "vapor/parser/declaration.h"
 
 using namespace reaver::vapor;
@@ -54,11 +54,11 @@ MAYFLY_ADD_TESTCASE("non-member, explicit type, initializer", [] {
         auto analysis_future = decl->analyze(ctx);
         reaver::get(analysis_future);
 
-        MAYFLY_CHECK(decl->declared_symbol()->get_variable()->get_type() == builtin_types().integer.get());
+        MAYFLY_CHECK(decl->declared_symbol()->get_expression()->get_type() == builtin_types().integer.get());
         MAYFLY_CHECK(decl->initializer_expression().get()->get_type() == builtin_types().integer.get());
 
         integer_constant expected_value{ 1 };
-        MAYFLY_CHECK(decl->initializer_expression().get()->get_variable()->is_equal(&expected_value));
+        MAYFLY_CHECK(decl->initializer_expression().get()->is_equal(&expected_value));
 
         auto init_expr = decl->initializer_expression().get();
         simplification_context simpl_ctx{};
@@ -97,11 +97,11 @@ MAYFLY_ADD_TESTCASE("non-member, deduced type, initializer", [] {
         auto analysis_future = decl->analyze(ctx);
         reaver::get(analysis_future);
 
-        MAYFLY_CHECK(decl->declared_symbol()->get_variable()->get_type() == builtin_types().integer.get());
+        MAYFLY_CHECK(decl->declared_symbol()->get_expression()->get_type() == builtin_types().integer.get());
         MAYFLY_CHECK(decl->initializer_expression().get()->get_type() == builtin_types().integer.get());
 
         integer_constant expected_value{ 1 };
-        MAYFLY_CHECK(decl->initializer_expression().get()->get_variable()->is_equal(&expected_value));
+        MAYFLY_CHECK(decl->initializer_expression().get()->is_equal(&expected_value));
     }
 });
 
@@ -118,13 +118,13 @@ MAYFLY_ADD_TESTCASE("member, deduced type, initializer", [] {
         auto analysis_future = decl->analyze(ctx);
         reaver::get(analysis_future);
 
-        MAYFLY_CHECK(decl->declared_symbol()->get_variable()->get_type() == builtin_types().integer.get());
+        MAYFLY_CHECK(decl->declared_symbol()->get_expression()->get_type() == builtin_types().integer.get());
         MAYFLY_CHECK(decl->initializer_expression().get()->get_type() == builtin_types().integer.get());
 
         integer_constant expected_value{ 1 };
-        MAYFLY_CHECK(decl->initializer_expression().get()->get_variable()->is_equal(&expected_value));
-        MAYFLY_CHECK(decl->declared_symbol()->get_variable()->is_member());
-        MAYFLY_CHECK(decl->declared_symbol()->get_variable()->get_default_value()->get_variable()->is_equal(&expected_value));
+        MAYFLY_CHECK(decl->initializer_expression().get()->is_equal(&expected_value));
+        MAYFLY_CHECK(decl->declared_symbol()->get_expression()->is_member());
+        MAYFLY_CHECK(decl->declared_symbol()->get_expression()->get_default_value()->is_equal(&expected_value));
     }
 });
 
@@ -141,8 +141,8 @@ MAYFLY_ADD_TESTCASE("member, explicit type, no initializer", [] {
         auto analysis_future = decl->analyze(ctx);
         reaver::get(analysis_future);
 
-        MAYFLY_CHECK(decl->declared_symbol()->get_variable()->get_type() == builtin_types().integer.get());
-        MAYFLY_CHECK(decl->declared_symbol()->get_variable()->is_member());
+        MAYFLY_CHECK(decl->declared_symbol()->get_expression()->get_type() == builtin_types().integer.get());
+        MAYFLY_CHECK(decl->declared_symbol()->get_expression()->is_member());
     }
 });
 

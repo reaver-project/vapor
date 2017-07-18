@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,4 +23,3 @@
 #include "vapor/analyzer/semantic/context.h"
 #include "vapor/analyzer/statements/statement.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/analyzer/variables/variable.h"

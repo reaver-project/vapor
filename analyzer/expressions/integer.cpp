@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -29,13 +29,13 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    statement_ir integer_literal::_codegen_ir(ir_generation_context &) const
+    statement_ir integer_constant::_codegen_ir(ir_generation_context &) const
     {
         return { codegen::ir::instruction{ none,
             none,
             { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
             {},
-            codegen::ir::value{ codegen::ir::integer_value{ _value->get_value() } } } };
+            codegen::ir::value{ codegen::ir::integer_value{ _value } } } };
     }
 }
 }

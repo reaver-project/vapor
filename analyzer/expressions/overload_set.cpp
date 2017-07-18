@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,11 +22,12 @@
 
 #include <numeric>
 
+#include "vapor/analyzer/expressions/expression_ref.h"
+#include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/statements/function_declaration.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/analyzer/variables/overload_set.h"
 #include "vapor/codegen/ir/function.h"
 #include "vapor/codegen/ir/type.h"
 #include "vapor/parser.h"
@@ -35,16 +36,23 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<variable> overload_set::_clone_with_replacement(replacements & repl) const
+    std::unique_ptr<expression> overload_set::_clone_expr_with_replacement(replacements & repl) const
     {
-        assert(0);
+        // icky
+        return make_expression_ref(const_cast<overload_set *>(this));
     }
 
-    variable_ir overload_set::_codegen_ir(ir_generation_context & ctx) const
+    statement_ir overload_set::_codegen_ir(ir_generation_context & ctx) const
     {
         auto var = codegen::ir::make_variable(_type->codegen_type(ctx));
         var->scopes = _type->get_scope()->codegen_ir(ctx);
-        return { std::move(var) };
+        return { codegen::ir::instruction{
+            none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, codegen::ir::value{ std::move(var) } } };
+    }
+
+    declaration_ir overload_set::declaration_codegen_ir(ir_generation_context & ctx) const
+    {
+        return { { get<std::shared_ptr<codegen::ir::variable>>(codegen_ir(ctx).back().result) } };
     }
 
     void overload_set::add_function(function_declaration * decl)

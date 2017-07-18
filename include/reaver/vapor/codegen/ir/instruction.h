@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -106,6 +106,11 @@ inline namespace _v1
         struct noop_instruction
         {
         };
+
+        inline auto get_ir_variable(const std::vector<instruction> & ir)
+        {
+            return get<std::shared_ptr<variable>>(ir.back().result);
+        }
     };
 }
 }

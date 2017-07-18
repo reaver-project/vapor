@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,7 +27,7 @@
 #include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/expressions/import.h"
 #include "vapor/analyzer/expressions/integer.h"
-#include "vapor/analyzer/expressions/member.h"
+#include "vapor/analyzer/expressions/member_access.h"
 #include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/expressions/struct.h"
 #include "vapor/analyzer/expressions/unary.h"
@@ -48,9 +48,9 @@ inline namespace _v1
                     return nullptr;
                 },
 
-                [](const parser::integer_literal & integer) -> std::unique_ptr<expression> { return std::make_unique<integer_literal>(integer); },
+                [](const parser::integer_literal & integer) -> std::unique_ptr<expression> { return std::make_unique<integer_constant>(integer); },
 
-                [](const parser::boolean_literal & boolean) -> std::unique_ptr<expression> { return std::make_unique<boolean_literal>(boolean); },
+                [](const parser::boolean_literal & boolean) -> std::unique_ptr<expression> { return std::make_unique<boolean_constant>(boolean); },
 
                 [&](const parser::postfix_expression & postfix) -> std::unique_ptr<expression> {
                     auto pexpr = preanalyze_postfix_expression(postfix, lex_scope);
@@ -83,7 +83,7 @@ inline namespace _v1
                 },
 
                 [&](const parser::member_expression & mexpr) -> std::unique_ptr<expression> {
-                    auto memexpr = preanalyze_member_expression(mexpr, lex_scope);
+                    auto memexpr = preanalyze_member_access_expression(mexpr, lex_scope);
                     return memexpr;
                 },
 

@@ -40,10 +40,25 @@ inline namespace _v1
         }
 
     private:
+        virtual expression * _get_replacement() override
+        {
+            return _type->get_expression();
+        }
+
+        virtual const expression * _get_replacement() const override
+        {
+            return _type->get_expression();
+        }
+
         virtual future<> _analyze(analysis_context &) override;
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
         virtual future<expression *> _simplify_expr(simplification_context &) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+
+        virtual bool _is_equal(const expression * rhs) const override
+        {
+            assert(0);
+        }
 
         const parser::struct_literal & _parse;
 

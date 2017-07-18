@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,17 +21,17 @@
  **/
 
 #include "vapor/analyzer/expressions/identifier.h"
-#include "vapor/analyzer/expressions/variable.h"
 #include "vapor/parser.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    reaver::future<> identifier::_analyze(analysis_context & ctx)
+    future<> identifier::_analyze(analysis_context & ctx)
     {
-        return _lex_scope->resolve(_parse.value.string).then([](auto && symbol) { return symbol->get_variable_future(); }).then([this](auto && variable) {
-            _referenced = variable;
+        return _lex_scope->resolve(_parse.value.string).then([](auto && symbol) { return symbol->get_expression_future(); }).then([this](auto && expression) {
+            _referenced = expression;
+            this->_set_type(_referenced->get_type());
         });
     }
 }

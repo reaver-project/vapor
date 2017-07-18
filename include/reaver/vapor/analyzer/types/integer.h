@@ -35,6 +35,10 @@ inline namespace _v1
     class integer_type : public type
     {
     public:
+        integer_type() : type{ dont_init_expr }
+        {
+        }
+
         virtual future<std::vector<function *>> get_candidates(lexer::token_type token) const override
         {
             auto ret = [](auto && fn) { return make_ready_future(std::vector<function *>{ fn }); };

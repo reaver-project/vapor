@@ -22,16 +22,9 @@
 
 #pragma once
 
-#include "expression.h"
-#include "variable.h"
+#include <string>
 
-namespace reaver::vapor::parser
-{
-inline namespace _v1
-{
-    struct member_expression;
-}
-}
+#include "expression.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -40,50 +33,74 @@ inline namespace _v1
     class member_expression : public expression
     {
     public:
-        member_expression(const parser::member_expression & parse);
-
-        virtual void print(std::ostream & os, print_context) const override;
-
-        virtual variable * get_variable() const override;
-
-        const auto & parse() const
+        member_expression(type * parent_type, std::u32string name, type * own_type) : expression{ own_type }, _parent{ parent_type }, _name{ std::move(name) }
         {
-            return _parse;
+        }
+
+        codegen::ir::member_variable member_codegen_ir(ir_generation_context & ctx) const;
+
+        const std::u32string & get_name() const
+        {
+            return _name;
+        }
+
+        virtual void print(std::ostream & os, print_context ctx) const override
+        {
+            os << styles::def << ctx << styles::rule_name << "member-expression";
+            os << styles::def << " @ " << styles::address << this << styles::def << ": ";
+            os << styles::string_value << utf8(_name) << styles::def << '\n';
+
+            auto type_ctx = ctx.make_branch(false);
+            os << styles::def << type_ctx << styles::subrule_name << "type:\n";
+            get_type()->print(os, type_ctx.make_branch(true));
+
+            auto parent_ctx = ctx.make_branch(true);
+            if (_parent)
+            {
+                os << styles::def << parent_ctx << styles::subrule_name << "parent type:\n";
+                _parent->print(os, parent_ctx.make_branch(true));
+            }
+            else
+            {
+                os << styles::def << parent_ctx << styles::subrule_name << "unknown parent type\n";
+            }
+        }
+
+        virtual bool is_member() const override
+        {
+            return true;
+        }
+
+        virtual void set_parent_type(type * parent_type)
+        {
+            assert(!_parent);
+            assert(parent_type);
+            _parent = parent_type;
         }
 
     private:
-        member_expression(const parser::member_expression & parse, variable * referenced) : _parse{ parse }, _referenced{ referenced }
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
         {
+            return std::make_unique<member_expression>(_parent, _name, get_type());
         }
 
-        virtual future<> _analyze(analysis_context &) override;
-
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
+        virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
         {
-            if (_referenced)
-            {
-                return make_variable_expression(_referenced->clone_with_replacement(repl));
-            }
-
-            assert(!"tried to clone_expr_with_replacement a member expression that refers to a member assignment; this shouldn't've survived analysis!");
+            assert(0);
         }
 
-        virtual future<expression *> _simplify_expr(simplification_context &) override
+        virtual bool _is_equal(const expression * rhs) const override
         {
-            return make_ready_future<expression *>(this);
+            assert(0);
         }
 
-        virtual statement_ir _codegen_ir(ir_generation_context &) const override;
-
-        const parser::member_expression & _parse;
-
-        variable * _referenced = nullptr;
-        variable * _base = nullptr;
+        type * _parent = nullptr;
+        std::u32string _name;
     };
 
-    inline std::unique_ptr<member_expression> preanalyze_member_expression(const parser::member_expression & parse, scope *)
+    inline auto make_member_expression(type * parent, std::u32string name, type * own_type)
     {
-        return std::make_unique<member_expression>(parse);
+        return std::make_unique<member_expression>(parent, std::move(name), own_type);
     }
 }
 }

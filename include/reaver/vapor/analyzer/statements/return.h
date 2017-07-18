@@ -49,9 +49,9 @@ inline namespace _v1
             return _value_expr->get_type();
         }
 
-        variable * get_returned_variable() const
+        expression * get_returned_expression() const
         {
-            return _value_expr->get_variable();
+            return _value_expr.get();
         }
 
         virtual bool always_returns() const override

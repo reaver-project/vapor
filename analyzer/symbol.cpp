@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,12 +27,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    variant<std::shared_ptr<codegen::_v1::ir::variable>, std::vector<codegen::_v1::ir::function>> symbol::codegen_ir(ir_generation_context & ctx) const
+    declaration_ir symbol::codegen_ir(ir_generation_context & ctx) const
     {
-        return fmap(_variable->codegen_ir(ctx),
-            make_overload_set([](none_t) { return std::vector<codegen::ir::function>{}; },
-                [](std::vector<codegen::ir::function> fs) { return fs; },
-                [](codegen::ir::value val) { return get<std::shared_ptr<codegen::ir::variable>>(val); }));
+        return get_expression()->declaration_codegen_ir(ctx);
     }
 }
 }

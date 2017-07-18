@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -25,7 +25,7 @@
 #include <memory>
 #include <shared_mutex>
 
-#include "variables/variable.h"
+#include "expressions/expression.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -37,36 +37,36 @@ inline namespace _v1
         using _shlock = std::shared_lock<std::shared_mutex>;
 
     public:
-        symbol(std::u32string name, variable * variable) : _name{ std::move(name) }, _variable{ variable }
+        symbol(std::u32string name, expression * expression) : _name{ std::move(name) }, _expression{ expression }
         {
         }
 
-        void set_variable(variable * var)
+        void set_expression(expression * var)
         {
             _ulock lock{ _lock };
 
-            assert(!_variable && var);
-            _variable = var;
+            assert(!_expression && var);
+            _expression = var;
             if (_promise)
             {
-                _promise->set(_variable);
+                _promise->set(_expression);
             }
         }
 
-        variable * get_variable() const
+        expression * get_expression() const
         {
             _shlock lock{ _lock };
 
-            assert(_variable);
-            return _variable;
+            assert(_expression);
+            return _expression;
         }
 
         type * get_type() const
         {
             _shlock lock{ _lock };
 
-            assert(_variable);
-            return _variable->get_type();
+            assert(_expression);
+            return _expression->get_type();
         }
 
         std::u32string get_name() const
@@ -74,18 +74,18 @@ inline namespace _v1
             return _name;
         }
 
-        auto get_variable_future()
+        auto get_expression_future()
         {
             _ulock lock{ _lock };
 
-            if (_variable && !_future)
+            if (_expression && !_future)
             {
-                _future = make_ready_future(_variable);
+                _future = make_ready_future(_expression);
             }
 
             if (!_future)
             {
-                auto pair = make_promise<variable *>();
+                auto pair = make_promise<expression *>();
                 _promise = std::move(pair.promise);
                 _future = std::move(pair.future);
             }
@@ -95,27 +95,27 @@ inline namespace _v1
 
         future<> simplify(simplification_context & ctx)
         {
-            return get_variable()->simplify(ctx).then([&](auto && simplified) {
+            return get_expression()->simplify_expr(ctx).then([&](auto && simplified) {
                 _ulock lock{ _lock };
-                _variable = simplified;
+                _expression = simplified;
             });
         }
 
-        variant<std::shared_ptr<codegen::ir::variable>, std::vector<codegen::ir::function>> codegen_ir(ir_generation_context &) const;
+        declaration_ir codegen_ir(ir_generation_context &) const;
 
     private:
         mutable std::shared_mutex _lock;
 
         std::u32string _name;
 
-        variable * _variable;
-        optional<future<variable *>> _future;
-        optional<manual_promise<variable *>> _promise;
+        expression * _expression;
+        optional<future<expression *>> _future;
+        optional<manual_promise<expression *>> _promise;
     };
 
-    inline auto make_symbol(std::u32string name, variable * variable = nullptr)
+    inline auto make_symbol(std::u32string name, expression * expression = nullptr)
     {
-        return std::make_unique<symbol>(std::move(name), variable);
+        return std::make_unique<symbol>(std::move(name), expression);
     }
 }
 }

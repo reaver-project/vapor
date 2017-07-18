@@ -45,8 +45,6 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
-        virtual variable * get_variable() const override;
-
         const expression * get_lhs() const
         {
             return _lhs.get();
@@ -70,6 +68,16 @@ inline namespace _v1
     private:
         binary_expression(const binary_expression & other) : _parse{ other._parse }, _op{ other._op }
         {
+        }
+
+        virtual expression * _get_replacement() override
+        {
+            return _call_expression->_get_replacement();
+        }
+
+        virtual const expression * _get_replacement() const override
+        {
+            return _call_expression->_get_replacement();
         }
 
         virtual future<> _analyze(analysis_context &) override;

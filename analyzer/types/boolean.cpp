@@ -21,9 +21,10 @@
  **/
 
 #include "vapor/analyzer/types/boolean.h"
-#include "vapor/analyzer/expressions/variable.h"
+#include "vapor/analyzer/expressions/boolean.h"
+#include "vapor/analyzer/expressions/runtime_value.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/analyzer/variables/boolean.h"
+#include "vapor/codegen/ir/instruction.h"
 #include "vapor/codegen/ir/type.h"
 #include "vapor/codegen/ir/variable.h"
 
@@ -44,8 +45,8 @@ inline namespace _v1
     template<typename Instruction, typename Eval>
     auto boolean_type::_generate_function(const char32_t * name, const char * desc, Eval eval, type * return_type)
     {
-        auto lhs = make_blank_variable(builtin_types().boolean.get());
-        auto rhs = make_blank_variable(builtin_types().boolean.get());
+        auto lhs = make_runtime_value(builtin_types().boolean.get());
+        auto rhs = make_runtime_value(builtin_types().boolean.get());
 
         auto lhs_arg = lhs.get();
         auto rhs_arg = rhs.get();
@@ -74,7 +75,7 @@ inline namespace _v1
 #define ADD_OPERATION(NAME, BUILTIN_NAME, OPERATOR, RESULT_TYPE)                                                                                               \
     function * boolean_type::_##NAME()                                                                                                                         \
     {                                                                                                                                                          \
-        static auto eval = [](auto &&, const std::vector<variable *> & args) {                                                                                 \
+        static auto eval = [](auto &&, const std::vector<expression *> & args) {                                                                               \
             assert(args.size() == 2);                                                                                                                          \
             assert(args[0]->get_type() == builtin_types().boolean.get());                                                                                      \
             assert(args[1]->get_type() == builtin_types().boolean.get());                                                                                      \
@@ -84,10 +85,9 @@ inline namespace _v1
                 return make_ready_future<expression *>(nullptr);                                                                                               \
             }                                                                                                                                                  \
                                                                                                                                                                \
-            auto lhs = static_cast<boolean_constant *>(args[0]);                                                                                               \
-            auto rhs = static_cast<boolean_constant *>(args[1]);                                                                                               \
-            return make_ready_future<expression *>(                                                                                                            \
-                make_variable_expression(std::make_unique<RESULT_TYPE##_constant>(lhs->get_value() OPERATOR rhs->get_value())).release());                     \
+            auto lhs = args[0]->as<boolean_constant>();                                                                                                        \
+            auto rhs = args[1]->as<boolean_constant>();                                                                                                        \
+            return make_ready_future<expression *>(std::make_unique<RESULT_TYPE##_constant>(lhs->get_value() OPERATOR rhs->get_value()).release());            \
         };                                                                                                                                                     \
         static auto NAME = _generate_function<codegen::ir::boolean_##NAME##_instruction>(                                                                      \
             BUILTIN_NAME, "<builtin boolean " #NAME ">", eval, builtin_types().RESULT_TYPE.get());                                                             \

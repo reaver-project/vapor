@@ -24,36 +24,47 @@
 
 #include <memory>
 
-#include "../../codegen/ir/boolean.h"
 #include "../../parser/literal.h"
-#include "../function.h"
-#include "../variables/boolean.h"
-#include "variable.h"
+#include "expression.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class boolean_literal : public expression
+    class boolean_constant : public expression
     {
     public:
-        boolean_literal(const parser::boolean_literal & parse) : _parse{ parse }
+        boolean_constant(const parser::boolean_literal & parse) : expression{ builtin_types().boolean.get() }, _value{ parse.value.string == U"true" }
         {
-            auto val = std::make_unique<boolean_constant>(parse);
-            _value = val.get();
-            _set_variable(std::move(val));
+            _parse.address = &parse;
+            _parse.range = parse.range;
+        }
+
+        boolean_constant(bool value, synthesized_node<void> parse = {})
+            : expression{ builtin_types().boolean.get() }, _parse{ parse }, _value{ std::move(value) }
+        {
         }
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            os << styles::def << ctx << styles::rule_name << "boolean-literal";
+            os << styles::def << ctx << styles::rule_name << "boolean-constant";
             print_address_range(os, this);
-            os << ' ' << styles::string_value << std::boolalpha << _value->get_value() << '\n';
+            os << ' ' << styles::string_value << _value << '\n';
         }
 
         const auto & parse() const
         {
             return _parse;
+        }
+
+        auto get_value() const
+        {
+            return _value;
+        }
+
+        virtual bool is_constant() const override
+        {
+            return true;
         }
 
     private:
@@ -64,7 +75,7 @@ inline namespace _v1
 
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
-            return make_variable_expression(_value->clone_with_replacement(repl));
+            return std::make_unique<boolean_constant>(_value, _parse);
         }
 
         virtual future<expression *> _simplify_expr(simplification_context &) override
@@ -74,10 +85,14 @@ inline namespace _v1
 
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-        const parser::boolean_literal & _parse;
-        boolean_constant * _value;
-    };
+        virtual bool _is_equal(const expression * rhs) const override
+        {
+            auto rhs_bool = rhs->as<boolean_constant>();
+            return rhs_bool && _value == rhs_bool->_value;
+        }
 
-    std::unique_ptr<type> make_boolean_type();
+        synthesized_node<void> _parse;
+        bool _value;
+    };
 }
 }

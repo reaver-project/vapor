@@ -24,11 +24,10 @@
 
 #include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/expressions/identifier.h"
+#include "vapor/analyzer/expressions/member.h"
 #include "vapor/analyzer/expressions/postfix.h"
-#include "vapor/analyzer/expressions/variable.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
-#include "vapor/analyzer/variables/member.h"
 #include "vapor/parser.h"
 
 namespace reaver::vapor::analyzer
@@ -47,11 +46,11 @@ inline namespace _v1
         ret->_base_expr = _base_expr->clone_expr_with_replacement(repl);
         ret->_arguments = fmap(_arguments, [&](auto && arg) { return arg->clone_expr_with_replacement(repl); });
 
-        ret->_referenced_variable = fmap(_referenced_variable, [&](auto && var) {
-            auto it = repl.variables.find(var);
-            if (it != repl.variables.end())
+        ret->_referenced_expression = fmap(_referenced_expression, [&](auto && var) {
+            auto it = repl.expressions.find(var);
+            if (it != repl.expressions.end())
             {
-                return repl.variables[var];
+                return repl.expressions[var];
             }
             return var;
         });
@@ -76,14 +75,13 @@ inline namespace _v1
 
                 if (_accessed_member)
                 {
-                    auto var = _base_expr->get_variable();
-                    if (!var->is_constant())
+                    if (!_base_expr->is_constant())
                     {
                         return make_ready_future<expression *>(this);
                     }
 
-                    assert(_referenced_variable.get()->is_member());
-                    auto member = var->get_member(static_cast<member_variable *>(*_referenced_variable));
+                    assert(_referenced_expression.get()->is_member());
+                    auto member = _base_expr->get_member(_referenced_expression.get()->as<member_expression>()->get_name());
                     assert(member);
 
                     if (!member->is_constant())
@@ -92,7 +90,7 @@ inline namespace _v1
                     }
 
                     auto repl = replacements{};
-                    return make_ready_future<expression *>(make_variable_expression(member->clone_with_replacement(repl)).release());
+                    return make_ready_future<expression *>(member->clone_expr_with_replacement(repl).release());
                 }
 
                 return _call_expression->simplify_expr(ctx).then([&](auto && repl) -> expression * {

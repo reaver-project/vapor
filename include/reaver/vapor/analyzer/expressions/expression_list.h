@@ -27,7 +27,6 @@
 #include <reaver/prelude/monad.h>
 
 #include "../helpers.h"
-#include "../variables/variable.h"
 #include "expression.h"
 
 namespace reaver::vapor::parser
@@ -57,6 +56,11 @@ inline namespace _v1
             return mbind(value, [&](auto && expr) { return expr->codegen_ir(ctx); });
         }
 
+        virtual bool _is_equal(const expression * rhs) const override
+        {
+            return value.back()->is_equal(rhs);
+        }
+
     public:
         expression_list(const parser::expression_list & parse) : parse_{ parse }
         {
@@ -64,9 +68,9 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
-        virtual variable * get_variable() const override
+        virtual bool is_constant() const override
         {
-            return value.back()->get_variable();
+            return std::all_of(value.begin(), value.end(), [](auto && expr) { return expr->is_constant(); });
         }
 
         const auto & parse() const

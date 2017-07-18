@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -33,6 +33,7 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     class function;
+    class expression;
 
     class ir_generation_context
     {
@@ -47,9 +48,28 @@ inline namespace _v1
         std::size_t label_index = 0;
         std::size_t struct_index = 0;
 
+        void push_base_expression(const expression * expr)
+        {
+            _base_expression_stack.push_back(expr);
+        }
+
+        void pop_base_expression(const expression * expr)
+        {
+            assert(!_base_expression_stack.empty());
+            assert(_base_expression_stack.back() == expr);
+            _base_expression_stack.pop_back();
+        }
+
+        const expression * get_current_base() const
+        {
+            assert(!_base_expression_stack.empty());
+            return _base_expression_stack.back();
+        }
+
     private:
         std::vector<const function *> _functions_to_generate;
         std::unordered_set<const function *> _generated_functions;
+        std::vector<const expression *> _base_expression_stack;
     };
 }
 }

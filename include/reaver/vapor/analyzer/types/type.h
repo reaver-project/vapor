@@ -49,7 +49,6 @@ inline namespace _v1
 {
     class function;
     class expression;
-    class variable;
 
     class type
     {
@@ -64,6 +63,27 @@ inline namespace _v1
         {
             _init_expr();
             _init_pack_type();
+        }
+
+        static constexpr struct dont_init_expr_t
+        {
+        } dont_init_expr{};
+
+        type(dont_init_expr_t) : _member_scope{ std::make_unique<scope>() }
+        {
+        }
+
+        void init_expr()
+        {
+            if (!_self_expression)
+            {
+                if (!_expression_initialization)
+                {
+                    _expression_initialization = true;
+                    _init_expr();
+                    _init_pack_type();
+                }
+            }
         }
 
     protected:
@@ -91,7 +111,7 @@ inline namespace _v1
             return make_ready_future(std::vector<function *>{});
         }
 
-        virtual future<function *> get_constructor(std::vector<const variable *>) const
+        virtual future<function *> get_constructor(std::vector<const expression *>) const
         {
             return make_ready_future(static_cast<function *>(nullptr));
         }
@@ -102,6 +122,11 @@ inline namespace _v1
         virtual const scope * get_scope() const
         {
             return _member_scope.get();
+        }
+
+        virtual type * get_member_type(const std::u32string &) const
+        {
+            return nullptr;
         }
 
         std::shared_ptr<codegen::ir::variable_type> codegen_type(ir_generation_context & ctx) const
@@ -115,10 +140,7 @@ inline namespace _v1
             return *_codegen_t;
         }
 
-        expression * get_expression() const
-        {
-            return _self_expression.get();
-        }
+        expression * get_expression() const;
 
         virtual type * get_pack_type() const
         {
@@ -136,11 +158,6 @@ inline namespace _v1
             return false;
         }
 
-        virtual bool is_member_assignment() const
-        {
-            return false;
-        }
-
     private:
         virtual void _codegen_type(ir_generation_context &) const = 0;
 
@@ -148,6 +165,7 @@ inline namespace _v1
         std::unique_ptr<scope> _member_scope;
         // only shared to not require a complete definition of expression to be visible
         // (unique_ptr would require that unless I moved all ctors and dtors out of the header)
+        bool _expression_initialization = false;
         std::shared_ptr<expression> _self_expression;
         void _init_expr();
         std::unique_ptr<type> _pack_type;
@@ -159,6 +177,10 @@ inline namespace _v1
     class type_type : public type
     {
     public:
+        type_type() : type{ dont_init_expr }
+        {
+        }
+
         virtual std::string explain() const override
         {
             return "type";
@@ -176,8 +198,8 @@ inline namespace _v1
 
         mutable std::mutex _generic_ctor_lock;
         mutable std::shared_ptr<function> _generic_ctor;
-        mutable std::shared_ptr<variable> _generic_ctor_first_arg;
-        mutable std::shared_ptr<variable> _generic_ctor_pack_arg;
+        mutable std::unique_ptr<expression> _generic_ctor_first_arg;
+        mutable std::unique_ptr<expression> _generic_ctor_pack_arg;
     };
 
     std::unique_ptr<type> make_integer_type();
@@ -206,6 +228,11 @@ inline namespace _v1
 
             return builtins;
         }();
+
+        builtins.type->init_expr();
+        builtins.integer->init_expr();
+        builtins.boolean->init_expr();
+        builtins.unconstrained->init_expr();
 
         return builtins;
     }

@@ -25,7 +25,6 @@
 #include "../../range.h"
 #include "../function.h"
 #include "expression.h"
-#include "variable.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -45,15 +44,13 @@ inline namespace _v1
         }
 
         virtual void print(std::ostream &, print_context ctx) const override;
-        virtual variable * get_variable() const override;
 
         void replace_with(std::unique_ptr<expression> expr)
         {
-            assert(!_var);
             assert(!_replacement_expr);
 
             _replacement_expr = std::move(expr);
-            if (auto * replacement_call_expr = dynamic_cast<call_expression *>(_replacement_expr.get()))
+            if (auto * replacement_call_expr = _replacement_expr->as<call_expression>())
             {
                 replacement_call_expr->set_parse_range(_range.get());
             }
@@ -71,6 +68,16 @@ inline namespace _v1
         }
 
     private:
+        virtual expression * _get_replacement() override
+        {
+            return _replacement_expr ? _replacement_expr->_get_replacement() : this;
+        }
+
+        virtual const expression * _get_replacement() const override
+        {
+            return _replacement_expr ? _replacement_expr->_get_replacement() : this;
+        }
+
         virtual future<> _analyze(analysis_context &) override;
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
         virtual future<expression *> _simplify_expr(simplification_context &) override;
@@ -83,7 +90,6 @@ inline namespace _v1
 
     private:
         std::vector<expression *> _args;
-        std::unique_ptr<variable> _var;
         std::unique_ptr<expression> _cloned_type_expr;
     };
 
@@ -104,11 +110,6 @@ inline namespace _v1
     inline auto make_call_expression(function * fun, std::vector<expression *> args)
     {
         return std::make_unique<call_expression>(fun, args);
-    }
-
-    inline auto make_call_expression(function * fun, std::vector<variable *> args)
-    {
-        return std::make_unique<owning_call_expression>(fun, fmap(args, [](auto && arg) { return make_variable_ref_expression(arg); }));
     }
 }
 }

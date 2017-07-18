@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,7 +21,6 @@
  **/
 
 #include "vapor/codegen/generator.h"
-#include "vapor/codegen/cxx/names.h" // baaaaad, need to sort this nonsense out
 #include "vapor/codegen/ir/type.h"
 
 #include <cassert>
@@ -50,29 +49,6 @@ inline namespace _v1
 
         _defined_types.insert(type);
         return _generator->generate_definition(type, *this);
-    }
-
-    std::u32string codegen_context::get_storage_for(std::shared_ptr<ir::variable_type> type)
-    {
-        auto it = _unallocated_variables.find(type);
-        if (it != _unallocated_variables.end())
-        {
-            if (!it->second.empty())
-            {
-                auto ret = std::move(it->second.back());
-                it->second.pop_back();
-                return ret;
-            }
-        }
-
-        auto var = U"__pseudoregister_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(storage_object_index++));
-        put_into_function_header += U"::reaver::manual_object<" + cxx::type_name(type, *this) + U"> " + var + U";\n";
-        return var;
-    }
-
-    void codegen_context::free_storage_for(std::u32string name, std::shared_ptr<ir::variable_type> type)
-    {
-        _unallocated_variables[std::move(type)].push_back(std::move(name));
     }
 }
 }

@@ -28,13 +28,13 @@
 
 #include "../../parser/literal.h"
 #include "../symbol.h"
-#include "expression.h"
+#include "expression_ref.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class identifier : public expression
+    class identifier : public expression_ref
     {
     public:
         identifier(const parser::identifier & parse, scope * lex_scope) : _parse{ parse }, _lex_scope{ lex_scope }
@@ -48,11 +48,6 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
-        virtual variable * get_variable() const override
-        {
-            return _referenced;
-        }
-
         const auto & parse() const
         {
             return _parse;
@@ -60,13 +55,9 @@ inline namespace _v1
 
     private:
         virtual future<> _analyze(analysis_context &) override;
-        std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
-        virtual future<expression *> _simplify_expr(simplification_context &) override;
-        virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
         const parser::identifier & _parse;
         scope * _lex_scope;
-        variable * _referenced;
     };
 
     inline std::unique_ptr<identifier> preanalyze_identifier(const parser::identifier & parse, scope * lex_scope)

@@ -45,14 +45,14 @@ inline namespace _v1
     class call_expression;
 
     using function_codegen = reaver::function<codegen::ir::function(ir_generation_context &)>;
-    using function_hook = reaver::function<reaver::future<>(analysis_context &, call_expression *, std::vector<variable *>)>;
-    using function_eval = reaver::function<future<expression *>(simplification_context &, std::vector<variable *>)>;
+    using function_hook = reaver::function<reaver::future<>(analysis_context &, call_expression *, std::vector<expression *>)>;
+    using function_eval = reaver::function<future<expression *>(simplification_context &, std::vector<expression *>)>;
     using scopes_generator = reaver::function<std::vector<codegen::ir::scope>(ir_generation_context &)>;
 
     class function
     {
     public:
-        function(std::string explanation, expression * ret, std::vector<variable *> params, function_codegen codegen, optional<range_type> range = none)
+        function(std::string explanation, expression * ret, std::vector<expression *> params, function_codegen codegen, optional<range_type> range = none)
             : _explanation{ std::move(explanation) },
               _range{ std::move(range) },
               _return_type_expression{ ret },
@@ -81,7 +81,7 @@ inline namespace _v1
             return _return_type_expression;
         }
 
-        const std::vector<variable *> & parameters() const
+        const std::vector<expression *> & parameters() const
         {
             return _parameters;
         }
@@ -102,7 +102,7 @@ inline namespace _v1
         void print(std::ostream & os, print_context ctx) const;
 
         future<> simplify(simplification_context &);
-        future<expression *> simplify(simplification_context &, std::vector<variable *>);
+        future<expression *> simplify(simplification_context &, std::vector<expression *>);
 
         codegen::ir::function codegen_ir(ir_generation_context & ctx) const
         {
@@ -160,14 +160,6 @@ inline namespace _v1
 
         future<expression *> get_return_type() const
         {
-            std::unique_lock<std::mutex> lock{ _ret_lock };
-
-            if (_return_type_expression)
-            {
-                return make_ready_future(+_return_type_expression);
-            }
-
-            assert(_return_type_future);
             return _return_type_future.get();
         }
 
@@ -191,14 +183,14 @@ inline namespace _v1
             _analysis_hooks.push_back(std::move(hook));
         }
 
-        future<> run_analysis_hooks(analysis_context & ctx, call_expression * expr, std::vector<variable *> args);
+        future<> run_analysis_hooks(analysis_context & ctx, call_expression * expr, std::vector<expression *> args);
 
         void set_eval(function_eval eval)
         {
             _compile_time_eval = std::move(eval);
         }
 
-        void set_parameters(std::vector<variable *> params)
+        void set_parameters(std::vector<expression *> params)
         {
             _parameters = std::move(params);
         }
@@ -231,7 +223,7 @@ inline namespace _v1
         std::shared_ptr<expression> _owned_expression;
 
         bool _is_member = false;
-        std::vector<variable *> _parameters;
+        std::vector<expression *> _parameters;
         optional<std::u32string> _name;
         function_codegen _codegen;
         mutable optional<codegen::ir::function> _ir;
@@ -243,7 +235,7 @@ inline namespace _v1
 
     inline std::unique_ptr<function> make_function(std::string expl,
         expression * return_type,
-        std::vector<variable *> parameters,
+        std::vector<expression *> parameters,
         function_codegen codegen,
         optional<range_type> range = none)
     {

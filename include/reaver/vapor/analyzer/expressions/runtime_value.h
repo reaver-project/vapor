@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,37 +22,41 @@
 
 #pragma once
 
-#include <memory>
-
-#include "../types/overload_set.h"
-#include "variable.h"
+#include "expression.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class function_declaration;
-
-    class overload_set : public variable, public std::enable_shared_from_this<overload_set>
+    class runtime_value_expression : public expression
     {
     public:
-        overload_set(scope * lex_scope) : _type{ std::make_unique<overload_set_type>(lex_scope) }
-        {
-        }
+        using expression::expression;
 
-        void add_function(function_declaration * fn);
-
-        virtual type * get_type() const override
+        virtual void print(std::ostream &, print_context) const override
         {
-            return _type.get();
+            assert(0);
         }
 
     private:
-        virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override;
-        virtual variable_ir _codegen_ir(ir_generation_context &) const override;
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+        {
+            return std::make_unique<runtime_value_expression>(get_type());
+        }
 
-        std::vector<function_declaration *> _function_decls;
-        std::unique_ptr<overload_set_type> _type;
+        virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
+        {
+            return { codegen::ir::instruction{ none,
+                none,
+                { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
+                {},
+                codegen::ir::make_variable(get_type()->codegen_type(ctx)) } };
+        }
     };
+
+    inline std::unique_ptr<expression> make_runtime_value(type * t)
+    {
+        return std::make_unique<runtime_value_expression>(t);
+    }
 }
 }

@@ -111,7 +111,7 @@ inline namespace _v1
             return base_expr_instructions;
         }
 
-        auto base_variable_value = get<codegen::ir::value>(_base_expr->get_variable()->codegen_ir(ctx));
+        auto base_variable_value = base_expr_instructions.back().result;
         auto base_variable = get<std::shared_ptr<codegen::ir::variable>>(base_variable_value);
 
         if (_modifier == lexer::token_type::dot)
@@ -120,7 +120,7 @@ inline namespace _v1
                 none,
                 { boost::typeindex::type_id<codegen::ir::member_access_instruction>() },
                 { base_variable, codegen::ir::label{ _accessed_member.get(), {} } },
-                { codegen::ir::make_variable(_referenced_variable.get()->get_type()->codegen_type(ctx)) } };
+                { codegen::ir::make_variable(_referenced_expression.get()->get_type()->codegen_type(ctx)) } };
 
             base_expr_instructions.push_back(std::move(access_instruction));
 
@@ -128,21 +128,6 @@ inline namespace _v1
         }
 
         return _call_expression->codegen_ir(ctx);
-    }
-
-    variable * postfix_expression::get_variable() const
-    {
-        if (!_modifier)
-        {
-            return _base_expr->get_variable();
-        }
-
-        if (_referenced_variable)
-        {
-            return *_referenced_variable;
-        }
-
-        return _call_expression->get_variable();
     }
 }
 }

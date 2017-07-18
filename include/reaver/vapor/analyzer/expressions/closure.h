@@ -47,6 +47,8 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
+        virtual declaration_ir declaration_codegen_ir(ir_generation_context &) const override;
+
     private:
         virtual future<> _analyze(analysis_context &) override;
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,46 +27,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    member_expression::member_expression(const parser::member_expression & parse) : _parse{ parse }
+    codegen::ir::member_variable member_expression::member_codegen_ir(ir_generation_context & ctx) const
     {
-    }
-
-    void member_expression::print(std::ostream & os, print_context ctx) const
-    {
-        os << styles::def << ctx << styles::rule_name << "member-expression";
-        print_address_range(os, this);
-        os << '\n';
-
-        os << styles::def << ctx.make_branch(false) << styles::subrule_name << "referenced member name: " << styles::string_value
-           << utf8(_parse.member_name.value.string) << '\n';
-
-        auto type_ctx = ctx.make_branch(true);
-        os << styles::def << type_ctx << styles::subrule_name << "referenced variable type:\n";
-        get_type()->print(os, type_ctx.make_branch(true));
-    }
-
-    variable * member_expression::get_variable() const
-    {
-        if (!_referenced)
-        {
-            return expression::get_variable();
-        }
-
-        return _referenced;
-    }
-
-    statement_ir member_expression::_codegen_ir(ir_generation_context & ctx) const
-    {
-        auto base_variable_value = get<codegen::ir::value>(_base->codegen_ir(ctx));
-        auto base_variable = get<std::shared_ptr<codegen::ir::variable>>(base_variable_value);
-
-        return { codegen::ir::instruction{ none,
-                     none,
-                     { boost::typeindex::type_id<codegen::ir::member_access_instruction>() },
-                     { base_variable, codegen::ir::label{ _parse.member_name.value.string, {} } },
-                     get<codegen::ir::value>(_referenced->codegen_ir(ctx)) },
-            codegen::ir::instruction{
-                none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, get<codegen::ir::value>(_referenced->codegen_ir(ctx)) } };
+        return codegen::ir::member_variable{ _name, get_type()->codegen_type(ctx), 0 };
     }
 }
 }

@@ -21,8 +21,8 @@
  **/
 
 #include "vapor/analyzer/expressions/call.h"
+#include "vapor/analyzer/expressions/member_assignment.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/analyzer/variables/member_assignment.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -64,17 +64,6 @@ inline namespace _v1
         }
     }
 
-    variable * call_expression::get_variable() const
-    {
-        if (_replacement_expr)
-        {
-            return _replacement_expr->get_variable();
-        }
-
-        assert(_var);
-        return _var.get();
-    }
-
     statement_ir call_expression::_codegen_ir(ir_generation_context & ctx) const
     {
         if (_replacement_expr)
@@ -82,15 +71,12 @@ inline namespace _v1
             return _replacement_expr->codegen_ir(ctx);
         }
 
-        auto arguments_instructions = fmap(_args, [&](auto && arg) { return arg->codegen_ir(ctx); });
+        if (_function->is_member())
+        {
+            ctx.push_base_expression(_args.front());
+        }
 
-        arguments_instructions.reserve(_function->parameters().size());
-        std::transform(
-            _function->parameters().begin() + _args.size(), _function->parameters().end(), std::back_inserter(arguments_instructions), [&](auto && member) {
-                auto def = member->get_default_value();
-                assert(def);
-                return def->codegen_ir(ctx);
-            });
+        auto arguments_instructions = fmap(_args, [&](auto && arg) { return arg->codegen_ir(ctx); });
 
         auto arguments_values = fmap(arguments_instructions, [](auto && insts) { return insts.back().result; });
         arguments_values.insert(arguments_values.begin(), _function->call_operand_ir(ctx));
@@ -99,13 +85,14 @@ inline namespace _v1
         {
             assert(arguments_values.size() >= 2);
             std::swap(arguments_values[0], arguments_values[1]);
+            auto base = arguments_values[0];
         }
 
         auto call_expr_instruction = codegen::ir::instruction{ none,
             none,
             { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
             std::move(arguments_values),
-            { codegen::ir::make_variable(_var->get_type()->codegen_type(ctx)) } };
+            { codegen::ir::make_variable(get_type()->codegen_type(ctx)) } };
 
         ctx.add_function_to_generate(_function);
 
@@ -115,6 +102,11 @@ inline namespace _v1
             return unit{};
         });
         ret.push_back(std::move(call_expr_instruction));
+
+        if (_function->is_member())
+        {
+            ctx.pop_base_expression(_args.front());
+        }
 
         return ret;
     }

@@ -33,7 +33,6 @@ inline namespace _v1
 {
     class statement;
     class expression;
-    class variable;
 
     class simplification_context
     {
@@ -80,7 +79,6 @@ inline namespace _v1
         }
 
         void keep_alive(statement * ptr);
-        void keep_alive(variable * ptr);
 
     private:
         std::atomic<bool> _something_happened{ false };
@@ -91,11 +89,9 @@ inline namespace _v1
         mutable std::shared_mutex _futures_lock;
         std::unordered_map<statement *, future<statement *>> _statement_futures;
         std::unordered_map<expression *, future<expression *>> _expression_futures;
-        std::unordered_map<variable *, future<variable *>> _variable_futures;
 
         std::mutex _keep_alive_lock;
         std::unordered_set<std::unique_ptr<statement>> _keep_alive_stmt;
-        std::unordered_set<std::unique_ptr<variable>> _keep_alive_var;
 
         template<typename T>
         auto & _get_futures() = delete;
@@ -119,12 +115,6 @@ inline namespace _v1
     inline auto & simplification_context::_get_futures<expression>()
     {
         return _expression_futures;
-    }
-
-    template<>
-    inline auto & simplification_context::_get_futures<variable>()
-    {
-        return _variable_futures;
     }
 }
 }

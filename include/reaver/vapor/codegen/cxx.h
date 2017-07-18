@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -37,12 +37,23 @@ inline namespace _v1
         virtual std::u32string generate_declaration(ir::variable &, codegen_context &) const override;
         virtual std::u32string generate_declaration(ir::function &, codegen_context &) const override;
         virtual std::u32string generate_declaration(const std::shared_ptr<ir::variable_type> &, codegen_context &) const override;
-        virtual std::u32string generate_definition(const ir::variable &, codegen_context &) const override;
-        virtual std::u32string generate_definition(const ir::function &, codegen_context &) const override;
-        virtual std::u32string generate_definition(const std::shared_ptr<ir::variable_type> &, codegen_context &) const override;
-        virtual std::u32string generate_definition(const ir::member_variable &, codegen_context &) const override;
+        virtual std::u32string generate_definition(const ir::variable &, codegen_context &) override;
+        virtual std::u32string generate_definition(const ir::function &, codegen_context &) override;
+        virtual std::u32string generate_definition(const std::shared_ptr<ir::variable_type> &, codegen_context &) override;
+        virtual std::u32string generate_definition(const ir::member_variable &, codegen_context &) override;
 
-        virtual std::u32string generate(const ir::instruction &, codegen_context &) const override;
+        virtual std::u32string generate(const ir::instruction &, codegen_context &) override;
+
+        std::u32string get_storage_for(std::shared_ptr<ir::variable_type>, codegen_context &);
+        void free_storage_for(std::u32string, std::shared_ptr<ir::variable_type>, codegen_context &);
+
+        void clear_storage()
+        {
+            _unallocated_variables.clear();
+        }
+
+    private:
+        mutable std::unordered_map<std::shared_ptr<ir::variable_type>, std::vector<std::u32string>> _unallocated_variables;
     };
 
     namespace cxx

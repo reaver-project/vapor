@@ -49,53 +49,11 @@ inline namespace _v1
         }
     };
 
-    class test_variable : public variable
-    {
-    public:
-        test_variable(type * t) : _type{ t }
-        {
-        }
-
-        virtual type * get_type() const override
-        {
-            return _type;
-        }
-
-        void set_clone_result(std::unique_ptr<variable> var)
-        {
-            _clone_var = std::move(var);
-        }
-
-    private:
-        virtual std::unique_ptr<variable> _clone_with_replacement(replacements &) const override
-        {
-            if (!_clone_var)
-            {
-                throw unexpected_call{ __PRETTY_FUNCTION__ };
-            }
-
-            return std::move(const_cast<test_variable *>(this)->_clone_var);
-        }
-
-        virtual variable_ir _codegen_ir(ir_generation_context &) const override
-        {
-            throw unexpected_call{ __PRETTY_FUNCTION__ };
-        }
-
-        type * _type = nullptr;
-        std::unique_ptr<variable> _clone_var;
-    };
-
     class test_expression : public expression
     {
     public:
-        test_expression()
+        test_expression(type * t = nullptr) : expression{ t }
         {
-        }
-
-        test_expression(type * t) : _type{ t }
-        {
-            _set_variable(std::make_unique<test_variable>(t));
         }
 
         virtual void print(std::ostream &, print_context) const override
@@ -103,14 +61,9 @@ inline namespace _v1
             throw unexpected_call{ __PRETTY_FUNCTION__ };
         }
 
-        void set_variable(std::unique_ptr<variable> var)
+        void set_analysis_type(type * t)
         {
-            _set_variable(std::move(var));
-        }
-
-        void set_analysis_variable(std::unique_ptr<variable> var)
-        {
-            _analysis_variable = std::move(var);
+            _analysis_type = t;
         }
 
         void set_clone_result(std::unique_ptr<expression> expr)
@@ -126,12 +79,12 @@ inline namespace _v1
     private:
         virtual reaver::future<> _analyze(analysis_context &) override
         {
-            if (!_analysis_variable)
+            if (!_analysis_type)
             {
                 throw unexpected_call{ __PRETTY_FUNCTION__ };
             }
 
-            _set_variable(std::move(_analysis_variable));
+            _set_type(std::move(_analysis_type));
 
             return reaver::make_ready_future();
         }
@@ -161,10 +114,14 @@ inline namespace _v1
             throw unexpected_call{ __PRETTY_FUNCTION__ };
         }
 
-        type * _type = nullptr;
+        virtual bool _is_equal(const expression * rhs) const override
+        {
+            throw unexpected_call{ __PRETTY_FUNCTION__ };
+        }
+
+        type * _analysis_type = nullptr;
         std::unique_ptr<expression> _clone_expr;
         std::unique_ptr<expression> _simplified_expr;
-        std::unique_ptr<variable> _analysis_variable;
     };
 
     class test_type : public type

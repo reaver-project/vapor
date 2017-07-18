@@ -127,6 +127,17 @@ inline namespace _v1
         print_address_range(os, ptr->parse());
     }
 
+    template<typename T>
+    void print_address_optional_range(std::ostream & os, const T * ptr)
+    {
+        os << styles::def << " @ " << styles::address << ptr;
+        if (auto parse = ptr->parse())
+        {
+            os << styles::def << ", AST node";
+            print_address_range(os, parse.get());
+        }
+    }
+
     // support for "synthesized" parse nodes (for example from call_expression
     template<typename T>
     struct synthesized_node

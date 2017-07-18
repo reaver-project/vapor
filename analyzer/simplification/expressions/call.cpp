@@ -21,9 +21,8 @@
  **/
 
 #include "vapor/analyzer/expressions/call.h"
+#include "vapor/analyzer/expressions/type.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/analyzer/variables/expression.h"
-#include "vapor/analyzer/variables/type.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -41,13 +40,13 @@ inline namespace _v1
         if (_cloned_type_expr)
         {
             ret->_cloned_type_expr = _cloned_type_expr->clone_expr_with_replacement(repl);
-            auto var = ret->_cloned_type_expr->get_variable();
-            auto type_var = dynamic_cast<type_variable *>(var);
-            ret->_var = make_expression_ref_variable(ret.get(), type_var->get_value());
+            auto type = ret->_cloned_type_expr->as<type_expression>();
+            assert(type);
+            ret->_set_type(type->get_value());
             return ret;
         }
 
-        ret->_var = make_expression_ref_variable(ret.get(), _var->get_type());
+        ret->_set_type(get_type());
         return ret;
     }
 
@@ -55,7 +54,10 @@ inline namespace _v1
     {
         if (_replacement_expr)
         {
-            return _replacement_expr->simplify_expr(ctx);
+            return _replacement_expr->simplify_expr(ctx).then([&](auto && simplified) {
+                replace_uptr(_replacement_expr, simplified, ctx);
+                return _replacement_expr.release();
+            });
         }
 
         return when_all(fmap(_args, [&](auto && arg) { return arg->simplify_expr(ctx); })).then([&](auto && repl) {
@@ -69,7 +71,7 @@ inline namespace _v1
                 }
             }
 
-            return _function->simplify(ctx, fmap(_args, [](auto && arg) { return arg->get_variable(); }));
+            return _function->simplify(ctx, _args);
         });
     }
 
@@ -85,7 +87,7 @@ inline namespace _v1
 
         return when_all(fmap(_var_exprs, [&](auto && arg) { return arg->simplify_expr(ctx); })).then([&](auto && repl) {
             replace_uptrs(_var_exprs, repl, ctx);
-            return _function->simplify(ctx, fmap(_var_exprs, [](auto && arg) { return arg->get_variable(); }));
+            return _function->simplify(ctx, fmap(_var_exprs, [](auto && arg) { return arg.get(); }));
         });
     }
 }

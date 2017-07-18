@@ -55,7 +55,7 @@ inline namespace _v1
         return ret;
     }
 
-    std::u32string cxx_generator::generate_definition(const ir::variable & var, codegen_context & ctx) const
+    std::u32string cxx_generator::generate_definition(const ir::variable & var, codegen_context & ctx)
     {
         std::u32string ret;
 
@@ -72,7 +72,7 @@ inline namespace _v1
         return ret;
     }
 
-    std::u32string cxx_generator::generate_definition(const ir::member_variable & member, codegen_context & ctx) const
+    std::u32string cxx_generator::generate_definition(const ir::member_variable & member, codegen_context & ctx)
     {
         std::u32string ret;
 
@@ -98,7 +98,7 @@ inline namespace _v1
                 },
                 [&](const codegen::ir::boolean_value & val) -> std::u32string { return val.value ? U"true" : U"false"; },
                 [&](const std::shared_ptr<ir::variable> & var) {
-                    return variable_name(*var, ctx) + (var->argument || dont_unref ? U"" : var->is_move() ? U".move()" : U".reference()");
+                    return variable_name(*var, ctx) + (var->parameter || dont_unref ? U"" : var->is_move() ? U".move()" : U".reference()");
                 },
                 [&](const codegen::ir::label & label) {
                     assert(label.scopes.empty());
@@ -131,7 +131,8 @@ inline namespace _v1
         if (!var.destroyed)
         {
             var.destroyed = true;
-            ctx.free_storage_for(*var.name, var.type);
+            auto cxxgen = dynamic_cast<cxx_generator &>(ctx.generator());
+            cxxgen.free_storage_for(*var.name, var.type, ctx);
         }
     }
 }

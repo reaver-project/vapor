@@ -21,11 +21,13 @@
  **/
 
 #include "vapor/analyzer/types/member_assignment.h"
-#include "vapor/analyzer/expressions/variable.h"
+#include "vapor/analyzer/expressions/call.h"
+#include "vapor/analyzer/expressions/expression_ref.h"
+#include "vapor/analyzer/expressions/member_assignment.h"
+#include "vapor/analyzer/expressions/runtime_value.h"
+#include "vapor/analyzer/expressions/type.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/unconstrained.h"
-#include "vapor/analyzer/variables/member_assignment.h"
-#include "vapor/analyzer/variables/type.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -43,20 +45,24 @@ inline namespace _v1
             return make_ready_future(std::vector<function *>{});
         }
 
-        auto var = make_blank_variable(builtin_types().unconstrained.get());
+        auto expr = make_runtime_value(builtin_types().unconstrained.get());
 
-        auto overload = make_function("member assignment", nullptr, { _var, var.get() }, [](auto &&) -> codegen::ir::function {
+        auto overload = make_function("member assignment", nullptr, { _expr, expr.get() }, [](auto &&) -> codegen::ir::function {
             assert(!"trying to codegen a member-assignment expression");
         });
         overload->set_return_type(assigned_type()->get_expression());
-        overload->add_analysis_hook([this](auto &&, auto &&, std::vector<variable *> args) {
+        overload->add_analysis_hook([this](auto &&, auto && call_expr, std::vector<expression *> args) {
             assert(args.size() == 2);
-            assert(args.front() == _var);
-            _var->set_rhs(args.back());
+            _expr->set_rhs(args.back());
+            call_expr->replace_with(make_expression_ref(_expr));
 
             return make_ready_future();
         });
-        overload->set_eval([this](auto &&...) { return make_ready_future(make_variable_ref_expression(_var).release()); });
+        overload->set_eval([this](auto &&...) -> future<expression *> {
+            assert(0); // need to pass this in a way that conveys the information that this isn't the owner of it
+            // (or a way to make it the owner of it, which I guess should be doable since this is eval)
+            // return make_ready_future(make_variable_ref_expression(_var).release());
+        });
 
         auto ret = overload.get();
 
@@ -64,7 +70,7 @@ inline namespace _v1
             // TODO: this is useless, move the generation of the overload to the constructor
             std::lock_guard<std::mutex> lock{ _storage_lock };
             _fun_storage.push_back(std::move(overload));
-            _var_storage.push_back(std::move(var));
+            _expr_storage.push_back(std::move(expr));
         }
 
         return make_ready_future(std::vector<function *>{ ret });
