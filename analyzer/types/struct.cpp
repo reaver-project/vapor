@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/types/struct.h"
+#include "vapor/analyzer/expressions/member_access.h"
 #include "vapor/analyzer/expressions/runtime_value.h"
 #include "vapor/analyzer/expressions/struct.h"
 #include "vapor/analyzer/expressions/struct_value.h"
@@ -134,10 +135,13 @@ inline namespace _v1
 
         auto data_members = fmap(_data_members, [&](auto && member) -> expression * {
             auto param = make_member_expression(this, member->get_name(), member->get_type());
-            param->set_default_value(member);
+            auto def_value = make_member_access_expression(member->get_name(), member->get_type());
+
+            param->set_default_value(def_value.get());
 
             auto param_ptr = param.get();
             _member_copy_arguments.push_back(std::move(param));
+            _member_copy_arguments.push_back(std::move(def_value));
             return param_ptr;
         });
 
@@ -181,7 +185,7 @@ inline namespace _v1
 
             for (auto && arg : args)
             {
-                if (auto member_arg = arg->as<member_expression>())
+                if (auto member_arg = arg->as<member_access_expression>())
                 {
                     auto actual_arg = base->get_member(member_arg->get_name());
                     arg = actual_arg ? actual_arg : arg;

@@ -52,19 +52,17 @@ inline namespace _v1
             // and hence we need to do a Special Thing
             if (top_level->get_lhs() == this && top_level->get_operator() == lexer::token_type::assign)
             {
-                _assignment_expr = make_member_assignment_expression(_parse.member_name.value.string);
+                _assignment_expr = make_member_assignment_expression(_name);
                 _set_type(_assignment_expr->get_type());
                 return make_ready_future();
             }
         }
 
         return get<postfix_expression *>(*last_postfix)->get_base_expression(ctx).then([&](auto && base_expr) {
-            auto referenced_type = base_expr->get_type()->get_member_type(_parse.member_name.value.string);
+            auto referenced_type = base_expr->get_type()->get_member_type(_name);
             assert(referenced_type && "no member found for whatever reason");
 
-            _referenced = base_expr->get_member(_parse.member_name.value.string);
-            _base = base_expr;
-
+            _referenced = base_expr->get_member(_name);
             _set_type(referenced_type);
         });
     }

@@ -22,10 +22,17 @@
 
 #pragma once
 
-#include "../../parser/member_expression.h"
 #include "expression.h"
 #include "expression_ref.h"
 #include "member_assignment.h"
+
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct member_expression;
+}
+}
 
 namespace reaver::vapor::analyzer
 {
@@ -34,18 +41,23 @@ inline namespace _v1
     class member_access_expression : public expression
     {
     public:
+        member_access_expression(std::u32string name, type * referenced_type) : expression{ referenced_type }, _name{ std::move(name) }
+        {
+            assert(referenced_type);
+        }
+
         member_access_expression(const parser::member_expression & parse);
 
         virtual void print(std::ostream & os, print_context) const override;
 
         const auto & parse() const
         {
-            return _parse;
+            return _parse.get();
         }
 
         auto get_name() const
         {
-            return _parse.member_name.value.string;
+            return _name;
         }
 
         virtual bool is_member_access() const override
@@ -54,7 +66,7 @@ inline namespace _v1
         }
 
     private:
-        member_access_expression(const parser::member_expression & parse, expression * referenced) : _parse{ parse }, _referenced{ referenced }
+        member_access_expression(optional<synthesized_node<void>> parse, expression * referenced) : _parse{ parse }, _referenced{ referenced }
         {
         }
 
@@ -67,8 +79,13 @@ inline namespace _v1
                 return make_expression_ref(repl.expressions.at(_referenced));
             }
 
+            if (!_base)
+            {
+                return std::unique_ptr<member_access_expression>{ new member_access_expression{ _name, get_type() } };
+            }
+
             auto replaced_base = repl.expressions.at(_base);
-            if (auto repl = replaced_base->get_member(_parse.member_name.value.string))
+            if (auto repl = replaced_base->get_member(_name))
             {
                 return make_expression_ref(repl);
             }
@@ -87,11 +104,13 @@ inline namespace _v1
         }
 
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        virtual bool _invalidate_ir(ir_generation_context &) const override;
 
-        const parser::member_expression & _parse;
+        optional<synthesized_node<void>> _parse;
+        std::u32string _name;
 
         expression * _referenced = nullptr;
-        expression * _base = nullptr;
+        mutable const expression * _base = nullptr;
 
         std::unique_ptr<member_assignment_expression> _assignment_expr;
     };
@@ -99,6 +118,11 @@ inline namespace _v1
     inline std::unique_ptr<member_access_expression> preanalyze_member_access_expression(const parser::member_expression & parse, scope *)
     {
         return std::make_unique<member_access_expression>(parse);
+    }
+
+    inline std::unique_ptr<member_access_expression> make_member_access_expression(std::u32string name, type * ref_type)
+    {
+        return std::make_unique<member_access_expression>(std::move(name), ref_type);
     }
 }
 }

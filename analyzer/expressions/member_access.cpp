@@ -22,23 +22,31 @@
 
 #include "vapor/analyzer/expressions/member_access.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/parser/member_expression.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    member_access_expression::member_access_expression(const parser::member_expression & parse) : _parse{ parse }
+    member_access_expression::member_access_expression(const parser::member_expression & parse)
+        : _parse{ { &parse, parse.range } }, _name{ parse.member_name.value.string }
     {
     }
 
     void member_access_expression::print(std::ostream & os, print_context ctx) const
     {
         os << styles::def << ctx << styles::rule_name << "member-access-expression";
-        print_address_range(os, this);
-        os << '\n';
+        if (_parse)
+        {
+            print_address_range(os, this);
+        }
+        else
+        {
+            os << styles::def << " @ " << styles::address << this << styles::def << ':';
+        }
+        os << styles::string_value << utf8(_name) << '\n';
 
-        os << styles::def << ctx.make_branch(false) << styles::subrule_name << "referenced member name: " << styles::string_value
-           << utf8(_parse.member_name.value.string) << '\n';
+        os << styles::def << ctx.make_branch(false) << styles::subrule_name << "referenced member name: " << styles::string_value << utf8(_name) << '\n';
 
         auto type_ctx = ctx.make_branch(true);
         os << styles::def << type_ctx << styles::subrule_name << "referenced member type:\n";
@@ -47,16 +55,20 @@ inline namespace _v1
 
     statement_ir member_access_expression::_codegen_ir(ir_generation_context & ctx) const
     {
-        auto base_variable_value = _base->codegen_ir(ctx).back().result;
+        _base = ctx.get_current_base();
+
+        auto base_variable_value = ctx.get_current_base()->codegen_ir(ctx).back().result;
         auto base_variable = get<std::shared_ptr<codegen::ir::variable>>(base_variable_value);
 
-        auto retvar = codegen::ir::make_variable(ctx.get_current_base()->get_type()->get_member_type(_parse.member_name.value.string)->codegen_type(ctx));
+        auto retvar = codegen::ir::make_variable(ctx.get_current_base()->get_type()->get_member_type(_name)->codegen_type(ctx));
 
-        return { codegen::ir::instruction{ none,
-            none,
-            { boost::typeindex::type_id<codegen::ir::member_access_instruction>() },
-            { base_variable, codegen::ir::label{ _parse.member_name.value.string, {} } },
-            retvar } };
+        return { codegen::ir::instruction{
+            none, none, { boost::typeindex::type_id<codegen::ir::member_access_instruction>() }, { base_variable, codegen::ir::label{ _name, {} } }, retvar } };
+    }
+
+    bool member_access_expression::_invalidate_ir(ir_generation_context & ctx) const
+    {
+        return ctx.get_current_base() != _base;
     }
 }
 }

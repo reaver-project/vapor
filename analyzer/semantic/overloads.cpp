@@ -213,22 +213,6 @@ inline namespace _v1
         return ret;
     }
 
-    void process_member_arguments(std::vector<expression *> & arguments, expression * base)
-    {
-        for (auto && arg : arguments)
-        {
-            if (arg->is_member_access())
-            {
-                auto member_expr = arg->as<member_access_expression>();
-                assert(member_expr);
-                auto actual = base->get_member(member_expr->get_name());
-                assert(actual);
-
-                arg = actual;
-            }
-        }
-    }
-
     auto prepare_actual_arguments(function * overload, std::vector<expression *> arguments, expression * base = nullptr)
     {
         std::vector<expression *> ret;
@@ -326,11 +310,6 @@ inline namespace _v1
             ret.push_back(param->get_default_value());
             assert(!ret.back()->is_member_assignment());
             ++param_begin;
-        }
-
-        if (overload->is_member())
-        {
-            process_member_arguments(ret, base);
         }
 
         return ret;

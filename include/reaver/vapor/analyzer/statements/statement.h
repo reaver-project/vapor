@@ -127,7 +127,12 @@ inline namespace _v1
                 }
             }
 
-            return *_ir;
+            auto ret = *_ir;
+            if (_invalidate_ir(ctx))
+            {
+                _ir = none;
+            }
+            return ret;
         }
 
         virtual declaration_ir declaration_codegen_ir(ir_generation_context &) const
@@ -142,6 +147,11 @@ inline namespace _v1
         }
 
         virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const = 0;
+
+        virtual bool _invalidate_ir(ir_generation_context &) const
+        {
+            return false;
+        }
 
         virtual future<statement *> _simplify(simplification_context &)
         {
