@@ -63,7 +63,7 @@ inline namespace _v1
             assert(referenced_type && "no member found for whatever reason");
 
             _referenced = base_expr->get_member(_name);
-            _set_type(referenced_type);
+            this->_set_type(referenced_type);
         });
     }
 }

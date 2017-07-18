@@ -79,7 +79,7 @@ inline namespace _v1
                 function->set_body(_body.get());
 
                 _type = std::make_unique<closure_type>(_scope.get(), this, std::move(function));
-                _set_type(_type.get());
+                this->_set_type(_type.get());
             });
     }
 }

@@ -48,7 +48,7 @@ inline namespace _v1
             .then([&] {
                 if (!_modifier)
                 {
-                    _set_type(_base_expr->get_type());
+                    this->_set_type(_base_expr->get_type());
                     return make_ready_future();
                 }
 
@@ -60,7 +60,7 @@ inline namespace _v1
                         .then([](auto && symb) { return symb->get_expression_future(); })
                         .then([&](auto && var) {
                             _referenced_expression = var;
-                            _set_type(_referenced_expression.get()->get_type());
+                            this->_set_type(_referenced_expression.get()->get_type());
                         });
                 }
 
@@ -73,7 +73,7 @@ inline namespace _v1
                         _call_expression = std::move(call_expr);
                         return _call_expression->analyze(ctx);
                     })
-                    .then([&] { _set_type(_call_expression->get_type()); });
+                    .then([&] { this->_set_type(_call_expression->get_type()); });
             });
     }
 }

@@ -36,7 +36,7 @@ inline namespace _v1
         return _function->run_analysis_hooks(ctx, this, _args).then([&]() {
             if (_replacement_expr)
             {
-                return _replacement_expr->analyze(ctx).then([&] { _set_type(_replacement_expr->get_type()); });
+                return _replacement_expr->analyze(ctx).then([&] { this->_set_type(_replacement_expr->get_type()); });
             }
 
             return _function->get_return_type().then([&](expression * type_expr) {
@@ -108,7 +108,7 @@ inline namespace _v1
                                 assert(type_expr);
                                 assert(type_expr->get_value() != builtin_types().type.get());
 
-                                _set_type(type_expr->get_value());
+                                this->_set_type(type_expr->get_value());
 
                                 return make_ready_future();
                             }
@@ -159,14 +159,14 @@ inline namespace _v1
                         assert(expr);
                         assert(expr->get_value() != builtin_types().type.get());
 
-                        _set_type(expr->get_value());
+                        this->_set_type(expr->get_value());
                     });
                 }
 
                 auto expr = type_expr->as<type_expression>();
                 assert(expr->get_value() != builtin_types().type.get());
 
-                _set_type(expr->get_value());
+                this->_set_type(expr->get_value());
 
                 return make_ready_future();
             });

@@ -62,7 +62,7 @@ inline namespace _v1
             return _type_expression->analyze(ctx).then([&] {
                 auto type_value = _type_expression->as<type_expression>();
                 assert(type_value);
-                _set_type(type_value->get_value());
+                this->_set_type(type_value->get_value());
             });
         }
 
