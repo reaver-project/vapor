@@ -57,17 +57,23 @@ inline namespace _v1
             return make_ready_future();
         }
 
+    protected:
         virtual future<expression *> _simplify_expr(simplification_context & ctx) override
         {
             return _base->simplify_expr(ctx).then([&, this](auto && simplified) -> future<expression *> {
-                _base = simplified;
+                if (simplified)
+                {
+                    _base = simplified;
+                }
+                _base = _base->_get_replacement();
                 return make_ready_future<expression *>(this);
             });
         }
 
+    private:
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
-            return make_conversion_expression(repl.claim(_base), _target);
+            return make_conversion_expression(repl.copy_claim(_base), get_type());
         }
 
         virtual statement_ir _codegen_ir(ir_generation_context &) const override
@@ -76,7 +82,6 @@ inline namespace _v1
         }
 
         expression * _base;
-        type * _target;
     };
 
     class owning_conversion_expression : public conversion_expression
@@ -87,6 +92,19 @@ inline namespace _v1
         }
 
     private:
+        virtual future<expression *> _simplify_expr(simplification_context & ctx) override
+        {
+            return _owned->simplify_expr(ctx).then([&, this](auto && simplified) -> future<expression *> {
+                replace_uptr(_owned, simplified, ctx);
+                return conversion_expression::_simplify_expr(ctx).then([&](auto &&) -> expression * { return this; });
+            });
+        }
+
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
+        {
+            return make_conversion_expression(repl.claim(_owned.get()), get_type());
+        }
+
         std::unique_ptr<expression> _owned;
     };
 

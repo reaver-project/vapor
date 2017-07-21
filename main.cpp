@@ -32,8 +32,7 @@
 
 std::u32string program = UR"program(module hello_world
 {
-    // let int32 = sized_int(32);
-    let int32 = int;
+    let int32 = sized_int(32);
 
     let mn = struct
     {

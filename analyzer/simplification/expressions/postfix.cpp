@@ -77,7 +77,7 @@ inline namespace _v1
             auto clone = repl.claim(_call_expression.get()).release();
 
             return clone->simplify_expr(ctx).then([&ctx, clone](auto && simplified) {
-                if (simplified)
+                if (simplified && simplified != clone)
                 {
                     ctx.keep_alive(clone);
                     return simplified;
