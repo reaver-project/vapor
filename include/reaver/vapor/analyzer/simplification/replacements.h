@@ -35,6 +35,11 @@ inline namespace _v1
     class replacements
     {
     public:
+        replacements() = default;
+
+        replacements(const replacements &) = delete;
+        replacements(replacements &&) = default;
+
         ~replacements();
 
         void add_replacement(const statement *, statement *);
