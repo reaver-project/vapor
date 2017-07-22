@@ -42,7 +42,6 @@ inline namespace _v1
 
     void simplification_context::keep_alive(statement * ptr)
     {
-        logger::dlog() << "keeping " << ptr << " alive";
         std::lock_guard<std::mutex> lock{ _keep_alive_lock };
         auto inserted = _keep_alive_stmt.emplace(ptr).second;
         assert(inserted);

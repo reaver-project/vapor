@@ -56,6 +56,8 @@ inline namespace _v1
     {
         if (ptr && uptr.get() != ptr)
         {
+            logger::dlog(logger::trace) << "Replacing " << uptr.get() << " with " << ptr;
+            logger::default_logger().sync();
             ctx.keep_alive(uptr.release());
             uptr.reset(ptr);
             ctx.something_happened();

@@ -235,6 +235,14 @@ inline namespace _v1
             ++param_begin;
         }
 
+        auto handle_conversion = [&](expression *& expr, type * conv) {
+            // stupid leak
+            expr = make_conversion_expression(expr, conv).release();
+        };
+
+        // I actually do need to erase my ownerships here
+        // make the typeclasses thingy actually usable already, dammit
+
         while (arg_begin != arg_end)
         {
             assert(param_begin != param_end);
@@ -261,14 +269,6 @@ inline namespace _v1
             }
 
             bool last_matched;
-
-            auto handle_conversion = [&](expression *& expr, type * conv) {
-                // and yet another one
-                expr = make_conversion_expression(expr, conv).release();
-            };
-
-            // I actually do need to erase my ownerships here
-            // make the typeclasses thingy actually usable already, dammit
 
             do
             {
@@ -310,6 +310,12 @@ inline namespace _v1
 
                     ret.push_back(assignment->get_rhs());
                     assert(!ret.back()->is_member_assignment());
+
+                    if (member_param->get_type()->needs_conversion(ret.back()->get_type()))
+                    {
+                        handle_conversion(ret.back(), member_param->get_type());
+                    }
+
                     ++param_begin;
                     break;
                 }

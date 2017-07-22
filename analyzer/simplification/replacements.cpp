@@ -151,9 +151,18 @@ inline namespace _v1
         return std::unique_ptr<expression>();
     }
 
+    auto replacements::_clone(const statement * ptr)
+    {
+        auto ret = ptr->clone_with_replacement(*this);
+        logger::dlog(logger::trace) << "[" << this << "] Clone for " << ptr << " is " << ret.get();
+        return ret;
+    }
+
     auto replacements::_clone(const expression * ptr)
     {
-        return ptr->clone_expr_with_replacement(*this);
+        auto ret = ptr->clone_expr_with_replacement(*this);
+        logger::dlog(logger::trace) << "[" << this << "] Clone for " << ptr << " is " << ret.get();
+        return ret;
     }
 
     GENERATE(statement);

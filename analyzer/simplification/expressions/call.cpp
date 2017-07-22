@@ -71,6 +71,7 @@ inline namespace _v1
                 }
             }
 
+            logger::dlog(logger::trace) << "Simplifying call_expr " << this;
             return _function->simplify(ctx, _args);
         });
     }

@@ -26,6 +26,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include <reaver/logger.h>
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -74,12 +76,7 @@ inline namespace _v1
 
         auto _claim_special(const statement *);
 
-        template<typename T>
-        auto _clone(const T * ptr)
-        {
-            return ptr->clone_with_replacement(*this);
-        }
-
+        auto _clone(const statement *);
         auto _clone(const expression *);
 
         std::unordered_map<statement const *, statement *> _statements = {};

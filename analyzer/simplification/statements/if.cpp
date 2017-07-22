@@ -36,23 +36,25 @@ inline namespace _v1
 
         ret->_condition = repl.claim(_condition.get());
 
-        auto then = repl.claim(_then_block.get()).release();
-        ret->_then_block.reset(static_cast<block *>(then));
-
-        fmap(_else_block, [&](auto && block) {
-            auto else_ = repl.claim(block.get()).release();
-            ret->_else_block = std::unique_ptr<class block>(static_cast<class block *>(else_));
-            return unit{};
-        });
+        ret->_then_block = repl.claim(_then_block.get());
+        ret->_else_block = fmap(_else_block, [&](auto && block) { return repl.claim(block.get()); });
 
         return ret;
     }
 
     future<statement *> if_statement::_simplify(simplification_context & ctx)
     {
-        return _condition->simplify_expr(ctx).then([&](auto && simplified) {
-            replace_uptr(_condition, simplified, ctx);
+        auto future = _condition->simplify_expr(ctx)
+                          .then([&](auto && simplified) { replace_uptr(_condition, simplified, ctx); })
+                          .then([&] { return _then_block->simplify(ctx); })
+                          .then([&](auto && simpl) { replace_uptr(_then_block, simpl, ctx); });
 
+        if (_else_block)
+        {
+            future = future.then([&] { return _else_block.get()->simplify(ctx); }).then([&](auto && simpl) { replace_uptr(_else_block.get(), simpl, ctx); });
+        }
+
+        return future.then([&]() -> statement * {
             if (_condition->is_constant())
             {
                 if (_condition->get_type() != builtin_types().boolean.get())
@@ -60,35 +62,24 @@ inline namespace _v1
                     assert(0);
                 }
 
-                auto simplify_block = [&](auto && block) {
-                    auto released = block.release();
-                    return released->simplify(ctx).then([released, &ctx](auto && simpl) {
-                        if (released != simpl)
-                        {
-                            ctx.keep_alive(released);
-                        }
-                        return simpl;
-                    });
-                };
-
                 auto condition = _condition->as<boolean_constant>()->get_value();
                 if (condition)
                 {
-                    return simplify_block(_then_block);
+                    return _then_block.release();
                 }
 
                 else
                 {
                     if (_else_block)
                     {
-                        return simplify_block(_else_block.get());
+                        return _else_block.get().release();
                     }
 
-                    return make_ready_future<statement *>(make_null_statement().release());
+                    return make_null_statement().release();
                 }
             }
 
-            return make_ready_future<statement *>(this);
+            return this;
         });
     }
 }

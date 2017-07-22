@@ -29,6 +29,8 @@
 #include "vapor/analyzer/symbol.h"
 #include "vapor/parser/expr.h"
 
+#include "vapor/analyzer/expressions/integer.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -180,6 +182,7 @@ inline namespace _v1
                     return arg->get_type() == member->get_type();
                 }))
             {
+                logger::default_logger().sync();
                 assert(0);
             }
 
