@@ -87,7 +87,7 @@ inline namespace _v1
 
         return when_all(fmap(_var_exprs, [&](auto && arg) { return arg->simplify_expr(ctx); })).then([&](auto && repl) {
             replace_uptrs(_var_exprs, repl, ctx);
-            return call_expression::_simplify_expr(ctx);
+            return this->call_expression::_simplify_expr(ctx);
         });
     }
 }

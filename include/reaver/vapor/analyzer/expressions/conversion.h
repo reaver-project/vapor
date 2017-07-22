@@ -96,7 +96,7 @@ inline namespace _v1
         {
             return _owned->simplify_expr(ctx).then([&, this](auto && simplified) -> future<expression *> {
                 replace_uptr(_owned, simplified, ctx);
-                return conversion_expression::_simplify_expr(ctx).then([&](auto &&) -> expression * { return this; });
+                return this->conversion_expression::_simplify_expr(ctx).then([&](auto &&) -> expression * { return this; });
             });
         }
 
