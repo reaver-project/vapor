@@ -44,6 +44,16 @@ inline namespace _v1
             return {};
         }
 
+        if (auto sized = dynamic_cast<ir::sized_integer_type *>(type.get()))
+        {
+            // possibly get rid of this once in LLVM land?
+            assert(sized->integer_size <= 64);
+            ctx.put_into_global_before += UR"code(#include <cstdint>
+)code";
+
+            return {};
+        }
+
         std::u32string declaration;
 
         fmap(type->scopes, [&](auto && scope) {
@@ -70,6 +80,11 @@ inline namespace _v1
         }
 
         if (type == ir::builtin_types().boolean)
+        {
+            return {};
+        }
+
+        if (auto sized = dynamic_cast<ir::sized_integer_type *>(type.get()))
         {
             return {};
         }

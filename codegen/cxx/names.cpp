@@ -39,6 +39,31 @@ inline namespace _v1
             return U"::boost::multiprecision::cpp_int";
         }
 
+        if (auto sized = dynamic_cast<const ir::sized_integer_type *>(type.get()))
+        {
+            if (sized->integer_size <= 8)
+            {
+                return U"std::int_least8_t";
+            }
+
+            if (sized->integer_size <= 16)
+            {
+                return U"std::int_least16_t";
+            }
+
+            if (sized->integer_size <= 32)
+            {
+                return U"std::int_least32_t";
+            }
+
+            if (sized->integer_size <= 64)
+            {
+                return U"std::int_least64_t";
+            }
+
+            return {};
+        }
+
         std::u32string ret;
 
         fmap(type->scopes, [&](auto && scope) {
