@@ -38,6 +38,8 @@ inline namespace _v1
     public:
         sized_integer_constant(sized_integer * type, boost::multiprecision::cpp_int value) : expression{ type }, _value{ std::move(value) }, _type{ type }
         {
+            assert(_value <= _type->max_value());
+            assert(_value >= _type->min_value());
         }
 
         auto get_value() const
@@ -50,9 +52,16 @@ inline namespace _v1
             return true;
         }
 
-        virtual void print(std::ostream &, print_context) const override
+        virtual void print(std::ostream & os, print_context ctx) const override
         {
-            assert(0);
+            os << styles::def << ctx << styles::rule_name << "sized-integer-constant(" << _type->size() << ")";
+            print_address_range(os, this);
+            os << ' ' << styles::string_value << _value << '\n';
+        }
+
+        auto parse() const
+        {
+            return synthesized_node<void *>{ nullptr, {} };
         }
 
     private:

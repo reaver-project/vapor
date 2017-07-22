@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include "../function.h"
 #include "type.h"
 
 namespace reaver::vapor::analyzer
@@ -86,6 +87,21 @@ inline namespace _v1
         virtual bool needs_conversion(type * other) const override
         {
             return this != other;
+        }
+
+        auto max_value() const
+        {
+            return _max_value;
+        }
+
+        auto min_value() const
+        {
+            return _min_value;
+        }
+
+        auto size() const
+        {
+            return _size;
         }
 
     private:

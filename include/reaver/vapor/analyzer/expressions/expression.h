@@ -131,6 +131,22 @@ inline namespace _v1
             return false;
         }
 
+        virtual std::unique_ptr<expression> convert_to(type * target) const
+        {
+            if (get_type() == target)
+            {
+                assert(0); // I don't know whether I want to support this
+            }
+
+            auto repl = _get_replacement();
+            if (repl == this)
+            {
+                return nullptr;
+            }
+
+            return repl->convert_to(target);
+        }
+
         virtual bool is_member() const
         {
             return false;

@@ -60,13 +60,22 @@ inline namespace _v1
     protected:
         virtual future<expression *> _simplify_expr(simplification_context & ctx) override
         {
-            return _base->simplify_expr(ctx).then([&, this](auto && simplified) -> future<expression *> {
+            return _base->simplify_expr(ctx).then([&, this](auto && simplified) -> expression * {
                 if (simplified)
                 {
                     _base = simplified;
                 }
                 _base = _base->_get_replacement();
-                return make_ready_future<expression *>(this);
+
+                if (_base->is_constant())
+                {
+                    if (auto converted = _base->convert_to(get_type()))
+                    {
+                        return converted.release();
+                    }
+                }
+
+                return this;
             });
         }
 
@@ -96,7 +105,13 @@ inline namespace _v1
         {
             return _owned->simplify_expr(ctx).then([&, this](auto && simplified) -> future<expression *> {
                 replace_uptr(_owned, simplified, ctx);
-                return this->conversion_expression::_simplify_expr(ctx).then([&](auto &&) -> expression * { return this; });
+                return this->conversion_expression::_simplify_expr(ctx).then([&](auto && simpl) -> expression * {
+                    if (simpl && simpl != this)
+                    {
+                        return simpl;
+                    }
+                    return this;
+                });
             });
         }
 

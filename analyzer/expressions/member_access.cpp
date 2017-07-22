@@ -44,7 +44,7 @@ inline namespace _v1
         {
             os << styles::def << " @ " << styles::address << this << styles::def << ": ";
         }
-        os << styles::string_value << utf8(_name) << '\n';
+        os << styles::string_value << ' ' << utf8(_name) << '\n';
 
         auto type_ctx = ctx.make_branch(true);
         os << styles::def << type_ctx << styles::subrule_name << "referenced member type:\n";
