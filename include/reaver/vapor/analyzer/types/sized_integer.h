@@ -112,7 +112,7 @@ inline namespace _v1
         boost::multiprecision::cpp_int _min_value;
 
         template<typename Instruction, typename Eval>
-        auto _generate_function(const char32_t * name, std::string desc, Eval eval, type * return_type);
+        auto _generate_function(std::u32string name, std::string desc, Eval eval, type * return_type);
         std::unique_ptr<function> _addition;
         std::unique_ptr<function> _subtraction;
         std::unique_ptr<function> _multiplication;

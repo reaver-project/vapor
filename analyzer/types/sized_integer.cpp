@@ -39,7 +39,7 @@ inline namespace _v1
     }
 
     template<typename Instruction, typename Eval>
-    auto sized_integer::_generate_function(const char32_t * name, std::string desc, Eval eval, type * return_type)
+    auto sized_integer::_generate_function(std::u32string name, std::string desc, Eval eval, type * return_type)
     {
         auto lhs = make_runtime_value(this);
         auto rhs = make_runtime_value(this);
@@ -63,7 +63,7 @@ inline namespace _v1
                     { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<Instruction>() }, { lhs_ir, rhs_ir }, retval },
                         codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, {}, retval } } };
             });
-        fun->set_name(name);
+        fun->set_name(std::move(name));
         fun->set_eval(eval);
         return fun;
     }
@@ -93,12 +93,14 @@ inline namespace _v1
 
     sized_integer::sized_integer(std::size_t size) : _size{ size }
     {
-        ADD_OPERATION(addition, U"__builtin_integer_operator_plus", +, this, sized_integer, (this, ));
-        ADD_OPERATION(subtraction, U"__builtin_integer_operator_minus", -, this, sized_integer, (this, ));
-        ADD_OPERATION(multiplication, U"__builtin_integer_operator_star", *, this, sized_integer, (this, ));
-        ADD_OPERATION(equal_comparison, U"__builtin_integer_operator_equals", ==, builtin_types().boolean.get(), boolean, ());
-        ADD_OPERATION(less_comparison, U"__builtin_integer_operator_less", <, builtin_types().boolean.get(), boolean, ());
-        ADD_OPERATION(less_equal_comparison, U"__builtin_integer_operator_less_equal", <, builtin_types().boolean.get(), boolean, ());
+        auto u32size = boost::locale::conv::utf_to_utf<char32_t>(std::to_string(size));
+
+        ADD_OPERATION(addition, U"__builtin_sized_integer_" + u32size + U"_operator_plus", +, this, sized_integer, (this, ));
+        ADD_OPERATION(subtraction, U"__builtin_sized_integer_" + u32size + U"_operator_minus", -, this, sized_integer, (this, ));
+        ADD_OPERATION(multiplication, U"__builtin_sized_integer_" + u32size + U"_operator_star", *, this, sized_integer, (this, ));
+        ADD_OPERATION(equal_comparison, U"__builtin_sized_integer_" + u32size + U"_operator_equals", ==, builtin_types().boolean.get(), boolean, ());
+        ADD_OPERATION(less_comparison, U"__builtin_sized_integer_" + u32size + U"_operator_less", <, builtin_types().boolean.get(), boolean, ());
+        ADD_OPERATION(less_equal_comparison, U"__builtin_sized_" + u32size + U"_integer_operator_less_equal", <, builtin_types().boolean.get(), boolean, ());
 
         _max_value = (boost::multiprecision::cpp_int(1) << _size) - 1;
         _min_value = -_max_value - 1;
