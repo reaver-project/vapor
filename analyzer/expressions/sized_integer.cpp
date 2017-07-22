@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,42 +20,22 @@
  *
  **/
 
-#pragma once
+#include "vapor/analyzer/expressions/sized_integer.h"
+#include "vapor/analyzer/symbol.h"
+#include "vapor/codegen/ir/type.h"
+#include "vapor/codegen/ir/variable.h"
 
-#include <boost/multiprecision/cpp_int.hpp>
-
-#include <reaver/optional.h>
-
-namespace reaver::vapor::codegen
+namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    namespace ir
+    statement_ir sized_integer_constant::_codegen_ir(ir_generation_context &) const
     {
-        struct integer_value
-        {
-            boost::multiprecision::cpp_int value;
-            optional<std::size_t> size = none;
-        };
-
-        struct integer_addition_instruction
-        {
-        };
-        struct integer_subtraction_instruction
-        {
-        };
-        struct integer_multiplication_instruction
-        {
-        };
-        struct integer_equal_comparison_instruction
-        {
-        };
-        struct integer_less_comparison_instruction
-        {
-        };
-        struct integer_less_equal_comparison_instruction
-        {
-        };
+        return { codegen::ir::instruction{ none,
+            none,
+            { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
+            {},
+            codegen::ir::value{ codegen::ir::integer_value{ _value, _type->size() } } } };
     }
 }
 }

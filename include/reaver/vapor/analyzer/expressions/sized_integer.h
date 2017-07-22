@@ -70,10 +70,7 @@ inline namespace _v1
             return std::make_unique<sized_integer_constant>(_type, _value);
         }
 
-        virtual statement_ir _codegen_ir(ir_generation_context &) const override
-        {
-            assert(0);
-        }
+        virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
         virtual bool _is_equal(const expression * rhs) const override
         {

@@ -35,7 +35,7 @@ inline namespace _v1
 {
     void sized_integer::_codegen_type(ir_generation_context &) const
     {
-        assert(0);
+        _codegen_t = codegen::ir::builtin_types().sized_integer(_size);
     }
 
     template<typename Instruction, typename Eval>
