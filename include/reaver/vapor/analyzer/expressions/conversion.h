@@ -69,7 +69,7 @@ inline namespace _v1
 
                 if (_base->is_constant())
                 {
-                    if (auto converted = _base->convert_to(get_type()))
+                    if (auto converted = _base->convert_to(this->get_type()))
                     {
                         return converted.release();
                     }
