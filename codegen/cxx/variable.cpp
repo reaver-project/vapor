@@ -93,7 +93,7 @@ inline namespace _v1
             make_overload_set(
                 [&](const codegen::ir::integer_value & val) {
                     std::ostringstream os;
-                    os << val;
+                    os << val.value;
                     return boost::locale::conv::utf_to_utf<char32_t>(os.str());
                 },
                 [&](const codegen::ir::boolean_value & val) -> std::u32string { return val.value ? U"true" : U"false"; },

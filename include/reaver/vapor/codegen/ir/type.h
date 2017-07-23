@@ -70,36 +70,6 @@ inline namespace _v1
             std::size_t integer_size;
         };
 
-        inline std::ostream & operator<<(std::ostream & os, const variable_type & type)
-        {
-            if (type.members.empty())
-            {
-                return os;
-            }
-
-            os << "type\n{\n";
-            os << "name: " << utf8(type.name) << "\n";
-            os << "<print scopes one day!>\n";
-            os << "size: " << type.size << "\n";
-
-            fmap(type.members, [&](auto && member) {
-                fmap(member,
-                    make_overload_set(
-                        [&](const function & fun) {
-                            os << fun << '\n';
-                            return unit{};
-                        },
-                        [&](auto &&) {
-                            assert(0);
-                            return unit{};
-                        }));
-                return unit{};
-            });
-
-            os << "}\n";
-            return os;
-        }
-
         inline const auto & builtin_types()
         {
             struct builtin_types_t

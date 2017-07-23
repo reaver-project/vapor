@@ -77,8 +77,6 @@ inline namespace _v1
             value result;
         };
 
-        std::ostream & operator<<(std::ostream & os, const instruction & inst);
-
         struct function_call_instruction
         {
         };

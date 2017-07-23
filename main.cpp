@@ -102,15 +102,12 @@ int main() try
     reaver::logger::default_logger().sync();
 
     auto ir = analyzed_ast.codegen_ir();
+
+    // reaver::vapor::codegen::result generated_ir{ ir, reaver::vapor::codegen::make_printer() };
+    // reaver::logger::dlog() << "Generated IR:";
+    // reaver::logger::dlog() << generated_ir;
+
     reaver::vapor::codegen::result generated_code{ ir, reaver::vapor::codegen::make_cxx() };
-
-    // TODO: printing this actually needs a print_context
-    // to avoid endless repetitions of things
-    // and to fix the format
-    // actually this could be a generator... that'd make a lot of sense
-    // reaver::logger::dlog() << "Codegen IR:";
-    // reaver::logger::dlog() << ir;
-
     reaver::logger::dlog() << "Generated code:";
     reaver::logger::dlog() << generated_code;
 
