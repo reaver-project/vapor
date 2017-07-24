@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,56 +24,46 @@
 
 #include <memory>
 
+#include <boost/algorithm/string/join.hpp>
+
 #include "generator.h"
+#include "ir/scope.h"
 #include "ir/variable.h"
 
 namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    class cxx_generator : public code_generator
+    class ir_printer : public code_generator
     {
     public:
-        virtual std::u32string generate_global_definitions(codegen_context &) const override;
-        virtual std::u32string generate_declarations(ir::module &, codegen_context &) const override;
         virtual std::u32string generate_definitions(ir::module &, codegen_context &) override;
-
-        virtual std::u32string generate_declaration(std::shared_ptr<ir::variable_type>, codegen_context &) const override;
         virtual std::u32string generate_definition(std::shared_ptr<ir::variable_type>, codegen_context &) override;
 
-        std::u32string generate_declaration(ir::variable &, codegen_context &) const;
-        std::u32string generate_declaration(ir::function &, codegen_context &) const;
         std::u32string generate_definition(const ir::variable &, codegen_context &);
         std::u32string generate_definition(const ir::function &, codegen_context &);
         std::u32string generate_definition(const ir::member_variable &, codegen_context &);
 
         std::u32string generate(const ir::instruction &, codegen_context &);
 
-        std::u32string get_storage_for(std::shared_ptr<ir::variable_type>, codegen_context &);
-        void free_storage_for(std::u32string, std::shared_ptr<ir::variable_type>, codegen_context &);
-
-        void clear_storage()
+    private:
+        template<typename T>
+        static std::u32string _pointer_to_string(T * ptr)
         {
-            _unallocated_variables.clear();
+            std::stringstream ss;
+            ss << ptr;
+            return boost::locale::conv::utf_to_utf<char32_t>(ss.str());
         }
 
-    private:
-        mutable std::unordered_map<std::shared_ptr<ir::variable_type>, std::vector<std::u32string>> _unallocated_variables;
+        static std::u32string _scope_string(const std::vector<ir::scope> & sc)
+        {
+            return boost::algorithm::join(fmap(sc, [&](auto && scope) { return scope.name; }), U".");
+        }
     };
 
-    namespace cxx
+    inline std::shared_ptr<code_generator> make_printer()
     {
-        template<typename T>
-        std::u32string generate(const ir::instruction &, codegen_context &);
-
-        std::u32string value_of(const ir::value &, codegen_context &, bool = false);
-        std::u32string variable_of(const ir::value &, codegen_context &);
-        void mark_destroyed(const ir::value &, codegen_context &);
-    }
-
-    inline std::shared_ptr<code_generator> make_cxx()
-    {
-        return std::make_shared<cxx_generator>();
+        return std::make_shared<ir_printer>();
     }
 }
 }
