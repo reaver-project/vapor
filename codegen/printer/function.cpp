@@ -46,7 +46,19 @@ inline namespace _v1
 
         ret += U"define function @ " + _pointer_to_string(&fn) + U" `" + fn.name + U"`:\n{\n";
 
+        ret += U"parameters:\n{\n";
+        for (auto && param : fn.parameters)
+        {
+            ret += generate_definition(*param, ctx);
+        }
         ret += U"}\n";
+
+        ret += U"instructions:\n{\n";
+        for (auto && instr : fn.instructions)
+        {
+            ret += generate(instr, ctx);
+        }
+        ret += U"}\n}\n";
 
         return ret;
     }

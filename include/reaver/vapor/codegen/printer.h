@@ -59,6 +59,8 @@ inline namespace _v1
         {
             return boost::algorithm::join(fmap(sc, [&](auto && scope) { return scope.name; }), U".");
         }
+
+        static std::u32string _to_string(const ir::value &);
     };
 
     inline std::shared_ptr<code_generator> make_printer()

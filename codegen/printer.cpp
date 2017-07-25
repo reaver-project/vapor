@@ -20,10 +20,9 @@
  *
  **/
 
-#include <boost/algorithm/string/join.hpp>
-
-#include "vapor/codegen/ir/module.h"
 #include "vapor/codegen/printer.h"
+#include "vapor/codegen/ir/module.h"
+#include "vapor/codegen/ir/variable.h"
 
 namespace reaver::vapor::codegen
 {
@@ -41,6 +40,37 @@ inline namespace _v1
         }
 
         return ret;
+    }
+
+    std::u32string ir_printer::_to_string(const ir::value & val)
+    {
+        return get<std::u32string>(fmap(val,
+            make_overload_set(
+                [&](const ir::integer_value & val) {
+                    std::stringstream ss;
+                    ss << val.value;
+
+                    if (val.size)
+                    {
+                        ss << "_" << val.size.get();
+                    }
+
+                    return boost::locale::conv::utf_to_utf<char32_t>(ss.str());
+                },
+                [&](const ir::boolean_value & val) -> std::u32string { return val.value ? U"true" : U"false"; },
+                [&](const std::shared_ptr<ir::variable> & var) {
+                    return U"variable @ " + _pointer_to_string(var.get()) + U" `" + (var->name ? _scope_string(var->scopes) + U"." + var->name.get() : U"")
+                        + U"`";
+                },
+                [&](const ir::label & label) { return (label.scopes.empty() ? U"" : _scope_string(label.scopes) + U".") + label.name; },
+                [&](const ir::struct_value & struct_val) -> std::u32string {
+                    return U"type @ " + _pointer_to_string(struct_val.type.get()) + U"{ "
+                        + boost::algorithm::join(fmap(struct_val.fields, [&](auto && v) { return _to_string(v); }), U", ") + U" }";
+                },
+                [&](auto &&) {
+                    assert(0);
+                    return unit{};
+                })));
     }
 }
 }

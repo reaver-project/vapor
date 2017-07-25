@@ -103,9 +103,9 @@ int main() try
 
     auto ir = analyzed_ast.codegen_ir();
 
-    // reaver::vapor::codegen::result generated_ir{ ir, reaver::vapor::codegen::make_printer() };
-    // reaver::logger::dlog() << "Generated IR:";
-    // reaver::logger::dlog() << generated_ir;
+    reaver::vapor::codegen::result generated_ir{ ir, reaver::vapor::codegen::make_printer() };
+    reaver::logger::dlog() << "Generated IR:";
+    reaver::logger::dlog() << generated_ir;
 
     reaver::vapor::codegen::result generated_code{ ir, reaver::vapor::codegen::make_cxx() };
     reaver::logger::dlog() << "Generated code:";

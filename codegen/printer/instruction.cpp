@@ -20,15 +20,32 @@
  *
  **/
 
+#include "vapor/codegen/ir/instruction.h"
 #include "vapor/codegen/printer.h"
 
 namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    std::u32string ir_printer::generate(const ir::instruction & instr, codegen_context & ctx)
+    std::u32string ir_printer::generate(const ir::instruction & inst, codegen_context & ctx)
     {
-        assert(0);
+        std::u32string ret;
+
+        if (inst.label)
+        {
+            ret += U"label `" + inst.label.get() + U"`:\n";
+        }
+
+        if (inst.declared_variable)
+        {
+            ret += generate_definition(*inst.declared_variable.get(), ctx);
+        }
+
+        ret += _to_string(inst.result) + U" = " + boost::locale::conv::utf_to_utf<char32_t>(inst.instruction.explain()) + U" ";
+        ret += boost::algorithm::join(fmap(inst.operands, [&](auto && v) { return _to_string(v); }), U", ");
+        ret += U"\n";
+
+        return ret;
     }
 }
 }
