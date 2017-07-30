@@ -112,7 +112,7 @@ int main() try
     reaver::logger::dlog() << generated_code;
 
     boost::filesystem::create_directories("output");
-    std::ofstream out{ "output/output.cpp", std::ios::trunc | std::ios::out };
+    std::ofstream out{ "output/output.ll", std::ios::trunc | std::ios::out };
     out << generated_code;
 
     reaver::logger::default_logger().sync();
