@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,9 +20,15 @@
  *
  **/
 
-#pragma once
+#include "vapor/codegen/llvm_ir.h"
 
-#include "codegen/cxx.h"
-#include "codegen/llvm_ir.h"
-#include "codegen/printer.h"
-#include "codegen/result.h"
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
+{
+    std::u32string llvm_ir_generator::generate_definition(ir::variable & var, codegen_context & ctx)
+    {
+        return {};
+    }
+}
+}

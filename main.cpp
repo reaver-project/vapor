@@ -107,8 +107,8 @@ int main() try
     reaver::logger::dlog() << "Generated IR:";
     reaver::logger::dlog() << generated_ir;
 
-    reaver::vapor::codegen::result generated_code{ ir, reaver::vapor::codegen::make_cxx() };
-    reaver::logger::dlog() << "Generated code:";
+    reaver::vapor::codegen::result generated_code{ ir, reaver::vapor::codegen::make_llvm_ir() };
+    reaver::logger::dlog() << "Generated LLVM IR:";
     reaver::logger::dlog() << generated_code;
 
     boost::filesystem::create_directories("output");

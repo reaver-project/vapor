@@ -1,5 +1,3 @@
-target triple = "x86_64-pc-linux-gnu"
-
 declare i32 @atoi(i8* nocapture) nounwind
 
 define i32 @main(i32 %argc, i8** %argv) {
