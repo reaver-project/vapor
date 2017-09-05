@@ -219,7 +219,7 @@ inline namespace _v1
         auto actual_type = *_codegen_t;
 
         // TODO: actual name tracking for this shit
-        _codegen_type_name_value = U"__struct_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.struct_index++));
+        _codegen_type_name_value = U"struct_" + utf32(std::to_string(ctx.struct_index++));
         auto type = codegen::ir::variable_type{ _codegen_type_name_value.get(), get_scope()->codegen_ir(ctx), 0, {} };
 
         auto members = fmap(_data_members, [&](auto && member) { return codegen::ir::member{ member->member_codegen_ir(ctx) }; });

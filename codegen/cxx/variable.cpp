@@ -94,7 +94,7 @@ inline namespace _v1
                 [&](const codegen::ir::integer_value & val) {
                     std::ostringstream os;
                     os << val.value;
-                    return boost::locale::conv::utf_to_utf<char32_t>(os.str());
+                    return utf32(os.str());
                 },
                 [&](const codegen::ir::boolean_value & val) -> std::u32string { return val.value ? U"true" : U"false"; },
                 [&](const std::shared_ptr<ir::variable> & var) {

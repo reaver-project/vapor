@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2015-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,32 +20,24 @@
  *
  **/
 
-#include "vapor/codegen/ir/instruction.h"
-#include "vapor/codegen/printer.h"
+#pragma once
 
-namespace reaver::vapor::codegen
+#include <string>
+
+#include <boost/locale/encoding_utf.hpp>
+
+namespace reaver::vapor
 {
 inline namespace _v1
 {
-    std::u32string ir_printer::generate(const ir::instruction & inst, codegen_context & ctx)
+    inline auto utf8(const std::u32string & utf32)
     {
-        std::u32string ret;
+        return boost::locale::conv::utf_to_utf<char>(utf32);
+    }
 
-        if (inst.label)
-        {
-            ret += U"label `" + inst.label.get() + U"`:\n";
-        }
-
-        if (inst.declared_variable)
-        {
-            ret += generate_definition(*inst.declared_variable.get(), ctx);
-        }
-
-        ret += _to_string(inst.result) + U" = " + utf32(inst.instruction.explain()) + U" ";
-        ret += boost::algorithm::join(fmap(inst.operands, [&](auto && v) { return _to_string(v); }), U", ");
-        ret += U"\n";
-
-        return ret;
+    inline auto utf32(const std::string & utf8)
+    {
+        return boost::locale::conv::utf_to_utf<char32_t>(utf8);
     }
 }
 }

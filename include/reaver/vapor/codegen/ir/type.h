@@ -85,8 +85,7 @@ inline namespace _v1
                     auto & type = types[size];
                     if (!type)
                     {
-                        auto sized_type =
-                            std::make_shared<sized_integer_type>(U"sized_integer_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(size)));
+                        auto sized_type = std::make_shared<sized_integer_type>(U"sized_integer_" + utf32(std::to_string(size)));
                         sized_type->integer_size = size;
                         type = sized_type;
                     }

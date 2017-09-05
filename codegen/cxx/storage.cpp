@@ -40,7 +40,7 @@ inline namespace _v1
             }
         }
 
-        auto var = U"__pseudoregister_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.storage_object_index++));
+        auto var = U"__pseudoregister_" + utf32(std::to_string(ctx.storage_object_index++));
         ctx.put_into_function_header += U"::reaver::manual_object<" + cxx::type_name(type, ctx) + U"> " + var + U";\n";
         return var;
     }

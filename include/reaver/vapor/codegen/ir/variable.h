@@ -25,7 +25,7 @@
 #include <reaver/optional.h>
 #include <reaver/variant.h>
 
-#include "../../utf8.h"
+#include "../../utf.h"
 #include "boolean.h"
 #include "integer.h"
 #include "scope.h"

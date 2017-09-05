@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2017 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,19 +20,17 @@
  *
  **/
 
-#pragma once
+#include "vapor/codegen/ir/instruction.h"
+#include "vapor/codegen/llvm_ir.h"
 
-#include <string>
-
-#include <boost/locale/encoding_utf.hpp>
-
-namespace reaver::vapor
+namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    inline auto utf8(const std::u32string & utf32)
+    template<>
+    std::u32string llvm_ir_generator::generate<ir::return_instruction>(const ir::instruction & inst, codegen_context & ctx)
     {
-        return boost::locale::conv::utf_to_utf<char>(utf32);
+        return U"ret " + type_of(inst.result, ctx) + U" " + value_of(inst.result, ctx) + U"\n";
     }
 }
 }

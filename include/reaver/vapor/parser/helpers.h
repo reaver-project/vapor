@@ -30,7 +30,7 @@
 #include "../lexer/iterator.h"
 #include "../lexer/token.h"
 #include "../range.h"
-#include "../utf8.h"
+#include "../utf.h"
 
 namespace reaver::vapor::parser
 {

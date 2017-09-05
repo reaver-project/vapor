@@ -66,8 +66,8 @@ inline namespace _v1
             {}, {}, { boost::typeindex::type_id<codegen::ir::boolean_negation_instruction>() }, { condition_variable }, negated_variable
         };
 
-        auto else_label = U"__else_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.label_index++));
-        auto after_else_label = U"__after_else_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.label_index++));
+        auto else_label = U"else_" + utf32(std::to_string(ctx.label_index++));
+        auto after_else_label = U"after_else_" + utf32(std::to_string(ctx.label_index++));
 
         auto then_instructions = _then_block->codegen_ir(ctx);
         auto else_instructions = [&]() {

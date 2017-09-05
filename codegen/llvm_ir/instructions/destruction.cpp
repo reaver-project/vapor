@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,31 +21,22 @@
  **/
 
 #include "vapor/codegen/ir/instruction.h"
-#include "vapor/codegen/printer.h"
+#include "vapor/codegen/llvm_ir.h"
 
 namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    std::u32string ir_printer::generate(const ir::instruction & inst, codegen_context & ctx)
+    template<>
+    std::u32string llvm_ir_generator::generate<ir::destruction_instruction>(const ir::instruction & inst, codegen_context & ctx)
     {
-        std::u32string ret;
+        return {};
+    }
 
-        if (inst.label)
-        {
-            ret += U"label `" + inst.label.get() + U"`:\n";
-        }
-
-        if (inst.declared_variable)
-        {
-            ret += generate_definition(*inst.declared_variable.get(), ctx);
-        }
-
-        ret += _to_string(inst.result) + U" = " + utf32(inst.instruction.explain()) + U" ";
-        ret += boost::algorithm::join(fmap(inst.operands, [&](auto && v) { return _to_string(v); }), U", ");
-        ret += U"\n";
-
-        return ret;
+    template<>
+    std::u32string llvm_ir_generator::generate<ir::temporary_destruction_instruction>(const ir::instruction & inst, codegen_context & ctx)
+    {
+        return {};
     }
 }
 }

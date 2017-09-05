@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,29 +21,30 @@
  **/
 
 #include "vapor/codegen/ir/instruction.h"
-#include "vapor/codegen/printer.h"
+#include "vapor/codegen/llvm_ir.h"
 
 namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    std::u32string ir_printer::generate(const ir::instruction & inst, codegen_context & ctx)
+    // TODO: this implementation is BAD
+    // I need to align the branching model I have to what LLVM has
+    // because otherwise I'll forever have to deal with this insanity
+    template<>
+    std::u32string llvm_ir_generator::generate<ir::jump_instruction>(const ir::instruction & inst, codegen_context & ctx)
     {
+        assert(inst.operands.size() > 0 && inst.operands.size() % 2 == 0);
+
+        auto br_label_id = ctx.unnamed_variable_index++;
+
         std::u32string ret;
-
-        if (inst.label)
+        for (std::size_t i = 0; i < inst.operands.size() / 2; ++i)
         {
-            ret += U"label `" + inst.label.get() + U"`:\n";
-        }
+            auto label = utf32("." + std::to_string(br_label_id) + "." + std::to_string(i));
 
-        if (inst.declared_variable)
-        {
-            ret += generate_definition(*inst.declared_variable.get(), ctx);
+            ret += U"br i1 " + value_of(inst.operands[i * 2], ctx) + U", label " + value_of(inst.operands[i * 2 + 1], ctx) + U", label %\"" + label + U"\"\n"
+                + label + U":\n";
         }
-
-        ret += _to_string(inst.result) + U" = " + utf32(inst.instruction.explain()) + U" ";
-        ret += boost::algorithm::join(fmap(inst.operands, [&](auto && v) { return _to_string(v); }), U", ");
-        ret += U"\n";
 
         return ret;
     }

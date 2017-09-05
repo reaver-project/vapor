@@ -104,7 +104,7 @@ inline namespace _v1
 
         logger::default_logger().sync();
         assert(!"non-declaration name for unnamed variable requested");
-        // return U"__unnamed_variable_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.unnamed_variable_index++));
+        // return U"__unnamed_variable_" + utf32(std::to_string(ctx.unnamed_variable_index++));
     }
 
     std::u32string cxx::declaration_variable_name(ir::variable & var, codegen_context & ctx)
@@ -114,7 +114,7 @@ inline namespace _v1
             return *var.name;
         }
 
-        auto name = U"__unnamed_variable_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.unnamed_variable_index++));
+        auto name = U"__unnamed_variable_" + utf32(std::to_string(ctx.unnamed_variable_index++));
         var.name = name;
         return name;
     }

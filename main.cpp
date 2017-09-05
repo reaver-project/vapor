@@ -28,7 +28,7 @@
 #include "vapor/codegen.h"
 #include "vapor/lexer.h"
 #include "vapor/parser.h"
-#include "vapor/utf8.h"
+#include "vapor/utf.h"
 
 std::u32string program = UR"program(module hello_world
 {

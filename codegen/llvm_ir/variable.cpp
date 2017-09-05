@@ -20,6 +20,7 @@
  *
  **/
 
+#include "vapor/codegen/ir/type.h"
 #include "vapor/codegen/llvm_ir.h"
 
 namespace reaver::vapor::codegen
@@ -28,7 +29,21 @@ inline namespace _v1
 {
     std::u32string llvm_ir_generator::generate_definition(ir::variable & var, codegen_context & ctx)
     {
-        return {};
+        if (var.type == ir::builtin_types().type)
+        {
+            assert(var.refers_to);
+            ctx.put_into_global_before += ctx.define_if_necessary(var.refers_to);
+            return {};
+        }
+
+        std::u32string ret;
+
+        ret += ctx.define_if_necessary(var.type);
+
+        assert(!ctx.in_function_definition);
+        ret += variable_name(var, ctx) + U" = global " + type_name(var.type, ctx) + U" { }\n\n";
+
+        return ret;
     }
 }
 }

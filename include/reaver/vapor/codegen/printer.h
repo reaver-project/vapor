@@ -52,7 +52,7 @@ inline namespace _v1
         {
             std::stringstream ss;
             ss << ptr;
-            return boost::locale::conv::utf_to_utf<char32_t>(ss.str());
+            return utf32(ss.str());
         }
 
         static std::u32string _scope_string(const std::vector<ir::scope> & sc)

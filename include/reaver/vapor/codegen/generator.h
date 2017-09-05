@@ -61,6 +61,7 @@ inline namespace _v1
         std::u32string put_into_function_header;
 
         std::shared_ptr<ir::variable_type> declaring_members_for;
+        bool in_function_definition = false;
 
         auto & generator() const
         {

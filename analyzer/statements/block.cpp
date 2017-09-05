@@ -137,10 +137,11 @@ inline namespace _v1
             auto to_u32string = [](auto && v) {
                 std::stringstream stream;
                 stream << v;
-                return boost::locale::conv::utf_to_utf<char32_t>(stream.str());
+                return utf32(stream.str());
             };
 
             std::vector<codegen::ir::value> labeled_return_values;
+            codegen::ir::instruction * last_labelled = nullptr;
 
             for (std::size_t i = 0; i < statements.size(); ++i)
             {
@@ -153,8 +154,9 @@ inline namespace _v1
                 std::u32string label;
                 if (!stmt.label)
                 {
-                    label = U"__return_label_" + to_u32string(ctx.label_index++);
+                    label = U"return_label_" + to_u32string(ctx.label_index++);
                     stmt.label = label;
+                    last_labelled = &stmt;
                 }
                 else
                 {
@@ -165,7 +167,19 @@ inline namespace _v1
                 labeled_return_values.emplace_back(stmt.result);
             }
 
-            if (labeled_return_values.size() > 2)
+            // in this case we don't generate jumps
+            // if we generate the unnecessary label, it'll turn into an LLVM block
+            // and LLVM blocks need to have a branch before them
+            // hence, remove the label if it's useless
+            if (labeled_return_values.size() <= 2)
+            {
+                if (last_labelled)
+                {
+                    last_labelled->label = none;
+                }
+            }
+
+            else
             {
                 std::size_t return_value_index = 0;
 
@@ -179,7 +193,7 @@ inline namespace _v1
                     }
 
                     stmt.instruction = boost::typeindex::type_id<codegen::ir::jump_instruction>();
-                    stmt.operands = { codegen::ir::boolean_value{ true }, codegen::ir::label{ U"__return_phi", {} } };
+                    stmt.operands = { codegen::ir::boolean_value{ true }, codegen::ir::label{ U"return_phi", {} } };
 
                     // create a variable for the constant return value
                     if (stmt.result.index() != 0)
@@ -195,7 +209,7 @@ inline namespace _v1
                     ++return_value_index;
                 }
 
-                statements.emplace_back(codegen::ir::instruction{ optional<std::u32string>{ U"__return_phi" },
+                statements.emplace_back(codegen::ir::instruction{ optional<std::u32string>{ U"return_phi" },
                     none,
                     { boost::typeindex::type_id<codegen::ir::phi_instruction>() },
                     std::move(labeled_return_values),

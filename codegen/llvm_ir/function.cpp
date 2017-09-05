@@ -42,12 +42,21 @@ inline namespace _v1
             ret += ctx.define_if_necessary(ir::get_type(param));
         }
 
+        auto old = ctx.in_function_definition;
+        ctx.in_function_definition = true;
+
+        std::u32string scopes;
+        for (auto && scope : fn.scopes)
+        {
+            scopes += scope.name + U"::";
+        }
+
         ret += U"define " + type_name(ir::get_type(fn.return_value), ctx);
-        ret += U" @" + function_name(fn, ctx);
-        ret += U"(\n";
+        ret += U" @\"" + scopes + function_name(fn, ctx);
+        ret += U"\"(\n";
         for (auto && param : fn.parameters)
         {
-            ret += U"    " + type_name(ir::get_type(param), ctx) + U" " + variable_name(*param, ctx, true) + U",\n";
+            ret += U"    " + type_name(ir::get_type(param), ctx) + U" " + variable_name(*param, ctx) + U",\n";
         }
 
         if (!fn.parameters.empty())
@@ -66,7 +75,9 @@ inline namespace _v1
             ret += generate(inst, ctx);
         }
 
-        ret += U"}\n";
+        ctx.in_function_definition = old;
+
+        ret += U"}\n\n";
 
         return ret;
     }

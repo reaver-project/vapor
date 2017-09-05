@@ -35,7 +35,7 @@ inline namespace _v1
             none,
             { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
             {},
-            codegen::ir::value{ codegen::ir::integer_value{ _value } } } };
+            codegen::ir::value{ codegen::ir::integer_value{ _value, 0 } } } };
     }
 }
 }

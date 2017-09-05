@@ -22,6 +22,8 @@
 
 #include "generator.h"
 
+#include "ir/instruction.h" // TODO: remove
+
 namespace reaver::vapor::codegen
 {
 inline namespace _v1
@@ -36,14 +38,85 @@ inline namespace _v1
         std::u32string generate_definition(ir::variable &, codegen_context &);
         std::u32string generate_definition(ir::function &, codegen_context &);
 
+        // TODO: remove definition
         template<typename T>
-        static std::u32string generate(const ir::instruction & inst, codegen_context & ctx);
+        static std::u32string generate(const ir::instruction & inst, codegen_context & ctx)
+        {
+            return U"needed: generate<" + utf32(inst.instruction.explain()) + U">\n";
+        }
 
     private:
-        std::u32string type_name(std::shared_ptr<ir::variable_type>, codegen_context &);
-        std::u32string function_name(ir::function &, codegen_context &);
-        std::u32string variable_name(ir::variable &, codegen_context &, bool is_param = false);
+        static std::u32string type_name(std::shared_ptr<ir::variable_type>, codegen_context &);
+        static std::u32string function_name(ir::function &, codegen_context &);
+        static std::u32string variable_name(ir::variable &, codegen_context &);
 
+        static std::u32string variable_of(const ir::value & val, codegen_context & ctx)
+        {
+            assert(val.index() == 0);
+            return variable_name(*get<std::shared_ptr<ir::variable>>(val), ctx);
+        }
+
+        static std::u32string type_of(const ir::value & val, codegen_context & ctx)
+        {
+            return get<std::u32string>(fmap(val,
+                make_overload_set(
+                    [&](const ir::integer_value & val) {
+                        assert(val.size);
+
+                        std::ostringstream os;
+                        os << "i" << val.size.get();
+                        return utf32(os.str());
+                    },
+                    [&](const ir::boolean_value &) -> std::u32string { return U"i1"; },
+                    [&](const std::shared_ptr<ir::variable> & var) { return type_name(var->type, ctx); },
+                    [&](const ir::label &) {
+                        assert(0);
+                        return unit{};
+                    },
+                    [&](const ir::struct_value & val) { return type_name(val.type, ctx); },
+                    [](auto &&) {
+                        assert(0);
+                        return unit{};
+                    })));
+        }
+
+        static std::u32string value_of(const ir::value & val, codegen_context & ctx)
+        {
+            return get<std::u32string>(fmap(val,
+                make_overload_set(
+                    [&](const codegen::ir::integer_value & val) {
+                        std::ostringstream os;
+                        os << val.value;
+                        return utf32(os.str());
+                    },
+                    [&](const codegen::ir::boolean_value & val) -> std::u32string { return val.value ? U"true" : U"false"; },
+                    [&](const std::shared_ptr<ir::variable> & var) { return variable_name(*var, ctx); },
+                    [&](const codegen::ir::label & label) {
+                        assert(label.scopes.empty());
+                        return U"%\"" + label.name + U"\"";
+                    },
+                    [&](const codegen::ir::struct_value & val) {
+                        std::u32string ret;
+                        ret += U"{";
+
+                        for (auto && member : val.fields)
+                        {
+                            ret += U" " + type_of(member, ctx) + U" " + value_of(member, ctx) + U",";
+                        }
+
+                        if (ret.back() == U',')
+                        {
+                            ret.pop_back();
+                        }
+                        ret += U" }";
+
+                        return ret;
+                    },
+                    [&](auto &&) {
+                        assert(0);
+                        return unit{};
+                    })));
+        }
         std::u32string generate(const ir::instruction &, codegen_context &);
     };
 

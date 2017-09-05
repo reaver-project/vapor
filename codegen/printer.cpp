@@ -55,7 +55,7 @@ inline namespace _v1
                         ss << "_" << val.size.get();
                     }
 
-                    return boost::locale::conv::utf_to_utf<char32_t>(ss.str());
+                    return utf32(ss.str());
                 },
                 [&](const ir::boolean_value & val) -> std::u32string { return val.value ? U"true" : U"false"; },
                 [&](const std::shared_ptr<ir::variable> & var) {

@@ -31,7 +31,7 @@
 #include <reaver/optional.h>
 
 #include "../codegen/ir/scope.h"
-#include "../utf8.h"
+#include "../utf.h"
 #include "ir_context.h"
 
 namespace reaver::vapor::analyzer

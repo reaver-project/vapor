@@ -63,7 +63,7 @@ inline namespace _v1
     {
         auto actual_type = *_codegen_t;
 
-        auto type = codegen::ir::variable_type{ U"__overload_set_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.overload_set_index++)),
+        auto type = codegen::ir::variable_type{ U"overload_set_" + utf32(std::to_string(ctx.overload_set_index++)),
             get_scope()->codegen_ir(ctx),
             0,
             fmap(_functions, [&](auto && fn) {

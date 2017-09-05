@@ -93,7 +93,7 @@ inline namespace _v1
 
     sized_integer::sized_integer(std::size_t size) : _size{ size }
     {
-        auto u32size = boost::locale::conv::utf_to_utf<char32_t>(std::to_string(size));
+        auto u32size = utf32(std::to_string(size));
 
         ADD_OPERATION(addition, U"__builtin_sized_integer_" + u32size + U"_operator_plus", +, this, sized_integer, (this, ));
         ADD_OPERATION(subtraction, U"__builtin_sized_integer_" + u32size + U"_operator_minus", -, this, sized_integer, (this, ));

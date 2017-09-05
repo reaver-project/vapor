@@ -63,11 +63,10 @@ inline namespace _v1
 
         if (auto sized = dynamic_cast<const ir::sized_integer_type *>(type.get()))
         {
-            return U"i" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(sized->integer_size));
+            return U"i" + utf32(std::to_string(sized->integer_size));
         }
 
-        assert(0);
-        return type->name;
+        return U"%\"" + type->name + U"\"";
     }
 
     std::u32string llvm_ir_generator::function_name(ir::function & fn, codegen_context & ctx)
@@ -75,14 +74,14 @@ inline namespace _v1
         return fn.name;
     }
 
-    std::u32string llvm_ir_generator::variable_name(ir::variable & var, codegen_context & ctx, bool is_param)
+    std::u32string llvm_ir_generator::variable_name(ir::variable & var, codegen_context & ctx)
     {
         if (!var.name)
         {
-            var.name = (is_param ? U"%param" : U"%") + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.unnamed_variable_index++));
+            var.name = utf32(std::to_string(ctx.unnamed_variable_index++));
         }
 
-        return var.name.get();
+        return (ctx.in_function_definition ? U"%\"" : U"@\"") + var.name.get() + U"\"";
     }
 }
 }

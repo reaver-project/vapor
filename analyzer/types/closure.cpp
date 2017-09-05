@@ -39,9 +39,7 @@ inline namespace _v1
     {
         auto actual_type = *_codegen_t;
 
-        auto type = codegen::ir::variable_type{
-            U"__closure_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.closure_index++)), get_scope()->codegen_ir(ctx), 0, {}
-        };
+        auto type = codegen::ir::variable_type{ U"closure_" + utf32(std::to_string(ctx.closure_index++)), get_scope()->codegen_ir(ctx), 0, {} };
 
         auto scopes = get_scope()->codegen_ir(ctx);
         scopes.emplace_back(type.name, codegen::ir::scope_type::type);

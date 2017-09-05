@@ -52,7 +52,7 @@ inline namespace _v1
         std::u32string base;
         if (inst.label)
         {
-            base += *inst.label + U":\n";
+            base += U"\n" + *inst.label + U":\n";
         }
 
         if (inst.result.index() == 0)
