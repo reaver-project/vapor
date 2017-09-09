@@ -134,18 +134,18 @@ inline namespace _v1
 
         if (_is_top_level)
         {
-            auto to_u32string = [](auto && v) {
-                std::stringstream stream;
-                stream << v;
-                return utf32(stream.str());
-            };
-
             std::vector<codegen::ir::value> labeled_return_values;
-            codegen::ir::instruction * last_labelled = nullptr;
+            std::u32string_view current_label = U"entry";
 
             for (std::size_t i = 0; i < statements.size(); ++i)
             {
                 auto & stmt = statements[i];
+
+                if (stmt.label)
+                {
+                    current_label = *stmt.label;
+                }
+
                 if (!stmt.instruction.template is<codegen::ir::return_instruction>())
                 {
                     continue;
@@ -154,16 +154,14 @@ inline namespace _v1
                 std::u32string label;
                 if (!stmt.label)
                 {
-                    label = U"return_label_" + to_u32string(ctx.label_index++);
-                    stmt.label = label;
-                    last_labelled = &stmt;
+                    label = current_label;
                 }
                 else
                 {
                     label = stmt.label;
                 }
 
-                labeled_return_values.emplace_back(codegen::ir::label{ std::move(label), {} });
+                labeled_return_values.emplace_back(codegen::ir::label{ label, {} });
                 labeled_return_values.emplace_back(stmt.result);
             }
 
@@ -171,15 +169,7 @@ inline namespace _v1
             // if we generate the unnecessary label, it'll turn into an LLVM block
             // and LLVM blocks need to have a branch before them
             // hence, remove the label if it's useless
-            if (labeled_return_values.size() <= 2)
-            {
-                if (last_labelled)
-                {
-                    last_labelled->label = none;
-                }
-            }
-
-            else
+            if (labeled_return_values.size() > 2)
             {
                 std::size_t return_value_index = 0;
 
@@ -193,7 +183,7 @@ inline namespace _v1
                     }
 
                     stmt.instruction = boost::typeindex::type_id<codegen::ir::jump_instruction>();
-                    stmt.operands = { codegen::ir::boolean_value{ true }, codegen::ir::label{ U"return_phi", {} } };
+                    stmt.operands = { codegen::ir::label{ U"return_phi", {} } };
 
                     // create a variable for the constant return value
                     if (stmt.result.index() != 0)

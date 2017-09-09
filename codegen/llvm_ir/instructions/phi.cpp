@@ -20,6 +20,7 @@
  *
  **/
 
+#include "vapor/codegen/generator.h"
 #include "vapor/codegen/ir/instruction.h"
 #include "vapor/codegen/llvm_ir.h"
 
@@ -28,20 +29,20 @@ namespace reaver::vapor::codegen
 inline namespace _v1
 {
     template<>
-    std::u32string llvm_ir_generator::generate<ir::boolean_equal_comparison_instruction>(const ir::instruction & inst,
-        reaver::vapor::codegen::_v1::codegen_context & ctx)
+    std::u32string llvm_ir_generator::generate<ir::phi_instruction>(const ir::instruction & inst, codegen_context & ctx)
     {
-        assert(inst.operands.size() == 2);
-        return variable_of(inst.result, ctx) + U" = icmp eq " + type_of(inst.operands[0], ctx) + U" " + value_of(inst.operands[0], ctx) + U", "
-            + value_of(inst.operands[1], ctx) + U"\n";
-    }
+        std::u32string ret;
 
-    template<>
-    std::u32string llvm_ir_generator::generate<ir::boolean_negation_instruction>(const ir::instruction & inst,
-        reaver::vapor::codegen::_v1::codegen_context & ctx)
-    {
-        assert(inst.operands.size() == 1);
-        return variable_of(inst.result, ctx) + U" = icmp eq " + type_of(inst.operands[0], ctx) + U" " + value_of(inst.operands[0], ctx) + U", 0\n";
+        ret += variable_of(inst.result, ctx) + U" = phi " + type_of(inst.result, ctx);
+
+        for (std::size_t i = 0; 2 * i < inst.operands.size(); ++i)
+        {
+            ret += U" [ " + value_of(inst.operands[i * 2 + 1], ctx) + U", " + value_of(inst.operands[i * 2], ctx) + U" ],";
+        }
+        assert(ret.back() == U',');
+        ret.back() = U'\n';
+
+        return ret;
     }
 }
 }

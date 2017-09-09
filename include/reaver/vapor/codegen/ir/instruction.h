@@ -98,6 +98,9 @@ inline namespace _v1
         struct jump_instruction
         {
         };
+        struct conditional_jump_instruction
+        {
+        };
         struct phi_instruction
         {
         };

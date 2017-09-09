@@ -73,6 +73,7 @@ inline namespace _v1
                   ir::pass_value_instruction,
                   ir::return_instruction,
                   ir::jump_instruction,
+                  ir::conditional_jump_instruction,
                   ir::phi_instruction,
                   ir::noop_instruction,
 
