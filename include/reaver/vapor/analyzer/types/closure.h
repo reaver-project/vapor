@@ -58,8 +58,19 @@ inline namespace _v1
     private:
         virtual void _codegen_type(ir_generation_context &) const override;
 
+        virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
+        {
+            if (!_codegen_type_name)
+            {
+                _codegen_type_name = U"closure_" + utf32(std::to_string(ctx.closure_index++)), get_scope()->codegen_ir(ctx);
+            }
+
+            return *_codegen_type_name;
+        }
+
         closure * _closure;
         std::unique_ptr<function> _function;
+        mutable optional<std::u32string> _codegen_type_name;
     };
 }
 }

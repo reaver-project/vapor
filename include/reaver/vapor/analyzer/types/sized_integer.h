@@ -107,6 +107,11 @@ inline namespace _v1
     private:
         virtual void _codegen_type(ir_generation_context & ctx) const override;
 
+        virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
+        {
+            assert(0);
+        }
+
         std::size_t _size;
         boost::multiprecision::cpp_int _max_value;
         boost::multiprecision::cpp_int _min_value;

@@ -79,6 +79,17 @@ inline namespace _v1
 
         ret += U"}\n\n";
 
+        // quick and dirty, but this should work!
+        if (fn.is_entry)
+        {
+            ret += U"define i32 @__entry_call_thunk(i32 %arg)\n";
+            ret += U"{\n";
+            ret += U"entry:\n";
+            ret += U"    %0 = call i32 @\"" + scopes + function_name(fn, ctx) + U"\"(i32 %arg)\n";
+            ret += U"    ret i32 %0\n";
+            ret += U"}\n\n";
+        }
+
         return ret;
     }
 }

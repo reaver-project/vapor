@@ -117,7 +117,7 @@ inline namespace _v1
 
         mutable optional<std::u32string> _codegen_type_name_value;
 
-        std::u32string _codegen_type_name(ir_generation_context & ctx) const
+        virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
         {
             if (!_codegen_type_name_value)
             {

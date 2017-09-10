@@ -127,5 +127,35 @@ inline namespace _v1
 
         os << ": " << _explanation << '\n';
     }
+
+    codegen::ir::function function::codegen_ir(ir_generation_context & ctx) const
+    {
+        auto state = ctx.top_level_generation;
+        ctx.top_level_generation = false;
+
+        if (!_ir)
+        {
+            _ir = _codegen(ctx);
+            if (_is_member)
+            {
+                _ir->is_member = true;
+            }
+
+            if (_entry)
+            {
+                _ir->is_entry = true;
+                _ir->entry_variable = _entry_expr->codegen_ir(ctx).back().result;
+            }
+        }
+
+        if (state)
+        {
+            ctx.add_generated_function(this);
+        }
+
+        ctx.top_level_generation = state;
+
+        return *_ir;
+    }
 }
 }

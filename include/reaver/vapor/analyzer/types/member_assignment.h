@@ -78,6 +78,11 @@ inline namespace _v1
             assert(!"attempted to codegen a member-assignment-type");
         }
 
+        virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
+        {
+            assert(0);
+        }
+
         std::u32string _member_name;
         member_assignment_expression * _expr;
 

@@ -78,8 +78,11 @@ inline namespace _v1
                 function->set_name(U"operator()");
                 function->set_body(_body.get());
 
+                auto fn_ptr = function.get();
                 _type = std::make_unique<closure_type>(_scope.get(), this, std::move(function));
                 this->_set_type(_type.get());
+
+                fn_ptr->set_scopes_generator([this](auto && ctx) { return _type->codegen_scopes(ctx); });
             });
     }
 }

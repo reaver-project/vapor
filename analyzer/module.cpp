@@ -20,6 +20,7 @@
  *
  **/
 
+#include <reaver/future_get.h>
 #include <reaver/prelude/monad.h>
 #include <reaver/traits.h>
 
@@ -52,10 +53,21 @@ inline namespace _v1
         _analysis_futures = fmap(_statements, [&](auto && stmt) { return stmt->analyze(ctx); });
 
         auto all = when_all(_analysis_futures);
+        reaver::get(all);
 
-        while (!all.try_get())
+        // set entry(int32) as the entry point
+        if (auto entry = _scope->try_get(U"entry"))
         {
-            std::this_thread::sleep_for(std::chrono::nanoseconds(10000));
+            auto type = entry.get()->get_type();
+            auto future = type->get_candidates(lexer::token_type::round_bracket_open);
+            auto overloads = reaver::get(future);
+
+            // maybe this can be relaxed in the future?
+            assert(overloads.size() == 1);
+            assert(overloads[0]->parameters().size() == 1);
+            assert(overloads[0]->parameters()[0]->get_type() == ctx.sized_integers.at(32).get());
+
+            overloads[0]->mark_as_entry(ctx, entry.get()->get_expression());
         }
 
         logger::dlog() << "Analysis of module " << utf8(name()) << " finished.";
@@ -72,11 +84,7 @@ inline namespace _v1
 
             auto all = when_all(
                 fmap(_statements, [&](auto && stmt) { return stmt->simplify(ctx).then([&](auto && simplified) { replace_uptr(stmt, simplified, ctx); }); }));
-
-            while (!all.try_get())
-            {
-                std::this_thread::sleep_for(std::chrono::nanoseconds(10000));
-            }
+            reaver::get(all);
 
             cont = ctx.did_something_happen();
 

@@ -64,7 +64,18 @@ inline namespace _v1
     private:
         virtual void _codegen_type(ir_generation_context &) const override;
 
+        virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
+        {
+            if (!_codegen_type_name)
+            {
+                _codegen_type_name = U"overload_set_" + utf32(std::to_string(ctx.overload_set_index++));
+            }
+
+            return *_codegen_type_name;
+        }
+
         mutable std::mutex _functions_lock;
+        mutable optional<std::u32string> _codegen_type_name;
         std::vector<function *> _functions;
     };
 }

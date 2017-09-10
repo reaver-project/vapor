@@ -106,14 +106,7 @@ inline namespace _v1
                         codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
             });
 
-        _aggregate_ctor->set_scopes_generator([this](auto && ctx) {
-            this->codegen_type(ctx);
-
-            auto scopes = this->get_scope()->codegen_ir(ctx);
-            scopes.emplace_back(_codegen_type_name_value.get(), codegen::ir::scope_type::type);
-
-            return scopes;
-        });
+        _aggregate_ctor->set_scopes_generator([this](auto && ctx) { return this->codegen_scopes(ctx); });
 
         _aggregate_ctor->set_eval([this](auto &&, const std::vector<expression *> & args) {
             if (!std::equal(args.begin(), args.end(), _data_members.begin(), [](auto && arg, auto && member) { return arg->get_type() == member->get_type(); }))
@@ -173,6 +166,8 @@ inline namespace _v1
                           result },
                         codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
             });
+
+        _aggregate_copy_ctor->set_scopes_generator([this](auto && ctx) { return this->codegen_scopes(ctx); });
 
         _aggregate_copy_ctor->set_eval([this](auto &&, std::vector<expression *> args) {
             auto base = args.front();

@@ -55,6 +55,11 @@ inline namespace _v1
             assert(0);
         }
 
+        virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
+        {
+            assert(0);
+        }
+
         type * _return;
         std::vector<type *> _parameters;
         std::vector<std::unique_ptr<expression>> _params;

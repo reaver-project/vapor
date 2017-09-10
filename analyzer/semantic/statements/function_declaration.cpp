@@ -52,6 +52,7 @@ inline namespace _v1
             _parse.range);
         _function->set_name(U"operator()");
         _function->make_member();
+        _function->set_scopes_generator([this](auto && ctx) { return this->_overload_set->get_type()->codegen_scopes(ctx); });
         _overload_set->add_function(this);
 
         auto initial_future = [&] {

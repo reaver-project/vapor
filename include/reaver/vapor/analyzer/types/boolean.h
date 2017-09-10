@@ -66,6 +66,11 @@ inline namespace _v1
     private:
         virtual void _codegen_type(ir_generation_context &) const override;
 
+        virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
+        {
+            return U"boolean";
+        }
+
         template<typename Instruction, typename Eval>
         static auto _generate_function(const char32_t * name, const char * desc, Eval eval, type * return_type);
         static function * _equal_comparison();
