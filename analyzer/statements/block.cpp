@@ -29,6 +29,7 @@
 #include "vapor/analyzer/statements/return.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/parser.h"
+#include "vapor/utf.h"
 
 namespace reaver::vapor::analyzer
 {
