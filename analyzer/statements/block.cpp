@@ -136,7 +136,7 @@ inline namespace _v1
         if (_is_top_level)
         {
             std::vector<codegen::ir::value> labeled_return_values;
-            std::u32string_view current_label = U"entry";
+            std::u32string current_label = U"entry";
 
             for (std::size_t i = 0; i < statements.size(); ++i)
             {
