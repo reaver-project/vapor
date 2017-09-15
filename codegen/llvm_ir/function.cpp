@@ -33,13 +33,13 @@ inline namespace _v1
 
         if (auto type = fn.parent_type.lock())
         {
-            ret += ctx.define_if_necessary(type);
+            ctx.put_into_global_before += ctx.define_if_necessary(type);
         }
 
-        ret += ctx.define_if_necessary(ir::get_type(fn.return_value));
+        ctx.put_into_global_before += ctx.define_if_necessary(ir::get_type(fn.return_value));
         for (auto && param : fn.parameters)
         {
-            ret += ctx.define_if_necessary(ir::get_type(param));
+            ctx.put_into_global_before += ctx.define_if_necessary(ir::get_type(param));
         }
 
         auto old = ctx.in_function_definition;

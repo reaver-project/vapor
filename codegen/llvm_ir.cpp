@@ -66,6 +66,7 @@ inline namespace _v1
             return U"i" + utf32(std::to_string(sized->integer_size));
         }
 
+        ctx.put_into_global_before += ctx.define_if_necessary(type);
         return U"%\"" + type->name + U"\"";
     }
 

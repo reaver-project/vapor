@@ -68,12 +68,18 @@ inline namespace _v1
                         return utf32(os.str());
                     },
                     [&](const ir::boolean_value &) -> std::u32string { return U"i1"; },
-                    [&](const std::shared_ptr<ir::variable> & var) { return type_name(var->type, ctx); },
+                    [&](const std::shared_ptr<ir::variable> & var) {
+                        ctx.put_into_global_before += ctx.define_if_necessary(var->type);
+                        return type_name(var->type, ctx);
+                    },
                     [&](const ir::label &) {
                         assert(0);
                         return unit{};
                     },
-                    [&](const ir::struct_value & val) { return type_name(val.type, ctx); },
+                    [&](const ir::struct_value & val) {
+                        ctx.put_into_global_before += ctx.define_if_necessary(val.type);
+                        return type_name(val.type, ctx);
+                    },
                     [](auto &&) {
                         assert(0);
                         return unit{};

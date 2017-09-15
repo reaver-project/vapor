@@ -118,35 +118,24 @@ inline namespace _v1
         }
     }
 
-    namespace
-    {
-        template<typename Map>
-        auto as_vector(Map && map)
-        {
-            std::vector<std::pair<std::u32string, reaver::vapor::analyzer::_v1::symbol *>> ret;
-            ret.reserve(map.size());
-            std::transform(map.begin(), map.end(), std::back_inserter(ret), [](auto && pair) { return std::make_pair(pair.first, pair.second.get()); });
-            return ret;
-        }
-    }
-
     codegen::_v1::ir::module module::codegen_ir() const
     {
         auto ctx = ir_generation_context{};
 
         codegen::ir::module mod;
         mod.name = fmap(_parse.name.id_expression_value, [&](auto && ident) { return ident.value.string; });
-        mod.symbols = mbind(as_vector(_scope->declared_symbols()), [&](auto && symbol) {
-            return mbind(symbol.second->codegen_ir(ctx), [&](auto && decl) {
+
+        mod.symbols = mbind(_scope->symbols_in_order(), [&](auto && symbol) {
+            return mbind(symbol->codegen_ir(ctx), [&](auto && decl) {
                 return get<0>(fmap(decl,
                     make_overload_set(
                         [&](std::shared_ptr<codegen::ir::variable> symb) {
                             symb->declared = true;
-                            symb->name = symbol.second->get_name();
+                            symb->name = symbol->get_name();
                             return codegen::ir::module_symbols_t{ symb };
                         },
                         [&](auto && symb) {
-                            symb.name = symbol.second->get_name();
+                            symb.name = symbol->get_name();
                             return symb;
                         })));
             });
