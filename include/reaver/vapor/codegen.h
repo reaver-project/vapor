@@ -22,7 +22,6 @@
 
 #pragma once
 
-#include "codegen/cxx.h"
 #include "codegen/llvm_ir.h"
 #include "codegen/printer.h"
 #include "codegen/result.h"
