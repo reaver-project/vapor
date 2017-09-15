@@ -206,26 +206,29 @@ inline namespace _v1
         static auto boolean_type_expr = builtin_types().boolean->get_expression();
         static auto type_type_expr = builtin_types().type->get_expression();
 
-        static auto sized_int =
-            make_function("sized_int", builtin_types().type->get_expression(), { integer_type_expr }, [](auto && ctx) -> codegen::ir::function {
+        static auto sized_int = [] {
+            auto ret = make_function("sized_int", builtin_types().type->get_expression(), { integer_type_expr }, [](auto && ctx) -> codegen::ir::function {
                 assert(!"trying to codegen sized_int");
             });
 
-        sized_int->add_analysis_hook([](analysis_context & ctx, call_expression * expr, std::vector<expression *> args) {
-            assert(args.size() == 2 && args[1]->get_type() == builtin_types().integer.get());
-            auto int_var = static_cast<integer_constant *>(args[1]);
-            auto size = int_var->get_value().convert_to<std::size_t>();
+            ret->add_analysis_hook([](analysis_context & ctx, call_expression * expr, std::vector<expression *> args) {
+                assert(args.size() == 2 && args[1]->get_type() == builtin_types().integer.get());
+                auto int_var = static_cast<integer_constant *>(args[1]);
+                auto size = int_var->get_value().convert_to<std::size_t>();
 
-            auto & type = ctx.sized_integers[size];
-            if (!type)
-            {
-                type = make_sized_integer_type(size);
-            }
+                auto & type = ctx.sized_integers[size];
+                if (!type)
+                {
+                    type = make_sized_integer_type(size);
+                }
 
-            expr->replace_with(make_expression_ref(type->get_expression()));
+                expr->replace_with(make_expression_ref(type->get_expression()));
 
-            return make_ready_future();
-        });
+                return make_ready_future();
+            });
+
+            return ret;
+        }();
 
         static auto sized_int_expr = std::unique_ptr<expression>{ reaver::get(make_function_expression(sized_int.get())) };
 
