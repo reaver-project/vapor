@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,32 +20,23 @@
  *
  **/
 
-#pragma once
-
-#include <memory>
-#include <string>
+#include "vapor/codegen/ir/instruction.h"
+#include "vapor/codegen/llvm_ir.h"
 
 namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    namespace ir
+    template<>
+    std::u32string llvm_ir_generator::generate<ir::destruction_instruction>(const ir::instruction & inst, codegen_context & ctx)
     {
-        struct variable_type;
-        struct function;
-        struct variable;
+        return {};
     }
 
-    class codegen_context;
-
-    namespace cxx
+    template<>
+    std::u32string llvm_ir_generator::generate<ir::temporary_destruction_instruction>(const ir::instruction & inst, codegen_context & ctx)
     {
-        std::u32string type_name(const std::shared_ptr<const ir::variable_type> &, codegen_context &);
-        std::u32string declaration_type_name(const std::shared_ptr<ir::variable_type> &, codegen_context &);
-        std::u32string function_name(const ir::function &, codegen_context &);
-        std::u32string declaration_function_name(const ir::function &, codegen_context &);
-        std::u32string variable_name(const ir::variable &, codegen_context &);
-        std::u32string declaration_variable_name(ir::variable &, codegen_context &);
+        return {};
     }
 }
 }

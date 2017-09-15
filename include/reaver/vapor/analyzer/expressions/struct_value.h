@@ -36,14 +36,6 @@ inline namespace _v1
         {
             auto members = _type->get_data_members();
 
-            auto repl = replacements{};
-            fields.reserve(members.size());
-            std::transform(members.begin() + fields.size(), members.end(), std::back_inserter(fields), [&](auto && member) {
-                auto def = member->get_default_value();
-                assert(def);
-                return def->clone_expr_with_replacement(repl);
-            });
-
             assert(fields.size() == members.size());
 
             _fields_in_order.reserve(fields.size());
@@ -96,8 +88,7 @@ inline namespace _v1
     private:
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
-            return std::make_unique<struct_expression>(
-                _type, fmap(_fields_in_order, [&](auto && field) { return repl.expressions.at(field)->clone_expr_with_replacement(repl); }));
+            return std::make_unique<struct_expression>(_type, fmap(_fields_in_order, [&](auto && field) { return repl.copy_claim(field); }));
         }
 
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override

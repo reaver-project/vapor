@@ -77,8 +77,6 @@ inline namespace _v1
             value result;
         };
 
-        std::ostream & operator<<(std::ostream & os, const instruction & inst);
-
         struct function_call_instruction
         {
         };
@@ -98,6 +96,9 @@ inline namespace _v1
         {
         };
         struct jump_instruction
+        {
+        };
+        struct conditional_jump_instruction
         {
         };
         struct phi_instruction

@@ -25,6 +25,7 @@
 #include <reaver/id.h>
 
 #include "vapor/analyzer/expressions/call.h"
+#include "vapor/analyzer/expressions/conversion.h"
 #include "vapor/analyzer/expressions/expression.h"
 #include "vapor/analyzer/expressions/member.h"
 #include "vapor/analyzer/expressions/member_access.h"
@@ -234,6 +235,14 @@ inline namespace _v1
             ++param_begin;
         }
 
+        auto handle_conversion = [&](expression *& expr, type * conv) {
+            // stupid leak
+            expr = make_conversion_expression(expr, conv).release();
+        };
+
+        // I actually do need to erase my ownerships here
+        // make the typeclasses thingy actually usable already, dammit
+
         while (arg_begin != arg_end)
         {
             assert(param_begin != param_end);
@@ -269,6 +278,11 @@ inline namespace _v1
 
             if (matching_space.size() == 1 && !last_matched)
             {
+                if (param_type->needs_conversion(matched.back()->get_type()))
+                {
+                    handle_conversion(matched.back(), param_type);
+                }
+
                 ++arg_begin;
             }
 
@@ -296,6 +310,12 @@ inline namespace _v1
 
                     ret.push_back(assignment->get_rhs());
                     assert(!ret.back()->is_member_assignment());
+
+                    if (member_param->get_type()->needs_conversion(ret.back()->get_type()))
+                    {
+                        handle_conversion(ret.back(), member_param->get_type());
+                    }
+
                     ++param_begin;
                     break;
                 }

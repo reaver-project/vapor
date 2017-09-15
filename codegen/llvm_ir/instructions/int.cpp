@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,30 +20,27 @@
  *
  **/
 
-#include "vapor/codegen/cxx.h"
-#include "vapor/codegen/cxx/names.h"
 #include "vapor/codegen/ir/instruction.h"
+#include "vapor/codegen/llvm_ir.h"
 
 namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    namespace cxx
-    {
-#define ADD_INSTRUCTION(NAME, OPERATOR)                                                                                                                        \
+#define ADD_INSTRUCTION(NAME, INSTRUCTION)                                                                                                                     \
     template<>                                                                                                                                                 \
-    std::u32string generate<ir::integer_##NAME##_instruction>(const ir::instruction & inst, codegen_context & ctx)                                             \
+    std::u32string llvm_ir_generator::generate<ir::integer_##NAME##_instruction>(const ir::instruction & inst, codegen_context & ctx)                          \
     {                                                                                                                                                          \
         assert(inst.operands.size() == 2);                                                                                                                     \
-        return variable_of(inst.result, ctx) + U".emplace(" + value_of(inst.operands[0], ctx) + OPERATOR + value_of(inst.operands[1], ctx) + U");\n";          \
+        return variable_of(inst.result, ctx) + U" = " + INSTRUCTION + U" " + type_of(inst.operands[0], ctx) + U" " + value_of(inst.operands[0], ctx) + U", "   \
+            + value_of(inst.operands[1], ctx) + U"\n";                                                                                                         \
     }
 
-        ADD_INSTRUCTION(addition, U" + ");
-        ADD_INSTRUCTION(subtraction, U" - ");
-        ADD_INSTRUCTION(multiplication, U" * ");
-        ADD_INSTRUCTION(equal_comparison, U" == ");
-        ADD_INSTRUCTION(less_comparison, U" < ");
-        ADD_INSTRUCTION(less_equal_comparison, U" <= ");
-    }
+    ADD_INSTRUCTION(addition, U"add");
+    ADD_INSTRUCTION(subtraction, U"sub");
+    ADD_INSTRUCTION(multiplication, U"mul");
+    ADD_INSTRUCTION(equal_comparison, U"icmp eq");
+    ADD_INSTRUCTION(less_comparison, U"icmp slt");
+    ADD_INSTRUCTION(less_equal_comparison, U"icmp sle");
 }
 }

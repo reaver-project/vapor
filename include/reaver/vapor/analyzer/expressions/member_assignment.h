@@ -85,10 +85,9 @@ inline namespace _v1
             auto ret = std::make_unique<member_assignment_expression>(_type->member_name());
             ret->_rhs = _rhs;
 
-            auto it = repl.expressions.find(_rhs);
-            if (it != repl.expressions.end())
+            if (auto replaced = repl.try_get_replacement(_rhs))
             {
-                ret->_rhs = it->second;
+                ret->_rhs = replaced;
             }
 
             return ret;

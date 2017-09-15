@@ -56,6 +56,11 @@ inline namespace _v1
         {
             assert(!"tried to codegen a type pattern!");
         }
+
+        virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
+        {
+            assert(0);
+        }
     };
 
     inline std::unique_ptr<type> make_unconstrained_type()

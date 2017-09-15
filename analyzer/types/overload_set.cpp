@@ -22,6 +22,7 @@
 
 #include <numeric>
 
+#include "vapor/analyzer/expressions/expression.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
@@ -61,14 +62,11 @@ inline namespace _v1
     void overload_set_type::_codegen_type(ir_generation_context & ctx) const
     {
         auto actual_type = *_codegen_t;
-
-        auto type = codegen::ir::variable_type{ U"__overload_set_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.overload_set_index++)),
-            get_scope()->codegen_ir(ctx),
-            0,
-            fmap(_functions, [&](auto && fn) {
-                ctx.add_generated_function(fn);
-                return codegen::ir::member{ fn->codegen_ir(ctx) };
-            }) };
+        auto members = fmap(_functions, [&](auto && fn) {
+            ctx.add_generated_function(fn);
+            return codegen::ir::member{ fn->codegen_ir(ctx) };
+        });
+        auto type = codegen::ir::variable_type{ _codegen_name(ctx), get_scope()->codegen_ir(ctx), 0, std::move(members) };
 
         auto scopes = get_scope()->codegen_ir(ctx);
         scopes.emplace_back(type.name, codegen::ir::scope_type::type);

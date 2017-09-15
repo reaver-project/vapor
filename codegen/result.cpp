@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -35,60 +35,22 @@ inline namespace _v1
     result::result(std::vector<ir::module> ir, std::shared_ptr<code_generator> gen)
     {
         auto ctx = codegen_context{ gen };
+        _generated_code = gen->generate_global_definitions(ctx);
 
-        _generated_code = UR"code(#include <type_traits>
-#include <utility>
-#include <reaver/manual.h>
-)code";
-
-        fmap(ir, [&](auto && module) {
-            fmap(module.name, [&](auto && token) {
-                _generated_code += U"namespace " + token + U"\n{\n";
-                return unit{};
-            });
-
-            fmap(module.symbols, [&](auto && symbol) {
-                return fmap(symbol,
-                    make_overload_set(
-                        [&](std::shared_ptr<ir::variable> & var) {
-                            _generated_code += gen->generate_declaration(*var, ctx);
-                            return unit{};
-                        },
-                        [&](ir::function & fn) {
-                            _generated_code += gen->generate_declaration(fn, ctx);
-                            return unit{};
-                        }));
-            });
-
-            fmap(module.name, [&](auto &&) {
-                _generated_code += U"}\n";
-                return unit{};
-            });
-
-            return unit{};
-        });
+        for (auto && module : ir)
+        {
+            _generated_code += gen->generate_declarations(module, ctx);
+        }
 
         auto declarations = ctx.put_into_global_before + _generated_code + ctx.put_into_global;
         _generated_code = U"";
         ctx.put_into_global_before = U"";
         ctx.put_into_global = U"";
 
-        fmap(ir, [&](auto && module) {
-            fmap(module.symbols, [&](auto && symbol) {
-                return fmap(symbol,
-                    make_overload_set(
-                        [&](std::shared_ptr<ir::variable> & var) {
-                            _generated_code += gen->generate_definition(*var, ctx);
-                            return unit{};
-                        },
-                        [&](ir::function & fn) {
-                            _generated_code += gen->generate_definition(fn, ctx);
-                            return unit{};
-                        }));
-            });
-
-            return unit{};
-        });
+        for (auto && module : ir)
+        {
+            _generated_code += gen->generate_definitions(module, ctx);
+        }
 
         _generated_code = declarations + ctx.put_into_global_before + _generated_code + ctx.put_into_global;
     }

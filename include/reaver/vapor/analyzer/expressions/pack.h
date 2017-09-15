@@ -47,7 +47,7 @@ inline namespace _v1
     private:
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
-            return make_pack_expression(fmap(_exprs, [&](auto && expr) { return expr->clone_expr_with_replacement(repl); }), _type);
+            return make_pack_expression(fmap(_exprs, [&](auto && expr) { return repl.claim(expr); }), _type);
         }
 
         virtual statement_ir _codegen_ir(ir_generation_context &) const override

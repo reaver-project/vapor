@@ -25,7 +25,7 @@
 #include <reaver/optional.h>
 #include <reaver/variant.h>
 
-#include "../../utf8.h"
+#include "../../utf.h"
 #include "boolean.h"
 #include "integer.h"
 #include "scope.h"
@@ -82,14 +82,11 @@ inline namespace _v1
             return std::make_shared<variable>(variable{ std::move(type), std::move(name) });
         }
 
-        std::ostream & operator<<(std::ostream & os, const variable & var);
-
         struct value : public variant<std::shared_ptr<variable>, integer_value, boolean_value, struct_value, label>
         {
             using variant::variant;
         };
 
-        std::ostream & operator<<(std::ostream & os, const value & val);
         std::shared_ptr<variable_type> get_type(const value &);
     }
 }

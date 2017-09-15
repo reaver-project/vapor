@@ -29,6 +29,8 @@
 #include "vapor/analyzer/symbol.h"
 #include "vapor/parser/expr.h"
 
+#include "vapor/analyzer/expressions/integer.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -104,14 +106,7 @@ inline namespace _v1
                         codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
             });
 
-        _aggregate_ctor->set_scopes_generator([this](auto && ctx) {
-            this->codegen_type(ctx);
-
-            auto scopes = this->get_scope()->codegen_ir(ctx);
-            scopes.emplace_back(_codegen_type_name_value.get(), codegen::ir::scope_type::type);
-
-            return scopes;
-        });
+        _aggregate_ctor->set_scopes_generator([this](auto && ctx) { return this->codegen_scopes(ctx); });
 
         _aggregate_ctor->set_eval([this](auto &&, const std::vector<expression *> & args) {
             if (!std::equal(args.begin(), args.end(), _data_members.begin(), [](auto && arg, auto && member) { return arg->get_type() == member->get_type(); }))
@@ -125,7 +120,7 @@ inline namespace _v1
             }
 
             auto repl = replacements{};
-            auto arg_copies = fmap(args, [&](auto && arg) { return arg->clone_expr_with_replacement(repl); });
+            auto arg_copies = fmap(args, [&](auto && arg) { return repl.claim(arg); });
             return make_ready_future<expression *>(make_struct_expression(this->shared_from_this(), std::move(arg_copies)).release());
         });
 
@@ -172,6 +167,8 @@ inline namespace _v1
                         codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
             });
 
+        _aggregate_copy_ctor->set_scopes_generator([this](auto && ctx) { return this->codegen_scopes(ctx); });
+
         _aggregate_copy_ctor->set_eval([this](auto &&, std::vector<expression *> args) {
             auto base = args.front();
             args.erase(args.begin());
@@ -180,6 +177,7 @@ inline namespace _v1
                     return arg->get_type() == member->get_type();
                 }))
             {
+                logger::default_logger().sync();
                 assert(0);
             }
 
@@ -200,9 +198,9 @@ inline namespace _v1
             auto repl = replacements{};
             for (std::size_t i = 0; i < _data_members.size(); ++i)
             {
-                repl.expressions[base->get_member(_data_members[i]->get_name())] = args[i];
+                repl.add_replacement(base->get_member(_data_members[i]->get_name()), args[i]);
             }
-            return make_ready_future(base->clone_expr_with_replacement(repl).release());
+            return make_ready_future(repl.claim(base->_get_replacement()).release());
         });
 
         _aggregate_copy_ctor->set_name(U"replacing_copy_constructor");
@@ -216,7 +214,7 @@ inline namespace _v1
         auto actual_type = *_codegen_t;
 
         // TODO: actual name tracking for this shit
-        _codegen_type_name_value = U"__struct_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.struct_index++));
+        _codegen_type_name_value = U"struct_" + utf32(std::to_string(ctx.struct_index++));
         auto type = codegen::ir::variable_type{ _codegen_type_name_value.get(), get_scope()->codegen_ir(ctx), 0, {} };
 
         auto members = fmap(_data_members, [&](auto && member) { return codegen::ir::member{ member->member_codegen_ir(ctx) }; });

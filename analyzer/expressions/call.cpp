@@ -36,11 +36,10 @@ inline namespace _v1
 
         if (_replacement_expr)
         {
-            auto replacement_ctx = ctx.make_branch(true);
+            auto replacement_ctx = ctx.make_branch(false);
 
             os << styles::def << replacement_ctx << styles::subrule_name << "replacement expression:\n";
             _replacement_expr->print(os, replacement_ctx.make_branch(true));
-            return;
         }
 
         auto type_ctx = ctx.make_branch(false);

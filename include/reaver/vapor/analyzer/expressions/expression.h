@@ -67,14 +67,15 @@ inline namespace _v1
             return _type;
         }
 
+        friend class replacements;
+
+    private:
         std::unique_ptr<expression> clone_expr_with_replacement(replacements & repl) const
         {
-            auto ret = _get_replacement()->_clone_expr_with_replacement(repl);
-            repl.expressions[this] = ret.get();
-            repl.statements[this] = ret.get();
-            return ret;
+            return _clone_expr_with_replacement(repl);
         }
 
+    public:
         future<expression *> simplify_expr(simplification_context & ctx)
         {
             return ctx.get_future_or_init(this, [&]() { return make_ready_future().then([this, &ctx]() { return _simplify_expr(ctx); }); });
@@ -128,6 +129,22 @@ inline namespace _v1
             }
 
             return false;
+        }
+
+        virtual std::unique_ptr<expression> convert_to(type * target) const
+        {
+            if (get_type() == target)
+            {
+                assert(0); // I don't know whether I want to support this
+            }
+
+            auto repl = _get_replacement();
+            if (repl == this)
+            {
+                return nullptr;
+            }
+
+            return repl->convert_to(target);
         }
 
         virtual bool is_member() const
@@ -198,7 +215,7 @@ inline namespace _v1
             return make_ready_future();
         }
 
-        virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const override
+        virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const final
         {
             return _clone_expr_with_replacement(repl);
         }

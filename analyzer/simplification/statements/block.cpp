@@ -50,8 +50,8 @@ inline namespace _v1
         auto clone = std::unique_ptr<block>(new block(*this));
         auto repl = replacements{};
 
-        clone->_statements = fmap(_statements, [&](auto && stmt) { return stmt->clone_with_replacement(repl); });
-        clone->_value_expr = fmap(_value_expr, [&](auto && expr) { return expr->clone_expr_with_replacement(repl); });
+        clone->_statements = fmap(_statements, [&](auto && stmt) { return repl.claim(stmt.get()); });
+        clone->_value_expr = fmap(_value_expr, [&](auto && expr) { return repl.claim(expr.get()); });
         clone->_is_clone_cache = true;
 
         _clone = std::move(clone);
@@ -63,13 +63,13 @@ inline namespace _v1
 
         if (!_is_clone_cache)
         {
-            return _clone.get()->clone_with_replacement(repl);
+            return repl.claim(_clone.get().get());
         }
 
         auto ret = std::unique_ptr<block>(new block(*this));
 
-        ret->_statements = fmap(_statements, [&](auto && stmt) { return stmt->clone_with_replacement(repl); });
-        ret->_value_expr = fmap(_value_expr, [&](auto && expr) { return expr->clone_expr_with_replacement(repl); });
+        ret->_statements = fmap(_statements, [&](auto && stmt) { return repl.claim(stmt.get()); });
+        ret->_value_expr = fmap(_value_expr, [&](auto && expr) { return repl.claim(expr.get()); });
 
         return ret;
     }

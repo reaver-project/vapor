@@ -22,24 +22,21 @@
 
 #pragma once
 
-// this won't be necessary after gcc 7 and clang 4 are the minimal supported
-#if __has_include(<string_view>)
-#include <string_view>
-#else
-#include <experimental/string_view>
-namespace std
-{
-using experimental::string_view;
-}
-#endif
-
 #include <reaver/optional.h>
 #include <reaver/style.h>
 
 #include "range.h"
+#include "utf.h"
 
 namespace reaver::vapor
 {
+namespace analyzer
+{
+    inline namespace _v1
+    {
+        class expression;
+    }
+}
 inline namespace _v1
 {
     namespace styles
@@ -138,7 +135,7 @@ inline namespace _v1
         }
     }
 
-    // support for "synthesized" parse nodes (for example from call_expression
+    // support for "synthesized" parse nodes (for example from call_expression)
     template<typename T>
     struct synthesized_node
     {

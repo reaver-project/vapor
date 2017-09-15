@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,15 +20,8 @@
  *
  **/
 
-#include <unordered_map>
-
-#include <boost/type_index.hpp>
-
-#include <reaver/id.h>
-
-#include "vapor/codegen/cxx.h"
-#include "vapor/codegen/cxx/names.h"
 #include "vapor/codegen/ir/instruction.h"
+#include "vapor/codegen/llvm_ir.h"
 
 namespace reaver::vapor::codegen
 {
@@ -43,7 +36,7 @@ inline namespace _v1
 
             auto generator = [](auto type_id) {
                 using T = typename decltype(type_id)::type;
-                return &cxx::generate<T>;
+                return &llvm_ir_generator::generate<T>;
             };
 
             static const std::unordered_map<boost::typeindex::type_index, dispatched_type, boost::hash<boost::typeindex::type_index>> dispatch_table = {
@@ -54,28 +47,13 @@ inline namespace _v1
         }
     }
 
-    std::u32string cxx_generator::generate(const ir::instruction & inst, codegen_context & ctx)
+    std::u32string llvm_ir_generator::generate(const ir::instruction & inst, codegen_context & ctx)
     {
         std::u32string base;
         if (inst.label)
         {
-            base += *inst.label + U":\n";
+            base += U"\n" + *inst.label + U":\n";
         }
-
-        // make all pieces of storage that are moved-from during this instruction
-        // available for storage of the result of this instruction
-        fmap(inst.operands, [&](auto && operand) {
-            return fmap(operand,
-                make_overload_set(
-                    [&](const std::shared_ptr<ir::variable> & var) {
-                        if (!var->parameter && var->is_move())
-                        {
-                            cxx::mark_destroyed(var, ctx);
-                        }
-                        return unit{};
-                    },
-                    [&](auto &&) { return unit{}; }));
-        });
 
         if (inst.result.index() == 0)
         {
@@ -83,7 +61,7 @@ inline namespace _v1
             if (!var.declared)
             {
                 var.declared = true;
-                var.name = get_storage_for(var.type, ctx);
+                llvm_ir_generator::variable_name(var, ctx);
             }
         }
 
@@ -95,6 +73,7 @@ inline namespace _v1
                   ir::pass_value_instruction,
                   ir::return_instruction,
                   ir::jump_instruction,
+                  ir::conditional_jump_instruction,
                   ir::phi_instruction,
                   ir::noop_instruction,
 
@@ -112,22 +91,16 @@ inline namespace _v1
                   ir::boolean_negation_instruction>(inst, ctx);
     }
 
-    namespace cxx
+    template<>
+    std::u32string llvm_ir_generator::generate<ir::pass_value_instruction>(const ir::instruction &, codegen_context &)
     {
-        template<>
-        std::u32string generate<ir::pass_value_instruction>(const ir::instruction &, codegen_context &)
-        {
-            return {};
-        }
+        return {};
     }
 
-    namespace cxx
+    template<>
+    std::u32string llvm_ir_generator::generate<ir::noop_instruction>(const ir::instruction &, codegen_context &)
     {
-        template<>
-        std::u32string generate<ir::noop_instruction>(const ir::instruction &, codegen_context &)
-        {
-            return {};
-        }
+        return {};
     }
 }
 }

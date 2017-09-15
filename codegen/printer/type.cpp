@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,57 +21,17 @@
  **/
 
 #include "vapor/codegen/ir/type.h"
-#include "vapor/codegen/cxx.h"
-#include "vapor/codegen/cxx/names.h"
-
-#include <cassert>
+#include "vapor/codegen/printer.h"
 
 namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    std::u32string cxx_generator::generate_declaration(const std::shared_ptr<ir::variable_type> & type, codegen_context & ctx) const
+    std::u32string ir_printer::generate_definition(std::shared_ptr<ir::variable_type> type, codegen::codegen_context & ctx)
     {
-        if (type == ir::builtin_types().integer)
+        if (type == ir::builtin_types().integer || type == ir::builtin_types().boolean || dynamic_cast<ir::sized_integer_type *>(type.get()))
         {
-            ctx.put_into_global_before += UR"code(#include <boost/multiprecision/cpp_int.hpp>
-)code";
-            return {};
-        }
-
-        if (type == ir::builtin_types().boolean)
-        {
-            return {};
-        }
-
-        std::u32string declaration;
-
-        fmap(type->scopes, [&](auto && scope) {
-            assert(scope.type == ir::scope_type::module);
-            declaration += U"namespace " + scope.name + U"\n{\n";
-            return unit{};
-        });
-        declaration += U"struct " + cxx::declaration_type_name(type, ctx) + U";\n";
-        fmap(type->scopes, [&](auto &&) {
-            declaration += U"}\n";
-            return unit{};
-        });
-
-        ctx.put_into_global_before += declaration;
-
-        return U"";
-    }
-
-    std::u32string cxx_generator::generate_definition(const std::shared_ptr<ir::variable_type> & type, codegen_context & ctx)
-    {
-        if (type == ir::builtin_types().integer)
-        {
-            return {};
-        }
-
-        if (type == ir::builtin_types().boolean)
-        {
-            return {};
+            return U"";
         }
 
         std::u32string members;
@@ -85,10 +45,9 @@ inline namespace _v1
 
                         if (!fn.is_member)
                         {
-                            members += U"static ";
+                            members += U"[nonmember] ";
                         }
-                        members += this->generate_declaration(fn, ctx);
-                        ctx.put_into_global += this->generate_definition(fn, ctx);
+                        members += this->generate_definition(fn, ctx);
 
                         ctx.declaring_members_for = old_generated;
 
@@ -105,7 +64,7 @@ inline namespace _v1
             return unit{};
         });
 
-        return U"struct " + cxx::type_name(type, ctx) + U" {\n" + members + U"};\n";
+        return U"define type @ " + _pointer_to_string(type.get()) + U" `" + _scope_string(type->scopes) + U"." + type->name + U"`:\n{\n" + members + U"}\n";
     }
 }
 }

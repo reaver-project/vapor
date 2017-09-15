@@ -34,27 +34,22 @@ inline namespace _v1
 {
     std::unique_ptr<expression> binary_expression::_clone_expr_with_replacement(replacements & repl) const
     {
-        auto ret = std::unique_ptr<binary_expression>(new binary_expression(*this));
-
-        ret->_lhs = _lhs->clone_expr_with_replacement(repl);
-        ret->_rhs = _rhs->clone_expr_with_replacement(repl);
-        ret->_call_expression = _call_expression->clone_expr_with_replacement(repl);
-
-        return ret;
+        return repl.claim(_call_expression.get());
     }
 
     future<expression *> binary_expression::_simplify_expr(simplification_context & ctx)
     {
-        return when_all(_lhs->simplify_expr(ctx), _rhs->simplify_expr(ctx))
-            .then([&](auto && simplified) {
-                replace_uptr(_lhs, get<0>(simplified), ctx);
-                replace_uptr(_rhs, get<1>(simplified), ctx);
-                return _call_expression->simplify_expr(ctx);
-            })
-            .then([&](auto && repl) -> expression * {
-                replace_uptr(_call_expression, repl, ctx);
-                return this;
-            });
+        replacements repl;
+        auto clone = _clone_expr_with_replacement(repl).release();
+
+        return clone->simplify_expr(ctx).then([&ctx, clone](auto && simplified) {
+            if (simplified)
+            {
+                ctx.keep_alive(clone);
+                return simplified;
+            }
+            return clone;
+        });
     }
 }
 }

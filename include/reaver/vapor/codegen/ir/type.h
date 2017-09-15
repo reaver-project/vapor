@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -50,41 +50,25 @@ inline namespace _v1
 
         struct variable_type
         {
+            variable_type(std::u32string name = {}, std::vector<scope> scopes = {}, std::size_t size = {}, std::vector<member> members = {})
+                : name{ std::move(name) }, scopes{ std::move(scopes) }, size{ size }, members{ std::move(members) }
+            {
+            }
+
+            virtual ~variable_type() = default;
+
             std::u32string name;
             std::vector<scope> scopes;
             std::size_t size;
             std::vector<member> members;
         };
 
-        inline std::ostream & operator<<(std::ostream & os, const variable_type & type)
+        struct sized_integer_type : variable_type
         {
-            if (type.members.empty())
-            {
-                return os;
-            }
+            using variable_type::variable_type;
 
-            os << "type\n{\n";
-            os << "name: " << utf8(type.name) << "\n";
-            os << "<print scopes one day!>\n";
-            os << "size: " << type.size << "\n";
-
-            fmap(type.members, [&](auto && member) {
-                fmap(member,
-                    make_overload_set(
-                        [&](const function & fun) {
-                            os << fun << '\n';
-                            return unit{};
-                        },
-                        [&](auto &&) {
-                            assert(0);
-                            return unit{};
-                        }));
-                return unit{};
-            });
-
-            os << "}\n";
-            return os;
-        }
+            std::size_t integer_size;
+        };
 
         inline const auto & builtin_types()
         {
@@ -93,6 +77,20 @@ inline namespace _v1
                 std::shared_ptr<variable_type> integer;
                 std::shared_ptr<variable_type> boolean;
                 std::shared_ptr<variable_type> type;
+
+                std::shared_ptr<variable_type> sized_integer(std::size_t size) const
+                {
+                    static std::unordered_map<std::size_t, std::shared_ptr<variable_type>> types;
+
+                    auto & type = types[size];
+                    if (!type)
+                    {
+                        auto sized_type = std::make_shared<sized_integer_type>(U"sized_integer_" + utf32(std::to_string(size)));
+                        sized_type->integer_size = size;
+                        type = sized_type;
+                    }
+                    return type;
+                }
             };
 
             static auto types = [] {

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,35 +27,6 @@ namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    std::ostream & ir::operator<<(std::ostream & os, const ir::variable & var)
-    {
-        os << *var.type << "\n\n";
-
-        if (var.name)
-        {
-            os << "variable `" << utf8(*var.name) << "` of type `" << utf8(var.type->name) << "`";
-        }
-        else
-        {
-            os << "unnamed variable of type `" << utf8(var.type->name) << "`";
-        }
-
-        return os;
-    }
-
-    std::ostream & ir::operator<<(std::ostream & os, const ir::value & val)
-    {
-        return get<0>(fmap(val,
-            make_overload_set([&](std::shared_ptr<variable> var) -> auto & { return os << *var; },
-                [&](const integer_value & int_) -> auto & { return os << int_.value; },
-                [&](const boolean_value & bool_) -> auto & { return os << bool_.value; },
-                [&](const label & lbl) -> auto & { return os << "label `" << utf8(lbl.name) << "`"; },
-                [&](auto &&) -> auto & {
-                    assert(0);
-                    return os;
-                })));
-    }
-
     std::shared_ptr<ir::variable_type> ir::get_type(const ir::value & val)
     {
         return get<0>(fmap(val,

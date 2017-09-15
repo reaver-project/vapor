@@ -66,24 +66,5 @@ inline namespace _v1
 
                 [](auto &&) -> std::unique_ptr<statement> { assert(0); })));
     }
-
-    std::unique_ptr<statement> statement::clone_with_replacement(const std::vector<expression *> & params, const std::vector<expression *> & args) const
-    {
-        replacements repl;
-
-        assert(params.size() == args.size());
-        for (std::size_t i = 0; i < params.size(); ++i)
-        {
-            repl.statements[params[i]] = args[i];
-            if (auto param_expr = dynamic_cast<expression *>(params[i]))
-            {
-                auto arg_expr = dynamic_cast<expression *>(args[i]);
-                assert(arg_expr);
-                repl.expressions[param_expr] = arg_expr;
-            }
-        }
-
-        return clone_with_replacement(repl);
-    }
 }
 }

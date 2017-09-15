@@ -39,6 +39,11 @@ inline namespace _v1
             return _parse;
         }
 
+        virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override
+        {
+            return _type->get_expression()->declaration_codegen_ir(ctx);
+        }
+
     private:
         virtual expression * _get_replacement() override
         {

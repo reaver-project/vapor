@@ -158,8 +158,21 @@ inline namespace _v1
             return false;
         }
 
+        virtual bool needs_conversion(type * other) const
+        {
+            return false;
+        }
+
+        std::vector<codegen::ir::scope> codegen_scopes(ir_generation_context & ctx) const
+        {
+            auto base_scopes = _member_scope->codegen_ir(ctx);
+            base_scopes.push_back(codegen::ir::scope{ _codegen_name(ctx), codegen::ir::scope_type::type });
+            return base_scopes;
+        }
+
     private:
         virtual void _codegen_type(ir_generation_context &) const = 0;
+        virtual std::u32string _codegen_name(ir_generation_context &) const = 0;
 
     protected:
         std::unique_ptr<scope> _member_scope;
@@ -195,6 +208,10 @@ inline namespace _v1
 
     private:
         virtual void _codegen_type(ir_generation_context &) const override;
+        virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
+        {
+            return U"type";
+        }
 
         mutable std::mutex _generic_ctor_lock;
         mutable std::shared_ptr<function> _generic_ctor;

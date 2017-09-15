@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,22 +20,17 @@
  *
  **/
 
-#include "vapor/codegen/cxx.h"
-#include "vapor/codegen/cxx/names.h"
 #include "vapor/codegen/ir/instruction.h"
+#include "vapor/codegen/llvm_ir.h"
 
 namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    namespace cxx
+    template<>
+    std::u32string llvm_ir_generator::generate<ir::return_instruction>(const ir::instruction & inst, codegen_context & ctx)
     {
-        template<>
-        std::u32string generate<ir::materialization_instruction>(const ir::instruction & inst, codegen_context & ctx)
-        {
-            assert(inst.operands.size() == 1);
-            return variable_of(inst.result, ctx) + U".emplace(" + value_of(inst.operands.front(), ctx) + U");\n";
-        }
+        return U"ret " + type_of(inst.result, ctx) + U" " + value_of(inst.result, ctx) + U"\n";
     }
 }
 }

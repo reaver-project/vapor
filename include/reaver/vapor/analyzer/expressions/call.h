@@ -47,7 +47,7 @@ inline namespace _v1
 
         void replace_with(std::unique_ptr<expression> expr)
         {
-            assert(!_replacement_expr);
+            // assert(!_replacement_expr);
 
             _replacement_expr = std::move(expr);
             if (auto * replacement_call_expr = _replacement_expr->as<call_expression>())
@@ -80,7 +80,11 @@ inline namespace _v1
 
         virtual future<> _analyze(analysis_context &) override;
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
+
+    protected:
         virtual future<expression *> _simplify_expr(simplification_context &) override;
+
+    private:
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
     protected:

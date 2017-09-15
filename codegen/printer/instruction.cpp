@@ -20,34 +20,32 @@
  *
  **/
 
-#include "vapor/codegen/cxx.h"
-#include "vapor/codegen/cxx/names.h"
+#include "vapor/codegen/ir/instruction.h"
+#include "vapor/codegen/printer.h"
 
 namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    std::u32string cxx_generator::get_storage_for(std::shared_ptr<ir::variable_type> type, codegen_context & ctx)
+    std::u32string ir_printer::generate(const ir::instruction & inst, codegen_context & ctx)
     {
-        auto it = _unallocated_variables.find(type);
-        if (it != _unallocated_variables.end())
+        std::u32string ret;
+
+        if (inst.label)
         {
-            if (!it->second.empty())
-            {
-                auto ret = std::move(it->second.back());
-                it->second.pop_back();
-                return ret;
-            }
+            ret += U"label `" + inst.label.get() + U"`:\n";
         }
 
-        auto var = U"__pseudoregister_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.storage_object_index++));
-        ctx.put_into_function_header += U"::reaver::manual_object<" + cxx::type_name(type, ctx) + U"> " + var + U";\n";
-        return var;
-    }
+        if (inst.declared_variable)
+        {
+            ret += generate_definition(*inst.declared_variable.get(), ctx);
+        }
 
-    void cxx_generator::free_storage_for(std::u32string name, std::shared_ptr<ir::variable_type> type, codegen_context &)
-    {
-        _unallocated_variables[std::move(type)].push_back(std::move(name));
+        ret += _to_string(inst.result) + U" = " + utf32(inst.instruction.explain()) + U" ";
+        ret += boost::algorithm::join(fmap(inst.operands, [&](auto && v) { return _to_string(v); }), U", ");
+        ret += U"\n";
+
+        return ret;
     }
 }
 }

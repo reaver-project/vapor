@@ -28,6 +28,8 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    class type;
+
     class analysis_context
     {
     public:
@@ -36,6 +38,9 @@ inline namespace _v1
         }
 
         std::shared_ptr<simplification_context> simplification_ctx;
+        std::unordered_map<std::size_t, std::shared_ptr<type>> sized_integers;
+        bool entry_point_marked = false;
+        bool entry_variable_marked = false;
     };
 }
 }

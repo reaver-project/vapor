@@ -117,11 +117,11 @@ inline namespace _v1
 
         mutable optional<std::u32string> _codegen_type_name_value;
 
-        std::u32string _codegen_type_name(ir_generation_context & ctx) const
+        virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
         {
             if (!_codegen_type_name_value)
             {
-                _codegen_type_name_value = U"__struct_" + boost::locale::conv::utf_to_utf<char32_t>(std::to_string(ctx.struct_index++));
+                _codegen_type_name_value = U"struct_" + utf32(std::to_string(ctx.struct_index++));
             }
 
             return *_codegen_type_name_value;

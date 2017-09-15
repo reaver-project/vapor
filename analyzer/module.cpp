@@ -20,6 +20,7 @@
  *
  **/
 
+#include <reaver/future_get.h>
 #include <reaver/prelude/monad.h>
 #include <reaver/traits.h>
 
@@ -47,17 +48,26 @@ inline namespace _v1
         _scope->close();
     }
 
-    void module::analyze()
+    void module::analyze(analysis_context & ctx)
     {
-        analysis_context ctx;
-
         _analysis_futures = fmap(_statements, [&](auto && stmt) { return stmt->analyze(ctx); });
 
         auto all = when_all(_analysis_futures);
+        reaver::get(all);
 
-        while (!all.try_get())
+        // set entry(int32) as the entry point
+        if (auto entry = _scope->try_get(U"entry"))
         {
-            std::this_thread::sleep_for(std::chrono::nanoseconds(10000));
+            auto type = entry.get()->get_type();
+            auto future = type->get_candidates(lexer::token_type::round_bracket_open);
+            auto overloads = reaver::get(future);
+
+            // maybe this can be relaxed in the future?
+            assert(overloads.size() == 1);
+            assert(overloads[0]->parameters().size() == 1);
+            assert(overloads[0]->parameters()[0]->get_type() == ctx.sized_integers.at(32).get());
+
+            overloads[0]->mark_as_entry(ctx, entry.get()->get_expression());
         }
 
         logger::dlog() << "Analysis of module " << utf8(name()) << " finished.";
@@ -74,15 +84,16 @@ inline namespace _v1
 
             auto all = when_all(
                 fmap(_statements, [&](auto && stmt) { return stmt->simplify(ctx).then([&](auto && simplified) { replace_uptr(stmt, simplified, ctx); }); }));
-
-            while (!all.try_get())
-            {
-                std::this_thread::sleep_for(std::chrono::nanoseconds(10000));
-            }
+            reaver::get(all);
 
             cont = ctx.did_something_happen();
 
             logger::dlog() << "Simplification run of module " << utf8(name()) << " finished.";
+
+            std::stringstream ss;
+            print(ss, {});
+            logger::dlog() << ss.str();
+            logger::default_logger().sync();
         }
 
         logger::dlog() << "Simplification of module " << utf8(name()) << " finished.";
@@ -107,35 +118,24 @@ inline namespace _v1
         }
     }
 
-    namespace
-    {
-        template<typename Map>
-        auto as_vector(Map && map)
-        {
-            std::vector<std::pair<std::u32string, reaver::vapor::analyzer::_v1::symbol *>> ret;
-            ret.reserve(map.size());
-            std::transform(map.begin(), map.end(), std::back_inserter(ret), [](auto && pair) { return std::make_pair(pair.first, pair.second.get()); });
-            return ret;
-        }
-    }
-
     codegen::_v1::ir::module module::codegen_ir() const
     {
         auto ctx = ir_generation_context{};
 
         codegen::ir::module mod;
         mod.name = fmap(_parse.name.id_expression_value, [&](auto && ident) { return ident.value.string; });
-        mod.symbols = mbind(as_vector(_scope->declared_symbols()), [&](auto && symbol) {
-            return mbind(symbol.second->codegen_ir(ctx), [&](auto && decl) {
+
+        mod.symbols = mbind(_scope->symbols_in_order(), [&](auto && symbol) {
+            return mbind(symbol->codegen_ir(ctx), [&](auto && decl) {
                 return get<0>(fmap(decl,
                     make_overload_set(
                         [&](std::shared_ptr<codegen::ir::variable> symb) {
                             symb->declared = true;
-                            symb->name = symbol.second->get_name();
+                            symb->name = symbol->get_name();
                             return codegen::ir::module_symbols_t{ symb };
                         },
                         [&](auto && symb) {
-                            symb.name = symbol.second->get_name();
+                            symb.name = symbol->get_name();
                             return symb;
                         })));
             });

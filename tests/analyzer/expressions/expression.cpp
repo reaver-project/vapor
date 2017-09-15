@@ -59,10 +59,10 @@ MAYFLY_ADD_TESTCASE("clone cache", [] {
     expr.set_clone_result(std::move(clone));
 
     replacements repl;
-    auto actual_clone = expr.clone_expr_with_replacement(repl);
+    auto actual_clone = repl.claim(&expr);
     MAYFLY_CHECK(actual_clone.get() == clone_ptr);
-    MAYFLY_CHECK(repl.expressions.at(&expr) == clone_ptr);
-    MAYFLY_CHECK(repl.statements.at(&expr) == clone_ptr);
+    MAYFLY_CHECK(repl.get_replacement(&expr) == clone_ptr);
+    MAYFLY_CHECK(repl.get_replacement(static_cast<statement *>(&expr)) == clone_ptr);
 });
 
 MAYFLY_ADD_TESTCASE("simplification", [] {

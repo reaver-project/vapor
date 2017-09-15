@@ -104,34 +104,20 @@ inline namespace _v1
         future<> simplify(simplification_context &);
         future<expression *> simplify(simplification_context &, std::vector<expression *>);
 
-        codegen::ir::function codegen_ir(ir_generation_context & ctx) const
+        void mark_as_entry(analysis_context & ctx, expression * entry_expr)
         {
-            auto state = ctx.top_level_generation;
-            ctx.top_level_generation = false;
-
-            if (!_ir)
-            {
-                _ir = _codegen(ctx);
-                if (_is_member)
-                {
-                    _ir->is_member = true;
-                }
-            }
-
-            if (state)
-            {
-                ctx.add_generated_function(this);
-            }
-
-            ctx.top_level_generation = state;
-
-            return *_ir;
+            assert(!ctx.entry_point_marked);
+            ctx.entry_point_marked = true;
+            _entry = true;
+            _entry_expr = entry_expr;
         }
+
+        codegen::ir::function codegen_ir(ir_generation_context & ctx) const;
 
         codegen::ir::value call_operand_ir(ir_generation_context & ctx) const
         {
             auto scopes = [&]() -> std::vector<codegen::ir::scope> {
-                if (!_is_member && _scopes_generator)
+                if (_scopes_generator)
                 {
                     return _scopes_generator.get()(ctx);
                 }
@@ -231,6 +217,9 @@ inline namespace _v1
         std::vector<function_hook> _analysis_hooks;
         optional<function_eval> _compile_time_eval;
         optional<scopes_generator> _scopes_generator;
+
+        bool _entry = false;
+        expression * _entry_expr = nullptr;
     };
 
     inline std::unique_ptr<function> make_function(std::string expl,

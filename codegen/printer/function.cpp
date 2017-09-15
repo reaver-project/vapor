@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,31 +21,46 @@
  **/
 
 #include "vapor/codegen/ir/function.h"
+#include "vapor/codegen/printer.h"
 
 namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    std::ostream & ir::operator<<(std::ostream & os, const ir::function & fn)
+    std::u32string ir_printer::generate_definition(const ir::function & fn, codegen_context & ctx)
     {
-        os << "function `" << utf8(fn.name) << "`\n";
-        os << "{\n";
+        std::u32string ret;
 
-        os << "parameters:\n";
-        fmap(fn.parameters, [&](auto && val) {
-            os << *val << "\n";
+        if (auto type = fn.parent_type.lock())
+        {
+            if (type != ctx.declaring_members_for)
+            {
+                return {};
+            }
+        }
+
+        fmap(fn.parameters, [&](auto && value) {
+            ctx.put_into_global_before += ctx.define_if_necessary(ir::get_type(value));
             return unit{};
         });
 
-        os << "return value: " << fn.return_value << '\n';
+        ret += U"define function @ " + _pointer_to_string(&fn) + U" `" + fn.name + U"`:\n{\n";
 
-        os << "instructions:\n";
-        fmap(fn.instructions, [&](auto && inst) {
-            os << inst << '\n';
-            return unit{};
-        });
-        os << "}\n";
-        return os;
+        ret += U"parameters:\n{\n";
+        for (auto && param : fn.parameters)
+        {
+            ret += generate_definition(*param, ctx);
+        }
+        ret += U"}\n";
+
+        ret += U"instructions:\n{\n";
+        for (auto && instr : fn.instructions)
+        {
+            ret += generate(instr, ctx);
+        }
+        ret += U"}\n}\n";
+
+        return ret;
     }
 }
 }

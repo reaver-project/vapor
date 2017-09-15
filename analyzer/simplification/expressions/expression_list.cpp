@@ -46,7 +46,7 @@ inline namespace _v1
         auto ret = std::make_unique<expression_list>(parse_);
         ret->range = range;
 
-        ret->value = fmap(value, [&](auto && expr) { return expr->clone_expr_with_replacement(repl); });
+        ret->value = fmap(value, [&](auto && expr) { return repl.claim(expr.get()); });
 
         return ret;
     }

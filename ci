@@ -26,13 +26,37 @@ function install_package() {
 install_package reaverlib master
 install_package mayfly develop
 
+# this is a stupid hack and ideally I'd just rename the current "llvm" images to "clang"
+# and have "llvm" images on top of boost, that'd just build specific versions of llvm
+# for this purpose here, if necessary
+#
+# the main problem I have with all this is that clang also depends on llvm, so I'd need
+# to have images with *two* llvm installs present if I want to test with mixed clang
+# versions for the compiler itself and for the use in test later, but not sure if I want that
+#
+# the problem with the following solution is that the version of llc is not fixed here,
+# and can change at virtually any point, which'd be bad. I'll just keep printing it for
+# the moment and hope for the best, and invent a better solution later
+#
+# (maybe the llvm images should just be an "addon" that checks whether llc exists and builds
+# llvm if it doesn't? but I don't know how to track llc versions there in the build process.
+# this will take a while to figure out. could just also drop gcc support, but that seems bad.)
+if ! which llc
+then
+    apt-get update
+    apt-get install -y llvm
+fi
+
+llc --version
+
 make -j${core_number} -l${core_number}
 
 make test -j${core_number} -l${core_number}
 ./tests/test -j ${core_number} -l 3 -r teamcity
 
 ./vprc
-echo 'int main(int argc, char ** argv) { return hello_world::entry(atoi(argv[1])).convert_to<int>(); }' >> output/output.cpp
-c++ -Wno-extra-qualification -Werror -std=c++1z -O3 output/output.cpp -o output/output -g -fsanitize=address
+cat librt/crt1.ll >> output/output.ll
+llc output/output.ll -filetype=obj -relocation-model=pic
+cc output/output.o -o output/output
 ./output/output 3
 

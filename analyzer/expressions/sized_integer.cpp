@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2016 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,19 +20,22 @@
  *
  **/
 
-#pragma once
+#include "vapor/analyzer/expressions/sized_integer.h"
+#include "vapor/analyzer/symbol.h"
+#include "vapor/codegen/ir/type.h"
+#include "vapor/codegen/ir/variable.h"
 
-#include <string>
-
-#include <boost/locale.hpp>
-
-namespace reaver::vapor
+namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    inline auto utf8(const std::u32string & utf32)
+    statement_ir sized_integer_constant::_codegen_ir(ir_generation_context &) const
     {
-        return boost::locale::conv::utf_to_utf<char>(utf32);
+        return { codegen::ir::instruction{ none,
+            none,
+            { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
+            {},
+            codegen::ir::value{ codegen::ir::integer_value{ _value, _type->size() } } } };
     }
 }
 }

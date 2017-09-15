@@ -67,6 +67,11 @@ inline namespace _v1
             assert(!"tried to codegen a type pack");
         }
 
+        virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
+        {
+            assert(0);
+        }
+
         type * _pattern;
     };
 

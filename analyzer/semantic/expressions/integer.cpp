@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,31 +20,25 @@
  *
  **/
 
-#include "vapor/codegen/ir/instruction.h"
+#include "vapor/analyzer/expressions/integer.h"
+#include "vapor/analyzer/expressions/sized_integer.h"
+#include "vapor/analyzer/symbol.h"
 
-namespace reaver::vapor::codegen
+namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::ostream & ir::operator<<(std::ostream & os, const ir::instruction & inst)
+    std::unique_ptr<expression> integer_constant::convert_to(type * target) const
     {
-        fmap(inst.label, [&](auto && lbl) {
-            os << "label: `" << utf8(lbl) << "`\n";
-            return unit{};
-        });
-        fmap(inst.declared_variable, [&](auto && var) {
-            os << "variable declaration: " << *var << "\n";
-            return unit{};
-        });
-
-        os << inst.result << " = " << inst.instruction.explain() << " ";
-        if (!inst.operands.empty())
+        if (auto sized_target = dynamic_cast<sized_integer *>(target))
         {
-            std::copy(inst.operands.begin(), inst.operands.end() - 1, std::ostream_iterator<value>(os, ", "));
-            os << inst.operands.back();
+            if (_value <= sized_target->max_value() && _value >= sized_target->min_value())
+            {
+                return std::make_unique<sized_integer_constant>(sized_target, _value);
+            }
         }
 
-        return os;
+        return nullptr;
     }
 }
 }

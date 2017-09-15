@@ -29,6 +29,7 @@
 #include "vapor/analyzer/statements/return.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/parser.h"
+#include "vapor/utf.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -134,17 +135,18 @@ inline namespace _v1
 
         if (_is_top_level)
         {
-            auto to_u32string = [](auto && v) {
-                std::stringstream stream;
-                stream << v;
-                return boost::locale::conv::utf_to_utf<char32_t>(stream.str());
-            };
-
             std::vector<codegen::ir::value> labeled_return_values;
+            std::u32string current_label = U"entry";
 
             for (std::size_t i = 0; i < statements.size(); ++i)
             {
                 auto & stmt = statements[i];
+
+                if (stmt.label)
+                {
+                    current_label = *stmt.label;
+                }
+
                 if (!stmt.instruction.template is<codegen::ir::return_instruction>())
                 {
                     continue;
@@ -153,18 +155,21 @@ inline namespace _v1
                 std::u32string label;
                 if (!stmt.label)
                 {
-                    label = U"__return_label_" + to_u32string(ctx.label_index++);
-                    stmt.label = label;
+                    label = current_label;
                 }
                 else
                 {
                     label = stmt.label;
                 }
 
-                labeled_return_values.emplace_back(codegen::ir::label{ std::move(label), {} });
+                labeled_return_values.emplace_back(codegen::ir::label{ label, {} });
                 labeled_return_values.emplace_back(stmt.result);
             }
 
+            // in this case we don't generate jumps
+            // if we generate the unnecessary label, it'll turn into an LLVM block
+            // and LLVM blocks need to have a branch before them
+            // hence, remove the label if it's useless
             if (labeled_return_values.size() > 2)
             {
                 std::size_t return_value_index = 0;
@@ -179,7 +184,7 @@ inline namespace _v1
                     }
 
                     stmt.instruction = boost::typeindex::type_id<codegen::ir::jump_instruction>();
-                    stmt.operands = { codegen::ir::boolean_value{ true }, codegen::ir::label{ U"__return_phi", {} } };
+                    stmt.operands = { codegen::ir::label{ U"return_phi", {} } };
 
                     // create a variable for the constant return value
                     if (stmt.result.index() != 0)
@@ -195,7 +200,7 @@ inline namespace _v1
                     ++return_value_index;
                 }
 
-                statements.emplace_back(codegen::ir::instruction{ optional<std::u32string>{ U"__return_phi" },
+                statements.emplace_back(codegen::ir::instruction{ optional<std::u32string>{ U"return_phi" },
                     none,
                     { boost::typeindex::type_id<codegen::ir::phi_instruction>() },
                     std::move(labeled_return_values),

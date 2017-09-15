@@ -28,17 +28,19 @@
 #include "vapor/codegen.h"
 #include "vapor/lexer.h"
 #include "vapor/parser.h"
-#include "vapor/utf8.h"
+#include "vapor/utf.h"
 
 std::u32string program = UR"program(module hello_world
 {
+    let int32 = sized_int(32);
+
     let mn = struct
     {
-        let m : int;
-        let n : int;
+        let m : int32;
+        let n : int32;
     };
 
-    function ackermann(args : mn) -> int
+    function ackermann(args : mn) -> int32
     {
         if (args.m == 0)
         {
@@ -53,7 +55,7 @@ std::u32string program = UR"program(module hello_world
         return ackermann(args{ .m = .m - 1, .n = ackermann(args{ .n = .n - 1 }) });
     }
 
-    let entry = λ(arg : int) -> int
+    let entry = λ(arg : int32) -> int32
     {
         let constant_foldable = ackermann(mn{ 3, 4 });
         let non_constant_foldable = ackermann(mn{ .m = arg, .n = arg + 1 });
@@ -93,21 +95,24 @@ int main() try
 
     reaver::logger::default_logger().sync();
 
+    reaver::logger::dlog() << "Simplified AAST:";
+    analyzed_ast.simplify();
+    reaver::logger::dlog() << std::ref(analyzed_ast);
+
+    reaver::logger::default_logger().sync();
+
     auto ir = analyzed_ast.codegen_ir();
-    reaver::vapor::codegen::result generated_code{ ir, reaver::vapor::codegen::make_cxx() };
 
-    // TODO: printing this actually needs a print_context
-    // to avoid endless repetitions of things
-    // and to fix the format
-    // actually this could be a generator... that'd make a lot of sense
-    // reaver::logger::dlog() << "Codegen IR:";
-    // reaver::logger::dlog() << ir;
+    reaver::vapor::codegen::result generated_ir{ ir, reaver::vapor::codegen::make_printer() };
+    reaver::logger::dlog() << "Generated IR:";
+    reaver::logger::dlog() << generated_ir;
 
-    reaver::logger::dlog() << "Generated code:";
+    reaver::vapor::codegen::result generated_code{ ir, reaver::vapor::codegen::make_llvm_ir() };
+    reaver::logger::dlog() << "Generated LLVM IR:";
     reaver::logger::dlog() << generated_code;
 
     boost::filesystem::create_directories("output");
-    std::ofstream out{ "output/output.cpp", std::ios::trunc | std::ios::out };
+    std::ofstream out{ "output/output.ll", std::ios::trunc | std::ios::out };
     out << generated_code;
 
     reaver::logger::default_logger().sync();

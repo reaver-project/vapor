@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,6 +24,8 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 
+#include <reaver/optional.h>
+
 namespace reaver::vapor::codegen
 {
 inline namespace _v1
@@ -33,6 +35,7 @@ inline namespace _v1
         struct integer_value
         {
             boost::multiprecision::cpp_int value;
+            optional<std::size_t> size = none;
         };
 
         struct integer_addition_instruction

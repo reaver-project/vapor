@@ -60,7 +60,18 @@ MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
     reaver::get(declaration->analyze(ctx));
 
     simplification_context simpl_ctx;
-    replace_uptr(declaration, reaver::get(declaration->simplify(simpl_ctx)), simpl_ctx);
+    do
+    {
+        simpl_ctx.~simplification_context();
+        new (&simpl_ctx) simplification_context();
+
+        std::stringstream str;
+        declaration->print(str, {});
+        reaver::logger::dlog() << str.str();
+
+        replace_uptr(declaration, reaver::get(declaration->simplify(simpl_ctx)), simpl_ctx);
+        reaver::get(current_scope->get(U"bar")->simplify(simpl_ctx));
+    } while (simpl_ctx.did_something_happen());
 
     auto type_expr = struct_decl->declared_symbol()->get_expression()->as<type_expression>();
     MAYFLY_CHECK(type_expr);
@@ -92,7 +103,17 @@ MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
     auto replaced_expr = preanalyze_expression(replacement_ast, current_scope);
 
     reaver::get(replaced_expr->analyze(ctx));
-    replace_uptr(replaced_expr, reaver::get(replaced_expr->simplify_expr(simpl_ctx)), simpl_ctx);
+    do
+    {
+        simpl_ctx.~simplification_context();
+        new (&simpl_ctx) simplification_context();
+
+        std::stringstream str;
+        replaced_expr->print(str, {});
+        reaver::logger::dlog() << str.str();
+
+        replace_uptr(replaced_expr, reaver::get(replaced_expr->simplify_expr(simpl_ctx)), simpl_ctx);
+    } while (simpl_ctx.did_something_happen());
 
     integer_constant const_three{ 3 };
 
@@ -105,14 +126,24 @@ MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
     // designated replacement
 
     auto designated_repl_ast = parse(UR"code(
-            bar{ .j = 3 }
-        )code",
+                bar{ .j = 3 }
+            )code",
         [](auto && ctx) { return parser::parse_expression(ctx); });
 
     auto designated_repl_expr = preanalyze_expression(designated_repl_ast, current_scope);
 
     reaver::get(designated_repl_expr->analyze(ctx));
-    replace_uptr(designated_repl_expr, reaver::get(designated_repl_expr->simplify_expr(simpl_ctx)), simpl_ctx);
+    do
+    {
+        simpl_ctx.~simplification_context();
+        new (&simpl_ctx) simplification_context();
+
+        std::stringstream str;
+        designated_repl_expr->print(str, {});
+        reaver::logger::dlog() << str.str();
+
+        replace_uptr(designated_repl_expr, reaver::get(designated_repl_expr->simplify_expr(simpl_ctx)), simpl_ctx);
+    } while (simpl_ctx.did_something_happen());
 
     MAYFLY_CHECK(designated_repl_expr->get_type() == struct_type);
     MAYFLY_REQUIRE(designated_repl_expr->is_constant());

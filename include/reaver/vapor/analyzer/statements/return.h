@@ -79,9 +79,7 @@ inline namespace _v1
         virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const override
         {
             auto ret = std::unique_ptr<return_statement>(new return_statement(*this));
-
-            ret->_value_expr = _value_expr->clone_expr_with_replacement(repl);
-
+            ret->_value_expr = repl.claim(_value_expr.get());
             return ret;
         }
 

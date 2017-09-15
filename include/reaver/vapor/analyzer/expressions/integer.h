@@ -69,6 +69,8 @@ inline namespace _v1
             return true;
         }
 
+        virtual std::unique_ptr<expression> convert_to(type * target) const override;
+
     private:
         virtual future<> _analyze(analysis_context &) override
         {

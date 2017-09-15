@@ -38,28 +38,54 @@ inline namespace _v1
     {
         if (_call_expression)
         {
-            return _call_expression->clone_expr_with_replacement(repl);
+            return repl.claim(_call_expression.get());
+        }
+
+        auto base = repl.claim(_base_expr.get());
+        if (!_modifier)
+        {
+            return base;
         }
 
         auto ret = std::unique_ptr<postfix_expression>(new postfix_expression(*this));
 
-        ret->_base_expr = _base_expr->clone_expr_with_replacement(repl);
-        ret->_arguments = fmap(_arguments, [&](auto && arg) { return arg->clone_expr_with_replacement(repl); });
+        assert(_arguments.empty());
 
-        ret->_referenced_expression = fmap(_referenced_expression, [&](auto && var) {
-            auto it = repl.expressions.find(var);
-            if (it != repl.expressions.end())
+        ret->_base_expr = std::move(base);
+        auto type = ret->_base_expr->get_type();
+
+        ret->_referenced_expression = fmap(_referenced_expression, [&](auto && expr) {
+            if (auto replaced = repl.try_get_replacement(expr))
             {
-                return repl.expressions[var];
+                type = replaced->get_type();
+                return replaced;
             }
-            return var;
+            type = expr->get_type();
+            return expr;
         });
+
+        ret->_set_type(type);
 
         return ret;
     }
 
     future<expression *> postfix_expression::_simplify_expr(simplification_context & ctx)
     {
+        if (_call_expression)
+        {
+            replacements repl;
+            auto clone = repl.claim(_call_expression.get()).release();
+
+            return clone->simplify_expr(ctx).then([&ctx, clone](auto && simplified) {
+                if (simplified && simplified != clone)
+                {
+                    ctx.keep_alive(clone);
+                    return simplified;
+                }
+                return clone;
+            });
+        }
+
         return when_all(fmap(_arguments, [&](auto && expr) { return expr->simplify_expr(ctx); }))
             .then([&](auto && simplified) {
                 replace_uptrs(_arguments, simplified, ctx);
@@ -90,13 +116,10 @@ inline namespace _v1
                     }
 
                     auto repl = replacements{};
-                    return make_ready_future<expression *>(member->clone_expr_with_replacement(repl).release());
+                    return make_ready_future<expression *>(repl.claim(member).release());
                 }
 
-                return _call_expression->simplify_expr(ctx).then([&](auto && repl) -> expression * {
-                    replace_uptr(_call_expression, repl, ctx);
-                    return this;
-                });
+                assert(0);
             });
     }
 }

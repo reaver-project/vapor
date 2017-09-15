@@ -39,6 +39,7 @@ inline namespace _v1
         struct function;
         struct instruction;
         struct member_variable;
+        struct module;
     }
 
     class code_generator;
@@ -60,6 +61,7 @@ inline namespace _v1
         std::u32string put_into_function_header;
 
         std::shared_ptr<ir::variable_type> declaring_members_for;
+        bool in_function_definition = false;
 
         auto & generator() const
         {
@@ -77,15 +79,23 @@ inline namespace _v1
     public:
         virtual ~code_generator() = default;
 
-        virtual std::u32string generate_declaration(ir::variable &, codegen_context &) const = 0;
-        virtual std::u32string generate_declaration(ir::function &, codegen_context &) const = 0;
-        virtual std::u32string generate_declaration(const std::shared_ptr<ir::variable_type> &, codegen_context &) const = 0;
-        virtual std::u32string generate_definition(const ir::variable &, codegen_context &) = 0;
-        virtual std::u32string generate_definition(const ir::function &, codegen_context &) = 0;
-        virtual std::u32string generate_definition(const std::shared_ptr<ir::variable_type> &, codegen_context &) = 0;
-        virtual std::u32string generate_definition(const ir::member_variable &, codegen_context &) = 0;
+        virtual std::u32string generate_global_definitions(codegen_context &) const
+        {
+            return {};
+        }
 
-        virtual std::u32string generate(const ir::instruction &, codegen_context &) = 0;
+        virtual std::u32string generate_declarations(ir::module &, codegen_context &) const
+        {
+            return {};
+        }
+
+        virtual std::u32string generate_declaration(std::shared_ptr<ir::variable_type> type, codegen_context &) const
+        {
+            return {};
+        }
+
+        virtual std::u32string generate_definitions(ir::module &, codegen_context &) = 0;
+        virtual std::u32string generate_definition(std::shared_ptr<ir::variable_type> type, codegen_context &) = 0;
     };
 }
 }

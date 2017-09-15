@@ -38,7 +38,7 @@ inline namespace _v1
         print_address_range(os, this);
         os << '\n';
 
-        auto type_ctx = ctx.make_branch(false);
+        auto type_ctx = ctx.make_branch(true);
         os << styles::def << type_ctx << styles::subrule_name << "type:\n";
         get_type()->print(os, type_ctx.make_branch(true));
 
