@@ -82,7 +82,7 @@ inline namespace _v1
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
 
     protected:
-        virtual future<expression *> _simplify_expr(simplification_context &) override;
+        virtual future<expression *> _simplify_expr(recursive_context) override;
 
     private:
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
@@ -106,7 +106,7 @@ inline namespace _v1
         }
 
     private:
-        virtual future<expression *> _simplify_expr(simplification_context &) override;
+        virtual future<expression *> _simplify_expr(recursive_context) override;
 
         std::vector<std::unique_ptr<expression>> _var_exprs;
     };

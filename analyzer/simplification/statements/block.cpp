@@ -74,38 +74,41 @@ inline namespace _v1
         return ret;
     }
 
-    future<statement *> block::_simplify(simplification_context & ctx)
+    future<statement *> block::_simplify(recursive_context ctx)
     {
         _ensure_cache();
 
         if (!_value_expr && _statements.size() == 1)
         {
-            return _statements.front().release()->simplify(ctx);
+            return _statements.front()->simplify(ctx).then([&, ctx](auto && simpl) {
+                replace_uptr(_statements.front(), simpl, ctx.proper);
+                return _statements.front().release();
+            });
         }
 
         auto fut = foldl(_statements, make_ready_future(true), [&](auto future, auto && statement) {
-            return future.then([&](bool do_continue) {
+            return future.then([&, ctx](bool do_continue) {
                 if (!do_continue)
                 {
                     return make_ready_future(false);
                 }
 
-                return statement->simplify(ctx).then([&](auto && simplified) {
-                    replace_uptr(statement, simplified, ctx);
+                return statement->simplify(ctx).then([&, ctx](auto && simplified) {
+                    replace_uptr(statement, simplified, ctx.proper);
                     return !statement->always_returns();
                 });
             });
         });
 
         fmap(_value_expr, [&](auto && expr) {
-            fut = fut.then([&, expr = expr.get()](bool do_continue) {
+            fut = fut.then([&, expr = expr.get(), ctx](bool do_continue) {
                 if (!do_continue)
                 {
                     return make_ready_future(false);
                 }
 
-                return expr->simplify_expr(ctx).then([&](auto && simplified) {
-                    replace_uptr(*_value_expr, simplified, ctx);
+                return expr->simplify_expr(ctx).then([&, ctx](auto && simplified) {
+                    replace_uptr(*_value_expr, simplified, ctx.proper);
                     return true;
                 });
             });

@@ -106,9 +106,9 @@ inline namespace _v1
             return _clone_with_replacement(repl);
         }
 
-        future<statement *> simplify(simplification_context & ctx)
+        future<statement *> simplify(recursive_context ctx)
         {
-            return ctx.get_future_or_init(this, [&]() { return make_ready_future().then([this, &ctx]() { return _simplify(ctx); }); });
+            return ctx.proper.get_future_or_init(this, [&]() { return make_ready_future().then([this, ctx]() { return _simplify(ctx); }); });
         }
 
         virtual std::vector<const return_statement *> get_returns() const
@@ -161,7 +161,7 @@ inline namespace _v1
             return false;
         }
 
-        virtual future<statement *> _simplify(simplification_context &)
+        virtual future<statement *> _simplify(recursive_context)
         {
             return make_ready_future(this);
         }
@@ -192,7 +192,7 @@ inline namespace _v1
             return std::make_unique<null_statement>();
         }
 
-        virtual future<statement *> _simplify(simplification_context &) override
+        virtual future<statement *> _simplify(recursive_context) override
         {
             return make_ready_future<statement *>(this);
         }

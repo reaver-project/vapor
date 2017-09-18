@@ -53,7 +53,7 @@ MAYFLY_ADD_TESTCASE("single branch, true", [] {
     replacements repl;
     simplification_context simpl_ctx;
 
-    auto simpl_future = if_stmt->simplify(simpl_ctx);
+    auto simpl_future = if_stmt->simplify({ simpl_ctx });
     replace_uptr(if_stmt, reaver::get(simpl_future), simpl_ctx);
     MAYFLY_REQUIRE(if_stmt.get() != if_stmt_ptr);
 
@@ -80,7 +80,7 @@ MAYFLY_ADD_TESTCASE("single branch, false", [] {
     replacements repl;
     simplification_context simpl_ctx;
 
-    auto simpl_future = if_stmt->simplify(simpl_ctx);
+    auto simpl_future = if_stmt->simplify({ simpl_ctx });
     replace_uptr(if_stmt, reaver::get(simpl_future), simpl_ctx);
     MAYFLY_REQUIRE(if_stmt.get() != if_stmt_ptr);
 
@@ -107,7 +107,7 @@ MAYFLY_ADD_TESTCASE("two branches, true", [] {
     replacements repl;
     simplification_context simpl_ctx;
 
-    auto simpl_future = if_stmt->simplify(simpl_ctx);
+    auto simpl_future = if_stmt->simplify({ simpl_ctx });
     replace_uptr(if_stmt, reaver::get(simpl_future), simpl_ctx);
     MAYFLY_REQUIRE(if_stmt.get() != if_stmt_ptr);
 
@@ -136,7 +136,7 @@ MAYFLY_ADD_TESTCASE("two branches, false", [] {
     replacements repl;
     simplification_context simpl_ctx;
 
-    auto simpl_future = if_stmt->simplify(simpl_ctx);
+    auto simpl_future = if_stmt->simplify({ simpl_ctx });
     replace_uptr(if_stmt, reaver::get(simpl_future), simpl_ctx);
     MAYFLY_REQUIRE(if_stmt.get() != if_stmt_ptr);
 
@@ -170,8 +170,8 @@ MAYFLY_ADD_TESTCASE("runtime condition", [] {
     replacements repl;
     simplification_context simpl_ctx;
 
-    auto simpl_future_single = if_stmt_single->simplify(simpl_ctx);
-    auto simpl_future_double = if_stmt_double->simplify(simpl_ctx);
+    auto simpl_future_single = if_stmt_single->simplify({ simpl_ctx });
+    auto simpl_future_double = if_stmt_double->simplify({ simpl_ctx });
     auto simplified_single = reaver::get(simpl_future_single);
     MAYFLY_REQUIRE(simplified_single == if_stmt_single.get());
     auto simplified_double = reaver::get(simpl_future_double);

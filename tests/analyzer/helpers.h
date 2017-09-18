@@ -99,7 +99,7 @@ inline namespace _v1
             return std::move(const_cast<test_expression *>(this)->_clone_expr);
         }
 
-        virtual reaver::future<expression *> _simplify_expr(simplification_context &) override
+        virtual reaver::future<expression *> _simplify_expr(recursive_context) override
         {
             if (!_simplified_expr)
             {

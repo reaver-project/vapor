@@ -76,9 +76,9 @@ inline namespace _v1
         }
 
     public:
-        future<expression *> simplify_expr(simplification_context & ctx)
+        future<expression *> simplify_expr(recursive_context ctx)
         {
-            return ctx.get_future_or_init(this, [&]() { return make_ready_future().then([this, &ctx]() { return _simplify_expr(ctx); }); });
+            return ctx.proper.get_future_or_init(this, [&]() { return make_ready_future().then([this, ctx]() { return _simplify_expr(ctx); }); });
         }
 
         void set_context(expression_context ctx)
@@ -222,12 +222,12 @@ inline namespace _v1
 
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const = 0;
 
-        virtual future<statement *> _simplify(simplification_context & ctx) override final
+        virtual future<statement *> _simplify(recursive_context ctx) override final
         {
             return simplify_expr(ctx).then([&](auto && simplified) -> statement * { return simplified; });
         }
 
-        virtual future<expression *> _simplify_expr(simplification_context &)
+        virtual future<expression *> _simplify_expr(recursive_context)
         {
             return make_ready_future(this);
         }

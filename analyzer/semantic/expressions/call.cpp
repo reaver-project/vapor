@@ -134,7 +134,7 @@ inline namespace _v1
 
                     auto cont = [this, ctx = std::make_shared<simplification_context>()](auto self)->future<expression *>
                     {
-                        return _cloned_type_expr->simplify_expr(*ctx).then([this, ctx, self](auto && simpl) -> future<expression *> {
+                        return _cloned_type_expr->simplify_expr({ *ctx }).then([this, ctx, self](auto && simpl) -> future<expression *> {
                             replace_uptr(_cloned_type_expr, simpl, *ctx);
 
                             if (_cloned_type_expr->is_constant() || !ctx->did_something_happen())

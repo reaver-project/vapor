@@ -83,10 +83,10 @@ inline namespace _v1
             return ret;
         }
 
-        virtual future<statement *> _simplify(simplification_context & ctx) override
+        virtual future<statement *> _simplify(recursive_context ctx) override
         {
-            return _value_expr->simplify_expr(ctx).then([&](auto && simplified) -> statement * {
-                replace_uptr(_value_expr, simplified, ctx);
+            return _value_expr->simplify_expr(ctx).then([&, ctx](auto && simplified) -> statement * {
+                replace_uptr(_value_expr, simplified, ctx.proper);
                 return this;
             });
         }

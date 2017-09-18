@@ -32,10 +32,10 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    future<expression *> expression_list::_simplify_expr(simplification_context & ctx)
+    future<expression *> expression_list::_simplify_expr(recursive_context ctx)
     {
         return when_all(fmap(value, [&](auto && expr) { return expr->simplify_expr(ctx); })).then([&](auto && simplified) -> expression * {
-            replace_uptrs(value, simplified, ctx);
+            replace_uptrs(value, simplified, ctx.proper);
             assert(0);
             return this;
         });

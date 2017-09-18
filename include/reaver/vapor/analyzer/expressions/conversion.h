@@ -58,7 +58,7 @@ inline namespace _v1
         }
 
     protected:
-        virtual future<expression *> _simplify_expr(simplification_context & ctx) override
+        virtual future<expression *> _simplify_expr(recursive_context ctx) override
         {
             return _base->simplify_expr(ctx).then([&, this](auto && simplified) -> expression * {
                 if (simplified)
@@ -101,10 +101,10 @@ inline namespace _v1
         }
 
     private:
-        virtual future<expression *> _simplify_expr(simplification_context & ctx) override
+        virtual future<expression *> _simplify_expr(recursive_context ctx) override
         {
-            return _owned->simplify_expr(ctx).then([&, this](auto && simplified) -> future<expression *> {
-                replace_uptr(_owned, simplified, ctx);
+            return _owned->simplify_expr(ctx).then([&, this, ctx](auto && simplified) -> future<expression *> {
+                replace_uptr(_owned, simplified, ctx.proper);
                 return this->conversion_expression::_simplify_expr(ctx).then([&](auto && simpl) -> expression * {
                     if (simpl && simpl != this)
                     {

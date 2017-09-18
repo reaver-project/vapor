@@ -46,7 +46,7 @@ inline namespace _v1
 
     using function_codegen = reaver::function<codegen::ir::function(ir_generation_context &)>;
     using function_hook = reaver::function<reaver::future<>(analysis_context &, call_expression *, std::vector<expression *>)>;
-    using function_eval = reaver::function<future<expression *>(simplification_context &, std::vector<expression *>)>;
+    using function_eval = reaver::function<future<expression *>(recursive_context, std::vector<expression *>)>;
     using scopes_generator = reaver::function<std::vector<codegen::ir::scope>(ir_generation_context &)>;
 
     class function
@@ -101,8 +101,8 @@ inline namespace _v1
 
         void print(std::ostream & os, print_context ctx) const;
 
-        future<> simplify(simplification_context &);
-        future<expression *> simplify(simplification_context &, std::vector<expression *>);
+        future<> simplify(recursive_context);
+        future<expression *> simplify(recursive_context, std::vector<expression *>);
 
         void mark_as_entry(analysis_context & ctx, expression * entry_expr)
         {

@@ -93,7 +93,7 @@ inline namespace _v1
             return *_future;
         }
 
-        future<> simplify(simplification_context & ctx)
+        future<> simplify(recursive_context ctx)
         {
             return get_expression()->simplify_expr(ctx).then([&](auto && simplified) {
                 _ulock lock{ _lock };

@@ -34,10 +34,10 @@ inline namespace _v1
         assert(!"this shouldn't be called, or, when called, should return an empty expression...");
     }
 
-    future<expression *> closure::_simplify_expr(simplification_context & ctx)
+    future<expression *> closure::_simplify_expr(recursive_context ctx)
     {
         return _body->simplify(ctx).then([&](auto && simplified) -> expression * {
-            replace_uptr(_body, dynamic_cast<block *>(simplified), ctx);
+            replace_uptr(_body, dynamic_cast<block *>(simplified), ctx.proper);
             return this;
         });
     }

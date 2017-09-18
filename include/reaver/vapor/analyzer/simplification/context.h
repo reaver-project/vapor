@@ -116,5 +116,21 @@ inline namespace _v1
     {
         return _expression_futures;
     }
+
+    class function;
+
+    struct recursive_context
+    {
+        simplification_context & proper;
+
+        struct call_frame
+        {
+            class function * function;
+            std::vector<expression *> arguments;
+        };
+
+        // this desperately needs a functional data structure
+        std::vector<call_frame> call_stack = {};
+    };
 }
 }

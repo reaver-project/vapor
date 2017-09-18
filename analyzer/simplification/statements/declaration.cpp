@@ -32,14 +32,14 @@ inline namespace _v1
         return repl.claim(_init_expr.get().get());
     }
 
-    future<statement *> declaration::_simplify(simplification_context & ctx)
+    future<statement *> declaration::_simplify(recursive_context ctx)
     {
         auto fut = make_ready_future<statement *>(this);
 
         fmap(_init_expr, [&](auto && expr) {
             fut = expr->simplify_expr(ctx)
-                      .then([&](auto && simplified) {
-                          replace_uptr(_init_expr.get(), simplified, ctx);
+                      .then([&, ctx](auto && simplified) {
+                          replace_uptr(_init_expr.get(), simplified, ctx.proper);
                           return _declared_symbol->simplify(ctx);
                       })
                       .then([&]() -> statement * { return _init_expr->release(); });

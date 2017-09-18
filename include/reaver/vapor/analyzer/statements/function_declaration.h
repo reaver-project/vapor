@@ -64,7 +64,7 @@ inline namespace _v1
             return make_null_statement();
         }
 
-        virtual future<statement *> _simplify(simplification_context &) override;
+        virtual future<statement *> _simplify(recursive_context) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
         const parser::function & _parse;

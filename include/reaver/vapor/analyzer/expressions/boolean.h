@@ -78,7 +78,7 @@ inline namespace _v1
             return std::make_unique<boolean_constant>(_value, _parse);
         }
 
-        virtual future<expression *> _simplify_expr(simplification_context &) override
+        virtual future<expression *> _simplify_expr(recursive_context) override
         {
             return make_ready_future<expression *>(this);
         }

@@ -76,13 +76,13 @@ MAYFLY_ADD_TESTCASE("simplification", [] {
     expr.set_simplified_expression(std::move(simplified));
 
     simplification_context ctx;
-    auto simpl_future = expr.simplify_expr(ctx);
+    auto simpl_future = expr.simplify_expr({ ctx });
     MAYFLY_REQUIRE(reaver::get(simpl_future) == simplified_ptr);
 
-    auto resimpl_future = expr.simplify_expr(ctx);
+    auto resimpl_future = expr.simplify_expr({ ctx });
     MAYFLY_REQUIRE(reaver::get(resimpl_future) == simplified_ptr);
 
-    auto stmt_simpl_future = expr.simplify(ctx);
+    auto stmt_simpl_future = expr.simplify({ ctx });
     MAYFLY_REQUIRE(reaver::get(stmt_simpl_future) == simplified_ptr);
 
     auto ctx_future = ctx.get_future_or_init<expression>(&expr, [&]() -> reaver::future<expression *> {
@@ -95,9 +95,9 @@ MAYFLY_ADD_TESTCASE("simplification", [] {
     delete simplified_ptr;
 
     simplification_context other_ctx;
-    auto bad_simpl_future = expr.simplify_expr(other_ctx);
+    auto bad_simpl_future = expr.simplify_expr({ other_ctx });
     MAYFLY_CHECK_THROWS_TYPE(unexpected_call, reaver::get(bad_simpl_future));
-    MAYFLY_CHECK_THROWS_TYPE(unexpected_call, reaver::get(expr.simplify(other_ctx)));
+    MAYFLY_CHECK_THROWS_TYPE(unexpected_call, reaver::get(expr.simplify({ other_ctx })));
 });
 
 MAYFLY_END_SUITE;
