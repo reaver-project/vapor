@@ -45,14 +45,18 @@ inline namespace _v1
     {
         if (_body)
         {
-            // TODO: remove this condition
-            if (std::any_of(arguments.begin(), arguments.end(), [&](auto && arg) { return !arg->is_constant(); }))
-            {
-                return make_ready_future<expression *>(nullptr);
-            }
-
-            if (std::find_if(
-                    ctx.call_stack.begin(), ctx.call_stack.end(), [&](auto && frame) { return frame.function == this && frame.arguments == arguments; })
+            if (std::find_if(ctx.call_stack.begin(),
+                    ctx.call_stack.end(),
+                    [&](auto && frame) {
+                        return frame.function == this
+                            && std::mismatch(frame.arguments.begin() + _is_member,
+                                   frame.arguments.end(),
+                                   arguments.begin() + _is_member,
+                                   arguments.end(),
+                                   [](auto && lhs, auto && rhs) { return !lhs->is_different_constant(rhs); })
+                                   .first
+                            == frame.arguments.end();
+                    })
                 != ctx.call_stack.end())
             {
                 return make_ready_future<expression *>(nullptr);

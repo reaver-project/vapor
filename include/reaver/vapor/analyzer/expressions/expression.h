@@ -131,6 +131,18 @@ inline namespace _v1
             return false;
         }
 
+        bool is_different_constant(const expression * rhs)
+        {
+            bool is_c = is_constant();
+
+            if (is_c ^ rhs->is_constant())
+            {
+                return true;
+            }
+
+            return is_c && !is_equal(rhs);
+        }
+
         virtual std::unique_ptr<expression> convert_to(type * target) const
         {
             if (get_type() == target)
