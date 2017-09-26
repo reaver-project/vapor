@@ -45,19 +45,14 @@ inline namespace _v1
     {
         if (_body)
         {
-            if (std::find_if(ctx.call_stack.begin(),
-                    ctx.call_stack.end(),
-                    [&](auto && frame) {
-                        return frame.function == this
-                            && std::mismatch(frame.arguments.begin() + _is_member,
-                                   frame.arguments.end(),
-                                   arguments.begin() + _is_member,
-                                   arguments.end(),
-                                   [](auto && lhs, auto && rhs) { return !lhs->is_different_constant(rhs); })
-                                   .first
-                            == frame.arguments.end();
-                    })
-                != ctx.call_stack.end())
+            auto new_frame = call_frame{ this, arguments };
+
+            if (auto expr = ctx.proper.results.get_call_result(new_frame))
+            {
+                return make_ready_future(expr.release());
+            }
+
+            if (std::find_if(ctx.call_stack.begin(), ctx.call_stack.end(), [&](auto && frame) { return frame == new_frame; }) != ctx.call_stack.end())
             {
                 return make_ready_future<expression *>(nullptr);
             }
@@ -66,7 +61,7 @@ inline namespace _v1
                 if (arguments.size())
                 {
                     auto body = _body->clone_with_replacement(_parameters, arguments);
-                    auto proper_ctx = std::make_shared<simplification_context>();
+                    auto proper_ctx = std::make_shared<simplification_context>(ctx.proper.results);
 
                     auto simplify = [this, arguments, proper_ctx, ctx = recursive_context{ *proper_ctx, ctx.call_stack }](auto self, auto body)
                     {
@@ -81,8 +76,9 @@ inline namespace _v1
                             // ugh
                             // but I don't know how else to write this
                             // without creating a long overload for optctx
+                            auto & res = proper_ctx->results;
                             proper_ctx->~simplification_context();
-                            new (&*proper_ctx) simplification_context();
+                            new (&*proper_ctx) simplification_context(res);
                             return self(self, body);
                         });
                     };
@@ -94,7 +90,7 @@ inline namespace _v1
                 assert(_body);
                 return make_ready_future<statement *>(_body);
             }()
-                       .then([&](auto && body) {
+                       .then([=](auto && body) {
                            auto returns = body->get_returns();
 
                            auto body_block = dynamic_cast<block *>(body);
@@ -112,7 +108,9 @@ inline namespace _v1
                            if (std::all_of(begin, returns.end(), [](auto && ret) { return ret->get_returned_expression()->is_constant(); })
                                && std::all_of(begin, returns.end(), [&](auto && ret) { return ret->get_returned_expression()->is_equal(expr); }))
                            {
-                               return make_ready_future(expr);
+                               replacements a, b;
+                               ctx.proper.results.save_call_result(call_frame{ this, arguments }, a.claim(expr));
+                               return make_ready_future(b.claim(expr).release());
                            }
 
                            return make_ready_future<expression *>(nullptr);

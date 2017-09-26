@@ -61,7 +61,8 @@ MAYFLY_ADD_TESTCASE("non-member, explicit type, initializer", [] {
         MAYFLY_CHECK(decl->initializer_expression().get()->is_equal(&expected_value));
 
         auto init_expr = decl->initializer_expression().get();
-        simplification_context simpl_ctx{};
+        cached_results res;
+        simplification_context simpl_ctx{ res };
         auto simpl_future = decl->simplify({ simpl_ctx });
         std::unique_ptr<statement> simplified{ reaver::get(simpl_future) };
         MAYFLY_CHECK(simplified.get() == init_expr);

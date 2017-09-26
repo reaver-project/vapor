@@ -63,9 +63,6 @@ inline namespace _v1
         }
     };
 
-    inline std::unique_ptr<type> make_unconstrained_type()
-    {
-        return std::make_unique<unconstrained_type>();
-    }
+    std::unique_ptr<type> make_unconstrained_type();
 }
 }

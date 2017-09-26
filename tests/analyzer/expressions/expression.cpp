@@ -75,7 +75,8 @@ MAYFLY_ADD_TESTCASE("simplification", [] {
 
     expr.set_simplified_expression(std::move(simplified));
 
-    simplification_context ctx;
+    cached_results res;
+    simplification_context ctx{ res };
     auto simpl_future = expr.simplify_expr({ ctx });
     MAYFLY_REQUIRE(reaver::get(simpl_future) == simplified_ptr);
 
@@ -94,7 +95,7 @@ MAYFLY_ADD_TESTCASE("simplification", [] {
 
     delete simplified_ptr;
 
-    simplification_context other_ctx;
+    simplification_context other_ctx{ res };
     auto bad_simpl_future = expr.simplify_expr({ other_ctx });
     MAYFLY_CHECK_THROWS_TYPE(unexpected_call, reaver::get(bad_simpl_future));
     MAYFLY_CHECK_THROWS_TYPE(unexpected_call, reaver::get(expr.simplify({ other_ctx })));

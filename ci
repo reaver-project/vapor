@@ -58,5 +58,5 @@ make test -j${core_number} -l${core_number}
 cat librt/crt1.ll >> output/output.ll
 llc output/output.ll -filetype=obj -relocation-model=pic
 cc output/output.o -o output/output
-./output/output 3
+./output/output 2
 

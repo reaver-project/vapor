@@ -59,11 +59,12 @@ MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
     reaver::get(struct_decl->analyze(ctx));
     reaver::get(declaration->analyze(ctx));
 
-    simplification_context simpl_ctx;
+    cached_results res;
+    simplification_context simpl_ctx{ res };
     do
     {
         simpl_ctx.~simplification_context();
-        new (&simpl_ctx) simplification_context();
+        new (&simpl_ctx) simplification_context(res);
 
         std::stringstream str;
         declaration->print(str, {});
@@ -106,7 +107,7 @@ MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
     do
     {
         simpl_ctx.~simplification_context();
-        new (&simpl_ctx) simplification_context();
+        new (&simpl_ctx) simplification_context(res);
 
         std::stringstream str;
         replaced_expr->print(str, {});
@@ -136,7 +137,7 @@ MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
     do
     {
         simpl_ctx.~simplification_context();
-        new (&simpl_ctx) simplification_context();
+        new (&simpl_ctx) simplification_context(res);
 
         std::stringstream str;
         designated_repl_expr->print(str, {});

@@ -132,7 +132,7 @@ inline namespace _v1
 
                     _cloned_type_expr = repl.claim(type_expr);
 
-                    auto cont = [this, ctx = std::make_shared<simplification_context>()](auto self)->future<expression *>
+                    auto cont = [this, ctx = std::make_shared<simplification_context>(*ctx.results)](auto self)->future<expression *>
                     {
                         return _cloned_type_expr->simplify_expr({ *ctx }).then([this, ctx, self](auto && simpl) -> future<expression *> {
                             replace_uptr(_cloned_type_expr, simpl, *ctx);
@@ -142,8 +142,9 @@ inline namespace _v1
                                 return make_ready_future<expression *>(_cloned_type_expr.get());
                             }
 
+                            auto & res = ctx->results;
                             ctx->~simplification_context();
-                            new (&*ctx) simplification_context();
+                            new (&*ctx) simplification_context(res);
                             return self(self);
                         });
                     };

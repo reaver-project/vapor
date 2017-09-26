@@ -51,7 +51,8 @@ MAYFLY_ADD_TESTCASE("single branch, true", [] {
     MAYFLY_CHECK(if_stmt->get_returns().size() == 1);
 
     replacements repl;
-    simplification_context simpl_ctx;
+    cached_results res;
+    simplification_context simpl_ctx{ res };
 
     auto simpl_future = if_stmt->simplify({ simpl_ctx });
     replace_uptr(if_stmt, reaver::get(simpl_future), simpl_ctx);
@@ -78,7 +79,8 @@ MAYFLY_ADD_TESTCASE("single branch, false", [] {
     MAYFLY_CHECK(if_stmt->get_returns().size() == 1);
 
     replacements repl;
-    simplification_context simpl_ctx;
+    cached_results res;
+    simplification_context simpl_ctx{ res };
 
     auto simpl_future = if_stmt->simplify({ simpl_ctx });
     replace_uptr(if_stmt, reaver::get(simpl_future), simpl_ctx);
@@ -105,7 +107,8 @@ MAYFLY_ADD_TESTCASE("two branches, true", [] {
     MAYFLY_CHECK(if_stmt->get_returns().size() == 2);
 
     replacements repl;
-    simplification_context simpl_ctx;
+    cached_results res;
+    simplification_context simpl_ctx{ res };
 
     auto simpl_future = if_stmt->simplify({ simpl_ctx });
     replace_uptr(if_stmt, reaver::get(simpl_future), simpl_ctx);
@@ -134,7 +137,8 @@ MAYFLY_ADD_TESTCASE("two branches, false", [] {
     MAYFLY_CHECK(if_stmt->get_returns().size() == 2);
 
     replacements repl;
-    simplification_context simpl_ctx;
+    cached_results res;
+    simplification_context simpl_ctx{ res };
 
     auto simpl_future = if_stmt->simplify({ simpl_ctx });
     replace_uptr(if_stmt, reaver::get(simpl_future), simpl_ctx);
@@ -168,7 +172,8 @@ MAYFLY_ADD_TESTCASE("runtime condition", [] {
     reaver::get(analysis_future_double);
 
     replacements repl;
-    simplification_context simpl_ctx;
+    cached_results res;
+    simplification_context simpl_ctx{ res };
 
     auto simpl_future_single = if_stmt_single->simplify({ simpl_ctx });
     auto simpl_future_double = if_stmt_double->simplify({ simpl_ctx });

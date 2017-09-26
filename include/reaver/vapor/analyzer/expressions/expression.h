@@ -198,6 +198,11 @@ inline namespace _v1
             return dynamic_cast<const T *>(_get_replacement());
         }
 
+        virtual std::size_t hash_value() const
+        {
+            return 0;
+        }
+
         // this ought to be protected
         // but then derived classes wouldn't be able to recurse
         // so let's just mark it as "protected interface"
@@ -260,6 +265,11 @@ inline namespace _v1
 
         expression_context _expr_ctx;
     };
+
+    inline std::size_t hash_value(const expression & expr)
+    {
+        return expr.hash_value();
+    }
 
     std::unique_ptr<expression> preanalyze_expression(const parser::expression & expr, scope * lex_scope);
 }

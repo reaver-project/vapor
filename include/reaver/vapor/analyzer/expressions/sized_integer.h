@@ -64,6 +64,14 @@ inline namespace _v1
             return synthesized_node<void *>{ nullptr, {} };
         }
 
+        virtual std::size_t hash_value() const override
+        {
+            std::size_t seed = 0;
+            boost::hash_combine(seed, _type->size());
+            boost::hash_combine(seed, _value);
+            return seed;
+        }
+
     private:
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
         {

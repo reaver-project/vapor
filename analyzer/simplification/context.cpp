@@ -21,13 +21,68 @@
  **/
 
 #include "vapor/analyzer/simplification/context.h"
+
+#include <boost/functional/hash.hpp>
+
 #include "vapor/analyzer/expressions/expression.h"
+#include "vapor/analyzer/function.h"
 #include "vapor/analyzer/symbol.h"
+
+std::size_t std::hash<reaver::vapor::analyzer::call_frame>::operator()(const reaver::vapor::analyzer::call_frame & frame) const
+{
+    std::size_t seed = 0;
+
+    boost::hash_combine(seed, frame.function);
+    boost::hash_combine(seed, frame.arguments.size());
+    for (auto && arg : frame.arguments)
+    {
+        boost::hash_combine(seed, *arg);
+    }
+
+    return seed;
+}
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    bool operator==(const call_frame & lhs, const call_frame & rhs)
+    {
+        return lhs.function == rhs.function
+            && std::mismatch(lhs.arguments.begin() + lhs.function->is_member(),
+                   lhs.arguments.end(),
+                   rhs.arguments.begin() + lhs.function->is_member(),
+                   rhs.arguments.end(),
+                   [](auto && lhs, auto && rhs) { return !lhs->is_different_constant(rhs); })
+                   .first
+            == lhs.arguments.end();
+    }
+
+    void cached_results::save_call_result(call_frame frame, std::unique_ptr<expression> expr)
+    {
+        auto it = _cached_call_results.find(frame);
+        if (it == _cached_call_results.end())
+        {
+            replacements repl;
+            auto owning = fmap(frame.arguments, [&](auto && arg) { return repl.claim(arg->_get_replacement()); });
+            auto raw = fmap(owning, [](auto && arg) { return arg.get(); });
+            std::move(owning.begin(), owning.end(), std::back_inserter(_key_store));
+            _cached_call_results.emplace(call_frame{ frame.function, std::move(raw) }, std::move(expr));
+        }
+    }
+
+    std::unique_ptr<expression> cached_results::get_call_result(call_frame frame) const
+    {
+        auto it = _cached_call_results.find(frame);
+        if (it != _cached_call_results.end())
+        {
+            replacements repl;
+            return repl.claim(it->second.get());
+        }
+
+        return {};
+    }
+
     simplification_context::~simplification_context() = default;
 
     void simplification_context::_handle_expressions(expression * ptr, future<expression *> & fut)

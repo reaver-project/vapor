@@ -51,7 +51,7 @@ std::u32string program = UR"program(module hello_world
 
     let entry = λ(arg : int32) -> int32
     {
-        let constant_foldable = ackermann(3, 4);
+        let constant_foldable = ackermann(2, 3);
         let non_constant_foldable = ackermann(arg, arg + 1);
 
         return constant_foldable - non_constant_foldable;
