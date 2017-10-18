@@ -58,13 +58,18 @@ inline namespace _v1
             }
         }
 
-        return get<postfix_expression *>(*last_postfix)->get_base_expression(ctx).then([&](auto && base_expr) {
-            auto referenced_type = base_expr->get_type()->get_member_type(_name);
-            assert(referenced_type && "no member found for whatever reason");
+        return get<postfix_expression *>(*last_postfix)->get_base_expression(ctx).then([&](auto && base) { this->set_base_expression(base); });
+    }
 
-            _referenced = base_expr->get_member(_name);
-            this->_set_type(referenced_type);
-        });
+    void member_access_expression::set_base_expression(expression * base)
+    {
+        _base = base;
+
+        auto referenced_type = base->get_type()->get_member_type(_name);
+        assert(referenced_type && "no member found for whatever reason");
+
+        _referenced = base->get_member(_name);
+        this->_set_type(referenced_type);
     }
 }
 }
