@@ -33,10 +33,10 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    future<statement *> function_declaration::_simplify(simplification_context & ctx)
+    future<statement *> function_declaration::_simplify(recursive_context ctx)
     {
         return _body->simplify(ctx).then([&](auto && simplified) -> statement * {
-            replace_uptr(_body, dynamic_cast<block *>(simplified), ctx);
+            replace_uptr(_body, dynamic_cast<block *>(simplified), ctx.proper);
             return this;
         });
     }

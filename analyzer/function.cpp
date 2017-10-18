@@ -31,7 +31,7 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    future<> function::simplify(simplification_context & ctx)
+    future<> function::simplify(recursive_context ctx)
     {
         if (_body)
         {
@@ -41,11 +41,18 @@ inline namespace _v1
         return make_ready_future();
     }
 
-    future<expression *> function::simplify(simplification_context & ctx, std::vector<expression *> arguments)
+    future<expression *> function::simplify(recursive_context ctx, std::vector<expression *> arguments)
     {
         if (_body)
         {
-            if (!std::any_of(arguments.begin(), arguments.end(), [](auto && arg) { return arg->is_constant(); }))
+            auto new_frame = call_frame{ this, arguments };
+
+            if (auto expr = ctx.proper.results.get_call_result(new_frame))
+            {
+                return make_ready_future(expr.release());
+            }
+
+            if (std::find_if(ctx.call_stack.begin(), ctx.call_stack.end(), [&](auto && frame) { return frame == new_frame; }) != ctx.call_stack.end())
             {
                 return make_ready_future<expression *>(nullptr);
             }
@@ -54,20 +61,24 @@ inline namespace _v1
                 if (arguments.size())
                 {
                     auto body = _body->clone_with_replacement(_parameters, arguments);
+                    auto proper_ctx = std::make_shared<simplification_context>(ctx.proper.results);
 
-                    auto simplify = [ctx = std::make_shared<simplification_context>()](auto self, auto body)
+                    auto simplify = [this, arguments, proper_ctx, ctx = recursive_context{ *proper_ctx, ctx.call_stack }](auto self, auto body)
                     {
-                        return body->simplify(*ctx).then([old_body = body, ctx, self](auto && body)->future<block *> {
-                            if (!ctx->did_something_happen())
+                        auto new_ctx = ctx;
+                        new_ctx.call_stack.push_back({ this, arguments });
+                        return body->simplify(new_ctx).then([proper_ctx, old_body = body, new_ctx, self](auto && body)->future<statement *> {
+                            if (!new_ctx.proper.did_something_happen())
                             {
-                                return make_ready_future<block *>(dynamic_cast<block *>(body));
+                                return make_ready_future(body);
                             }
 
                             // ugh
                             // but I don't know how else to write this
                             // without creating a long overload for optctx
-                            ctx->~simplification_context();
-                            new (&*ctx) simplification_context();
+                            auto & res = proper_ctx->results;
+                            proper_ctx->~simplification_context();
+                            new (&*proper_ctx) simplification_context(res);
                             return self(self, body);
                         });
                     };
@@ -76,14 +87,18 @@ inline namespace _v1
                     return simplify(simplify, body.release());
                 }
 
-                return make_ready_future(_body);
+                assert(_body);
+                return make_ready_future<statement *>(_body);
             }()
-                       .then([&](auto && body) {
+                       .then([=](auto && body) {
                            auto returns = body->get_returns();
 
-                           assert(body->has_return_expression() || returns.size());
-                           auto expr = body->has_return_expression() ? body->get_return_expression() : returns.front()->get_returned_expression();
-                           auto begin = body->has_return_expression() ? returns.begin() : returns.begin() + 1;
+                           auto body_block = dynamic_cast<block *>(body);
+                           auto has_return_expr = body_block && body_block->has_return_expression();
+                           assert(has_return_expr || returns.size());
+
+                           auto expr = has_return_expr ? body_block->get_return_expression() : returns.front()->get_returned_expression();
+                           auto begin = has_return_expr ? returns.begin() : returns.begin() + 1;
 
                            if (!expr->is_constant())
                            {
@@ -93,7 +108,9 @@ inline namespace _v1
                            if (std::all_of(begin, returns.end(), [](auto && ret) { return ret->get_returned_expression()->is_constant(); })
                                && std::all_of(begin, returns.end(), [&](auto && ret) { return ret->get_returned_expression()->is_equal(expr); }))
                            {
-                               return make_ready_future(expr);
+                               replacements a, b;
+                               ctx.proper.results.save_call_result(call_frame{ this, arguments }, a.claim(expr));
+                               return make_ready_future(b.claim(expr).release());
                            }
 
                            return make_ready_future<expression *>(nullptr);

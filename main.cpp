@@ -34,12 +34,9 @@ std::u32string program = UR"program(module hello_world
 {
     let int32 = sized_int(32);
 
-    let mn = struct
-    {
-        let m : int32;
-        let n : int32;
-    };
+    let mn = struct { let m : int32; let n : int32; };
 
+    //function ackermann(m : int32, n : int32) -> int32
     function ackermann(args : mn) -> int32
     {
         if (args.m == 0)
@@ -57,8 +54,8 @@ std::u32string program = UR"program(module hello_world
 
     let entry = λ(arg : int32) -> int32
     {
-        let constant_foldable = ackermann(mn{ 3, 4 });
-        let non_constant_foldable = ackermann(mn{ .m = arg, .n = arg + 1 });
+        let constant_foldable = ackermann(mn{ 2, 3 });
+        let non_constant_foldable = ackermann(mn{ arg, arg + 1 });
 
         return constant_foldable - non_constant_foldable;
     };

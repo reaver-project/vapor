@@ -33,7 +33,7 @@ inline namespace _v1
         assert(0);
     }
 
-    future<expression *> struct_literal::_simplify_expr(simplification_context & ctx)
+    future<expression *> struct_literal::_simplify_expr(recursive_context ctx)
     {
         return make_ready_future<expression *>(this);
     }

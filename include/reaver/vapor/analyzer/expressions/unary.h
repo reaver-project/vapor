@@ -53,7 +53,7 @@ inline namespace _v1
             assert(0);
         }
 
-        virtual future<expression *> _simplify_expr(simplification_context &) override
+        virtual future<expression *> _simplify_expr(recursive_context) override
         {
             assert(0);
         }

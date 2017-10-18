@@ -65,6 +65,13 @@ inline namespace _v1
             return true;
         }
 
+        virtual bool is_constant() const override
+        {
+            return _referenced && _referenced->is_constant();
+        }
+
+        void set_base_expression(expression * base);
+
     private:
         member_access_expression(optional<synthesized_node<void>> parse, expression * referenced) : _parse{ parse }, _referenced{ referenced }
         {
@@ -84,7 +91,7 @@ inline namespace _v1
                 return std::unique_ptr<member_access_expression>{ new member_access_expression{ _name, get_type() } };
             }
 
-            auto replaced_base = repl.try_get_replacement(_base);
+            auto replaced_base = repl.get_replacement(_base);
             if (auto repl = replaced_base->get_member(_name))
             {
                 return make_expression_ref(repl);
@@ -95,11 +102,16 @@ inline namespace _v1
             std::unique_ptr<member_access_expression> ret{ new member_access_expression{ _parse, nullptr } };
             ret->_base = replaced_base;
             ret->_set_type(get_type());
+            ret->_name = _name;
             return ret;
         }
 
-        virtual future<expression *> _simplify_expr(simplification_context &) override
+        virtual future<expression *> _simplify_expr(recursive_context) override
         {
+            if (_referenced && _referenced->is_constant())
+            {
+                return make_ready_future(_referenced);
+            }
             return make_ready_future<expression *>(this);
         }
 

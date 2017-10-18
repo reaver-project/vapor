@@ -99,6 +99,12 @@ inline namespace _v1
             return { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, std::move(result) } };
         }
 
+        virtual bool _is_equal(const expression * rhs) const override
+        {
+            auto rhs_struct = rhs->as<struct_expression>();
+            return rhs_struct && _type == rhs_struct->_type && _fields == rhs_struct->_fields;
+        }
+
         std::shared_ptr<struct_type> _type;
         std::unordered_map<const member_expression *, std::unique_ptr<expression>> _fields;
         std::vector<expression *> _fields_in_order;

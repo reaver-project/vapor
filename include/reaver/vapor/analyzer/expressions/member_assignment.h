@@ -93,7 +93,7 @@ inline namespace _v1
             return ret;
         }
 
-        virtual future<expression *> _simplify_expr(simplification_context & ctx) override
+        virtual future<expression *> _simplify_expr(recursive_context ctx) override
         {
             return _rhs->simplify_expr(ctx).then([&](auto && simpl) -> expression * {
                 _rhs = simpl;

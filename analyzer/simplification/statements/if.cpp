@@ -42,16 +42,18 @@ inline namespace _v1
         return ret;
     }
 
-    future<statement *> if_statement::_simplify(simplification_context & ctx)
+    future<statement *> if_statement::_simplify(recursive_context ctx)
     {
         auto future = _condition->simplify_expr(ctx)
-                          .then([&](auto && simplified) { replace_uptr(_condition, simplified, ctx); })
-                          .then([&] { return _then_block->simplify(ctx); })
-                          .then([&](auto && simpl) { replace_uptr(_then_block, simpl, ctx); });
+                          .then([&, ctx](auto && simplified) { replace_uptr(_condition, simplified, ctx.proper); })
+                          .then([&, ctx] { return _then_block->simplify(ctx); })
+                          .then([&, ctx](auto && simpl) { replace_uptr(_then_block, simpl, ctx.proper); });
 
         if (_else_block)
         {
-            future = future.then([&] { return _else_block.get()->simplify(ctx); }).then([&](auto && simpl) { replace_uptr(_else_block.get(), simpl, ctx); });
+            future = future.then([&, ctx] { return _else_block.get()->simplify(ctx); }).then([&, ctx](auto && simpl) {
+                replace_uptr(_else_block.get(), simpl, ctx.proper);
+            });
         }
 
         return future.then([&]() -> statement * {

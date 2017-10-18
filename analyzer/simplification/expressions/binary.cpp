@@ -37,15 +37,15 @@ inline namespace _v1
         return repl.claim(_call_expression.get());
     }
 
-    future<expression *> binary_expression::_simplify_expr(simplification_context & ctx)
+    future<expression *> binary_expression::_simplify_expr(recursive_context ctx)
     {
         replacements repl;
         auto clone = _clone_expr_with_replacement(repl).release();
 
-        return clone->simplify_expr(ctx).then([&ctx, clone](auto && simplified) {
+        return clone->simplify_expr(ctx).then([ctx, clone](auto && simplified) {
             if (simplified)
             {
-                ctx.keep_alive(clone);
+                ctx.proper.keep_alive(clone);
                 return simplified;
             }
             return clone;

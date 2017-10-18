@@ -76,14 +76,15 @@ inline namespace _v1
     void module::simplify()
     {
         bool cont = true;
+        cached_results res;
         while (cont)
         {
             logger::dlog() << "Simplification run of module " << utf8(name()) << " starting...";
 
-            simplification_context ctx{};
+            simplification_context ctx{ res };
 
-            auto all = when_all(
-                fmap(_statements, [&](auto && stmt) { return stmt->simplify(ctx).then([&](auto && simplified) { replace_uptr(stmt, simplified, ctx); }); }));
+            auto all = when_all(fmap(
+                _statements, [&](auto && stmt) { return stmt->simplify({ ctx }).then([&](auto && simplified) { replace_uptr(stmt, simplified, ctx); }); }));
             reaver::get(all);
 
             cont = ctx.did_something_happen();

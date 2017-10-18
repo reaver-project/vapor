@@ -76,9 +76,9 @@ inline namespace _v1
         }
 
     public:
-        future<expression *> simplify_expr(simplification_context & ctx)
+        future<expression *> simplify_expr(recursive_context ctx)
         {
-            return ctx.get_future_or_init(this, [&]() { return make_ready_future().then([this, &ctx]() { return _simplify_expr(ctx); }); });
+            return ctx.proper.get_future_or_init(this, [&]() { return make_ready_future().then([this, ctx]() { return _simplify_expr(ctx); }); });
         }
 
         void set_context(expression_context ctx)
@@ -129,6 +129,18 @@ inline namespace _v1
             }
 
             return false;
+        }
+
+        bool is_different_constant(const expression * rhs)
+        {
+            bool is_c = is_constant();
+
+            if (is_c ^ rhs->is_constant())
+            {
+                return true;
+            }
+
+            return is_c && !is_equal(rhs);
         }
 
         virtual std::unique_ptr<expression> convert_to(type * target) const
@@ -186,6 +198,11 @@ inline namespace _v1
             return dynamic_cast<const T *>(_get_replacement());
         }
 
+        virtual std::size_t hash_value() const
+        {
+            return 0;
+        }
+
         // this ought to be protected
         // but then derived classes wouldn't be able to recurse
         // so let's just mark it as "protected interface"
@@ -222,12 +239,12 @@ inline namespace _v1
 
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const = 0;
 
-        virtual future<statement *> _simplify(simplification_context & ctx) override final
+        virtual future<statement *> _simplify(recursive_context ctx) override final
         {
             return simplify_expr(ctx).then([&](auto && simplified) -> statement * { return simplified; });
         }
 
-        virtual future<expression *> _simplify_expr(simplification_context &)
+        virtual future<expression *> _simplify_expr(recursive_context)
         {
             return make_ready_future(this);
         }
@@ -248,6 +265,11 @@ inline namespace _v1
 
         expression_context _expr_ctx;
     };
+
+    inline std::size_t hash_value(const expression & expr)
+    {
+        return expr.hash_value();
+    }
 
     std::unique_ptr<expression> preanalyze_expression(const parser::expression & expr, scope * lex_scope);
 }

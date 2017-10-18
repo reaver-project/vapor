@@ -80,7 +80,7 @@ inline namespace _v1
             return std::make_unique<expression_ref>(referenced);
         }
 
-        virtual future<expression *> _simplify_expr(simplification_context & ctx) override
+        virtual future<expression *> _simplify_expr(recursive_context ctx) override
         {
             return _referenced->simplify_expr(ctx).then([&](auto && simplified) -> expression * {
                 if (simplified && simplified != _referenced)

@@ -69,30 +69,30 @@ inline namespace _v1
         return ret;
     }
 
-    future<expression *> postfix_expression::_simplify_expr(simplification_context & ctx)
+    future<expression *> postfix_expression::_simplify_expr(recursive_context ctx)
     {
         if (_call_expression)
         {
             replacements repl;
             auto clone = repl.claim(_call_expression.get()).release();
 
-            return clone->simplify_expr(ctx).then([&ctx, clone](auto && simplified) {
+            return clone->simplify_expr(ctx).then([ctx, clone](auto && simplified) {
                 if (simplified && simplified != clone)
                 {
-                    ctx.keep_alive(clone);
+                    ctx.proper.keep_alive(clone);
                     return simplified;
                 }
                 return clone;
             });
         }
 
-        return when_all(fmap(_arguments, [&](auto && expr) { return expr->simplify_expr(ctx); }))
-            .then([&](auto && simplified) {
-                replace_uptrs(_arguments, simplified, ctx);
+        return when_all(fmap(_arguments, [&, ctx](auto && expr) { return expr->simplify_expr(ctx); }))
+            .then([&, ctx](auto && simplified) {
+                replace_uptrs(_arguments, simplified, ctx.proper);
                 return _base_expr->simplify_expr(ctx);
             })
-            .then([&](auto && simplified) {
-                replace_uptr(_base_expr, simplified, ctx);
+            .then([&, ctx](auto && simplified) {
+                replace_uptr(_base_expr, simplified, ctx.proper);
 
                 if (!_modifier)
                 {

@@ -53,21 +53,21 @@ inline namespace _v1
         return ret;
     }
 
-    future<expression *> call_expression::_simplify_expr(simplification_context & ctx)
+    future<expression *> call_expression::_simplify_expr(recursive_context ctx)
     {
         if (_replacement_expr)
         {
             return make_ready_future(_replacement_expr.release());
         }
 
-        return when_all(fmap(_args, [&](auto && arg) { return arg->simplify_expr(ctx); })).then([&](auto && repl) {
+        return when_all(fmap(_args, [&](auto && arg) { return arg->simplify_expr(ctx); })).then([&, ctx](auto && repl) {
             assert(_args.size() == repl.size());
             for (std::size_t i = 0; i < _args.size(); ++i)
             {
                 if (repl[i] && repl[i] != _args[i])
                 {
                     _args[i] = repl[i];
-                    ctx.something_happened();
+                    ctx.proper.something_happened();
                 }
             }
 
@@ -76,18 +76,18 @@ inline namespace _v1
         });
     }
 
-    future<expression *> owning_call_expression::_simplify_expr(simplification_context & ctx)
+    future<expression *> owning_call_expression::_simplify_expr(recursive_context ctx)
     {
         if (_replacement_expr)
         {
-            return _replacement_expr->simplify_expr(ctx).then([&](auto && repl) -> expression * {
-                replace_uptr(_replacement_expr, repl, ctx);
+            return _replacement_expr->simplify_expr(ctx).then([&, ctx](auto && repl) -> expression * {
+                replace_uptr(_replacement_expr, repl, ctx.proper);
                 return this;
             });
         }
 
-        return when_all(fmap(_var_exprs, [&](auto && arg) { return arg->simplify_expr(ctx); })).then([&](auto && repl) {
-            replace_uptrs(_var_exprs, repl, ctx);
+        return when_all(fmap(_var_exprs, [&](auto && arg) { return arg->simplify_expr(ctx); })).then([&, ctx](auto && repl) {
+            replace_uptrs(_var_exprs, repl, ctx.proper);
             return this->call_expression::_simplify_expr(ctx);
         });
     }

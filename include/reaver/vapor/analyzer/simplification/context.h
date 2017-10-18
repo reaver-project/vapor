@@ -27,16 +27,57 @@
 
 #include <reaver/future.h>
 
+#include "replacements.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
     class statement;
     class expression;
+    class function;
+
+    struct call_frame
+    {
+        class function * function;
+        std::vector<expression *> arguments;
+    };
+
+    bool operator==(const call_frame &, const call_frame &);
+}
+}
+
+namespace std
+{
+template<>
+struct hash<reaver::vapor::analyzer::call_frame>
+{
+    std::size_t operator()(const reaver::vapor::analyzer::call_frame &) const;
+};
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    class cached_results
+    {
+    public:
+        void save_call_result(call_frame, std::unique_ptr<expression>);
+        std::unique_ptr<expression> get_call_result(call_frame) const;
+
+    private:
+        std::unordered_map<call_frame, std::unique_ptr<expression>> _cached_call_results;
+        std::vector<std::unique_ptr<expression>> _key_store;
+    };
 
     class simplification_context
     {
     public:
+        simplification_context(cached_results & results) : results{ results }
+        {
+        }
+
         ~simplification_context();
 
         template<typename T, typename F>
@@ -80,6 +121,8 @@ inline namespace _v1
 
         void keep_alive(statement * ptr);
 
+        cached_results & results;
+
     private:
         std::atomic<bool> _something_happened{ false };
 
@@ -116,5 +159,13 @@ inline namespace _v1
     {
         return _expression_futures;
     }
+
+    struct recursive_context
+    {
+        simplification_context & proper;
+
+        // this desperately needs a functional data structure
+        std::vector<call_frame> call_stack = {};
+    };
 }
 }

@@ -76,7 +76,7 @@ inline namespace _v1
     private:
         virtual future<> _analyze(analysis_context & ctx) override;
         virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const override;
-        virtual future<statement *> _simplify(simplification_context & ctx) override;
+        virtual future<statement *> _simplify(recursive_context ctx) override;
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
 
         const parser::declaration & _parse;
