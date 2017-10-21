@@ -50,11 +50,6 @@ inline namespace _v1
             return _name;
         }
 
-        const auto & parse() const
-        {
-            return _parse;
-        }
-
         auto declared_symbol() const
         {
             return _declared_symbol;
@@ -79,7 +74,6 @@ inline namespace _v1
         virtual future<statement *> _simplify(recursive_context ctx) override;
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
 
-        const parser::declaration & _parse;
         std::u32string _name;
         symbol * _declared_symbol;
         optional<std::unique_ptr<expression>> _type_specifier;

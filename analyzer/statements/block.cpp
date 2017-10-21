@@ -36,9 +36,11 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     block::block(const parser::block & parse, scope * lex_scope, bool is_top_level)
-        : _parse{ parse }, _scope{ lex_scope->clone_local() }, _original_scope{ _scope.get() }, _is_top_level{ is_top_level }
+        : _scope{ lex_scope->clone_local() }, _original_scope{ _scope.get() }, _is_top_level{ is_top_level }
     {
-        _statements = fmap(_parse.block_value, [&](auto && row) {
+        _set_ast_info(make_node(parse));
+
+        _statements = fmap(parse.block_value, [&](auto && row) {
             return get<0>(fmap(row,
                 make_overload_set([&](const parser::block & block) -> std::unique_ptr<statement> { return preanalyze_block(block, _scope.get(), false); },
                     [&](const parser::statement & statement) {
@@ -55,7 +57,7 @@ inline namespace _v1
 
         _scope->close();
 
-        _value_expr = fmap(_parse.value_expression, [&](auto && val_expr) {
+        _value_expr = fmap(parse.value_expression, [&](auto && val_expr) {
             auto expr = preanalyze_expression_list(val_expr, _scope.get());
             return expr;
         });

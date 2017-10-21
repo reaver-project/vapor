@@ -48,7 +48,7 @@ inline namespace _v1
                     return nullptr;
                 },
 
-                [](const parser::integer_literal & integer) -> std::unique_ptr<expression> { return std::make_unique<integer_constant>(integer); },
+                [](const parser::integer_literal & integer) -> std::unique_ptr<expression> { return make_integer_constant(integer); },
 
                 [](const parser::boolean_literal & boolean) -> std::unique_ptr<expression> { return std::make_unique<boolean_constant>(boolean); },
 

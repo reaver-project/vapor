@@ -37,7 +37,7 @@ inline namespace _v1
 {
     struct_type::~struct_type() = default;
 
-    struct_type::struct_type(const parser::struct_literal & parse, scope * lex_scope) : type{ lex_scope }, _parse{ parse }
+    struct_type::struct_type(const parser::struct_literal & parse, scope * lex_scope) : type{ lex_scope }, _parse{ make_node(parse) }
     {
         auto ctor_pair = make_promise<function *>();
         _aggregate_ctor_future = std::move(ctor_pair.future);

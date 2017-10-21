@@ -40,11 +40,6 @@ inline namespace _v1
     public:
         closure(const parser::lambda_expression & parse, scope * lex_scope);
 
-        const auto & parse() const
-        {
-            return _parse;
-        }
-
         virtual void print(std::ostream & os, print_context ctx) const override;
 
         virtual declaration_ir declaration_codegen_ir(ir_generation_context &) const override;
@@ -55,7 +50,6 @@ inline namespace _v1
         virtual future<expression *> _simplify_expr(recursive_context) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-        const parser::lambda_expression & _parse;
         parameter_list _parameter_list;
 
         optional<std::unique_ptr<expression>> _return_type;

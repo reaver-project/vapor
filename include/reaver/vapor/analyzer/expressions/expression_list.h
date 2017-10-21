@@ -62,8 +62,9 @@ inline namespace _v1
         }
 
     public:
-        expression_list(const parser::expression_list & parse) : parse_{ parse }
+        expression_list(ast_node node)
         {
+            _set_ast_info(node);
         }
 
         virtual void print(std::ostream & os, print_context ctx) const override;
@@ -73,13 +74,8 @@ inline namespace _v1
             return std::all_of(value.begin(), value.end(), [](auto && expr) { return expr->is_constant(); });
         }
 
-        const auto & parse() const
-        {
-            return parse_;
-        }
+        friend std::unique_ptr<expression> preanalyze_expression_list(const parser::expression_list &, scope *);
 
-        const parser::expression_list & parse_;
-        range_type range;
         std::vector<std::unique_ptr<expression>> value;
     };
 

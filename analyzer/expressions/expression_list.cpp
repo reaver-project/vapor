@@ -59,9 +59,9 @@ inline namespace _v1
             return preanalyze_expression(expr.expressions.front(), lex_scope);
         }
 
-        auto ret = std::make_unique<expression_list>(expr);
+        auto ret = std::make_unique<expression_list>(make_node(expr));
         ret->value = fmap(expr.expressions, [&](auto && expr) { return preanalyze_expression(expr, lex_scope); });
-        ret->range = expr.range;
+        ret->_set_ast_info(make_node(expr));
         return ret;
     }
 }

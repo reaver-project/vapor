@@ -51,11 +51,6 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
-        const auto & parse() const
-        {
-            return _parse;
-        }
-
     private:
         virtual future<> _analyze(analysis_context &) override;
 
@@ -67,7 +62,7 @@ inline namespace _v1
         virtual future<statement *> _simplify(recursive_context) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-        const parser::function & _parse;
+        std::u32string _name;
         parameter_list _parameter_list;
 
         optional<std::unique_ptr<expression>> _return_type;

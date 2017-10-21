@@ -34,8 +34,9 @@ inline namespace _v1
     class return_statement : public statement
     {
     public:
-        return_statement(const parser::return_expression & parse, scope * lex_scope) : _parse{ parse }
+        return_statement(const parser::return_expression & parse, scope * lex_scope)
         {
+            _set_ast_info(make_node(parse));
             _value_expr = preanalyze_expression(parse.return_value, lex_scope);
         }
 
@@ -61,18 +62,13 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context) const override;
 
-        const auto & parse() const
-        {
-            return _parse;
-        }
-
     private:
         virtual future<> _analyze(analysis_context & ctx) override
         {
             return _value_expr->analyze(ctx);
         }
 
-        return_statement(const return_statement & other) : _parse{ other._parse }
+        return_statement(const return_statement & other)
         {
         }
 
@@ -93,7 +89,6 @@ inline namespace _v1
 
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-        const parser::return_expression & _parse;
         std::unique_ptr<expression> _value_expr;
     };
 

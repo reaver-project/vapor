@@ -35,6 +35,7 @@ inline namespace _v1
     public:
         if_statement(const parser::if_statement & parse, scope * lex_scope) : _parse{ parse }
         {
+            _set_ast_info(make_node(parse));
             _condition = preanalyze_expression(parse.condition, lex_scope);
             _then_block = preanalyze_block(parse.then_block, lex_scope, false);
             _else_block = fmap(parse.else_block, [&](auto && parse) -> std::unique_ptr<statement> { return preanalyze_block(parse, lex_scope, false); });
@@ -51,11 +52,6 @@ inline namespace _v1
         }
 
         virtual void print(std::ostream & os, print_context) const override;
-
-        const auto & parse() const
-        {
-            return _parse;
-        }
 
     private:
         if_statement(const if_statement & other) : _parse{ other._parse }

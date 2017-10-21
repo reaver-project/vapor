@@ -40,7 +40,7 @@ inline namespace _v1
         _function = make_function("overloadable function",
             nullptr,
             {},
-            [=, name = _parse.name.value.string](ir_generation_context & ctx) {
+            [=](ir_generation_context & ctx) {
                 auto ret = codegen::ir::function{ U"operator()",
                     {},
                     fmap(_parameter_list, [&](auto && param) { return get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
@@ -49,7 +49,7 @@ inline namespace _v1
                 ret.is_member = true;
                 return ret;
             },
-            _parse.range);
+            get_ast_info().get().range);
         _function->set_name(U"operator()");
         _function->make_member();
         _function->set_scopes_generator([this](auto && ctx) { return this->_overload_set->get_type()->codegen_scopes(ctx); });

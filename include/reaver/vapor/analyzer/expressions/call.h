@@ -37,12 +37,6 @@ inline namespace _v1
         {
         }
 
-        void set_parse_range(const range_type & range)
-        {
-            assert(!_range);
-            _range = range;
-        }
-
         virtual void print(std::ostream &, print_context ctx) const override;
 
         void replace_with(std::unique_ptr<expression> expr)
@@ -52,19 +46,18 @@ inline namespace _v1
             _replacement_expr = std::move(expr);
             if (auto * replacement_call_expr = _replacement_expr->as<call_expression>())
             {
-                replacement_call_expr->set_parse_range(_range.get());
+                replacement_call_expr->_set_ast_info(get_ast_info().get());
             }
         }
 
         const range_type & get_range() const
         {
-            assert(_range);
-            return *_range;
+            return get_ast_info().get().range;
         }
 
-        auto parse() const
+        void set_ast_info(ast_node node)
         {
-            return synthesized_node<call_expression>{ this, get_range() };
+            _set_ast_info(node);
         }
 
     private:
@@ -89,7 +82,6 @@ inline namespace _v1
 
     protected:
         function * _function;
-        optional<const range_type &> _range;
         std::unique_ptr<expression> _replacement_expr;
 
     private:

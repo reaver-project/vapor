@@ -28,15 +28,15 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    member_access_expression::member_access_expression(const parser::member_expression & parse)
-        : _parse{ { &parse, parse.range } }, _name{ parse.member_name.value.string }
+    member_access_expression::member_access_expression(const parser::member_expression & parse) : _name{ parse.member_name.value.string }
     {
+        _set_ast_info(make_node(parse));
     }
 
     void member_access_expression::print(std::ostream & os, print_context ctx) const
     {
         os << styles::def << ctx << styles::rule_name << "member-access-expression";
-        if (_parse)
+        if (get_ast_info())
         {
             print_address_range(os, this);
         }

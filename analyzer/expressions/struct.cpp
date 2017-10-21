@@ -29,8 +29,9 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     struct_literal::struct_literal(const parser::struct_literal & parse, scope * lex_scope)
-        : expression{ builtin_types().type.get() }, _parse{ parse }, _type{ make_struct_type(parse, lex_scope) }
+        : expression{ builtin_types().type.get() }, _type{ make_struct_type(parse, lex_scope) }
     {
+        _set_ast_info(make_node(parse));
     }
 
     void struct_literal::print(std::ostream & os, print_context ctx) const

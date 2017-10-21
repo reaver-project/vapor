@@ -41,6 +41,7 @@ inline namespace _v1
               _lhs{ preanalyze_expression(_parse.lhs, lex_scope) },
               _rhs{ preanalyze_expression(_parse.rhs, lex_scope) }
         {
+            _set_ast_info({ &parse, parse.range });
         }
 
         virtual void print(std::ostream & os, print_context ctx) const override;
@@ -58,11 +59,6 @@ inline namespace _v1
         lexer::token_type get_operator() const
         {
             return _op.type;
-        }
-
-        const auto & parse() const
-        {
-            return _parse;
         }
 
     private:

@@ -47,7 +47,7 @@ inline namespace _v1
             .then([&](std::unique_ptr<expression> call_expr) {
                 if (auto call_expr_downcasted = call_expr->as<call_expression>())
                 {
-                    call_expr_downcasted->set_parse_range(_parse.range);
+                    call_expr_downcasted->set_ast_info(get_ast_info().get());
                 }
                 _call_expression = std::move(call_expr);
                 return _call_expression->analyze(ctx);

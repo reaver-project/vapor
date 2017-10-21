@@ -29,7 +29,7 @@ inline namespace _v1
 {
     future<> identifier::_analyze(analysis_context & ctx)
     {
-        return _lex_scope->resolve(_parse.value.string).then([](auto && symbol) { return symbol->get_expression_future(); }).then([this](auto && expression) {
+        return _lex_scope->resolve(_name).then([](auto && symbol) { return symbol->get_expression_future(); }).then([this](auto && expression) {
             _referenced = expression;
             this->_set_type(_referenced->get_type());
         });

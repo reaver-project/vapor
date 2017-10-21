@@ -41,19 +41,14 @@ inline namespace _v1
     class member_access_expression : public expression
     {
     public:
+        member_access_expression(const parser::member_expression & parse);
+
         member_access_expression(std::u32string name, type * referenced_type) : expression{ referenced_type }, _name{ std::move(name) }
         {
             assert(referenced_type);
         }
 
-        member_access_expression(const parser::member_expression & parse);
-
         virtual void print(std::ostream & os, print_context) const override;
-
-        const auto & parse() const
-        {
-            return _parse.get();
-        }
 
         auto get_name() const
         {
@@ -73,8 +68,9 @@ inline namespace _v1
         void set_base_expression(expression * base);
 
     private:
-        member_access_expression(optional<synthesized_node<void>> parse, expression * referenced) : _parse{ parse }, _referenced{ referenced }
+        member_access_expression(ast_node parse, expression * referenced) : _referenced{ referenced }
         {
+            _set_ast_info(parse);
         }
 
         virtual future<> _analyze(analysis_context &) override;
@@ -99,7 +95,7 @@ inline namespace _v1
 
             assert(!_assignment_expr);
 
-            std::unique_ptr<member_access_expression> ret{ new member_access_expression{ _parse, nullptr } };
+            std::unique_ptr<member_access_expression> ret{ new member_access_expression{ get_ast_info().get(), nullptr } };
             ret->_base = replaced_base;
             ret->_set_type(get_type());
             ret->_name = _name;
@@ -118,7 +114,6 @@ inline namespace _v1
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
         virtual bool _invalidate_ir(ir_generation_context &) const override;
 
-        optional<synthesized_node<void>> _parse;
         std::u32string _name;
 
         expression * _referenced = nullptr;

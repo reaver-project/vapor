@@ -59,11 +59,6 @@ inline namespace _v1
             os << ' ' << styles::string_value << _value << '\n';
         }
 
-        auto parse() const
-        {
-            return synthesized_node<void *>{ nullptr, {} };
-        }
-
         virtual std::size_t hash_value() const override
         {
             std::size_t seed = 0;

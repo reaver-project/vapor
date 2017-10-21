@@ -36,13 +36,12 @@ inline namespace _v1
     public:
         boolean_constant(const parser::boolean_literal & parse) : expression{ builtin_types().boolean.get() }, _value{ parse.value.string == U"true" }
         {
-            _parse.address = &parse;
-            _parse.range = parse.range;
+            _set_ast_info({ &parse, parse.range });
         }
 
-        boolean_constant(bool value, synthesized_node<void> parse = {})
-            : expression{ builtin_types().boolean.get() }, _parse{ parse }, _value{ std::move(value) }
+        boolean_constant(bool value, ast_node parse = {}) : expression{ builtin_types().boolean.get() }, _value{ std::move(value) }
         {
+            _set_ast_info(parse);
         }
 
         virtual void print(std::ostream & os, print_context ctx) const override
@@ -50,11 +49,6 @@ inline namespace _v1
             os << styles::def << ctx << styles::rule_name << "boolean-constant";
             print_address_range(os, this);
             os << ' ' << styles::string_value << _value << '\n';
-        }
-
-        const auto & parse() const
-        {
-            return _parse;
         }
 
         auto get_value() const
@@ -75,7 +69,7 @@ inline namespace _v1
 
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
-            return std::make_unique<boolean_constant>(_value, _parse);
+            return std::make_unique<boolean_constant>(_value, get_ast_info().get());
         }
 
         virtual future<expression *> _simplify_expr(recursive_context) override
@@ -91,7 +85,6 @@ inline namespace _v1
             return rhs_bool && _value == rhs_bool->_value;
         }
 
-        synthesized_node<void> _parse;
         bool _value;
     };
 }

@@ -148,6 +148,18 @@ inline namespace _v1
             return {};
         }
 
+        optional<ast_node> get_ast_info() const
+        {
+            return _parse_info;
+        }
+
+    protected:
+        void _set_ast_info(ast_node info)
+        {
+            assert(!_parse_info);
+            _parse_info = info;
+        }
+
     private:
         virtual future<> _analyze(analysis_context &)
         {
@@ -172,6 +184,8 @@ inline namespace _v1
         std::atomic<bool> _is_future_assigned{ false };
         optional<future<>> _analysis_future;
         mutable optional<statement_ir> _ir;
+
+        optional<ast_node> _parse_info;
     };
 
     class null_statement : public statement

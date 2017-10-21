@@ -51,13 +51,8 @@ inline namespace _v1
             return _base_expr->analyze(ctx).then([&] { return _base_expr.get(); });
         }
 
-        const auto & parse() const
-        {
-            return _parse;
-        }
-
     private:
-        postfix_expression(const postfix_expression & other) : _parse{ other._parse }, _modifier{ other._modifier }, _accessed_member{ other._accessed_member }
+        postfix_expression(const postfix_expression & other) : _modifier{ other._modifier }, _accessed_member{ other._accessed_member }
         {
         }
 
@@ -112,7 +107,6 @@ inline namespace _v1
             return _base_expr->is_equal(rhs);
         }
 
-        const parser::postfix_expression & _parse;
         scope * _scope = nullptr;
         std::unique_ptr<expression> _base_expr;
         optional<lexer::token_type> _modifier;

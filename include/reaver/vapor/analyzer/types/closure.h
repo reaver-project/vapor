@@ -50,9 +50,9 @@ inline namespace _v1
 
         virtual future<std::vector<function *>> get_candidates(lexer::token_type bracket) const override;
 
-        const auto & parse() const
+        auto get_ast_info() const
         {
-            return _closure->parse();
+            return _closure->get_ast_info();
         }
 
     private:

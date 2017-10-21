@@ -28,21 +28,23 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     declaration::declaration(const parser::declaration & parse, scope * old_scope, scope * new_scope, declaration_type decl_type)
-        : _parse{ parse }, _name{ parse.identifier.value.string }, _type{ decl_type }
+        : _name{ parse.identifier.value.string }, _type{ decl_type }
     {
+        _set_ast_info(make_node(parse));
+
         switch (_type)
         {
             case declaration_type::variable:
-                assert(_parse.rhs);
+                assert(parse.rhs);
                 break;
 
             case declaration_type::member:
-                assert(_parse.type_expression || _parse.rhs);
+                assert(parse.type_expression || parse.rhs);
                 break;
         }
 
-        _type_specifier = fmap(_parse.type_expression, [&](auto && expr) { return preanalyze_expression(expr, old_scope); });
-        _init_expr = fmap(_parse.rhs, [&](auto && expr) { return preanalyze_expression(expr, old_scope); });
+        _type_specifier = fmap(parse.type_expression, [&](auto && expr) { return preanalyze_expression(expr, old_scope); });
+        _init_expr = fmap(parse.rhs, [&](auto && expr) { return preanalyze_expression(expr, old_scope); });
 
         auto symbol = make_symbol(_name);
         _declared_symbol = symbol.get();

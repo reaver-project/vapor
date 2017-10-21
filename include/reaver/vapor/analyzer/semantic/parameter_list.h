@@ -38,6 +38,7 @@ inline namespace _v1
         parameter(const parser::parameter & parse, scope * lex_scope)
             : _parse{ parse }, _name{ parse.name.value.string }, _type_expression{ preanalyze_expression(parse.type, lex_scope) }
         {
+            _set_ast_info(make_node(parse));
         }
 
         virtual void print(std::ostream & os, print_context ctx) const override
@@ -49,11 +50,6 @@ inline namespace _v1
             auto type_expr_ctx = ctx.make_branch(true);
             os << styles::def << type_expr_ctx << styles::subrule_name << "type expression:\n";
             _type_expression->print(os, type_expr_ctx.make_branch(true));
-        }
-
-        auto parse() const
-        {
-            return _parse;
         }
 
     private:
@@ -87,13 +83,13 @@ inline namespace _v1
 
     using parameter_list = std::vector<std::unique_ptr<parameter>>;
 
-    inline parameter_list preanalyze_parameter_list(const parser::parameter_list & arglist, scope * lex_scope)
+    inline parameter_list preanalyze_parameter_list(const parser::parameter_list & param_list, scope * lex_scope)
     {
-        return fmap(arglist.parameters, [&](auto && arg) {
-            auto param = std::make_unique<parameter>(arg, lex_scope);
+        return fmap(param_list.parameters, [&](auto && param_parse) {
+            auto param = std::make_unique<parameter>(param_parse, lex_scope);
 
-            auto symb = make_symbol(arg.name.value.string, param.get());
-            lex_scope->init(arg.name.value.string, std::move(symb));
+            auto symb = make_symbol(param_parse.name.value.string, param.get());
+            lex_scope->init(param_parse.name.value.string, std::move(symb));
 
             return param;
         });

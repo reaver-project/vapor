@@ -49,17 +49,12 @@ inline namespace _v1
         virtual void print(std::ostream & os, print_context ctx) const override
         {
             os << styles::def << ctx << styles::rule_name << "type-expression";
-            print_address_optional_range(os, this);
+            print_address_range(os, this);
             os << '\n';
 
             auto type_ctx = ctx.make_branch(true);
             os << styles::def << type_ctx << styles::subrule_name << "value:\n";
             _type->print(os, type_ctx.make_branch(true));
-        }
-
-        auto parse() const
-        {
-            return optional<synthesized_node<void>>{};
         }
 
         virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override

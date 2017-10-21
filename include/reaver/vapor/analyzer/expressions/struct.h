@@ -34,11 +34,6 @@ inline namespace _v1
 
         virtual void print(std::ostream &, print_context) const override;
 
-        const auto & parse() const
-        {
-            return _parse;
-        }
-
         virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override
         {
             return _type->get_expression()->declaration_codegen_ir(ctx);
@@ -64,8 +59,6 @@ inline namespace _v1
         {
             assert(0);
         }
-
-        const parser::struct_literal & _parse;
 
         std::shared_ptr<struct_type> _type;
     };

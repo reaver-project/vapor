@@ -33,20 +33,23 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    function_declaration::function_declaration(const parser::function & parse, scope * parent_scope) : _parse{ parse }, _scope{ parent_scope->clone_local() }
+    function_declaration::function_declaration(const parser::function & parse, scope * parent_scope)
+        : _name{ parse.name.value.string }, _scope{ parent_scope->clone_local() }
     {
+        _set_ast_info(make_node(parse));
+
         fmap(parse.parameters, [&](auto && param_list) {
             _parameter_list = preanalyze_parameter_list(param_list, _scope.get());
             return unit{};
         });
         _scope->close();
 
-        _return_type = fmap(_parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, _scope.get()); });
-        _body = preanalyze_block(*_parse.body, _scope.get(), true);
+        _return_type = fmap(parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, _scope.get()); });
+        _body = preanalyze_block(*parse.body, _scope.get(), true);
         std::shared_ptr<overload_set> keep_count;
-        auto symbol = parent_scope->get_or_init(_parse.name.value.string, [&] {
+        auto symbol = parent_scope->get_or_init(parse.name.value.string, [&] {
             keep_count = std::make_shared<overload_set>(_scope.get());
-            return make_symbol(_parse.name.value.string, keep_count.get());
+            return make_symbol(parse.name.value.string, keep_count.get());
         });
 
         _overload_set = symbol->get_expression()->as<overload_set>()->shared_from_this();
@@ -56,7 +59,7 @@ inline namespace _v1
     {
         os << styles::def << ctx << styles::rule_name << "function-declaration";
         print_address_range(os, this);
-        os << ' ' << styles::string_value << utf8(_parse.name.value.string) << '\n';
+        os << ' ' << styles::string_value << utf8(_name) << '\n';
 
         if (_parameter_list.size())
         {

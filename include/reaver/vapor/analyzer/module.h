@@ -61,9 +61,9 @@ inline namespace _v1
         void print(std::ostream & os, print_context ctx) const;
         codegen::ir::module codegen_ir() const;
 
-        const auto & parse() const
+        auto get_ast_info() const
         {
-            return _parse;
+            return make_optional(std::ref(_parse));
         }
 
     private:

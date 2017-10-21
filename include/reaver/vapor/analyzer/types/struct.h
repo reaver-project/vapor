@@ -81,9 +81,9 @@ inline namespace _v1
             return _aggregate_copy_ctor_future->then([](auto && ctor) { return std::vector<function *>{ ctor }; });
         }
 
-        const auto & parse() const
+        auto get_ast_info() const
         {
-            return _parse;
+            return make_optional(_parse);
         }
 
         virtual type * get_member_type(const std::u32string & name) const override
@@ -100,7 +100,7 @@ inline namespace _v1
     private:
         virtual void _codegen_type(ir_generation_context &) const override;
 
-        const parser::struct_literal & _parse;
+        ast_node _parse;
 
         std::vector<std::unique_ptr<declaration>> _data_members_declarations;
         std::vector<member_expression *> _data_members;

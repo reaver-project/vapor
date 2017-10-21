@@ -33,10 +33,11 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    postfix_expression::postfix_expression(const parser::postfix_expression & parse, scope * lex_scope)
-        : _parse{ parse }, _scope{ lex_scope }, _modifier{ parse.modifier_type }
+    postfix_expression::postfix_expression(const parser::postfix_expression & parse, scope * lex_scope) : _scope{ lex_scope }, _modifier{ parse.modifier_type }
     {
-        fmap(_parse.base_expression,
+        _set_ast_info(make_node(parse));
+
+        fmap(parse.base_expression,
             make_overload_set(
                 [&](const parser::expression_list & expr_list) {
                     _base_expr = preanalyze_expression_list(expr_list, lex_scope);
@@ -47,12 +48,12 @@ inline namespace _v1
                     return unit{};
                 }));
 
-        if (_parse.arguments.size())
+        if (parse.arguments.size())
         {
-            _arguments = fmap(_parse.arguments, [&](auto && expr) { return preanalyze_expression(expr, lex_scope); });
+            _arguments = fmap(parse.arguments, [&](auto && expr) { return preanalyze_expression(expr, lex_scope); });
         }
 
-        fmap(_parse.accessed_member, [&](auto && member) {
+        fmap(parse.accessed_member, [&](auto && member) {
             _accessed_member = member.value.string;
             return unit{};
         });

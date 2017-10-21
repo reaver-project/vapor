@@ -29,15 +29,19 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    closure::closure(const parser::lambda_expression & parse, scope * lex_scope) : _parse{ parse }, _scope{ lex_scope->clone_local() }
+    closure::closure(const parser::lambda_expression & parse, scope * lex_scope) : _scope{ lex_scope->clone_local() }
     {
+        _set_ast_info(make_node(parse));
+
+        assert(!parse.captures);
+
         fmap(parse.parameters, [&](auto && param_list) {
             _parameter_list = preanalyze_parameter_list(param_list, _scope.get());
             return unit{};
         });
         _scope->close();
 
-        _return_type = fmap(_parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, _scope.get()); });
+        _return_type = fmap(parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, _scope.get()); });
         _body = preanalyze_block(parse.body, _scope.get(), true);
     }
 
@@ -46,8 +50,6 @@ inline namespace _v1
         os << styles::def << ctx << styles::rule_name << "closure";
         print_address_range(os, this);
         os << '\n';
-
-        assert(!_parse.captures);
 
         auto type_ctx = ctx.make_branch(false);
         os << styles::def << type_ctx << styles::subrule_name << "type:\n";
