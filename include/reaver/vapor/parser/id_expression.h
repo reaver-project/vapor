@@ -41,10 +41,7 @@ inline namespace _v1
         std::vector<identifier> id_expression_value;
     };
 
-    inline bool operator==(const id_expression & lhs, const id_expression & rhs)
-    {
-        return lhs.range == rhs.range && lhs.id_expression_value == rhs.id_expression_value;
-    }
+    bool operator==(const id_expression & lhs, const id_expression & rhs);
 
     id_expression parse_id_expression(context & ctx);
 

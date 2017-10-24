@@ -27,6 +27,11 @@ namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
+    bool operator==(const expression & lhs, const expression & rhs)
+    {
+        return lhs.range == rhs.range && lhs.expression_value == rhs.expression_value;
+    }
+
     expression parse_expression(context & ctx, expression_special_modes mode)
     {
         expression ret;

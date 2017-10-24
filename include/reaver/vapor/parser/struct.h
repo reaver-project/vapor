@@ -37,10 +37,7 @@ inline namespace _v1
         std::vector<variant<declaration, function>> members;
     };
 
-    inline bool operator==(const struct_literal & lhs, const struct_literal & rhs)
-    {
-        return lhs.range == rhs.range && lhs.members == rhs.members;
-    }
+    bool operator==(const struct_literal & lhs, const struct_literal & rhs);
 
     struct_literal parse_struct_literal(context & ctx);
     declaration parse_struct_declaration(context & ctx);

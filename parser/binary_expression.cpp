@@ -27,6 +27,11 @@ namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
+    bool operator==(const binary_expression & lhs, const binary_expression & rhs)
+    {
+        return lhs.range == rhs.range && lhs.op == rhs.op && lhs.lhs == rhs.lhs && lhs.rhs == rhs.rhs;
+    }
+
     const std::vector<reaver::vapor::lexer::_v1::token_type> & binary_operators()
     {
         static std::vector<lexer::token_type> binary_ops = { lexer::token_type::plus,

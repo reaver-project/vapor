@@ -39,10 +39,7 @@ inline namespace _v1
         expression rhs;
     };
 
-    inline bool operator==(const binary_expression & lhs, const binary_expression & rhs)
-    {
-        return lhs.range == rhs.range && lhs.op == rhs.op && lhs.lhs == rhs.lhs && lhs.rhs == rhs.rhs;
-    }
+    bool operator==(const binary_expression & lhs, const binary_expression & rhs);
 
     const std::vector<lexer::token_type> & binary_operators();
 

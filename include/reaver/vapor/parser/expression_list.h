@@ -39,10 +39,7 @@ inline namespace _v1
         std::vector<expression> expressions;
     };
 
-    inline bool operator==(const expression_list & lhs, const expression_list & rhs)
-    {
-        return lhs.range == rhs.range && lhs.expressions == rhs.expressions;
-    }
+    bool operator==(const expression_list & lhs, const expression_list & rhs);
 
     expression_list parse_expression_list(context & ctx);
 
