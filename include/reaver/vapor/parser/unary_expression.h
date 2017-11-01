@@ -32,6 +32,15 @@ inline namespace _v1
 {
     struct unary_expression
     {
+        unary_expression() = default;
+
+        // without this, GCC 6.4 complains that unary_expression has a deleted copy constructor
+        // W. T. F.
+        unary_expression(const unary_expression & expr) = default;
+        unary_expression(unary_expression &&) = default;
+        unary_expression & operator=(const unary_expression &) = default;
+        unary_expression & operator=(unary_expression &&) = default;
+
         range_type range;
         lexer::token op;
         expression operand;
