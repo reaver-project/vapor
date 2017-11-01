@@ -22,7 +22,6 @@
 
 #pragma once
 
-#include "../../parser/unary_expression.h"
 #include "expression.h"
 
 namespace reaver::vapor::analyzer
@@ -32,11 +31,6 @@ inline namespace _v1
     class unary_expression : public expression
     {
     public:
-        unary_expression(const parser::unary_expression & parse, scope * lex_scope) : _parse{ parse }
-        {
-            assert(0);
-        }
-
         virtual void print(std::ostream &, print_context) const override
         {
             assert(0);
@@ -62,13 +56,25 @@ inline namespace _v1
         {
             assert(0);
         }
-
-        const parser::unary_expression & _parse;
     };
+}
+}
 
-    std::unique_ptr<unary_expression> preanalyze_unary_expression(const parser::unary_expression & parse, scope * lex_scope)
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct unary_expression;
+}
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    inline std::unique_ptr<unary_expression> preanalyze_unary_expression(const parser::unary_expression &, scope *)
     {
-        return std::make_unique<unary_expression>(parse, lex_scope);
+        assert(0);
     }
 }
 }
