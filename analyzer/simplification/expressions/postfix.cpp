@@ -47,11 +47,9 @@ inline namespace _v1
             return base;
         }
 
-        auto ret = std::unique_ptr<postfix_expression>(new postfix_expression(*this));
-
         assert(_arguments.empty());
+        auto ret = std::unique_ptr<postfix_expression>(new postfix_expression(get_ast_info().get(), std::move(base), _modifier, {}, _accessed_member));
 
-        ret->_base_expr = std::move(base);
         auto type = ret->_base_expr->get_type();
 
         ret->_referenced_expression = fmap(_referenced_expression, [&](auto && expr) {

@@ -22,7 +22,6 @@
 
 #pragma once
 
-#include "../../parser/parameter_list.h"
 #include "../expressions/expression.h"
 #include "../expressions/expression_ref.h"
 #include "../expressions/type.h"
@@ -35,11 +34,7 @@ inline namespace _v1
     class parameter : public expression
     {
     public:
-        parameter(const parser::parameter & parse, scope * lex_scope)
-            : _parse{ parse }, _name{ parse.name.value.string }, _type_expression{ preanalyze_expression(parse.type, lex_scope) }
-        {
-            _set_ast_info(make_node(parse));
-        }
+        parameter(ast_node parse, std::u32string name, std::unique_ptr<expression> type);
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
@@ -75,24 +70,26 @@ inline namespace _v1
                 none, none, { boost::typeindex::type_id<codegen::ir::materialization_instruction>() }, {}, { std::move(var) } } };
         }
 
-        const parser::parameter & _parse;
-
         std::u32string _name;
         std::unique_ptr<expression> _type_expression;
     };
 
     using parameter_list = std::vector<std::unique_ptr<parameter>>;
+}
+}
 
-    inline parameter_list preanalyze_parameter_list(const parser::parameter_list & param_list, scope * lex_scope)
-    {
-        return fmap(param_list.parameters, [&](auto && param_parse) {
-            auto param = std::make_unique<parameter>(param_parse, lex_scope);
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct parameter_list;
+}
+}
 
-            auto symb = make_symbol(param_parse.name.value.string, param.get());
-            lex_scope->init(param_parse.name.value.string, std::move(symb));
-
-            return param;
-        });
-    }
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    parameter_list preanalyze_parameter_list(const parser::parameter_list & param_list, scope * lex_scope);
 }
 }

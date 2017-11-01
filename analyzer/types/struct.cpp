@@ -35,27 +35,21 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    struct_type::~struct_type() = default;
-
-    struct_type::struct_type(const parser::struct_literal & parse, scope * lex_scope) : type{ lex_scope }, _parse{ make_node(parse) }
+    std::unique_ptr<struct_type> make_struct_type(const parser::struct_literal & parse, scope * lex_scope)
     {
-        auto ctor_pair = make_promise<function *>();
-        _aggregate_ctor_future = std::move(ctor_pair.future);
-        _aggregate_ctor_promise = std::move(ctor_pair.promise);
+        auto member_scope = lex_scope->clone_for_class();
 
-        auto copy_pair = make_promise<function *>();
-        _aggregate_copy_ctor_future = std::move(copy_pair.future);
-        _aggregate_copy_ctor_promise = std::move(copy_pair.promise);
+        std::vector<std::unique_ptr<declaration>> decls;
 
         fmap(parse.members, [&](auto && member) {
             fmap(member,
                 make_overload_set(
                     [&](const parser::declaration & decl) {
-                        auto scope = _member_scope.get();
+                        auto scope = member_scope.get();
                         auto decl_stmt = preanalyze_member_declaration(decl, scope);
-                        assert(scope == _member_scope.get());
+                        assert(scope == member_scope.get());
 
-                        _data_members_declarations.push_back(std::move(decl_stmt));
+                        decls.push_back(std::move(decl_stmt));
 
                         return unit{};
                     },
@@ -68,7 +62,23 @@ inline namespace _v1
             return unit{};
         });
 
-        _member_scope->close();
+        member_scope->close();
+
+        return std::make_unique<struct_type>(make_node(parse), std::move(member_scope), std::move(decls));
+    }
+
+    struct_type::~struct_type() = default;
+
+    struct_type::struct_type(ast_node parse, std::unique_ptr<scope> member_scope, std::vector<std::unique_ptr<declaration>> member_decls)
+        : type{ std::move(member_scope) }, _parse{ parse }, _data_members_declarations{ std::move(member_decls) }
+    {
+        auto ctor_pair = make_promise<function *>();
+        _aggregate_ctor_future = std::move(ctor_pair.future);
+        _aggregate_ctor_promise = std::move(ctor_pair.promise);
+
+        auto copy_pair = make_promise<function *>();
+        _aggregate_copy_ctor_future = std::move(copy_pair.future);
+        _aggregate_copy_ctor_promise = std::move(copy_pair.promise);
     }
 
     void struct_type::generate_constructors()

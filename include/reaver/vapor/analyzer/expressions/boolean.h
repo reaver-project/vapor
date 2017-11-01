@@ -34,11 +34,6 @@ inline namespace _v1
     class boolean_constant : public expression
     {
     public:
-        boolean_constant(const parser::boolean_literal & parse) : expression{ builtin_types().boolean.get() }, _value{ parse.value.string == U"true" }
-        {
-            _set_ast_info({ &parse, parse.range });
-        }
-
         boolean_constant(bool value, ast_node parse = {}) : expression{ builtin_types().boolean.get() }, _value{ std::move(value) }
         {
             _set_ast_info(parse);
@@ -87,5 +82,10 @@ inline namespace _v1
 
         bool _value;
     };
+
+    inline std::unique_ptr<boolean_constant> make_boolean_constant(const parser::boolean_literal & parse)
+    {
+        return std::make_unique<boolean_constant>(parse.value.string == U"true", make_node(parse));
+    }
 }
 }

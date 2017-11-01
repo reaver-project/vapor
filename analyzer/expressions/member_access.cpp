@@ -28,9 +28,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    member_access_expression::member_access_expression(const parser::member_expression & parse) : _name{ parse.member_name.value.string }
+    std::unique_ptr<member_access_expression> preanalyze_member_access_expression(const parser::member_expression & parse, scope *)
     {
-        _set_ast_info(make_node(parse));
+        return std::make_unique<member_access_expression>(make_node(parse), parse.member_name.value.string);
     }
 
     void member_access_expression::print(std::ostream & os, print_context ctx) const

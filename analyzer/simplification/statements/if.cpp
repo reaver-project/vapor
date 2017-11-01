@@ -32,12 +32,10 @@ inline namespace _v1
 {
     std::unique_ptr<statement> if_statement::_clone_with_replacement(replacements & repl) const
     {
-        auto ret = std::unique_ptr<if_statement>(new if_statement(*this));
-
-        ret->_condition = repl.claim(_condition.get());
-
-        ret->_then_block = repl.claim(_then_block.get());
-        ret->_else_block = fmap(_else_block, [&](auto && block) { return repl.claim(block.get()); });
+        auto ret = std::unique_ptr<if_statement>(
+            new if_statement(get_ast_info().get(), repl.claim(_condition.get()), repl.claim(_then_block.get()), fmap(_else_block, [&](auto && block) {
+                return repl.claim(block.get());
+            })));
 
         return ret;
     }

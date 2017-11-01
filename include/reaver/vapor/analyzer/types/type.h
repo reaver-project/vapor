@@ -65,6 +65,12 @@ inline namespace _v1
             _init_pack_type();
         }
 
+        type(std::unique_ptr<scope> member_scope) : _member_scope{ std::move(member_scope) }
+        {
+            _init_expr();
+            _init_pack_type();
+        }
+
         static constexpr struct dont_init_expr_t
         {
         } dont_init_expr{};

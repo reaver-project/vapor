@@ -43,7 +43,12 @@ inline namespace _v1
     class declaration : public statement
     {
     public:
-        declaration(const parser::declaration & parse, scope * old_scope, scope * new_scope, declaration_type decl_type);
+        declaration(ast_node parse,
+            std::u32string name,
+            optional<std::unique_ptr<expression>> init_expr,
+            optional<std::unique_ptr<expression>> type_specifier,
+            scope * scope,
+            declaration_type decl_type);
 
         const auto & name() const
         {
@@ -81,17 +86,21 @@ inline namespace _v1
         optional<std::unique_ptr<member_expression>> _declared_member;
         declaration_type _type;
     };
+}
+}
 
-    inline std::unique_ptr<declaration> preanalyze_declaration(const parser::declaration & parse, scope *& lex_scope)
-    {
-        auto old_scope = lex_scope;
-        lex_scope = old_scope->clone_for_decl();
-        return std::make_unique<declaration>(parse, old_scope, lex_scope, declaration_type::variable);
-    }
-
-    inline std::unique_ptr<declaration> preanalyze_member_declaration(const parser::declaration & parse, scope * lex_scope)
-    {
-        return std::make_unique<declaration>(parse, lex_scope, lex_scope, declaration_type::member);
-    }
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct declaration;
+}
+}
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    std::unique_ptr<declaration> preanalyze_declaration(const parser::declaration & parse, scope *& lex_scope);
+    std::unique_ptr<declaration> preanalyze_member_declaration(const parser::declaration & parse, scope * lex_scope);
 }
 }

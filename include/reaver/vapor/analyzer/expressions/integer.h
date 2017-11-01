@@ -87,7 +87,7 @@ inline namespace _v1
         boost::multiprecision::cpp_int _value;
     };
 
-    inline std::unique_ptr<expression> make_integer_constant(const parser::integer_literal & parse)
+    inline std::unique_ptr<integer_constant> make_integer_constant(const parser::integer_literal & parse)
     {
         return std::make_unique<integer_constant>(boost::multiprecision::cpp_int{ utf8(parse.value.string) }, make_node(parse));
     }

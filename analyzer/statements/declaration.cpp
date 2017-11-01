@@ -27,12 +27,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    declaration::declaration(const parser::declaration & parse, scope * old_scope, scope * new_scope, declaration_type decl_type)
-        : _name{ parse.identifier.value.string }, _type{ decl_type }
+    std::unique_ptr<declaration> _preanalyze_declaration(const parser::declaration & parse, scope * old_scope, scope * new_scope, declaration_type type)
     {
-        _set_ast_info(make_node(parse));
-
-        switch (_type)
+        switch (type)
         {
             case declaration_type::variable:
                 assert(parse.rhs);
@@ -43,19 +40,48 @@ inline namespace _v1
                 break;
         }
 
-        _type_specifier = fmap(parse.type_expression, [&](auto && expr) { return preanalyze_expression(expr, old_scope); });
-        _init_expr = fmap(parse.rhs, [&](auto && expr) { return preanalyze_expression(expr, old_scope); });
-
-        auto symbol = make_symbol(_name);
-        _declared_symbol = symbol.get();
-        if (!new_scope->init(_name, std::move(symbol)))
-        {
-            assert(0);
-        }
+        auto ret = std::make_unique<declaration>(make_node(parse),
+            parse.identifier.value.string,
+            fmap(parse.rhs, [&](auto && expr) { return preanalyze_expression(expr, old_scope); }),
+            fmap(parse.type_expression, [&](auto && expr) { return preanalyze_expression(expr, old_scope); }),
+            new_scope,
+            type);
 
         if (old_scope != new_scope)
         {
             new_scope->close();
+        }
+
+        return ret;
+    }
+
+    std::unique_ptr<declaration> preanalyze_declaration(const parser::declaration & parse, scope *& lex_scope)
+    {
+        auto old_scope = lex_scope;
+        lex_scope = old_scope->clone_for_decl();
+        return _preanalyze_declaration(parse, old_scope, lex_scope, declaration_type::variable);
+    }
+
+    std::unique_ptr<declaration> preanalyze_member_declaration(const parser::declaration & parse, scope * lex_scope)
+    {
+        return _preanalyze_declaration(parse, lex_scope, lex_scope, declaration_type::member);
+    }
+
+    declaration::declaration(ast_node parse,
+        std::u32string name,
+        optional<std::unique_ptr<expression>> init_expr,
+        optional<std::unique_ptr<expression>> type_specifier,
+        scope * scope,
+        declaration_type decl_type)
+        : _name{ std::move(name) }, _type_specifier{ std::move(type_specifier) }, _init_expr{ std::move(init_expr) }, _type{ decl_type }
+    {
+        _set_ast_info(parse);
+
+        auto symbol = make_symbol(_name);
+        _declared_symbol = symbol.get();
+        if (!scope->init(_name, std::move(symbol)))
+        {
+            assert(0);
         }
     }
 

@@ -24,7 +24,6 @@
 
 #include <memory>
 
-#include "../../parser/function.h"
 #include "../expressions/expression.h"
 #include "../function.h"
 #include "../semantic/parameter_list.h"
@@ -42,7 +41,12 @@ inline namespace _v1
     class function_declaration : public statement
     {
     public:
-        function_declaration(const parser::function & parse, scope * parent_scope);
+        function_declaration(ast_node parse,
+            std::u32string name,
+            parameter_list params,
+            optional<std::unique_ptr<expression>> return_type,
+            std::unique_ptr<block> body,
+            std::unique_ptr<scope> scope);
 
         function * get_function() const
         {
@@ -72,10 +76,20 @@ inline namespace _v1
         std::shared_ptr<overload_set> _overload_set;
         std::unique_ptr<expression> _self;
     };
+}
+}
 
-    inline std::unique_ptr<function_declaration> preanalyze_function(const parser::function & func, scope *& lex_scope)
-    {
-        return std::make_unique<function_declaration>(func, lex_scope);
-    }
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct function;
+}
+}
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    std::unique_ptr<function_declaration> preanalyze_function(const parser::function & func, scope *& lex_scope);
 }
 }

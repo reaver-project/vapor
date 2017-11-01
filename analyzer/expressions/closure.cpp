@@ -24,25 +24,41 @@
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/closure.h"
+#include "vapor/parser/expr.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    closure::closure(const parser::lambda_expression & parse, scope * lex_scope) : _scope{ lex_scope->clone_local() }
+    std::unique_ptr<closure> preanalyze_closure(const parser::lambda_expression & parse, scope * lex_scope)
     {
-        _set_ast_info(make_node(parse));
-
         assert(!parse.captures);
 
-        fmap(parse.parameters, [&](auto && param_list) {
-            _parameter_list = preanalyze_parameter_list(param_list, _scope.get());
-            return unit{};
-        });
-        _scope->close();
+        auto local_scope = lex_scope->clone_local();
+        parameter_list params;
 
-        _return_type = fmap(parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, _scope.get()); });
-        _body = preanalyze_block(parse.body, _scope.get(), true);
+        if (parse.parameters)
+        {
+            params = preanalyze_parameter_list(parse.parameters.get(), local_scope.get());
+        }
+        local_scope->close();
+        auto scope = local_scope.get();
+
+        return std::make_unique<closure>(make_node(parse),
+            std::move(local_scope),
+            std::move(params),
+            preanalyze_block(parse.body, scope, true),
+            fmap(parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, scope); }));
+    }
+
+    closure::closure(ast_node parse,
+        std::unique_ptr<scope> sc,
+        parameter_list params,
+        std::unique_ptr<block> body,
+        optional<std::unique_ptr<expression>> return_type)
+        : _parameter_list{ std::move(params) }, _return_type{ std::move(return_type) }, _scope{ std::move(sc) }, _body{ std::move(body) }
+    {
+        _set_ast_info(parse);
     }
 
     void closure::print(std::ostream & os, print_context ctx) const

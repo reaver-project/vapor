@@ -22,7 +22,6 @@
 
 #pragma once
 
-#include "../../parser/return_expression.h"
 #include "../expressions/expression.h"
 #include "../helpers.h"
 #include "../statements/statement.h"
@@ -34,11 +33,7 @@ inline namespace _v1
     class return_statement : public statement
     {
     public:
-        return_statement(const parser::return_expression & parse, scope * lex_scope)
-        {
-            _set_ast_info(make_node(parse));
-            _value_expr = preanalyze_expression(parse.return_value, lex_scope);
-        }
+        return_statement(ast_node parse, std::unique_ptr<expression> value);
 
         virtual std::vector<const return_statement *> get_returns() const override
         {
@@ -91,10 +86,21 @@ inline namespace _v1
 
         std::unique_ptr<expression> _value_expr;
     };
+}
+}
 
-    inline std::unique_ptr<return_statement> preanalyze_return(const parser::return_expression & parse, scope * lex_scope)
-    {
-        return std::make_unique<return_statement>(parse, lex_scope);
-    }
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct return_expression;
+}
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    std::unique_ptr<return_statement> preanalyze_return(const parser::return_expression & parse, scope * lex_scope);
 }
 }

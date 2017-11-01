@@ -33,23 +33,43 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    function_declaration::function_declaration(const parser::function & parse, scope * parent_scope)
-        : _name{ parse.name.value.string }, _scope{ parent_scope->clone_local() }
+    std::unique_ptr<function_declaration> preanalyze_function(const parser::function & parse, scope *& lex_scope)
     {
-        _set_ast_info(make_node(parse));
+        auto function_scope = lex_scope->clone_local();
 
-        fmap(parse.parameters, [&](auto && param_list) {
-            _parameter_list = preanalyze_parameter_list(param_list, _scope.get());
-            return unit{};
-        });
-        _scope->close();
+        parameter_list params;
+        if (parse.parameters)
+        {
+            params = preanalyze_parameter_list(parse.parameters.get(), function_scope.get());
+        }
+        function_scope->close();
 
-        _return_type = fmap(parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, _scope.get()); });
-        _body = preanalyze_block(*parse.body, _scope.get(), true);
+        return std::make_unique<function_declaration>(make_node(parse),
+            parse.name.value.string,
+            std::move(params),
+            fmap(parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, function_scope.get()); }),
+            preanalyze_block(*parse.body, function_scope.get(), true),
+            std::move(function_scope));
+    }
+
+    function_declaration::function_declaration(ast_node parse,
+        std::u32string name,
+        parameter_list params,
+        optional<std::unique_ptr<expression>> return_type,
+        std::unique_ptr<block> body,
+        std::unique_ptr<scope> scope)
+        : _name{ std::move(name) },
+          _parameter_list{ std::move(params) },
+          _return_type{ std::move(return_type) },
+          _body{ std::move(body) },
+          _scope{ std::move(scope) }
+    {
+        _set_ast_info(parse);
+
         std::shared_ptr<overload_set> keep_count;
-        auto symbol = parent_scope->get_or_init(parse.name.value.string, [&] {
+        auto symbol = _scope->parent()->get_or_init(_name, [&] {
             keep_count = std::make_shared<overload_set>(_scope.get());
-            return make_symbol(parse.name.value.string, keep_count.get());
+            return make_symbol(_name, keep_count.get());
         });
 
         _overload_set = symbol->get_expression()->as<overload_set>()->shared_from_this();

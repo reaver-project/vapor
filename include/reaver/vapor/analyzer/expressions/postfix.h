@@ -24,14 +24,6 @@
 
 #include "expression.h"
 
-namespace reaver::vapor::parser
-{
-inline namespace _v1
-{
-    struct postfix_expression;
-}
-}
-
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -42,7 +34,11 @@ inline namespace _v1
     class postfix_expression : public expression
     {
     public:
-        postfix_expression(const parser::postfix_expression & parse, scope * lex_scope);
+        postfix_expression(ast_node parse,
+            std::unique_ptr<expression> base,
+            optional<lexer::token_type> mod,
+            std::vector<std::unique_ptr<expression>> arguments,
+            optional<std::u32string> accessed_member);
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
@@ -52,10 +48,6 @@ inline namespace _v1
         }
 
     private:
-        postfix_expression(const postfix_expression & other) : _modifier{ other._modifier }, _accessed_member{ other._accessed_member }
-        {
-        }
-
         static auto _get_replacement_helper()
         {
             return [](auto && self) {
@@ -107,7 +99,6 @@ inline namespace _v1
             return _base_expr->is_equal(rhs);
         }
 
-        scope * _scope = nullptr;
         std::unique_ptr<expression> _base_expr;
         optional<lexer::token_type> _modifier;
         std::vector<std::unique_ptr<expression>> _arguments;
@@ -116,10 +107,21 @@ inline namespace _v1
         optional<std::u32string> _accessed_member;
         optional<expression *> _referenced_expression;
     };
+}
+}
 
-    inline std::unique_ptr<postfix_expression> preanalyze_postfix_expression(const parser::postfix_expression & parse, scope * lex_scope)
-    {
-        return std::make_unique<postfix_expression>(parse, lex_scope);
-    }
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct postfix_expression;
+}
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    std::unique_ptr<postfix_expression> preanalyze_postfix_expression(const parser::postfix_expression & parse, scope * lex_scope);
 }
 }

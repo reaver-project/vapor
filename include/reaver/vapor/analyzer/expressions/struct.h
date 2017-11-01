@@ -30,7 +30,7 @@ inline namespace _v1
     class struct_literal : public expression
     {
     public:
-        struct_literal(const parser::struct_literal & parse, scope * lex_scope);
+        struct_literal(ast_node parse, std::unique_ptr<struct_type> type);
 
         virtual void print(std::ostream &, print_context) const override;
 
@@ -62,10 +62,21 @@ inline namespace _v1
 
         std::shared_ptr<struct_type> _type;
     };
+}
+}
 
-    inline auto preanalyze_struct_literal(const parser::struct_literal & parse, scope * lex_scope)
-    {
-        return std::make_unique<struct_literal>(parse, lex_scope);
-    }
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct struct_literal;
+}
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    std::unique_ptr<struct_literal> preanalyze_struct_literal(const parser::struct_literal & parse, scope * lex_scope);
 }
 }
