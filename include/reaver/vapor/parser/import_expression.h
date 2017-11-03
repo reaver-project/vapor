@@ -39,10 +39,7 @@ inline namespace _v1
         variant<id_expression, string_literal> module_name = id_expression();
     };
 
-    inline bool operator==(const import_expression & lhs, const import_expression & rhs)
-    {
-        return lhs.range == rhs.range && lhs.module_name == rhs.module_name;
-    }
+    bool operator==(const import_expression & lhs, const import_expression & rhs);
 
     import_expression parse_import_expression(context & ctx);
 

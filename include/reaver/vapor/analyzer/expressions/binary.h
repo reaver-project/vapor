@@ -22,7 +22,6 @@
 
 #pragma once
 
-#include "../../parser/binary_expression.h"
 #include "expression.h"
 
 namespace reaver::vapor::analyzer
@@ -34,14 +33,7 @@ inline namespace _v1
     class binary_expression : public expression
     {
     public:
-        binary_expression(const parser::binary_expression & parse, scope * lex_scope)
-            : _parse{ parse },
-              _scope{ lex_scope },
-              _op{ _parse.op },
-              _lhs{ preanalyze_expression(_parse.lhs, lex_scope) },
-              _rhs{ preanalyze_expression(_parse.rhs, lex_scope) }
-        {
-        }
+        binary_expression(ast_node parse, lexer::token op, std::unique_ptr<expression> lhs, std::unique_ptr<expression> rhs);
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
@@ -60,16 +52,7 @@ inline namespace _v1
             return _op.type;
         }
 
-        const auto & parse() const
-        {
-            return _parse;
-        }
-
     private:
-        binary_expression(const binary_expression & other) : _parse{ other._parse }, _op{ other._op }
-        {
-        }
-
         virtual expression * _get_replacement() override
         {
             return _call_expression->_get_replacement();
@@ -85,17 +68,26 @@ inline namespace _v1
         virtual future<expression *> _simplify_expr(recursive_context) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-        const parser::binary_expression & _parse;
-        scope * _scope = nullptr;
         lexer::token _op;
         std::unique_ptr<expression> _lhs;
         std::unique_ptr<expression> _rhs;
         std::unique_ptr<expression> _call_expression;
     };
+}
+}
 
-    inline std::unique_ptr<binary_expression> preanalyze_binary_expression(const parser::binary_expression & parse, scope * lex_scope)
-    {
-        return std::make_unique<binary_expression>(parse, lex_scope);
-    }
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct binary_expression;
+}
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    std::unique_ptr<binary_expression> preanalyze_binary_expression(const parser::binary_expression & parse, scope * lex_scope);
 }
 }

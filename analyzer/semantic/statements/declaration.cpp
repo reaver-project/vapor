@@ -59,7 +59,7 @@ inline namespace _v1
 
                 if (_type == declaration_type::member)
                 {
-                    _declared_member = make_member_expression(nullptr, _parse.identifier.value.string, _init_expr.get()->get_type());
+                    _declared_member = make_member_expression(nullptr, _name, _init_expr.get()->get_type());
                     _declared_member.get()->set_default_value(_init_expr.get().get());
                     expression = _declared_member.get().get();
                 }
@@ -75,7 +75,7 @@ inline namespace _v1
             fut = fut.then([&]() {
                 assert(_type_specifier);
                 auto type = _type_specifier.get()->as<type_expression>()->get_value();
-                _declared_member = make_member_expression(nullptr, _parse.identifier.value.string, type);
+                _declared_member = make_member_expression(nullptr, _name, type);
 
                 _declared_symbol->set_expression(_declared_member.get().get());
             });

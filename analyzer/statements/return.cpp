@@ -24,11 +24,22 @@
 #include "vapor/analyzer/symbol.h"
 #include "vapor/parser/expression_list.h"
 #include "vapor/parser/lambda_expression.h"
+#include "vapor/parser/return_expression.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    std::unique_ptr<return_statement> preanalyze_return(const parser::return_expression & parse, scope * lex_scope)
+    {
+        return std::make_unique<return_statement>(make_node(parse), preanalyze_expression(parse.return_value, lex_scope));
+    }
+
+    return_statement::return_statement(ast_node parse, std::unique_ptr<expression> value) : _value_expr{ std::move(value) }
+    {
+        _set_ast_info(parse);
+    }
+
     void return_statement::print(std::ostream & os, print_context ctx) const
     {
         os << styles::def << ctx << styles::rule_name << "return-statement";

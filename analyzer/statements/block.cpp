@@ -35,30 +35,49 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    block::block(const parser::block & parse, scope * lex_scope, bool is_top_level)
-        : _parse{ parse }, _scope{ lex_scope->clone_local() }, _original_scope{ _scope.get() }, _is_top_level{ is_top_level }
+    std::unique_ptr<block> preanalyze_block(const parser::block & parse, scope * lex_scope, bool is_top_level)
     {
-        _statements = fmap(_parse.block_value, [&](auto && row) {
+        auto scope = lex_scope->clone_local();
+
+        auto statements = fmap(parse.block_value, [&](auto && row) {
             return get<0>(fmap(row,
-                make_overload_set([&](const parser::block & block) -> std::unique_ptr<statement> { return preanalyze_block(block, _scope.get(), false); },
+                make_overload_set([&](const parser::block & block) -> std::unique_ptr<statement> { return preanalyze_block(block, scope.get(), false); },
                     [&](const parser::statement & statement) {
-                        auto scope_ptr = _scope.get();
+                        auto scope_ptr = scope.get();
                         auto ret = preanalyze_statement(statement, scope_ptr);
-                        if (scope_ptr != _scope.get())
+                        if (scope_ptr != scope.get())
                         {
-                            _scope.release()->keep_alive();
-                            _scope.reset(scope_ptr);
+                            scope.release()->keep_alive();
+                            scope.reset(scope_ptr);
                         }
                         return ret;
                     })));
         });
 
-        _scope->close();
+        scope->close();
 
-        _value_expr = fmap(_parse.value_expression, [&](auto && val_expr) {
-            auto expr = preanalyze_expression_list(val_expr, _scope.get());
-            return expr;
-        });
+        auto scope_ptr = scope.get();
+        return std::make_unique<block>(make_node(parse),
+            std::move(scope),
+            lex_scope,
+            std::move(statements),
+            fmap(parse.value_expression, [&](auto && val_expr) { return preanalyze_expression_list(val_expr, scope_ptr); }),
+            is_top_level);
+    }
+
+    block::block(ast_node parse,
+        std::unique_ptr<scope> lex_scope,
+        scope * original_scope,
+        std::vector<std::unique_ptr<statement>> statements,
+        optional<std::unique_ptr<expression>> value_expr,
+        bool is_top_level)
+        : _scope{ std::move(lex_scope) },
+          _original_scope{ original_scope },
+          _statements{ std::move(statements) },
+          _value_expr{ std::move(value_expr) },
+          _is_top_level{ is_top_level }
+    {
+        _set_ast_info(parse);
     }
 
     type * block::return_type() const

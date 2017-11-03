@@ -63,10 +63,7 @@ inline namespace _v1
             expression_value = postfix_expression();
     };
 
-    inline bool operator==(const expression & lhs, const expression & rhs)
-    {
-        return lhs.range == rhs.range && lhs.expression_value == rhs.expression_value;
-    }
+    bool operator==(const expression & lhs, const expression & rhs);
 
     expression parse_expression(context & ctx, expression_special_modes = expression_special_modes::none);
 

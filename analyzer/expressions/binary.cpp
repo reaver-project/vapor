@@ -32,6 +32,18 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    std::unique_ptr<binary_expression> preanalyze_binary_expression(const parser::binary_expression & parse, scope * lex_scope)
+    {
+        return std::make_unique<binary_expression>(
+            make_node(parse), parse.op, preanalyze_expression(parse.lhs, lex_scope), preanalyze_expression(parse.rhs, lex_scope));
+    }
+
+    binary_expression::binary_expression(ast_node parse, lexer::token op, std::unique_ptr<expression> lhs, std::unique_ptr<expression> rhs)
+        : _op{ op }, _lhs{ std::move(lhs) }, _rhs{ std::move(rhs) }
+    {
+        _set_ast_info(parse);
+    }
+
     void binary_expression::print(std::ostream & os, print_context ctx) const
     {
         os << styles::def << ctx << styles::rule_name << "binary-expression";

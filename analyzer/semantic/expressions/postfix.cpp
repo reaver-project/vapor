@@ -64,11 +64,11 @@ inline namespace _v1
                         });
                 }
 
-                return resolve_overload(ctx, _parse.range, _base_expr.get(), *_modifier, fmap(_arguments, [](auto && arg) { return arg.get(); }))
+                return resolve_overload(ctx, get_ast_info()->range, _base_expr.get(), *_modifier, fmap(_arguments, [](auto && arg) { return arg.get(); }))
                     .then([&](std::unique_ptr<expression> call_expr) {
                         if (auto call_expr_downcasted = call_expr->as<call_expression>())
                         {
-                            call_expr_downcasted->set_parse_range(_parse.range);
+                            call_expr_downcasted->set_ast_info(get_ast_info().get());
                         }
                         _call_expression = std::move(call_expr);
                         return _call_expression->analyze(ctx);

@@ -43,11 +43,11 @@ inline namespace _v1
         _rhs->set_context(expr_ctx);
 
         return when_all(_lhs->analyze(ctx), _rhs->analyze(ctx))
-            .then([&](auto) { return resolve_overload(ctx, _parse.range, _lhs.get(), _rhs.get(), _op.type); })
+            .then([&](auto) { return resolve_overload(ctx, this->get_ast_info().get().range, _lhs.get(), _rhs.get(), _op.type); })
             .then([&](std::unique_ptr<expression> call_expr) {
                 if (auto call_expr_downcasted = call_expr->as<call_expression>())
                 {
-                    call_expr_downcasted->set_parse_range(_parse.range);
+                    call_expr_downcasted->set_ast_info(get_ast_info().get());
                 }
                 _call_expression = std::move(call_expr);
                 return _call_expression->analyze(ctx);

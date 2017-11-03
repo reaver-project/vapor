@@ -49,7 +49,12 @@ inline namespace _v1
     class block : public statement
     {
     public:
-        block(const parser::block & parse, scope * lex_scope, bool is_top_level);
+        block(ast_node parse,
+            std::unique_ptr<scope> lex_scope,
+            scope * original_scope,
+            std::vector<std::unique_ptr<statement>> statements,
+            optional<std::unique_ptr<expression>> value_expr,
+            bool is_top_level);
 
         type * value_type() const
         {
@@ -86,15 +91,10 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context) const override;
 
-        const auto & parse() const
-        {
-            return _parse;
-        }
-
         codegen::ir::value codegen_return(ir_generation_context &) const;
 
     private:
-        block(const block & other) : _parse{ other._parse }, _original_scope{ other._original_scope }, _is_top_level{ other._is_top_level }
+        block(const block & other) : _original_scope{ other._original_scope }, _is_top_level{ other._is_top_level }
         {
         }
 
@@ -103,7 +103,6 @@ inline namespace _v1
         virtual future<statement *> _simplify(recursive_context) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-        const parser::block & _parse;
         std::unique_ptr<scope> _scope;
         const scope * const _original_scope;
         std::vector<std::unique_ptr<statement>> _statements;
@@ -117,9 +116,6 @@ inline namespace _v1
         mutable optional<std::unique_ptr<block>> _clone;
     };
 
-    inline std::unique_ptr<block> preanalyze_block(const parser::block & parse, scope * lex_scope, bool is_top_level)
-    {
-        return std::make_unique<block>(parse, std::move(lex_scope), is_top_level);
-    }
+    std::unique_ptr<block> preanalyze_block(const parser::block & parse, scope * lex_scope, bool is_top_level);
 }
 }

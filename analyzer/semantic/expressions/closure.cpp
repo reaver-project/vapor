@@ -73,7 +73,7 @@ inline namespace _v1
                         ret.is_member = true;
                         return ret;
                     },
-                    _parse.range);
+                    get_ast_info().get().range);
 
                 function->set_name(U"operator()");
                 function->set_body(_body.get());

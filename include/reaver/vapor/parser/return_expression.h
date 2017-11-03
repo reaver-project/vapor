@@ -35,10 +35,7 @@ inline namespace _v1
         expression return_value;
     };
 
-    inline bool operator==(const return_expression & lhs, const return_expression & rhs)
-    {
-        return lhs.range == rhs.range && lhs.return_value == rhs.return_value;
-    }
+    bool operator==(const return_expression & lhs, const return_expression & rhs);
 
     return_expression parse_return_expression(context & ctx);
 

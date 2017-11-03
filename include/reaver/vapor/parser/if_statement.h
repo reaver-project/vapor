@@ -38,10 +38,7 @@ inline namespace _v1
         optional<recursive_wrapper<block>> else_block;
     };
 
-    inline bool operator==(const if_statement & lhs, const if_statement & rhs)
-    {
-        return lhs.range == rhs.range && lhs.condition == rhs.condition && *lhs.then_block == rhs.then_block && lhs.else_block == rhs.else_block;
-    }
+    bool operator==(const if_statement & lhs, const if_statement & rhs);
 
     if_statement parse_if_statement(context & ctx);
 

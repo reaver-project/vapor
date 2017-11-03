@@ -27,14 +27,6 @@
 #include "../statements/statement.h"
 #include "type.h"
 
-namespace reaver::vapor::parser
-{
-inline namespace _v1
-{
-    struct struct_literal;
-}
-}
-
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -44,7 +36,8 @@ inline namespace _v1
     class struct_type : public type, public std::enable_shared_from_this<struct_type>
     {
     public:
-        struct_type(const parser::struct_literal & parse, scope * lex_scope);
+        struct_type(ast_node parse, std::unique_ptr<scope> member_scope, std::vector<std::unique_ptr<declaration>> member_decls);
+
         ~struct_type();
 
         void generate_constructors();
@@ -81,9 +74,9 @@ inline namespace _v1
             return _aggregate_copy_ctor_future->then([](auto && ctor) { return std::vector<function *>{ ctor }; });
         }
 
-        const auto & parse() const
+        auto get_ast_info() const
         {
-            return _parse;
+            return make_optional(_parse);
         }
 
         virtual type * get_member_type(const std::u32string & name) const override
@@ -100,7 +93,7 @@ inline namespace _v1
     private:
         virtual void _codegen_type(ir_generation_context &) const override;
 
-        const parser::struct_literal & _parse;
+        ast_node _parse;
 
         std::vector<std::unique_ptr<declaration>> _data_members_declarations;
         std::vector<member_expression *> _data_members;
@@ -127,10 +120,21 @@ inline namespace _v1
             return *_codegen_type_name_value;
         }
     };
+}
+}
 
-    inline auto make_struct_type(const parser::struct_literal & parse, scope * lex_scope)
-    {
-        return std::make_unique<struct_type>(parse, lex_scope);
-    }
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct struct_literal;
+}
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    std::unique_ptr<struct_type> make_struct_type(const parser::struct_literal & parse, scope * lex_scope);
 }
 }

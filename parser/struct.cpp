@@ -27,6 +27,11 @@ namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
+    bool operator==(const struct_literal & lhs, const struct_literal & rhs)
+    {
+        return lhs.range == rhs.range && lhs.members == rhs.members;
+    }
+
     namespace
     {
         struct named_struct

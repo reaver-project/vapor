@@ -38,12 +38,11 @@ inline namespace _v1
     class closure : public expression
     {
     public:
-        closure(const parser::lambda_expression & parse, scope * lex_scope);
-
-        const auto & parse() const
-        {
-            return _parse;
-        }
+        closure(ast_node parse,
+            std::unique_ptr<scope> sc,
+            parameter_list params,
+            std::unique_ptr<block> body,
+            optional<std::unique_ptr<expression>> return_type);
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
@@ -55,7 +54,6 @@ inline namespace _v1
         virtual future<expression *> _simplify_expr(recursive_context) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-        const parser::lambda_expression & _parse;
         parameter_list _parameter_list;
 
         optional<std::unique_ptr<expression>> _return_type;
@@ -63,10 +61,21 @@ inline namespace _v1
         std::unique_ptr<block> _body;
         std::unique_ptr<type> _type;
     };
+}
+}
 
-    inline std::unique_ptr<closure> preanalyze_closure(const parser::lambda_expression & parse, scope * lex_scope)
-    {
-        return std::make_unique<closure>(parse, lex_scope);
-    }
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct lambda_expression;
+}
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    std::unique_ptr<closure> preanalyze_closure(const parser::lambda_expression & parse, scope * lex_scope);
 }
 }

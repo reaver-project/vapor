@@ -23,14 +23,20 @@
 #include "vapor/analyzer/expressions/struct.h"
 #include "vapor/analyzer/statements/declaration.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/parser/struct.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    struct_literal::struct_literal(const parser::struct_literal & parse, scope * lex_scope)
-        : expression{ builtin_types().type.get() }, _parse{ parse }, _type{ make_struct_type(parse, lex_scope) }
+    std::unique_ptr<struct_literal> preanalyze_struct_literal(const parser::struct_literal & parse, scope * lex_scope)
     {
+        return std::make_unique<struct_literal>(make_node(parse), make_struct_type(parse, lex_scope));
+    }
+
+    struct_literal::struct_literal(ast_node parse, std::unique_ptr<struct_type> type) : expression{ builtin_types().type.get() }, _type{ std::move(type) }
+    {
+        _set_ast_info(parse);
     }
 
     void struct_literal::print(std::ostream & os, print_context ctx) const

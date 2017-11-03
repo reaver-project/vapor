@@ -31,7 +31,7 @@ inline namespace _v1
     {
         os << styles::def << ctx << styles::rule_name << "identifier";
         print_address_range(os, this);
-        os << ' ' << styles::string_value << utf8(_parse.value.string) << '\n';
+        os << ' ' << styles::string_value << utf8(_name) << '\n';
 
         auto expr_ctx = ctx.make_branch(false);
         os << styles::def << expr_ctx << styles::subrule_name << "referenced expression";

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,18 +20,27 @@
  *
  **/
 
-#include "vapor/analyzer/expressions/identifier.h"
-#include "vapor/parser.h"
+#include "vapor/parser/parameter_list.h"
+#include "vapor/analyzer/semantic/parameter_list.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    future<> identifier::_analyze(analysis_context & ctx)
+    parameter::parameter(ast_node parse, std::u32string name, std::unique_ptr<expression> type) : _name{ std::move(name) }, _type_expression{ std::move(type) }
     {
-        return _lex_scope->resolve(_name).then([](auto && symbol) { return symbol->get_expression_future(); }).then([this](auto && expression) {
-            _referenced = expression;
-            this->_set_type(_referenced->get_type());
+        _set_ast_info(parse);
+    }
+
+    parameter_list preanalyze_parameter_list(const parser::parameter_list & param_list, scope * lex_scope)
+    {
+        return fmap(param_list.parameters, [&](auto && param_parse) {
+            auto param = std::make_unique<parameter>(make_node(param_parse), param_parse.name.value.string, preanalyze_expression(param_parse.type, lex_scope));
+
+            auto symb = make_symbol(param_parse.name.value.string, param.get());
+            lex_scope->init(param_parse.name.value.string, std::move(symb));
+
+            return param;
         });
     }
 }

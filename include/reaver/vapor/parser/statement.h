@@ -45,10 +45,7 @@ inline namespace _v1
         variant<declaration, return_expression, expression_list, function, if_statement> statement_value = expression_list();
     };
 
-    inline bool operator==(const statement & lhs, const statement & rhs)
-    {
-        return lhs.range == rhs.range && lhs.statement_value == rhs.statement_value;
-    }
+    bool operator==(const statement & lhs, const statement & rhs);
 
     statement parse_statement(context & ctx);
 

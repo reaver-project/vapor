@@ -26,7 +26,6 @@
 
 #include <reaver/prelude/monad.h>
 
-#include "../../parser/expr.h"
 #include "../helpers.h"
 #include "../statements/statement.h"
 #include "../types/type.h"
@@ -270,7 +269,20 @@ inline namespace _v1
     {
         return expr.hash_value();
     }
+}
+}
 
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct expression;
+}
+}
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
     std::unique_ptr<expression> preanalyze_expression(const parser::expression & expr, scope * lex_scope);
 }
 }

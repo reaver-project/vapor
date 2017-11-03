@@ -22,7 +22,6 @@
 
 #pragma once
 
-#include "../../parser/parameter_list.h"
 #include "../expressions/expression.h"
 #include "../expressions/expression_ref.h"
 #include "../expressions/type.h"
@@ -35,10 +34,7 @@ inline namespace _v1
     class parameter : public expression
     {
     public:
-        parameter(const parser::parameter & parse, scope * lex_scope)
-            : _parse{ parse }, _name{ parse.name.value.string }, _type_expression{ preanalyze_expression(parse.type, lex_scope) }
-        {
-        }
+        parameter(ast_node parse, std::u32string name, std::unique_ptr<expression> type);
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
@@ -49,11 +45,6 @@ inline namespace _v1
             auto type_expr_ctx = ctx.make_branch(true);
             os << styles::def << type_expr_ctx << styles::subrule_name << "type expression:\n";
             _type_expression->print(os, type_expr_ctx.make_branch(true));
-        }
-
-        auto parse() const
-        {
-            return _parse;
         }
 
     private:
@@ -79,24 +70,26 @@ inline namespace _v1
                 none, none, { boost::typeindex::type_id<codegen::ir::materialization_instruction>() }, {}, { std::move(var) } } };
         }
 
-        const parser::parameter & _parse;
-
         std::u32string _name;
         std::unique_ptr<expression> _type_expression;
     };
 
     using parameter_list = std::vector<std::unique_ptr<parameter>>;
+}
+}
 
-    inline parameter_list preanalyze_parameter_list(const parser::parameter_list & arglist, scope * lex_scope)
-    {
-        return fmap(arglist.parameters, [&](auto && arg) {
-            auto param = std::make_unique<parameter>(arg, lex_scope);
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct parameter_list;
+}
+}
 
-            auto symb = make_symbol(arg.name.value.string, param.get());
-            lex_scope->init(arg.name.value.string, std::move(symb));
-
-            return param;
-        });
-    }
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    parameter_list preanalyze_parameter_list(const parser::parameter_list & param_list, scope * lex_scope);
 }
 }

@@ -43,11 +43,7 @@ inline namespace _v1
         optional<identifier> accessed_member = none;
     };
 
-    inline bool operator==(const postfix_expression & lhs, const postfix_expression & rhs)
-    {
-        return lhs.range == rhs.range && lhs.base_expression == rhs.base_expression && lhs.modifier_type == rhs.modifier_type && lhs.arguments == rhs.arguments
-            && lhs.accessed_member == rhs.accessed_member;
-    }
+    bool operator==(const postfix_expression & lhs, const postfix_expression & rhs);
 
     postfix_expression parse_postfix_expression(context & ctx, expression_special_modes = expression_special_modes::none);
 

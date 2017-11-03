@@ -36,15 +36,9 @@ inline namespace _v1
     class integer_constant : public expression
     {
     public:
-        integer_constant(const parser::integer_literal & parse) : expression{ builtin_types().integer.get() }, _value{ utf8(parse.value.string) }
+        integer_constant(boost::multiprecision::cpp_int value, ast_node parse = {}) : expression{ builtin_types().integer.get() }, _value{ std::move(value) }
         {
-            _parse.address = &parse;
-            _parse.range = parse.range;
-        }
-
-        integer_constant(boost::multiprecision::cpp_int value, synthesized_node<void> parse = {})
-            : expression{ builtin_types().integer.get() }, _parse{ parse }, _value{ std::move(value) }
-        {
+            _set_ast_info(parse);
         }
 
         virtual void print(std::ostream & os, print_context ctx) const override
@@ -52,11 +46,6 @@ inline namespace _v1
             os << styles::def << ctx << styles::rule_name << "integer-constant";
             print_address_range(os, this);
             os << ' ' << styles::string_value << _value << '\n';
-        }
-
-        const auto & parse() const
-        {
-            return _parse;
         }
 
         const auto & get_value() const
@@ -79,7 +68,7 @@ inline namespace _v1
 
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
-            return std::make_unique<integer_constant>(_value, _parse);
+            return std::make_unique<integer_constant>(_value, get_ast_info().get());
         }
 
         virtual future<expression *> _simplify_expr(recursive_context) override
@@ -95,8 +84,12 @@ inline namespace _v1
             return rhs_int && _value == rhs_int->_value;
         }
 
-        synthesized_node<void> _parse;
         boost::multiprecision::cpp_int _value;
     };
+
+    inline std::unique_ptr<integer_constant> make_integer_constant(const parser::integer_literal & parse)
+    {
+        return std::make_unique<integer_constant>(boost::multiprecision::cpp_int{ utf8(parse.value.string) }, make_node(parse));
+    }
 }
 }

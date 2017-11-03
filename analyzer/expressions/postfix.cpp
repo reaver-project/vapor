@@ -33,29 +33,25 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    postfix_expression::postfix_expression(const parser::postfix_expression & parse, scope * lex_scope)
-        : _parse{ parse }, _scope{ lex_scope }, _modifier{ parse.modifier_type }
+    std::unique_ptr<postfix_expression> preanalyze_postfix_expression(const parser::postfix_expression & parse, scope * lex_scope)
     {
-        fmap(_parse.base_expression,
-            make_overload_set(
-                [&](const parser::expression_list & expr_list) {
-                    _base_expr = preanalyze_expression_list(expr_list, lex_scope);
-                    return unit{};
-                },
-                [&](const parser::identifier & ident) {
-                    _base_expr = preanalyze_identifier(ident, lex_scope);
-                    return unit{};
-                }));
+        return std::make_unique<postfix_expression>(make_node(parse),
+            get<0>(fmap(parse.base_expression,
+                make_overload_set([&](const parser::expression_list & expr_list) { return preanalyze_expression_list(expr_list, lex_scope); },
+                    [&](const parser::identifier & ident) { return preanalyze_identifier(ident, lex_scope); }))),
+            parse.modifier_type,
+            fmap(parse.arguments, [&](auto && expr) { return preanalyze_expression(expr, lex_scope); }),
+            fmap(parse.accessed_member, [&](auto && member) { return member.value.string; }));
+    }
 
-        if (_parse.arguments.size())
-        {
-            _arguments = fmap(_parse.arguments, [&](auto && expr) { return preanalyze_expression(expr, lex_scope); });
-        }
-
-        fmap(_parse.accessed_member, [&](auto && member) {
-            _accessed_member = member.value.string;
-            return unit{};
-        });
+    postfix_expression::postfix_expression(ast_node parse,
+        std::unique_ptr<expression> base,
+        optional<lexer::token_type> mod,
+        std::vector<std::unique_ptr<expression>> arguments,
+        optional<std::u32string> accessed_member)
+        : _base_expr{ std::move(base) }, _modifier{ mod }, _arguments{ std::move(arguments) }, _accessed_member{ std::move(accessed_member) }
+    {
+        _set_ast_info(parse);
     }
 
     void postfix_expression::print(std::ostream & os, print_context ctx) const

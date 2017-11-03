@@ -23,12 +23,30 @@
 #include "vapor/analyzer/statements/if.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/parser/lambda_expression.h"
+#include "vapor/parser/expr.h"
+#include "vapor/parser/if_statement.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    std::unique_ptr<if_statement> preanalyze_if_statement(const parser::if_statement & parse, scope * lex_scope)
+    {
+        return std::make_unique<if_statement>(make_node(parse),
+            preanalyze_expression(parse.condition, lex_scope),
+            preanalyze_block(parse.then_block, lex_scope, false),
+            fmap(parse.else_block, [&](auto && parse) -> std::unique_ptr<statement> { return preanalyze_block(parse, lex_scope, false); }));
+    }
+
+    if_statement::if_statement(ast_node parse,
+        std::unique_ptr<expression> condition,
+        std::unique_ptr<statement> then,
+        optional<std::unique_ptr<statement>> else_)
+        : _condition{ std::move(condition) }, _then_block{ std::move(then) }, _else_block{ std::move(else_) }
+    {
+        _set_ast_info(parse);
+    }
+
     void if_statement::print(std::ostream & os, print_context ctx) const
     {
         os << styles::def << ctx << styles::rule_name << "if-statement";

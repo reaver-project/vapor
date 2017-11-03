@@ -37,32 +37,28 @@ inline namespace _v1
     class identifier : public expression_ref
     {
     public:
-        identifier(const parser::identifier & parse, scope * lex_scope) : _parse{ parse }, _lex_scope{ lex_scope }
+        identifier(std::u32string name, scope * lex_scope, ast_node parse_info) : _lex_scope{ lex_scope }, _name{ std::move(name) }
         {
+            _set_ast_info(parse_info);
         }
 
         const std::u32string & name() const
         {
-            return _parse.value.string;
+            return _name;
         }
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
-        const auto & parse() const
-        {
-            return _parse;
-        }
-
     private:
         virtual future<> _analyze(analysis_context &) override;
 
-        const parser::identifier & _parse;
         scope * _lex_scope;
+        std::u32string _name;
     };
 
     inline std::unique_ptr<identifier> preanalyze_identifier(const parser::identifier & parse, scope * lex_scope)
     {
-        return std::make_unique<identifier>(parse, lex_scope);
+        return std::make_unique<identifier>(parse.value.string, lex_scope, make_node(parse));
     }
 }
 }

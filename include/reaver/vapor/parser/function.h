@@ -44,11 +44,7 @@ inline namespace _v1
         recursive_wrapper<block> body;
     };
 
-    inline bool operator==(const function & lhs, const function & rhs)
-    {
-        return lhs.range == rhs.range && lhs.name == rhs.name && lhs.parameters == rhs.parameters && lhs.return_type == rhs.return_type
-            && *lhs.body == rhs.body;
-    }
+    bool operator==(const function & lhs, const function & rhs);
 
     function parse_function(context & ctx);
 
