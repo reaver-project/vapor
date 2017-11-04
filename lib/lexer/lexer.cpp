@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016 Michał "Griwes" Dominiak
+ * Copyright © 2014-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -43,6 +43,12 @@ inline namespace _v1
         token_types[+token_type::return_] = "return";
         token_types[+token_type::function] = "function";
         token_types[+token_type::struct_] = "struct";
+
+        token_types[+token_type::typeclass] = "typeclass";
+        token_types[+token_type::implicit] = "implicit";
+        token_types[+token_type::instance] = "instance";
+        token_types[+token_type::default_] = "default";
+        token_types[+token_type::with] = "with";
 
         token_types[+token_type::if_] = "if";
         token_types[+token_type::else_] = "else";
@@ -120,6 +126,12 @@ inline namespace _v1
         { U"return", token_type::return_ },
         { U"function", token_type::function },
         { U"struct", token_type::struct_ },
+
+        { U"typeclass", token_type::typeclass },
+        { U"implicit", token_type::implicit },
+        { U"instance", token_type::instance },
+        { U"default", token_type::default_ },
+        { U"with", token_type::with },
 
         { U"if", token_type::if_ },
         { U"else", token_type::else_ },
