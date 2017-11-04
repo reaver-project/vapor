@@ -27,7 +27,7 @@
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/statements/block.h"
-#include "vapor/analyzer/statements/function_declaration.h"
+#include "vapor/analyzer/statements/function.h"
 #include "vapor/codegen/ir/function.h"
 #include "vapor/parser/lambda_expression.h"
 
@@ -35,7 +35,7 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    future<> function_declaration::_analyze(analysis_context & ctx)
+    future<> function_definition::_analyze(analysis_context & ctx)
     {
         _function = make_function("overloadable function",
             nullptr,

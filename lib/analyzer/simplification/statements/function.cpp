@@ -1,5 +1,4 @@
 /**
- *
  * Vapor Compiler Licence
  *
  * Copyright © 2016-2017 Michał "Griwes" Dominiak
@@ -21,42 +20,25 @@
  *
  **/
 
-#pragma once
+#include <numeric>
 
-#include <memory>
-
-#include "../types/overload_set.h"
-#include "expression.h"
+#include "vapor/analyzer/expressions/overload_set.h"
+#include "vapor/analyzer/function.h"
+#include "vapor/analyzer/helpers.h"
+#include "vapor/analyzer/statements/block.h"
+#include "vapor/analyzer/statements/function.h"
+#include "vapor/parser/lambda_expression.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class function_definition;
-
-    class overload_set : public expression, public std::enable_shared_from_this<overload_set>
+    future<statement *> function_definition::_simplify(recursive_context ctx)
     {
-    public:
-        overload_set(scope * lex_scope) : _type{ std::make_unique<overload_set_type>(lex_scope) }
-        {
-            _set_type(_type.get());
-        }
-
-        void add_function(function_definition * fn);
-
-        virtual void print(std::ostream & os, print_context) const override
-        {
-            assert(0);
-        }
-
-        virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override;
-
-    private:
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
-        virtual statement_ir _codegen_ir(ir_generation_context &) const override;
-
-        std::vector<function_definition *> _function_defs;
-        std::unique_ptr<overload_set_type> _type;
-    };
+        return _body->simplify(ctx).then([&](auto && simplified) -> statement * {
+            replace_uptr(_body, dynamic_cast<block *>(simplified), ctx.proper);
+            return this;
+        });
+    }
 }
 }

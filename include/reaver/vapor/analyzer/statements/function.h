@@ -35,13 +35,13 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class function;
+    class function_definition;
     class overload_set;
 
-    class function_declaration : public statement
+    class function_definition : public statement
     {
     public:
-        function_declaration(ast_node parse,
+        function_definition(ast_node parse,
             std::u32string name,
             parameter_list params,
             optional<std::unique_ptr<expression>> return_type,
@@ -83,13 +83,14 @@ namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
-    struct function;
+    struct function_definition;
 }
 }
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<function_declaration> preanalyze_function(const parser::function & func, scope *& lex_scope);
+    std::unique_ptr<function_definition> preanalyze_function_definition(const parser::function_definition & func, scope *& lex_scope);
 }
 }

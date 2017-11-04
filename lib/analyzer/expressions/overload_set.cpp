@@ -26,7 +26,7 @@
 #include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
-#include "vapor/analyzer/statements/function_declaration.h"
+#include "vapor/analyzer/statements/function.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/codegen/ir/function.h"
 #include "vapor/codegen/ir/type.h"
@@ -55,9 +55,9 @@ inline namespace _v1
         return { { get<std::shared_ptr<codegen::ir::variable>>(codegen_ir(ctx).back().result) } };
     }
 
-    void overload_set::add_function(function_declaration * decl)
+    void overload_set::add_function(function_definition * decl)
     {
-        _function_decls.push_back(decl);
+        _function_defs.push_back(decl);
         _type->add_function(decl->get_function());
     }
 }

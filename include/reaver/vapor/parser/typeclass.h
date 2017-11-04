@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2017 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,33 +22,17 @@
 
 #pragma once
 
-#include <string>
-
-#include <reaver/variant.h>
-
-#include "binary_expression.h"
-#include "declaration.h"
-#include "expression_list.h"
 #include "function.h"
 #include "helpers.h"
-#include "if_statement.h"
-#include "return_expression.h"
-#include "unary_expression.h"
 
 namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
-    struct statement
+    struct typeclass_literal
     {
         range_type range;
-        variant<declaration, return_expression, expression_list, function_definition, if_statement> statement_value = expression_list();
+        std::vector<variant<function_declaration, function_definition>> members;
     };
-
-    bool operator==(const statement & lhs, const statement & rhs);
-
-    statement parse_statement(context & ctx);
-
-    void print(const statement & stmt, std::ostream & os, print_context ctx);
 }
 }

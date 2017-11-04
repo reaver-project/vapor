@@ -39,8 +39,18 @@ inline namespace _v1
         if (peek(ctx, lexer::token_type::function))
         {
             auto func = parse_function(ctx);
-            ret.range = func.range;
-            ret.statement_value = std::move(func);
+
+            fmap(func,
+                make_overload_set(
+                    [&](function_definition & func) {
+                        ret.range = func.range;
+                        ret.statement_value = std::move(func);
+                        return unit{};
+                    },
+                    [&](function_declaration & func) {
+                        assert("function declaration not allowed in the context; TODO: make this a sensible error");
+                        return unit{};
+                    }));
         }
 
         else if (peek(ctx, lexer::token_type::if_))

@@ -61,13 +61,14 @@ inline namespace _v1
 
     void print(const expression_list & list, std::ostream & os, print_context ctx)
     {
-        os << ctx << "`expression-list` at " << list.range << '\n';
+        os << styles::def << ctx << styles::rule_name << "expression-list";
+        print_address_range(os, list);
+        os << '\n';
 
+        std::size_t idx = 0;
         for (auto && expression : list.expressions)
         {
-            os << ctx << "{\n";
-            print(expression, os, ctx.make_branch(false));
-            os << ctx << "}\n";
+            print(expression, os, ctx.make_branch(++idx == list.expressions.size()));
         }
     }
 }

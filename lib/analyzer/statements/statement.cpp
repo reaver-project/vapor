@@ -25,7 +25,7 @@
 #include "vapor/analyzer/expressions/import.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/statements/declaration.h"
-#include "vapor/analyzer/statements/function_declaration.h"
+#include "vapor/analyzer/statements/function.h"
 #include "vapor/analyzer/statements/if.h"
 #include "vapor/analyzer/statements/return.h"
 #include "vapor/analyzer/symbol.h"
@@ -54,8 +54,8 @@ inline namespace _v1
                     return std::unique_ptr<expression>();
                 },
 
-                [&](const parser::function & func) -> std::unique_ptr<statement> {
-                    auto ret = preanalyze_function(func, lex_scope);
+                [&](const parser::function_definition & func) -> std::unique_ptr<statement> {
+                    auto ret = preanalyze_function_definition(func, lex_scope);
                     return ret;
                 },
 

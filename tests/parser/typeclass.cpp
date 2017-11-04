@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,25 +20,17 @@
  *
  **/
 
-#include <numeric>
+#include <reaver/mayfly.h>
 
-#include "vapor/analyzer/expressions/overload_set.h"
-#include "vapor/analyzer/function.h"
-#include "vapor/analyzer/helpers.h"
-#include "vapor/analyzer/statements/block.h"
-#include "vapor/analyzer/statements/function_declaration.h"
-#include "vapor/parser/lambda_expression.h"
+#include "vapor/parser/typeclass.h"
 
-namespace reaver::vapor::analyzer
-{
-inline namespace _v1
-{
-    future<statement *> function_declaration::_simplify(recursive_context ctx)
-    {
-        return _body->simplify(ctx).then([&](auto && simplified) -> statement * {
-            replace_uptr(_body, dynamic_cast<block *>(simplified), ctx.proper);
-            return this;
-        });
-    }
-}
-}
+#include "helpers.h"
+
+using namespace reaver::vapor;
+using namespace reaver::vapor::parser;
+
+MAYFLY_BEGIN_SUITE("parser");
+MAYFLY_BEGIN_SUITE("typeclass");
+
+MAYFLY_END_SUITE;
+MAYFLY_END_SUITE;

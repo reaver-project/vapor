@@ -54,7 +54,7 @@ inline namespace _v1
                         return unit{};
                     },
 
-                    [&](const parser::function & func) {
+                    [&](const parser::function_definition & func) {
                         assert(0);
                         return unit{};
                     }));

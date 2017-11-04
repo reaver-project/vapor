@@ -26,33 +26,33 @@
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/statements/block.h"
-#include "vapor/analyzer/statements/function_declaration.h"
+#include "vapor/analyzer/statements/function.h"
 #include "vapor/parser/expr.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<function_declaration> preanalyze_function(const parser::function & parse, scope *& lex_scope)
+    std::unique_ptr<function_definition> preanalyze_function_definition(const parser::function_definition & parse, scope *& lex_scope)
     {
         auto function_scope = lex_scope->clone_local();
 
         parameter_list params;
-        if (parse.parameters)
+        if (parse.signature.parameters)
         {
-            params = preanalyze_parameter_list(parse.parameters.get(), function_scope.get());
+            params = preanalyze_parameter_list(parse.signature.parameters.get(), function_scope.get());
         }
         function_scope->close();
 
-        return std::make_unique<function_declaration>(make_node(parse),
-            parse.name.value.string,
+        return std::make_unique<function_definition>(make_node(parse),
+            parse.signature.name.value.string,
             std::move(params),
-            fmap(parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, function_scope.get()); }),
+            fmap(parse.signature.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, function_scope.get()); }),
             preanalyze_block(*parse.body, function_scope.get(), true),
             std::move(function_scope));
     }
 
-    function_declaration::function_declaration(ast_node parse,
+    function_definition::function_definition(ast_node parse,
         std::u32string name,
         parameter_list params,
         optional<std::unique_ptr<expression>> return_type,
@@ -75,9 +75,9 @@ inline namespace _v1
         _overload_set = symbol->get_expression()->as<overload_set>()->shared_from_this();
     }
 
-    void function_declaration::print(std::ostream & os, print_context ctx) const
+    void function_definition::print(std::ostream & os, print_context ctx) const
     {
-        os << styles::def << ctx << styles::rule_name << "function-declaration";
+        os << styles::def << ctx << styles::rule_name << "function-definition";
         print_address_range(os, this);
         os << ' ' << styles::string_value << utf8(_name) << '\n';
 
@@ -102,7 +102,7 @@ inline namespace _v1
         _body->print(os, body_ctx.make_branch(true));
     }
 
-    statement_ir function_declaration::_codegen_ir(ir_generation_context &) const
+    statement_ir function_definition::_codegen_ir(ir_generation_context &) const
     {
         return {};
     }
