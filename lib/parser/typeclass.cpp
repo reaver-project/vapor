@@ -36,6 +36,16 @@ inline namespace _v1
         return lhs.name == rhs.name && lhs.definition == rhs.definition;
     }
 
+    bool operator==(const instance_literal & lhs, const instance_literal & rhs)
+    {
+        return lhs.range == rhs.range && lhs.typeclass_name == rhs.typeclass_name && lhs.arguments == rhs.arguments && lhs.definitions == rhs.definitions;
+    }
+
+    bool operator==(const default_instance_definition & lhs, const default_instance_definition & rhs)
+    {
+        return lhs.range == rhs.range && lhs.literal == rhs.literal;
+    }
+
     namespace
     {
         struct named_typeclass
@@ -93,6 +103,40 @@ inline namespace _v1
         return decl;
     }
 
+    instance_literal parse_instance_literal(context & ctx)
+    {
+        instance_literal ret;
+
+        auto start = expect(ctx, lexer::token_type::instance).range.start();
+        ret.typeclass_name = parse_id_expression(ctx);
+
+        expect(ctx, lexer::token_type::round_bracket_open);
+        ret.arguments = parse_expression_list(ctx);
+        expect(ctx, lexer::token_type::round_bracket_close);
+
+        expect(ctx, lexer::token_type::curly_bracket_open);
+        while (!peek(ctx, lexer::token_type::curly_bracket_close))
+        {
+            ret.definitions.push_back(parse_function_definition(ctx));
+        }
+        auto end = expect(ctx, lexer::token_type::curly_bracket_close).range.end();
+
+        ret.range = { start, end };
+
+        return ret;
+    }
+
+    default_instance_definition parse_default_instance(context & ctx)
+    {
+        default_instance_definition ret;
+
+        auto start = expect(ctx, lexer::token_type::default_).range.start();
+        ret.literal = parse_instance_literal(ctx);
+        ret.range = { start, ret.literal.range.end() };
+
+        return ret;
+    }
+
     void print(const typeclass_literal & lit, std::ostream & os, print_context ctx)
     {
         os << styles::def << ctx << styles::rule_name << "typeclass-literal";
@@ -120,6 +164,41 @@ inline namespace _v1
         auto def_ctx = ctx.make_branch(true);
         os << styles::def << def_ctx << styles::subrule_name << "definition:\n";
         print(def.definition, os, def_ctx.make_branch(true));
+    }
+
+    void print(const instance_literal & lit, std::ostream & os, print_context ctx)
+    {
+        os << styles::def << ctx << styles::rule_name << "instance-literal";
+        print_address_range(os, lit);
+        os << '\n';
+
+        auto name_ctx = ctx.make_branch(false);
+        os << styles::def << name_ctx << styles::subrule_name << "typeclass-name:\n";
+        print(lit.typeclass_name, os, name_ctx.make_branch(true));
+
+        auto args_ctx = ctx.make_branch(false);
+        os << styles::def << args_ctx << styles::subrule_name << "arguments:\n";
+        print(lit.arguments, os, args_ctx.make_branch(true));
+
+        auto defs_ctx = ctx.make_branch(true);
+        os << styles::def << defs_ctx << styles::subrule_name << "definitions:\n";
+
+        std::size_t idx = 0;
+        for (auto && def : lit.definitions)
+        {
+            print(def, os, defs_ctx.make_branch(++idx == lit.definitions.size()));
+        }
+    }
+
+    void print(const default_instance_definition & def, std::ostream & os, print_context ctx)
+    {
+        os << styles::def << ctx << styles::rule_name << "default-instance-definition";
+        print_address_range(os, def);
+        os << '\n';
+
+        auto literal_ctx = ctx.make_branch(true);
+        os << styles::def << literal_ctx << styles::subrule_name << "instance-literal:\n";
+        print(def.literal, os, literal_ctx.make_branch(true));
     }
 }
 }

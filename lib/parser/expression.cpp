@@ -81,6 +81,10 @@ inline namespace _v1
                 ret.expression_value = parse_template_expression(ctx);
                 break;
 
+            case lexer::token_type::instance:
+                ret.expression_value = parse_instance_literal(ctx);
+                break;
+
             default:
                 if (is_unary_operator(type))
                 {

@@ -88,6 +88,10 @@ inline namespace _v1
                 ret.statement_value = parse_template_declaration(ctx);
                 break;
 
+            case lexer::token_type::default_:
+                ret.statement_value = parse_default_instance(ctx);
+                break;
+
             default:
                 ret.statement_value = parse_expression_list(ctx);
         }

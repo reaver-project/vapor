@@ -25,6 +25,7 @@
 #include "declaration.h"
 #include "function.h"
 #include "helpers.h"
+#include "id_expression.h"
 
 namespace reaver::vapor::parser
 {
@@ -42,13 +43,33 @@ inline namespace _v1
         typeclass_literal definition;
     };
 
+    struct instance_literal
+    {
+        range_type range;
+        id_expression typeclass_name;
+        expression_list arguments;
+        std::vector<function_definition> definitions;
+    };
+
+    struct default_instance_definition
+    {
+        range_type range;
+        instance_literal literal;
+    };
+
     bool operator==(const typeclass_literal & lhs, const typeclass_literal & rhs);
     bool operator==(const typeclass_definition & lhs, const typeclass_definition & rhs);
+    bool operator==(const instance_literal & lhs, const instance_literal & rhs);
+    bool operator==(const default_instance_definition & lhs, const default_instance_definition & rhs);
 
     typeclass_literal parse_typeclass_literal(context & ctx);
     typeclass_definition parse_typeclass_definition(context & ctx);
+    instance_literal parse_instance_literal(context & ctx);
+    default_instance_definition parse_default_instance(context & ctx);
 
     void print(const typeclass_literal & lit, std::ostream & os, print_context ctx);
     void print(const typeclass_definition & def, std::ostream & os, print_context ctx);
+    void print(const instance_literal & def, std::ostream & os, print_context ctx);
+    void print(const default_instance_definition & def, std::ostream & os, print_context ctx);
 }
 }

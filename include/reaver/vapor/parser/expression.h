@@ -43,6 +43,7 @@ inline namespace _v1
     struct binary_expression;
     struct struct_literal;
     struct template_expression;
+    struct instance_literal;
 
     void print(const unary_expression & expr, std::ostream & os, std::size_t indent);
     void print(const binary_expression & expr, std::ostream & os, std::size_t indent);
@@ -61,7 +62,8 @@ inline namespace _v1
             recursive_wrapper<unary_expression>,
             recursive_wrapper<binary_expression>,
             recursive_wrapper<struct_literal>,
-            recursive_wrapper<template_expression>>
+            recursive_wrapper<template_expression>,
+            recursive_wrapper<instance_literal>>
             expression_value = postfix_expression();
     };
 
