@@ -34,13 +34,19 @@ inline namespace _v1
     {
         range_type range;
         identifier name;
-        expression type;
+        optional<expression> type;
     };
 
     struct parameter_list
     {
         range_type range;
         std::vector<parameter> parameters;
+    };
+
+    enum class parameter_type_mode
+    {
+        required,
+        optional
     };
 
     inline bool operator==(const parameter & lhs, const parameter & rhs)
@@ -53,7 +59,7 @@ inline namespace _v1
         return lhs.range == rhs.range && lhs.parameters == rhs.parameters;
     }
 
-    parameter_list parse_parameter_list(context & ctx);
+    parameter_list parse_parameter_list(context & ctx, parameter_type_mode mode = parameter_type_mode::required);
 
     void print(const parameter_list &, std::ostream &, print_context ctx);
 }

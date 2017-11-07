@@ -38,7 +38,7 @@ inline namespace _v1
         return lhs.range == rhs.range && lhs.signature == rhs.signature && *lhs.body == rhs.body;
     }
 
-    function_declaration parse_function_declaration(context & ctx)
+    function_declaration parse_function_declaration(context & ctx, parameter_type_mode mode)
     {
         function_declaration ret;
 
@@ -48,7 +48,7 @@ inline namespace _v1
         expect(ctx, lexer::token_type::round_bracket_open);
         if (peek(ctx) && peek(ctx)->type != lexer::token_type::round_bracket_close)
         {
-            ret.parameters = parse_parameter_list(ctx);
+            ret.parameters = parse_parameter_list(ctx, mode);
         }
         auto end = expect(ctx, lexer::token_type::round_bracket_close).range.end();
 
@@ -64,11 +64,16 @@ inline namespace _v1
         return ret;
     }
 
-    function_definition parse_function_definition(context & ctx, optional<function_declaration> decl)
+    function_definition parse_function_definition(context & ctx, parameter_type_mode mode)
+    {
+        return parse_function_definition(ctx, none, mode);
+    }
+
+    function_definition parse_function_definition(context & ctx, optional<function_declaration> decl, parameter_type_mode mode)
     {
         function_definition ret;
 
-        ret.signature = decl ? std::move(*decl) : parse_function_declaration(ctx);
+        ret.signature = decl ? std::move(*decl) : parse_function_declaration(ctx, mode);
 
         if (peek(ctx, lexer::token_type::block_value))
         {

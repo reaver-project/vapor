@@ -117,7 +117,7 @@ inline namespace _v1
         expect(ctx, lexer::token_type::curly_bracket_open);
         while (!peek(ctx, lexer::token_type::curly_bracket_close))
         {
-            ret.definitions.push_back(parse_function_definition(ctx));
+            ret.definitions.push_back(parse_function_definition(ctx, parameter_type_mode::optional));
         }
         auto end = expect(ctx, lexer::token_type::curly_bracket_close).range.end();
 
