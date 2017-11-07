@@ -36,7 +36,7 @@ inline namespace _v1
             auto name = parse_literal<lexer::token_type::identifier>(ctx);
 
             optional<expression> type_expr;
-            auto end = name.range.start();
+            auto end = name.range.end();
 
             if (mode == parameter_type_mode::required || peek(ctx, lexer::token_type::colon))
             {
