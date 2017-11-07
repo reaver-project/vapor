@@ -1,5 +1,4 @@
 /**
- *
  * Vapor Compiler Licence
  *
  * Copyright © 2016-2017 Michał "Griwes" Dominiak

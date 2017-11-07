@@ -43,7 +43,7 @@ inline namespace _v1
 
         auto type = peek(ctx)->type;
 
-        switch (auto type = peek(ctx)->type)
+        switch (type)
         {
             case lexer::token_type::string:
                 ret.expression_value = parse_literal<lexer::token_type::string>(ctx);
@@ -75,6 +75,10 @@ inline namespace _v1
 
             case lexer::token_type::dot:
                 ret.expression_value = parse_member_expression(ctx);
+                break;
+
+            case lexer::token_type::with:
+                ret.expression_value = parse_template_expression(ctx);
                 break;
 
             default:

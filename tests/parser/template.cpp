@@ -20,35 +20,32 @@
  *
  **/
 
-#pragma once
+#include <reaver/mayfly.h>
 
-#include "declaration.h"
-#include "function.h"
 #include "helpers.h"
 
-namespace reaver::vapor::parser
-{
-inline namespace _v1
-{
-    struct typeclass_literal
-    {
-        range_type range;
-        std::vector<variant<function_declaration, function_definition>> members;
-    };
+using namespace reaver::vapor;
+using namespace reaver::vapor::parser;
 
-    struct typeclass_definition
-    {
-        identifier name;
-        typeclass_literal definition;
-    };
+MAYFLY_BEGIN_SUITE("parser");
+MAYFLY_BEGIN_SUITE("template");
 
-    bool operator==(const typeclass_literal & lhs, const typeclass_literal & rhs);
-    bool operator==(const typeclass_definition & lhs, const typeclass_definition & rhs);
+MAYFLY_BEGIN_SUITE("introducer");
 
-    typeclass_literal parse_typeclass_literal(context & ctx);
-    typeclass_definition parse_typeclass_definition(context & ctx);
+MAYFLY_ADD_TESTCASE("single complete parameter",
+    test(UR"(with (T : type))",
+        template_introducer{ { 0, 15 },
+            { { 6, 14 },
+                { parameter{ { 6, 14 },
+                    { { 6, 7 }, { lexer::token_type::identifier, UR"(T)", { 6, 7 } } },
+                    { { 10, 14 },
+                        postfix_expression{ { 10, 14 },
+                            identifier{ { 10, 14 }, { lexer::token_type::identifier, UR"(type)", { 10, 14 } } },
+                            reaver::none,
+                            {} } } } } } },
+        &parse_template_introducer));
 
-    void print(const typeclass_literal & lit, std::ostream & os, print_context ctx);
-    void print(const typeclass_definition & def, std::ostream & os, print_context ctx);
-}
-}
+MAYFLY_END_SUITE;
+
+MAYFLY_END_SUITE;
+MAYFLY_END_SUITE;

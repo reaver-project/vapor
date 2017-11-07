@@ -23,32 +23,35 @@
 #pragma once
 
 #include "declaration.h"
-#include "function.h"
 #include "helpers.h"
+#include "parameter_list.h"
+#include "typeclass.h"
 
 namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
-    struct typeclass_literal
+    struct template_introducer
     {
         range_type range;
-        std::vector<variant<function_declaration, function_definition>> members;
+        parameter_list template_parameters;
     };
 
-    struct typeclass_definition
+    struct template_expression
     {
-        identifier name;
-        typeclass_literal definition;
+        range_type range;
+        template_introducer parameters;
+        variant<typeclass_literal> expression = typeclass_literal{};
     };
 
-    bool operator==(const typeclass_literal & lhs, const typeclass_literal & rhs);
-    bool operator==(const typeclass_definition & lhs, const typeclass_definition & rhs);
+    bool operator==(const template_introducer & lhs, const template_introducer & rhs);
+    bool operator==(const template_expression & lhs, const template_expression & rhs);
 
-    typeclass_literal parse_typeclass_literal(context & ctx);
-    typeclass_definition parse_typeclass_definition(context & ctx);
+    template_introducer parse_template_introducer(context & ctx);
+    template_expression parse_template_expression(context & ctx);
+    declaration parse_template_declaration(context & ctx);
 
-    void print(const typeclass_literal & lit, std::ostream & os, print_context ctx);
-    void print(const typeclass_definition & def, std::ostream & os, print_context ctx);
+    void print(const template_introducer & tpl, std::ostream & os, print_context ctx);
+    void print(const template_expression & tpl, std::ostream & os, print_context ctx);
 }
 }

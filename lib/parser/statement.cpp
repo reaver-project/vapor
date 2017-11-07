@@ -36,60 +36,69 @@ inline namespace _v1
     {
         statement ret;
 
-        if (peek(ctx, lexer::token_type::function))
+        if (!peek(ctx))
         {
-            auto func = parse_function(ctx);
-
-            fmap(func,
-                make_overload_set(
-                    [&](function_definition & func) {
-                        ret.range = func.range;
-                        ret.statement_value = std::move(func);
-                        return unit{};
-                    },
-                    [&](function_declaration & func) {
-                        assert("function declaration not allowed in the context; TODO: make this a sensible error");
-                        return unit{};
-                    }));
+            throw expectation_failure{ "statement" };
         }
 
-        else if (peek(ctx, lexer::token_type::if_))
-        {
-            auto if_ = parse_if_statement(ctx);
-            ret.range = if_.range;
-            ret.statement_value = std::move(if_);
-        }
+        auto type = peek(ctx)->type;
 
-        else
+        switch (type)
         {
-            if (peek(ctx, lexer::token_type::let))
+            case lexer::token_type::function:
             {
+                auto func = parse_function(ctx);
+
+                fmap(func,
+                    make_overload_set(
+                        [&](function_definition & func) {
+                            ret.range = func.range;
+                            ret.statement_value = std::move(func);
+                            return unit{};
+                        },
+                        [&](function_declaration & func) {
+                            assert("function declaration not allowed in the context; TODO: make this a sensible error");
+                            return unit{};
+                        }));
+
+                return ret;
+            }
+
+            case lexer::token_type::if_:
+            {
+                auto if_ = parse_if_statement(ctx);
+                ret.range = if_.range;
+                ret.statement_value = std::move(if_);
+                return ret;
+            }
+
+            case lexer::token_type::let:
                 ret.statement_value = parse_declaration(ctx);
-            }
+                break;
 
-            else if (peek(ctx, lexer::token_type::return_))
-            {
+            case lexer::token_type::return_:
                 ret.statement_value = parse_return_expression(ctx);
-            }
+                break;
 
-            else if (peek(ctx, lexer::token_type::struct_))
-            {
+            case lexer::token_type::struct_:
                 ret.statement_value = parse_struct_declaration(ctx);
-            }
+                break;
 
-            else
-            {
+            case lexer::token_type::with:
+                ret.statement_value = parse_template_declaration(ctx);
+                break;
+
+            default:
                 ret.statement_value = parse_expression_list(ctx);
-            }
-
-            auto end = expect(ctx, lexer::token_type::semicolon).range.end();
-            visit(
-                [&](const auto & value) -> unit {
-                    ret.range = { value.range.start(), end };
-                    return {};
-                },
-                ret.statement_value);
         }
+
+        auto end = expect(ctx, lexer::token_type::semicolon).range.end();
+        visit(
+            [&](const auto & value) -> unit {
+                ret.range = { value.range.start(), end };
+                return {};
+            },
+            ret.statement_value);
 
         return ret;
     }
