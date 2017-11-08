@@ -37,6 +37,26 @@ inline namespace _v1
 
     postfix_expression parse_postfix_expression(context & ctx, expression_special_modes mode)
     {
+        auto get_if_valid_modifier = [&]() -> std::optional<lexer::token_type> {
+            for (auto && type : { lexer::token_type::round_bracket_open,
+                     lexer::token_type::square_bracket_open,
+                     lexer::token_type::curly_bracket_open,
+                     lexer::token_type::dot })
+            {
+                if (type == lexer::token_type::curly_bracket_open && mode == expression_special_modes::brace)
+                {
+                    continue;
+                }
+
+                if (peek(ctx, type))
+                {
+                    return std::make_optional(type);
+                }
+            }
+
+            return std::nullopt;
+        };
+
         auto closing = [](lexer::token_type type) {
             using namespace lexer;
             switch (type)
@@ -73,51 +93,54 @@ inline namespace _v1
             end = range.end();
         }
 
-        for (auto && type :
-            { lexer::token_type::round_bracket_open, lexer::token_type::square_bracket_open, lexer::token_type::curly_bracket_open, lexer::token_type::dot })
+        auto modifier = get_if_valid_modifier();
+
+        while (true)
         {
-            if (type == lexer::token_type::curly_bracket_open && mode == expression_special_modes::brace)
+            if (modifier)
             {
-                continue;
-            }
+                ret.modifier_type = modifier.value();
+                expect(ctx, modifier.value());
 
-            if (peek(ctx, type))
-            {
-                ret.modifier_type = type;
-                expect(ctx, type);
-
-                break;
-            }
-        }
-
-        if (ret.modifier_type)
-        {
-            if (ret.modifier_type == lexer::token_type::dot)
-            {
-                ret.accessed_member = parse_literal<lexer::token_type::identifier>(ctx);
-                end = ret.accessed_member->range.end();
-            }
-
-            else
-            {
-                if (!peek(ctx, closing(*ret.modifier_type)))
+                if (ret.modifier_type == lexer::token_type::dot)
                 {
-                    auto old_stack = std::move(ctx.operator_stack);
-
-                    ret.arguments.push_back(parse_expression(ctx));
-                    while (peek(ctx, lexer::token_type::comma))
-                    {
-                        expect(ctx, lexer::token_type::comma);
-                        ret.arguments.push_back(parse_expression(ctx));
-                    }
-
-                    ctx.operator_stack = std::move(old_stack);
+                    ret.accessed_member = parse_literal<lexer::token_type::identifier>(ctx);
+                    end = ret.accessed_member->range.end();
                 }
-                end = expect(ctx, closing(*ret.modifier_type)).range.end();
-            }
-        }
 
-        ret.range = { start, end };
+                else
+                {
+                    if (!peek(ctx, closing(*ret.modifier_type)))
+                    {
+                        auto old_stack = std::move(ctx.operator_stack);
+
+                        ret.arguments.push_back(parse_expression(ctx));
+                        while (peek(ctx, lexer::token_type::comma))
+                        {
+                            expect(ctx, lexer::token_type::comma);
+                            ret.arguments.push_back(parse_expression(ctx));
+                        }
+
+                        ctx.operator_stack = std::move(old_stack);
+                    }
+                    end = expect(ctx, closing(*ret.modifier_type)).range.end();
+                }
+            }
+
+            ret.range = { start, end };
+
+            modifier = get_if_valid_modifier();
+
+            if (!modifier)
+            {
+                return ret;
+            }
+
+            auto base = std::move(ret);
+            ret = {};
+            expression_list base_list = { base.range, { expression{ base.range, std::move(base) } } };
+            ret.base_expression = std::move(base_list);
+        }
 
         return ret;
     }
@@ -136,12 +159,13 @@ inline namespace _v1
 
         if (expr.modifier_type)
         {
-            auto modifier_ctx = ctx.make_branch(false);
+            auto modifier_ctx = ctx.make_branch(expr.modifier_type != lexer::token_type::dot && expr.arguments.empty());
             os << modifier_ctx << styles::subrule_name << "modifier-type: " << styles::def << lexer::token_types[+*expr.modifier_type] << '\n';
 
             if (expr.modifier_type == lexer::token_type::dot)
             {
-                os << ctx.make_branch(true) << styles::subrule_name << "accessed-member: " << styles::def << utf8(expr.accessed_member->value.string) << '\n';
+                os << ctx.make_branch(true) << styles::subrule_name << "accessed-member: '" << styles::string_value << utf8(expr.accessed_member->value.string)
+                   << styles::def << "'\n";
             }
 
             else if (!expr.arguments.empty())

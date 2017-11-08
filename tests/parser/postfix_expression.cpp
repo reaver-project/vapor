@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -39,6 +39,19 @@ MAYFLY_ADD_TESTCASE("argumentless",
     test(UR"(foo();)",
         postfix_expression{ { 0, 5 },
             identifier{ { 0, 3 }, { lexer::token_type::identifier, UR"(foo)", { 0, 3 } } },
+            lexer::token_type::round_bracket_open,
+            {} },
+        [](auto && ctx) { return parse_postfix_expression(ctx); }));
+
+MAYFLY_ADD_TESTCASE("chained argumentless",
+    test(UR"(foo()();)",
+        postfix_expression{ { 0, 7 },
+            expression_list{ { 0, 5 },
+                { expression{ { 0, 5 },
+                    postfix_expression{ { 0, 5 },
+                        identifier{ { 0, 3 }, { lexer::token_type::identifier, UR"(foo)", { 0, 3 } } },
+                        lexer::token_type::round_bracket_open,
+                        {} } } } },
             lexer::token_type::round_bracket_open,
             {} },
         [](auto && ctx) { return parse_postfix_expression(ctx); }));
