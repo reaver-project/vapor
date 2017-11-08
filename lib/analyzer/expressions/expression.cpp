@@ -26,10 +26,12 @@
 #include "vapor/analyzer/expressions/closure.h"
 #include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/expressions/import.h"
+#include "vapor/analyzer/expressions/instance.h"
 #include "vapor/analyzer/expressions/integer.h"
 #include "vapor/analyzer/expressions/member_access.h"
 #include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/expressions/struct.h"
+#include "vapor/analyzer/expressions/template.h"
 #include "vapor/analyzer/expressions/unary.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
@@ -87,6 +89,16 @@ inline namespace _v1
                 [&](const parser::member_expression & mexpr) -> std::unique_ptr<expression> {
                     auto memexpr = preanalyze_member_access_expression(ctx, mexpr, lex_scope);
                     return memexpr;
+                },
+
+                [&](const parser::template_expression & texpr) -> std::unique_ptr<expression> {
+                    auto tplexpr = preanalyze_template_expression(texpr, lex_scope);
+                    return tplexpr;
+                },
+
+                [&](const parser::instance_literal & inst) -> std::unique_ptr<expression> {
+                    auto instlit = preanalyze_instance_literal(inst, lex_scope);
+                    return instlit;
                 },
 
                 [](const auto &) -> std::unique_ptr<expression> { assert(0); })));
