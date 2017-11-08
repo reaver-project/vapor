@@ -31,7 +31,7 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class function_declaration;
+    class function_definition;
 
     class overload_set : public expression, public std::enable_shared_from_this<overload_set>
     {
@@ -41,7 +41,7 @@ inline namespace _v1
             _set_type(_type.get());
         }
 
-        void add_function(function_declaration * fn);
+        void add_function(function_definition * fn);
 
         virtual void print(std::ostream & os, print_context) const override
         {
@@ -54,7 +54,7 @@ inline namespace _v1
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-        std::vector<function_declaration *> _function_decls;
+        std::vector<function_definition *> _function_defs;
         std::unique_ptr<overload_set_type> _type;
     };
 }

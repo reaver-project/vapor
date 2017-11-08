@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,26 +22,36 @@
 
 #pragma once
 
-#include <reaver/variant.h>
-
 #include "declaration.h"
-#include "function.h"
+#include "helpers.h"
+#include "parameter_list.h"
+#include "typeclass.h"
 
 namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
-    struct struct_literal
+    struct template_introducer
     {
         range_type range;
-        std::vector<variant<declaration, function_definition>> members;
+        parameter_list template_parameters;
     };
 
-    bool operator==(const struct_literal & lhs, const struct_literal & rhs);
+    struct template_expression
+    {
+        range_type range;
+        template_introducer parameters;
+        variant<typeclass_literal> expression = typeclass_literal{};
+    };
 
-    struct_literal parse_struct_literal(context & ctx);
-    declaration parse_struct_declaration(context & ctx);
+    bool operator==(const template_introducer & lhs, const template_introducer & rhs);
+    bool operator==(const template_expression & lhs, const template_expression & rhs);
 
-    void print(const struct_literal & lit, std::ostream & os, print_context ctx);
+    template_introducer parse_template_introducer(context & ctx);
+    template_expression parse_template_expression(context & ctx);
+    declaration parse_template_declaration(context & ctx);
+
+    void print(const template_introducer & tpl, std::ostream & os, print_context ctx);
+    void print(const template_expression & tpl, std::ostream & os, print_context ctx);
 }
 }

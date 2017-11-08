@@ -35,19 +35,33 @@ inline namespace _v1
 {
     struct block;
 
-    struct function
+    struct function_declaration
     {
         range_type range;
         identifier name;
         optional<parameter_list> parameters;
         optional<expression> return_type;
+    };
+
+    struct function_definition
+    {
+        range_type range;
+        function_declaration signature;
         recursive_wrapper<block> body;
     };
 
-    bool operator==(const function & lhs, const function & rhs);
+    bool operator==(const function_declaration & lhs, const function_declaration & rhs);
+    bool operator==(const function_definition & lhs, const function_definition & rhs);
 
-    function parse_function(context & ctx);
+    function_declaration parse_function_declaration(context & ctx, parameter_type_mode mode = parameter_type_mode::required);
+    function_definition parse_function_definition(context & ctx, parameter_type_mode mode);
+    function_definition parse_function_definition(context & ctx,
+        optional<function_declaration> decl = none,
+        parameter_type_mode mode = parameter_type_mode::required);
 
-    void print(const function & f, std::ostream & os, print_context ctx);
+    void print(const function_declaration & f, std::ostream & os, print_context ctx);
+    void print(const function_definition & f, std::ostream & os, print_context ctx);
+
+    variant<function_declaration, function_definition> parse_function(context & ctx);
 }
 }

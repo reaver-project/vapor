@@ -35,6 +35,20 @@ namespace vapor
     {
         inline namespace _v1
         {
+            template<typename T, typename U, typename = decltype(print(std::declval<T>(), std::declval<std::ostream &>(), std::declval<print_context>()))>
+            void report_different(std::stringstream & ss, T expected, U parsed)
+            {
+                print(expected, ss, {});
+                ss << "\n != \n";
+                print(parsed, ss, {});
+                logger::dlog() << ss.str();
+            }
+
+            template<typename... Ts>
+            void report_different(Ts &&...)
+            {
+            }
+
             template<typename T, typename F>
             auto test(std::u32string program, T expected, F && parser)
             {
@@ -42,7 +56,23 @@ namespace vapor
                 {
                     context ctx;
                     ctx.begin = lexer::iterator{ program.begin(), program.end() };
-                    MAYFLY_REQUIRE(expected == parser(ctx));
+
+                    std::stringstream ss;
+                    for (auto it = ctx.begin; it != ctx.end; ++it)
+                    {
+                        ss << *it << '\n';
+                    }
+
+                    auto parsed = parser(ctx);
+                    try
+                    {
+                        MAYFLY_REQUIRE(expected == parsed);
+                    }
+                    catch (...)
+                    {
+                        report_different(ss, expected, parsed);
+                        throw;
+                    }
                 };
             }
         }

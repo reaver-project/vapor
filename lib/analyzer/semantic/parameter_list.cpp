@@ -35,7 +35,10 @@ inline namespace _v1
     parameter_list preanalyze_parameter_list(const parser::parameter_list & param_list, scope * lex_scope)
     {
         return fmap(param_list.parameters, [&](auto && param_parse) {
-            auto param = std::make_unique<parameter>(make_node(param_parse), param_parse.name.value.string, preanalyze_expression(param_parse.type, lex_scope));
+            assert(param_parse.type);
+
+            auto param =
+                std::make_unique<parameter>(make_node(param_parse), param_parse.name.value.string, preanalyze_expression(param_parse.type.get(), lex_scope));
 
             auto symb = make_symbol(param_parse.name.value.string, param.get());
             lex_scope->init(param_parse.name.value.string, std::move(symb));

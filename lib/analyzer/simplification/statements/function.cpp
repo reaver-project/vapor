@@ -26,14 +26,14 @@
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/statements/block.h"
-#include "vapor/analyzer/statements/function_declaration.h"
+#include "vapor/analyzer/statements/function.h"
 #include "vapor/parser/lambda_expression.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    future<statement *> function_declaration::_simplify(recursive_context ctx)
+    future<statement *> function_definition::_simplify(recursive_context ctx)
     {
         return _body->simplify(ctx).then([&](auto && simplified) -> statement * {
             replace_uptr(_body, dynamic_cast<block *>(simplified), ctx.proper);

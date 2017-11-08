@@ -54,6 +54,12 @@ inline namespace _v1
         function,
         struct_,
 
+        typeclass,
+        implicit,
+        instance,
+        default_,
+        with,
+
         if_,
         else_,
 

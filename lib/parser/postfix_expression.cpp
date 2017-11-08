@@ -63,7 +63,6 @@ inline namespace _v1
             start = expect(ctx, lexer::token_type::round_bracket_open).range.start();
             ret.base_expression = parse_expression_list(ctx);
             end = expect(ctx, lexer::token_type::round_bracket_close).range.end();
-            ;
         }
 
         else

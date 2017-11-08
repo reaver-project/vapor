@@ -36,7 +36,6 @@ std::u32string program = UR"program(module hello_world
 
     let mn = struct { let m : int32; let n : int32; };
 
-    //function ackermann(m : int32, n : int32) -> int32
     function ackermann(args : mn) -> int32
     {
         if (args.m == 0)

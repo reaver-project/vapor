@@ -25,4 +25,5 @@
 #include "binary_expression.h"
 #include "lambda_expression.h"
 #include "struct.h"
+#include "template.h"
 #include "unary_expression.h"

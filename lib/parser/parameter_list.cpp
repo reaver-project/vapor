@@ -27,17 +27,25 @@ namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
-    parameter_list parse_parameter_list(context & ctx)
+    parameter_list parse_parameter_list(context & ctx, parameter_type_mode mode)
     {
         parameter_list ret;
 
         while (!peek(ctx, lexer::token_type::round_bracket_close))
         {
             auto name = parse_literal<lexer::token_type::identifier>(ctx);
-            expect(ctx, lexer::token_type::colon);
-            auto type_expr = parse_expression(ctx);
 
-            auto range = range_type{ name.range.start(), type_expr.range.end() };
+            optional<expression> type_expr;
+            auto end = name.range.end();
+
+            if (mode == parameter_type_mode::required || peek(ctx, lexer::token_type::colon))
+            {
+                expect(ctx, lexer::token_type::colon);
+                type_expr = parse_expression(ctx);
+                end = type_expr->range.end();
+            }
+
+            auto range = range_type{ name.range.start(), end };
             ret.parameters.push_back(parameter{ std::move(range), std::move(name), std::move(type_expr) });
 
             if (peek(ctx, lexer::token_type::comma))
@@ -64,8 +72,16 @@ inline namespace _v1
             auto param_ctx = ctx.make_branch(++idx == arglist.parameters.size());
             os << styles::def << param_ctx << styles::subrule_name << "parameter:\n";
 
-            print(parameter.name, os, param_ctx.make_branch(false));
-            print(parameter.type, os, param_ctx.make_branch(true));
+            auto name_ctx = param_ctx.make_branch(!parameter.type);
+            os << styles::def << name_ctx << styles::subrule_name << "name:\n";
+            print(parameter.name, os, name_ctx.make_branch(true));
+
+            if (parameter.type)
+            {
+                auto type_ctx = param_ctx.make_branch(true);
+                os << styles::def << type_ctx << styles::subrule_name << "type:\n";
+                print(parameter.type.get(), os, type_ctx.make_branch(true));
+            }
         }
     }
 }
