@@ -187,7 +187,10 @@ inline namespace _v1
         std::size_t idx = 0;
         for (auto && def : lit.definitions)
         {
-            print(def, os, defs_ctx.make_branch(++idx == lit.definitions.size()));
+            fmap(def, [&](auto && def) {
+                print(def, os, defs_ctx.make_branch(++idx == lit.definitions.size()));
+                return unit{};
+            });
         }
     }
 
