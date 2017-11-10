@@ -112,6 +112,11 @@ inline namespace _v1
             _default_value = expr;
         }
 
+        virtual void set_template_parameters(std::vector<parameter *>) override
+        {
+            assert(!"this expression doesn't support being a template");
+        }
+
         virtual bool is_constant() const
         {
             auto repl = _get_replacement();

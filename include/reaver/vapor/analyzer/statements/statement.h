@@ -40,6 +40,7 @@ inline namespace _v1
 {
     class return_statement;
     class scope;
+    class parameter;
 
     using statement_ir = std::vector<codegen::ir::instruction>;
     using declaration_ir = std::vector<codegen::ir::entity>;
@@ -144,6 +145,11 @@ inline namespace _v1
         std::optional<ast_node> get_ast_info() const
         {
             return _parse_info;
+        }
+
+        virtual void set_template_parameters(std::vector<parameter *>)
+        {
+            assert(!"this statement doesn't support being a template");
         }
 
     protected:

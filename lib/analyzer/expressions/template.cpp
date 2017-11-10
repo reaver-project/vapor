@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/expressions/template.h"
+#include "vapor/analyzer/expressions/typeclass.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/parser/template.h"
 
@@ -28,9 +29,25 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<template_expression> preanalyze_template_expression(const parser::template_expression & tpl, scope * lex_scope)
+    std::unique_ptr<template_expression> preanalyze_template_expression(const parser::template_expression & parse, scope * lex_scope)
     {
-        return std::make_unique<template_expression>();
+        auto scope = lex_scope->clone_for_class();
+        auto scope_ptr = scope.get();
+        return std::make_unique<template_expression>(make_node(parse),
+            std::move(scope),
+            preanalyze_parameter_list(parse.parameters.template_parameters, scope_ptr),
+            get<0>(fmap(parse.expression, make_overload_set([&](const parser::typeclass_literal & typeclass) -> std::unique_ptr<expression> {
+                return preanalyze_typeclass_literal(typeclass, scope_ptr);
+            }))));
+    }
+
+    template_expression::template_expression(ast_node parse,
+        std::unique_ptr<scope> template_scope,
+        parameter_list params,
+        std::unique_ptr<expression> templated_expr)
+        : _scope{ std::move(template_scope) }, _params{ std::move(params) }, _templated_expression{ std::move(templated_expr) }
+    {
+        _set_ast_info(parse);
     }
 
     void template_expression::print(std::ostream & os, print_context ctx) const

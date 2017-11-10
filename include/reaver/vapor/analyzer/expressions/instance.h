@@ -28,9 +28,19 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    class expression_list;
+
     class instance_literal : public expression
     {
     public:
+        using late_preanalysis_type = reaver::function<std::vector<std::unique_ptr<statement>>(scope *)>;
+
+        instance_literal(ast_node parse,
+            scope * original_scope,
+            std::vector<std::u32string> name_segments,
+            std::vector<std::unique_ptr<expression>> arguments,
+            late_preanalysis_type late_pre);
+
         virtual void print(std::ostream & os, print_context ctx) const override;
 
     private:
@@ -38,6 +48,15 @@ inline namespace _v1
         virtual future<expression *> _simplify_expr(recursive_context ctx) override;
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
+
+        scope * _original_scope;
+        std::unique_ptr<scope> _combined_scopes;
+
+        std::vector<std::u32string> _typeclass_name;
+        std::vector<std::unique_ptr<expression>> _arguments;
+        std::vector<std::unique_ptr<statement>> _definitions;
+
+        late_preanalysis_type _late_preanalysis;
     };
 }
 }

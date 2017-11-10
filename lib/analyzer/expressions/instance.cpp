@@ -21,6 +21,8 @@
  **/
 
 #include "vapor/analyzer/expressions/instance.h"
+#include "vapor/analyzer/expressions/expression_list.h"
+#include "vapor/analyzer/statements/function.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/parser/typeclass.h"
 
@@ -28,9 +30,36 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<instance_literal> preanalyze_instance_literal(const parser::instance_literal & tpl, scope * lex_scope)
+    std::unique_ptr<instance_literal> preanalyze_instance_literal(const parser::instance_literal & parse, scope * lex_scope)
     {
-        return std::make_unique<instance_literal>();
+        auto name_id_expr = fmap(parse.typeclass_name.id_expression_value, [&](auto && token) { return token.value.string; });
+
+        auto late_preanalysis = [&parse](scope * lex_scope) {
+            return fmap(parse.definitions, [&](auto && definition) {
+                return get<0>(fmap(definition, make_overload_set([&](const parser::function_definition & func) -> std::unique_ptr<statement> {
+                    return preanalyze_function_definition(func, lex_scope);
+                })));
+            });
+        };
+
+        return std::make_unique<instance_literal>(make_node(parse),
+            lex_scope,
+            std::move(name_id_expr),
+            fmap(parse.arguments.expressions, [&](auto && expr) { return preanalyze_expression(expr, lex_scope); }),
+            std::move(late_preanalysis));
+    }
+
+    instance_literal::instance_literal(ast_node parse,
+        scope * original_scope,
+        std::vector<std::u32string> name_segments,
+        std::vector<std::unique_ptr<expression>> arguments,
+        late_preanalysis_type late_pre)
+        : _original_scope{ original_scope },
+          _typeclass_name{ std::move(name_segments) },
+          _arguments{ std::move(arguments) },
+          _late_preanalysis{ std::move(late_pre) }
+    {
+        _set_ast_info(parse);
     }
 
     void instance_literal::print(std::ostream & os, print_context ctx) const

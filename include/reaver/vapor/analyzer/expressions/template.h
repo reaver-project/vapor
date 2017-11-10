@@ -23,6 +23,7 @@
 #pragma once
 
 #include "vapor/analyzer/expressions/expression.h"
+#include "vapor/analyzer/semantic/parameter_list.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -31,6 +32,8 @@ inline namespace _v1
     class template_expression : public expression
     {
     public:
+        template_expression(ast_node parse, std::unique_ptr<scope> template_scope, parameter_list params, std::unique_ptr<expression> templated_expr);
+
         virtual void print(std::ostream & os, print_context ctx) const override;
 
     private:
@@ -38,6 +41,10 @@ inline namespace _v1
         virtual future<expression *> _simplify_expr(recursive_context ctx) override;
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
+
+        std::unique_ptr<scope> _scope;
+        parameter_list _params;
+        std::unique_ptr<expression> _templated_expression;
     };
 }
 }
