@@ -36,23 +36,20 @@ inline namespace _v1
 {
     future<> function_definition::_analyze(analysis_context & ctx)
     {
-        _function = make_function("overloadable function",
-            nullptr,
-            {},
-            [=](ir_generation_context & ctx) {
-                auto ret = codegen::ir::function{ U"call",
-                    {},
-                    fmap(
-                        _parameter_list, [&](auto && param) { return std::get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
-                    _body->codegen_return(ctx),
-                    _body->codegen_ir(ctx) };
-                ret.is_member = true;
-                return ret;
-            },
-            get_ast_info().value().range);
+        _function = make_function("overloadable function", get_ast_info().value().range);
         _function->set_name(U"call");
+        _function->set_codegen([=](ir_generation_context & ctx) {
+            auto ret = codegen::ir::function{ U"call",
+                {},
+                fmap(_parameter_list, [&](auto && param) { return std::get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
+                _body->codegen_return(ctx),
+                _body->codegen_ir(ctx) };
+            ret.is_member = true;
+            return ret;
+        });
         _function->make_member();
         _function->set_scopes_generator([this](auto && ctx) { return this->_overload_set->get_type()->codegen_scopes(ctx); });
+
         _overload_set->add_function(this);
 
         auto initial_future = [&] {

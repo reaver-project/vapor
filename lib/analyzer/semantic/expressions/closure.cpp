@@ -58,25 +58,23 @@ inline namespace _v1
 
                 auto ret_expr = _return_type ? _return_type->get() : _body->return_type()->get_expression();
 
-                auto function = make_function("closure",
-                    ret_expr,
-                    fmap(_parameter_list, [](auto && param) -> expression * { return param.get(); }),
-                    [this](ir_generation_context & ctx) {
-                        auto ret = codegen::ir::function{
-                            U"operator()",
-                            {},
-                            fmap(_parameter_list,
-                                [&](auto && param) { return std::get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
-                            _body->codegen_return(ctx),
-                            _body->codegen_ir(ctx),
-                        };
-                        ret.is_member = true;
-                        return ret;
-                    },
-                    get_ast_info().value().range);
-
+                auto function = make_function("closure", get_ast_info().value().range);
                 function->set_name(U"operator()");
                 function->set_body(_body.get());
+                function->set_return_type(ret_expr);
+                function->set_parameters(fmap(_parameter_list, [](auto && param) -> expression * { return param.get(); }));
+                function->set_codegen([this](ir_generation_context & ctx) {
+                    auto ret = codegen::ir::function{
+                        U"operator()",
+                        {},
+                        fmap(_parameter_list,
+                            [&](auto && param) { return std::get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
+                        _body->codegen_return(ctx),
+                        _body->codegen_ir(ctx),
+                    };
+                    ret.is_member = true;
+                    return ret;
+                });
 
                 auto fn_ptr = function.get();
                 _type = std::make_unique<closure_type>(_scope.get(), this, std::move(function));

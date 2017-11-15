@@ -90,12 +90,9 @@ inline namespace _v1
                 _generic_ctor_first_arg = make_runtime_value(builtin_types().type.get());
                 _generic_ctor_pack_arg = make_runtime_value(builtin_types().unconstrained->get_pack_type());
 
-                _generic_ctor = make_function(
-                    "generic constructor", nullptr, { _generic_ctor_first_arg.get(), _generic_ctor_pack_arg.get() }, [](auto &&) -> codegen::ir::function {
-                        assert(!"tried to codegen the generic constructor!");
-                    });
-
+                _generic_ctor = make_function("generic constructor");
                 _generic_ctor->set_return_type(_generic_ctor_first_arg.get());
+                _generic_ctor->set_parameters({ _generic_ctor_first_arg.get(), _generic_ctor_pack_arg.get() });
 
                 _generic_ctor->make_member();
 

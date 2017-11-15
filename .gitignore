@@ -13,3 +13,4 @@ tags
 .gdb_history
 build*
 *.vprm
+*.tmp

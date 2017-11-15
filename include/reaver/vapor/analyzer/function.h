@@ -52,23 +52,8 @@ inline namespace _v1
     class function
     {
     public:
-        function(std::string explanation,
-            expression * ret,
-            std::vector<expression *> params,
-            function_codegen codegen,
-            std::optional<range_type> range = std::nullopt)
-            : _explanation{ std::move(explanation) },
-              _range{ std::move(range) },
-              _return_type_expression{ ret },
-              _parameters{ std::move(params) },
-              _codegen{ std::move(codegen) }
+        function(std::string explanation, std::optional<range_type> range = std::nullopt) : _explanation{ std::move(explanation) }, _range{ std::move(range) }
         {
-            if (ret)
-            {
-                _return_type_future = make_ready_future(ret);
-                return;
-            }
-
             auto pair = make_promise<expression *>();
             _return_type_promise = std::move(pair.promise);
             _return_type_future = std::move(pair.future);
@@ -163,6 +148,12 @@ inline namespace _v1
             _body = body;
         }
 
+        void set_codegen(function_codegen cdg)
+        {
+            assert(!_codegen);
+            _codegen = std::move(cdg);
+        }
+
         block * get_body() const
         {
             return _body;
@@ -211,7 +202,7 @@ inline namespace _v1
 
         block * _body = nullptr;
         mutable std::mutex _ret_lock;
-        expression * _return_type_expression;
+        expression * _return_type_expression = nullptr;
         std::optional<future<expression *>> _return_type_future;
         std::optional<manual_promise<expression *>> _return_type_promise;
         // this is shared ONLY because unique_ptr would require the definition of `expression`
@@ -221,7 +212,7 @@ inline namespace _v1
         bool _is_builtin = false;
         std::vector<expression *> _parameters;
         std::optional<std::u32string> _name;
-        function_codegen _codegen;
+        std::optional<function_codegen> _codegen;
         mutable std::optional<codegen::ir::function> _ir;
 
         std::vector<function_hook> _analysis_hooks;
@@ -232,13 +223,9 @@ inline namespace _v1
         expression * _entry_expr = nullptr;
     };
 
-    inline std::unique_ptr<function> make_function(std::string expl,
-        expression * return_type,
-        std::vector<expression *> parameters,
-        function_codegen codegen,
-        std::optional<range_type> range = std::nullopt)
+    inline std::unique_ptr<function> make_function(std::string expl, std::optional<range_type> range = std::nullopt)
     {
-        return std::make_unique<function>(std::move(expl), std::move(return_type), std::move(parameters), std::move(codegen), std::move(range));
+        return std::make_unique<function>(std::move(expl), std::move(range));
     }
 }
 }

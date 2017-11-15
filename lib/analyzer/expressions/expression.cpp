@@ -92,12 +92,12 @@ inline namespace _v1
                 },
 
                 [&](const parser::template_expression & texpr) -> std::unique_ptr<expression> {
-                    auto tplexpr = preanalyze_template_expression(texpr, lex_scope);
+                    auto tplexpr = preanalyze_template_expression(ctx, texpr, lex_scope);
                     return tplexpr;
                 },
 
                 [&](const parser::instance_literal & inst) -> std::unique_ptr<expression> {
-                    auto instlit = preanalyze_instance_literal(inst, lex_scope);
+                    auto instlit = preanalyze_instance_literal(ctx, inst, lex_scope);
                     return instlit;
                 },
 

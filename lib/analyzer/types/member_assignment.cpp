@@ -47,10 +47,9 @@ inline namespace _v1
 
         auto expr = make_runtime_value(builtin_types().unconstrained.get());
 
-        auto overload = make_function("member assignment", nullptr, { _expr, expr.get() }, [](auto &&) -> codegen::ir::function {
-            assert(!"trying to codegen a member-assignment expression");
-        });
+        auto overload = make_function("member assignment");
         overload->set_return_type(assigned_type()->get_expression());
+        overload->set_parameters({ _expr, expr.get() });
         overload->add_analysis_hook([this](auto &&, auto && call_expr, std::vector<expression *> args) {
             assert(args.size() == 2);
             _expr->set_rhs(args.back());

@@ -48,7 +48,7 @@ inline namespace _v1
         range_type range;
         id_expression typeclass_name;
         expression_list arguments;
-        std::vector<variant<function_definition>> definitions;
+        std::vector<std::variant<function_definition>> definitions;
     };
 
     struct default_instance_definition

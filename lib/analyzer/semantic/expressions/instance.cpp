@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -32,13 +32,13 @@ inline namespace _v1
     future<> instance_literal::_analyze(analysis_context & ctx)
     {
         return foldl(_typeclass_name,
-            make_ready_future<const scope *>(_original_scope),
-            [](future<const scope *> lex_scope, auto && name) {
-                return lex_scope.then([name](const scope * lex_scope) { return lex_scope->get_future(name); })
-                    .then([](symbol * symb) { return symb->get_expression_future(); })
-                    .then([](auto && expr) { return expr->get_type()->get_scope(); });
+            make_ready_future<scope *>(+_original_scope),
+            [](future<scope *> lex_scope, auto && name) {
+                return lex_scope.then([name](scope * lex_scope) { return lex_scope->get(name)->get_expression_future(); }).then([](auto && expr) {
+                    return expr->get_type()->get_scope();
+                });
             })
-            .then([&](const scope * typeclass_scope) {
+            .then([&](scope * typeclass_scope) {
                 assert(0);
                 // combine scopes
                 _definitions = _late_preanalysis(_combined_scopes.get());

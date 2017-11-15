@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -30,14 +30,14 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<instance_literal> preanalyze_instance_literal(const parser::instance_literal & parse, scope * lex_scope)
+    std::unique_ptr<instance_literal> preanalyze_instance_literal(precontext & ctx, const parser::instance_literal & parse, scope * lex_scope)
     {
         auto name_id_expr = fmap(parse.typeclass_name.id_expression_value, [&](auto && token) { return token.value.string; });
 
-        auto late_preanalysis = [&parse](scope * lex_scope) {
+        auto late_preanalysis = [&parse, &ctx](scope * lex_scope) {
             return fmap(parse.definitions, [&](auto && definition) {
-                return get<0>(fmap(definition, make_overload_set([&](const parser::function_definition & func) -> std::unique_ptr<statement> {
-                    return preanalyze_function_definition(func, lex_scope);
+                return std::get<0>(fmap(definition, make_overload_set([&](const parser::function_definition & func) -> std::unique_ptr<statement> {
+                    return preanalyze_function_definition(ctx, func, lex_scope);
                 })));
             });
         };
@@ -45,7 +45,7 @@ inline namespace _v1
         return std::make_unique<instance_literal>(make_node(parse),
             lex_scope,
             std::move(name_id_expr),
-            fmap(parse.arguments.expressions, [&](auto && expr) { return preanalyze_expression(expr, lex_scope); }),
+            fmap(parse.arguments.expressions, [&](auto && expr) { return preanalyze_expression(ctx, expr, lex_scope); }),
             std::move(late_preanalysis));
     }
 

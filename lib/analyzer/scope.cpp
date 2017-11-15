@@ -145,9 +145,9 @@ inline namespace _v1
         static auto type_type_expr = builtin_types().type->get_expression();
 
         static auto sized_int = [] {
-            auto ret = make_function("sized_int", builtin_types().type->get_expression(), { integer_type_expr }, [](auto && ctx) -> codegen::ir::function {
-                assert(!"trying to codegen sized_int");
-            });
+            auto ret = make_function("sized_int");
+            ret->set_return_type(builtin_types().type->get_expression());
+            ret->set_parameters({ integer_type_expr });
 
             ret->add_analysis_hook([](analysis_context & ctx, call_expression * expr, std::vector<expression *> args) {
                 assert(args.size() == 2 && args[1]->get_type() == builtin_types().integer.get());

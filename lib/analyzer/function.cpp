@@ -151,7 +151,8 @@ inline namespace _v1
 
         if (!_ir)
         {
-            _ir = _codegen(ctx);
+            assert(_codegen);
+            _ir = _codegen.value()(ctx);
             _ir->is_member = _is_member;
             _ir->is_builtin = _is_builtin;
 

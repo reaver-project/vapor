@@ -110,36 +110,33 @@ inline namespace _v1
             return ret;
         });
 
-        _aggregate_ctor = make_function("struct type constructor",
-            get_expression(),
-            fmap(_data_members, [](auto && member) -> expression * { return member; }),
-            [&](auto && ctx) -> codegen::ir::function {
-                auto ir_type = this->codegen_type(ctx);
-                auto args = fmap(_data_members, [&](auto && member) {
-                    auto ret = codegen::ir::make_variable(member->get_type()->codegen_type(ctx));
-                    return ret;
-                });
+        _aggregate_ctor = make_function("struct type constructor");
+        _aggregate_ctor->set_return_type(get_expression());
+        _aggregate_ctor->set_parameters(fmap(_data_members, [](auto && member) -> expression * { return member; }));
+        _aggregate_ctor->set_codegen([&](auto && ctx) -> codegen::ir::function {
+            auto ir_type = this->codegen_type(ctx);
+            auto args = fmap(_data_members, [&](auto && member) { return codegen::ir::make_variable(member->get_type()->codegen_type(ctx)); });
 
-                auto result = codegen::ir::make_variable(ir_type);
+            auto result = codegen::ir::make_variable(ir_type);
 
-                auto scopes = this->get_scope()->codegen_ir();
-                scopes.emplace_back(get_name(), codegen::ir::scope_type::type);
+            auto scopes = this->get_scope()->codegen_ir();
+            scopes.emplace_back(get_name(), codegen::ir::scope_type::type);
 
-                codegen::ir::function ret = { U"constructor",
-                    std::move(scopes),
-                    args,
-                    result,
-                    { codegen::ir::instruction{ std::nullopt,
-                          std::nullopt,
-                          { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() },
-                          fmap(args, [](auto && arg) -> codegen::ir::value { return arg; }),
-                          result },
-                        codegen::ir::instruction{
-                            std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
-                ret.is_defined = !_is_imported;
-                ret.is_exported = _is_exported;
-                return ret;
-            });
+            codegen::ir::function ret = { U"constructor",
+                std::move(scopes),
+                args,
+                result,
+                { codegen::ir::instruction{ std::nullopt,
+                      std::nullopt,
+                      { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() },
+                      fmap(args, [](auto && arg) -> codegen::ir::value { return arg; }),
+                      result },
+                    codegen::ir::instruction{
+                        std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
+            ret.is_defined = !_is_imported;
+            ret.is_exported = _is_exported;
+            return ret;
+        });
 
         _aggregate_ctor->set_scopes_generator([this](auto && ctx) { return this->codegen_scopes(ctx); });
 
@@ -178,33 +175,35 @@ inline namespace _v1
         _this_argument = make_runtime_value(this);
         data_members.insert(data_members.begin(), _this_argument.get());
 
-        _aggregate_copy_ctor =
-            make_function("struct type copy replacement constructor", get_expression(), data_members, [&](auto && ctx) -> codegen::ir::function {
-                auto ir_type = this->codegen_type(ctx);
-                auto args = fmap(_data_members, [&](auto && member) {
-                    auto ret = codegen::ir::make_variable(member->get_type()->codegen_type(ctx));
-                    return ret;
-                });
-                auto result = codegen::ir::make_variable(ir_type);
-
-                auto scopes = this->get_scope()->codegen_ir();
-                scopes.emplace_back(get_name(), codegen::ir::scope_type::type);
-
-                codegen::ir::function ret = { U"replacing_copy_constructor",
-                    std::move(scopes),
-                    args,
-                    result,
-                    { codegen::ir::instruction{ std::nullopt,
-                          std::nullopt,
-                          { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() },
-                          fmap(args, [](auto && arg) -> codegen::ir::value { return arg; }),
-                          result },
-                        codegen::ir::instruction{
-                            std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
-                ret.is_defined = !_is_imported;
-                ret.is_exported = _is_exported;
+        _aggregate_copy_ctor = make_function("struct type copy replacement constructor");
+        _aggregate_copy_ctor->set_return_type(get_expression());
+        _aggregate_copy_ctor->set_parameters(data_members);
+        _aggregate_copy_ctor->set_codegen([&](auto && ctx) -> codegen::ir::function {
+            auto ir_type = this->codegen_type(ctx);
+            auto args = fmap(_data_members, [&](auto && member) {
+                auto ret = codegen::ir::make_variable(member->get_type()->codegen_type(ctx));
                 return ret;
             });
+            auto result = codegen::ir::make_variable(ir_type);
+
+            auto scopes = this->get_scope()->codegen_ir();
+            scopes.emplace_back(get_name(), codegen::ir::scope_type::type);
+
+            codegen::ir::function ret = { U"replacing_copy_constructor",
+                std::move(scopes),
+                args,
+                result,
+                { codegen::ir::instruction{ std::nullopt,
+                      std::nullopt,
+                      { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() },
+                      fmap(args, [](auto && arg) -> codegen::ir::value { return arg; }),
+                      result },
+                    codegen::ir::instruction{
+                        std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
+            ret.is_defined = !_is_imported;
+            ret.is_exported = _is_exported;
+            return ret;
+        });
 
         _aggregate_copy_ctor->set_scopes_generator([this](auto && ctx) { return this->codegen_scopes(ctx); });
 

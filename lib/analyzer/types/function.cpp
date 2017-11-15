@@ -36,10 +36,9 @@ inline namespace _v1
     {
         _params.insert(_params.begin(), make_runtime_value(this));
 
-        _call_operator = make_function("function type " + function_type::explain() + " call operator",
-            _return->get_expression(),
-            fmap(_params, [](auto && expr) { return expr.get(); }),
-            [&](auto && ctx) -> codegen::ir::function { assert(0); });
+        _call_operator = make_function("function type " + function_type::explain() + " call operator");
+        _call_operator->set_return_type(_return->get_expression());
+        _call_operator->set_parameters(fmap(_params, [](auto && expr) { return expr.get(); }));
 
         _call_operator->make_member();
 

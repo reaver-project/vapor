@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -29,15 +29,15 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<template_expression> preanalyze_template_expression(const parser::template_expression & parse, scope * lex_scope)
+    std::unique_ptr<template_expression> preanalyze_template_expression(precontext & ctx, const parser::template_expression & parse, scope * lex_scope)
     {
         auto scope = lex_scope->clone_for_class();
         auto scope_ptr = scope.get();
         return std::make_unique<template_expression>(make_node(parse),
             std::move(scope),
-            preanalyze_parameter_list(parse.parameters.template_parameters, scope_ptr),
-            get<0>(fmap(parse.expression, make_overload_set([&](const parser::typeclass_literal & typeclass) -> std::unique_ptr<expression> {
-                return preanalyze_typeclass_literal(typeclass, scope_ptr);
+            preanalyze_parameter_list(ctx, parse.parameters.template_parameters, scope_ptr),
+            std::get<0>(fmap(parse.expression, make_overload_set([&](const parser::typeclass_literal & typeclass) -> std::unique_ptr<expression> {
+                return preanalyze_typeclass_literal(ctx, typeclass, scope_ptr);
             }))));
     }
 
