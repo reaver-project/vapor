@@ -126,6 +126,11 @@ inline namespace _v1
         {
             auto symb = scope->try_get(name);
 
+            if (!symb && _combined_with)
+            {
+                symb = _combined_with->try_get(name);
+            }
+
             if (symb && !symb.value()->is_hidden())
             {
                 _resolve_cache.emplace(name, symb.value());
