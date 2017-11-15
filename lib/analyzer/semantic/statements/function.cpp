@@ -34,23 +34,19 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    future<> function_definition::_analyze(analysis_context & ctx)
+    future<> function_declaration::_analyze(analysis_context & ctx)
     {
         _function = make_function("overloadable function", get_ast_info().value().range);
         _function->set_name(U"call");
-        _function->set_codegen([=](ir_generation_context & ctx) {
-            auto ret = codegen::ir::function{ U"call",
-                {},
-                fmap(_parameter_list, [&](auto && param) { return std::get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
-                _body->codegen_return(ctx),
-                _body->codegen_ir(ctx) };
-            ret.is_member = true;
-            return ret;
-        });
         _function->make_member();
         _function->set_scopes_generator([this](auto && ctx) { return this->_overload_set->get_type()->codegen_scopes(ctx); });
 
         _overload_set->add_function(this);
+
+        if (_template_params)
+        {
+            return make_ready_future();
+        }
 
         auto initial_future = [&] {
             if (_return_type)
@@ -68,12 +64,36 @@ inline namespace _v1
             return make_ready_future();
         }();
 
-        return initial_future.then([&] { return when_all(fmap(_parameter_list, [&](auto && param) { return param->analyze(ctx); })); })
-            .then([&] {
-                auto params = fmap(_parameter_list, [](auto && param) -> expression * { return param.get(); });
-                params.insert(params.begin(), _overload_set.get());
+        return initial_future.then([&] { return when_all(fmap(_parameter_list, [&](auto && param) { return param->analyze(ctx); })); }).then([&] {
+            auto params = fmap(_parameter_list, [](auto && param) -> expression * { return param.get(); });
+            params.insert(params.begin(), _overload_set.get());
 
-                _function->set_parameters(std::move(params));
+            _function->set_parameters(std::move(params));
+        });
+    }
+
+    future<> function_definition::_analyze(analysis_context & ctx)
+    {
+        auto base_future = function_declaration::_analyze(ctx);
+
+        if (_template_params)
+        {
+            return base_future;
+        }
+
+        return base_future
+            .then([&] {
+                _function->set_name(U"call");
+                _function->set_codegen([=](ir_generation_context & ctx) {
+                    auto ret = codegen::ir::function{ U"call",
+                        {},
+                        fmap(_parameter_list,
+                            [&](auto && param) { return std::get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
+                        _body->codegen_return(ctx),
+                        _body->codegen_ir(ctx) };
+                    ret.is_member = true;
+                    return ret;
+                });
 
                 return _body->analyze(ctx);
             })

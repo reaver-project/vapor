@@ -57,9 +57,9 @@ inline namespace _v1
         return { { std::get<std::shared_ptr<codegen::ir::variable>>(codegen_ir(ctx).back().result) } };
     }
 
-    void overload_set::add_function(function_definition * decl)
+    void overload_set::add_function(function_declaration * decl)
     {
-        _function_defs.push_back(decl);
+        _function_decls.push_back(decl);
         _type->add_function(decl->get_function());
     }
 

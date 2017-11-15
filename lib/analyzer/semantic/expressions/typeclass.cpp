@@ -29,7 +29,11 @@ inline namespace _v1
 {
     future<> typeclass_literal::_analyze(analysis_context & ctx)
     {
-        assert(0);
+        return when_all(fmap(_declarations, [&](auto && decl) {
+            decl->set_template_parameters(_params);
+            return decl->analyze(ctx);
+        }));
+        // TODO: create a function that'll allow invoking instances of the typeclass
     }
 }
 }

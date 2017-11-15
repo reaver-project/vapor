@@ -23,6 +23,7 @@
 #include <reaver/prelude/fold.h>
 
 #include "vapor/analyzer/expressions/instance.h"
+#include "vapor/analyzer/expressions/typeclass.h"
 #include "vapor/analyzer/symbol.h"
 
 namespace reaver::vapor::analyzer
@@ -31,18 +32,31 @@ inline namespace _v1
 {
     future<> instance_literal::_analyze(analysis_context & ctx)
     {
-        return foldl(_typeclass_name,
-            make_ready_future<scope *>(+_original_scope),
-            [](future<scope *> lex_scope, auto && name) {
-                return lex_scope.then([name](scope * lex_scope) { return lex_scope->get(name)->get_expression_future(); }).then([](auto && expr) {
-                    return expr->get_type()->get_scope();
-                });
-            })
-            .then([&](scope * typeclass_scope) {
-                assert(0);
-                // combine scopes
-                _definitions = _late_preanalysis(_combined_scopes.get());
+        auto name = _typeclass_name;
+        auto top_level = std::move(name.front());
+        name.erase(name.begin());
+
+        future<expression *> expr = _original_scope->resolve(top_level)->get_expression_future();
+
+        if (!name.empty())
+        {
+            expr = foldl(name, std::move(expr), [&ctx](future<expression *> expr, auto && name) {
+                return expr.then([&](auto && expr) { return expr->analyze(ctx).then([expr] { return expr->get_type()->get_scope(); }); })
+                    .then([name = std::move(name)](const scope * lex_scope) { return lex_scope->get(name)->get_expression_future(); });
             });
+        }
+
+        return expr.then([](expression * expr) {
+            auto typeclass = expr->_get_replacement()->as<typeclass_literal>();
+            assert(typeclass);
+
+            auto scope = typeclass->get_scope();
+            assert(scope);
+
+            //"combine" the scopes
+            // late preanalyze
+            assert(0);
+        });
     }
 }
 }

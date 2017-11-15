@@ -22,15 +22,46 @@
 
 #include "vapor/parser/typeclass.h"
 #include "vapor/analyzer/expressions/typeclass.h"
+#include "vapor/analyzer/statements/function.h"
 #include "vapor/analyzer/symbol.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<typeclass_literal> preanalyze_typeclass_literal(precontext & ctx, const parser::typeclass_literal & tpl, scope * lex_scope)
+    std::unique_ptr<typeclass_literal> preanalyze_typeclass_literal(precontext & ctx, const parser::typeclass_literal & parse, scope * lex_scope)
     {
-        return std::make_unique<typeclass_literal>();
+        auto scope = lex_scope->clone_for_class();
+        auto scope_ptr = scope.get();
+
+        auto ret = std::make_unique<typeclass_literal>(make_node(parse), std::move(scope), fmap(parse.members, [&](auto && member) {
+            return std::get<0>(fmap(member,
+                make_overload_set([&](const parser::function_declaration & decl)
+                                      -> std::unique_ptr<statement> { return preanalyze_function_declaration(ctx, decl, scope_ptr); },
+                    [&](const parser::function_definition & def) -> std::unique_ptr<statement> {
+                        return preanalyze_function_definition(ctx, def, scope_ptr);
+                    })));
+        }));
+
+        scope_ptr->close();
+
+        return ret;
+    }
+
+    typeclass_literal::typeclass_literal(ast_node parse, std::unique_ptr<scope> lex_scope, std::vector<std::unique_ptr<statement>> declarations)
+        : _scope{ std::move(lex_scope) }, _declarations{ std::move(declarations) }
+    {
+        _set_ast_info(parse);
+
+        auto pair = make_promise<void>();
+        _parameters_set = std::move(pair.future);
+        _parameters_set_promise = std::move(pair.promise);
+    }
+
+    void typeclass_literal::set_template_parameters(std::vector<parameter *> params)
+    {
+        _params = std::move(params);
+        _parameters_set_promise->set();
     }
 
     void typeclass_literal::print(std::ostream & os, print_context ctx) const

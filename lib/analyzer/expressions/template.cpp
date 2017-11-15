@@ -33,12 +33,14 @@ inline namespace _v1
     {
         auto scope = lex_scope->clone_for_class();
         auto scope_ptr = scope.get();
-        return std::make_unique<template_expression>(make_node(parse),
+        auto ret = std::make_unique<template_expression>(make_node(parse),
             std::move(scope),
             preanalyze_parameter_list(ctx, parse.parameters.template_parameters, scope_ptr),
             std::get<0>(fmap(parse.expression, make_overload_set([&](const parser::typeclass_literal & typeclass) -> std::unique_ptr<expression> {
                 return preanalyze_typeclass_literal(ctx, typeclass, scope_ptr);
             }))));
+        scope_ptr->close();
+        return ret;
     }
 
     template_expression::template_expression(ast_node parse,

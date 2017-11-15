@@ -33,6 +33,25 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    std::unique_ptr<function_declaration> preanalyze_function_declaration(precontext & ctx, const parser::function_declaration & parse, scope *& lex_scope)
+    {
+        auto function_scope = lex_scope->clone_local();
+
+        parameter_list params;
+        if (parse.parameters)
+        {
+            params = preanalyze_parameter_list(ctx, parse.parameters.value(), function_scope.get());
+        }
+        function_scope->close();
+        auto function_scope_ptr = function_scope.get();
+
+        return std::make_unique<function_declaration>(make_node(parse),
+            parse.name.value.string,
+            std::move(params),
+            fmap(parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ctx, ret_type, function_scope_ptr); }),
+            std::move(function_scope));
+    }
+
     std::unique_ptr<function_definition> preanalyze_function_definition(precontext & ctx, const parser::function_definition & parse, scope *& lex_scope)
     {
         auto function_scope = lex_scope->clone_local();
@@ -43,6 +62,7 @@ inline namespace _v1
             params = preanalyze_parameter_list(ctx, parse.signature.parameters.value(), function_scope.get());
         }
         function_scope->close();
+        auto function_scope_ptr = function_scope.get();
 
         auto ret = std::make_unique<function_definition>(make_node(parse),
             parse.signature.name.value.string,
@@ -66,17 +86,12 @@ inline namespace _v1
         return ret;
     }
 
-    function_definition::function_definition(ast_node parse,
+    function_declaration::function_declaration(ast_node parse,
         std::u32string name,
         parameter_list params,
         std::optional<std::unique_ptr<expression>> return_type,
-        std::unique_ptr<block> body,
         std::unique_ptr<scope> scope)
-        : _name{ std::move(name) },
-          _parameter_list{ std::move(params) },
-          _return_type{ std::move(return_type) },
-          _body{ std::move(body) },
-          _scope{ std::move(scope) }
+        : _name{ std::move(name) }, _parameter_list{ std::move(params) }, _return_type{ std::move(return_type) }, _scope{ std::move(scope) }
     {
         _set_ast_info(parse);
 
@@ -96,6 +111,21 @@ inline namespace _v1
         }
 
         _overload_set = symbol.value()->get_expression()->as<overload_set>()->shared_from_this();
+    }
+
+    function_definition::function_definition(ast_node parse,
+        std::u32string name,
+        parameter_list params,
+        std::optional<std::unique_ptr<expression>> return_type,
+        std::unique_ptr<block> body,
+        std::unique_ptr<scope> scope)
+        : function_declaration{ parse, std::move(name), std::move(params), std::move(return_type), std::move(scope) }, _body{ std::move(body) }
+    {
+    }
+
+    void function_declaration::print(std::ostream & os, print_context ctx) const
+    {
+        assert(0);
     }
 
     void function_definition::print(std::ostream & os, print_context ctx) const
@@ -123,6 +153,17 @@ inline namespace _v1
         auto body_ctx = ctx.make_branch(true);
         os << styles::def << body_ctx << styles::subrule_name << "body:\n";
         _body->print(os, body_ctx.make_branch(true));
+    }
+
+    void function_declaration::set_template_parameters(std::vector<parameter *> params)
+    {
+        assert(!_template_params);
+        _template_params = std::move(params);
+    }
+
+    statement_ir function_declaration::_codegen_ir(ir_generation_context &) const
+    {
+        return {};
     }
 
     statement_ir function_definition::_codegen_ir(ir_generation_context &) const

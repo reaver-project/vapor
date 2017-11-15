@@ -36,6 +36,16 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
+        virtual expression * _get_replacement() override
+        {
+            return _templated_expression.get();
+        }
+
+        virtual expression * _get_replacement() const override
+        {
+            return _templated_expression.get();
+        }
+
     private:
         virtual future<> _analyze(analysis_context & ctx) override;
         virtual future<expression *> _simplify_expr(recursive_context ctx) override;

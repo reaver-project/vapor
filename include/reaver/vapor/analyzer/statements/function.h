@@ -38,7 +38,53 @@ inline namespace _v1
     class function_definition;
     class overload_set;
 
-    class function_definition : public statement
+    class function_declaration : public statement
+    {
+    public:
+        function_declaration(ast_node parse,
+            std::u32string name,
+            parameter_list params,
+            std::optional<std::unique_ptr<expression>> return_type,
+            std::unique_ptr<scope> scope);
+
+        virtual void print(std::ostream & os, print_context ctx) const override;
+        virtual void set_template_parameters(std::vector<parameter *>) override;
+
+        scope * get_function_scope() const
+        {
+            return _scope.get();
+        }
+
+        function * get_function() const
+        {
+            return _function.get();
+        }
+
+    protected:
+        virtual future<> _analyze(analysis_context &) override;
+
+    private:
+        virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override
+        {
+            return make_null_statement();
+        }
+
+        virtual future<statement *> _simplify(recursive_context) override;
+        virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+
+    protected:
+        std::u32string _name;
+        parameter_list _parameter_list;
+        std::optional<std::unique_ptr<expression>> _return_type;
+        std::shared_ptr<overload_set> _overload_set;
+
+        std::unique_ptr<scope> _scope;
+
+        std::unique_ptr<function> _function;
+        std::optional<std::vector<parameter *>> _template_params;
+    };
+
+    class function_definition : public function_declaration
     {
     public:
         function_definition(ast_node parse,
@@ -47,11 +93,6 @@ inline namespace _v1
             std::optional<std::unique_ptr<expression>> return_type,
             std::unique_ptr<block> body,
             std::unique_ptr<scope> scope);
-
-        function * get_function() const
-        {
-            return _function.get();
-        }
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
@@ -66,14 +107,8 @@ inline namespace _v1
         virtual future<statement *> _simplify(recursive_context) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-        std::u32string _name;
-        parameter_list _parameter_list;
-
-        std::optional<std::unique_ptr<expression>> _return_type;
-        std::unique_ptr<block> _body;
-        std::unique_ptr<scope> _scope;
-        std::unique_ptr<function> _function;
         std::shared_ptr<overload_set> _overload_set;
+        std::unique_ptr<block> _body;
         std::unique_ptr<expression> _self;
     };
 }
@@ -83,6 +118,7 @@ namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
+    struct function_declaration;
     struct function_definition;
 }
 }
@@ -93,6 +129,7 @@ inline namespace _v1
 {
     struct precontext;
 
+    std::unique_ptr<function_declaration> preanalyze_function_declaration(precontext & ctx, const parser::function_declaration & func, scope *& lex_scope);
     std::unique_ptr<function_definition> preanalyze_function_definition(precontext & ctx, const parser::function_definition & func, scope *& lex_scope);
 }
 }
