@@ -43,25 +43,22 @@ inline namespace _v1
 
         _overload_set->add_function(this);
 
-        if (_template_params)
-        {
-            return make_ready_future();
-        }
-
         auto initial_future = [&] {
-            if (_return_type)
+            if (!_return_type)
             {
-                return (*_return_type)->analyze(ctx).then([&] {
-                    auto & type_expr = *_return_type;
-
-                    assert(type_expr->get_type() == builtin_types().type.get());
-                    assert(type_expr->is_constant());
-
-                    _function->set_return_type(_return_type.value()->_get_replacement());
-                });
+                return make_ready_future();
             }
 
-            return make_ready_future();
+            return (*_return_type)->analyze(ctx).then([&] {
+                if (!_template_params)
+                {
+                    auto & type_expr = *_return_type;
+                    assert(type_expr->get_type() == builtin_types().type.get());
+                    assert(type_expr->is_constant());
+                }
+
+                _function->set_return_type(_return_type->get());
+            });
         }();
 
         return initial_future.then([&] { return when_all(fmap(_parameter_list, [&](auto && param) { return param->analyze(ctx); })); }).then([&] {

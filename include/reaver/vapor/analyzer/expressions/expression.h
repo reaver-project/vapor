@@ -77,6 +77,11 @@ inline namespace _v1
             return _type;
         }
 
+        type * try_get_type() const
+        {
+            return _type;
+        }
+
         friend class replacements;
 
     private:

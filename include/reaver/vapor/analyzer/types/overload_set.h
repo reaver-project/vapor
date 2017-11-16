@@ -60,12 +60,16 @@ inline namespace _v1
         }
 
         virtual void print(std::ostream & os, print_context ctx) const override;
-
         virtual future<std::vector<function *>> get_candidates(lexer::token_type bracket) const override;
 
         void mark_exported()
         {
             _is_exported = true;
+        }
+
+        const std::vector<function *> & get_overloads() const
+        {
+            return _functions;
         }
 
     private:

@@ -49,6 +49,11 @@ inline namespace _v1
 
         void add_function(function_declaration * fn);
 
+        const std::vector<function *> & get_overloads() const
+        {
+            return _type->get_overloads();
+        }
+
         virtual void print(std::ostream & os, print_context) const override
         {
             assert(0);

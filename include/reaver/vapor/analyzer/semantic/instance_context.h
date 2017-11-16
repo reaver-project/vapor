@@ -20,22 +20,27 @@
  *
  **/
 
-#include "vapor/analyzer/expressions/typeclass.h"
-#include "vapor/analyzer/symbol.h"
+#pragma once
+
+#include <string>
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    future<> typeclass_literal::_analyze(analysis_context & ctx)
+    class scope;
+    class expression;
+
+    struct instance_context
     {
-        return _parameters_set->then([&] {
-            return when_all(fmap(_declarations, [&](auto && decl) {
-                decl->set_template_parameters(_params);
-                return decl->analyze(ctx);
-            }));
-        });
-        // TODO: create a function that'll allow invoking instances of the typeclass
-    }
+        const scope * tc_scope;
+        const std::vector<expression *> & arguments;
+    };
+
+    struct instance_function_context
+    {
+        const instance_context & instance;
+        const std::u32string & function_name;
+    };
 }
 }

@@ -26,6 +26,7 @@
 
 #include "../expressions/expression.h"
 #include "../function.h"
+#include "../semantic/instance_context.h"
 #include "../semantic/parameter_list.h"
 #include "../statements/block.h"
 #include "../statements/statement.h"
@@ -130,6 +131,9 @@ inline namespace _v1
     struct precontext;
 
     std::unique_ptr<function_declaration> preanalyze_function_declaration(precontext & ctx, const parser::function_declaration & func, scope *& lex_scope);
-    std::unique_ptr<function_definition> preanalyze_function_definition(precontext & ctx, const parser::function_definition & func, scope *& lex_scope);
+    std::unique_ptr<function_definition> preanalyze_function_definition(precontext & prectx,
+        const parser::function_definition & func,
+        scope *& lex_scope,
+        std::optional<instance_context> ctx = std::nullopt);
 }
 }

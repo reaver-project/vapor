@@ -52,14 +52,23 @@ inline namespace _v1
             std::move(function_scope));
     }
 
-    std::unique_ptr<function_definition> preanalyze_function_definition(precontext & ctx, const parser::function_definition & parse, scope *& lex_scope)
+    std::unique_ptr<function_definition> preanalyze_function_definition(precontext & prectx,
+        const parser::function_definition & parse,
+        scope *& lex_scope,
+        std::optional<instance_context> inst_ctx)
     {
         auto function_scope = lex_scope->clone_local();
+
+        std::optional<instance_function_context> ctx;
+        if (inst_ctx)
+        {
+            ctx.emplace(instance_function_context{ inst_ctx.value(), parse.signature.name.value.string });
+        }
 
         parameter_list params;
         if (parse.signature.parameters)
         {
-            params = preanalyze_parameter_list(ctx, parse.signature.parameters.value(), function_scope.get());
+            params = preanalyze_parameter_list(prectx, parse.signature.parameters.value(), function_scope.get(), ctx);
         }
         function_scope->close();
         auto function_scope_ptr = function_scope.get();
@@ -67,8 +76,8 @@ inline namespace _v1
         auto ret = std::make_unique<function_definition>(make_node(parse),
             parse.signature.name.value.string,
             std::move(params),
-            fmap(parse.signature.return_type, [&](auto && ret_type) { return preanalyze_expression(ctx, ret_type, function_scope.get()); }),
-            preanalyze_block(ctx, *parse.body, function_scope.get(), true),
+            fmap(parse.signature.return_type, [&](auto && ret_type) { return preanalyze_expression(prectx, ret_type, function_scope.get()); }),
+            preanalyze_block(prectx, *parse.body, function_scope.get(), true),
             std::move(function_scope));
 
         if (parse.signature.export_)
@@ -159,6 +168,10 @@ inline namespace _v1
     {
         assert(!_template_params);
         _template_params = std::move(params);
+        for (auto && param : _parameter_list)
+        {
+            param->set_template_parameters(_template_params.value());
+        }
     }
 
     statement_ir function_declaration::_codegen_ir(ir_generation_context &) const

@@ -26,6 +26,7 @@
 #include "../expressions/expression_ref.h"
 #include "../expressions/type.h"
 #include "../symbol.h"
+#include "instance_context.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -47,13 +48,22 @@ inline namespace _v1
             _type_expression->print(os, type_expr_ctx.make_branch(true));
         }
 
+        virtual void set_template_parameters(std::vector<parameter *> params) override
+        {
+            assert(!_template_params);
+            _template_params = std::move(params);
+        }
+
     private:
         virtual future<> _analyze(analysis_context & ctx) override
         {
             return _type_expression->analyze(ctx).then([&] {
-                auto type_value = _type_expression->as<type_expression>();
-                assert(type_value);
-                this->_set_type(type_value->get_value());
+                if (!_template_params)
+                {
+                    auto type_value = _type_expression->as<type_expression>();
+                    assert(type_value);
+                    this->_set_type(type_value->get_value());
+                }
             });
         }
 
@@ -85,6 +95,7 @@ inline namespace _v1
 
         std::u32string _name;
         std::unique_ptr<expression> _type_expression;
+        std::optional<std::vector<parameter *>> _template_params;
     };
 
     using parameter_list = std::vector<std::unique_ptr<parameter>>;
@@ -105,6 +116,9 @@ inline namespace _v1
 {
     struct precontext;
 
-    parameter_list preanalyze_parameter_list(precontext & ctx, const parser::parameter_list & param_list, scope * lex_scope);
+    parameter_list preanalyze_parameter_list(precontext & ctx,
+        const parser::parameter_list & param_list,
+        scope * lex_scope,
+        std::optional<instance_function_context> = std::nullopt);
 }
 }

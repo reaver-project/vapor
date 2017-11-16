@@ -46,18 +46,22 @@ inline namespace _v1
             });
         }
 
-        return expr.then([&](expression * expr) {
-            auto typeclass = expr->_get_replacement()->as<typeclass_literal>();
-            assert(typeclass);
+        return expr.then([&](expression * expr) { return expr->analyze(ctx).then([expr] { return expr; }); })
+            .then([&](expression * expr) {
+                auto typeclass = expr->_get_replacement()->as<typeclass_literal>();
+                assert(typeclass);
 
-            auto scope = typeclass->get_scope();
-            assert(scope);
+                _typeclass_scope = typeclass->get_scope();
+                assert(_typeclass_scope);
 
-            _scope = _original_scope->combine_with(scope);
-            _definitions = _late_preanalysis(_scope.get());
+                _scope = _original_scope->combine_with(_typeclass_scope);
+            })
+            .then([&] { return when_all(fmap(_arguments, [&](auto && arg) { return arg->analyze(ctx); })); })
+            .then([&] {
+                _definitions = _late_preanalysis(_scope.get(), _typeclass_scope, fmap(_arguments, [](auto && arg) { return arg.get(); }));
 
-            return when_all(fmap(_definitions, [&](auto && stmt) { return stmt->analyze(ctx); }));
-        });
+                return when_all(fmap(_definitions, [&](auto && stmt) { return stmt->analyze(ctx); }));
+            });
     }
 }
 }

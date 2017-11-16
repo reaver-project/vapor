@@ -33,7 +33,8 @@ inline namespace _v1
     class instance_literal : public expression
     {
     public:
-        using late_preanalysis_type = reaver::unique_function<std::vector<std::unique_ptr<statement>>(scope *)>;
+        using late_preanalysis_type =
+            reaver::unique_function<std::vector<std::unique_ptr<statement>>(scope *, const scope *, const std::vector<expression *> &)>;
 
         instance_literal(ast_node parse,
             scope * original_scope,
@@ -50,6 +51,7 @@ inline namespace _v1
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
 
         scope * _original_scope;
+        const scope * _typeclass_scope;
         std::unique_ptr<scope> _scope;
 
         std::vector<std::u32string> _typeclass_name;

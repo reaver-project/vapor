@@ -34,7 +34,7 @@ inline namespace _v1
         expression_ref() = default;
 
     public:
-        expression_ref(expression * expr) : expression{ expr->get_type() }, _referenced{ expr }
+        expression_ref(expression * expr) : _referenced{ expr }
         {
         }
 
@@ -65,7 +65,14 @@ inline namespace _v1
 
         virtual future<> _analyze(analysis_context & ctx) override
         {
-            return _referenced->analyze(ctx).then([&] { _referenced = _referenced->_get_replacement(); });
+            return _referenced->analyze(ctx).then([&] {
+                _referenced = _referenced->_get_replacement();
+
+                if (auto type = _referenced->try_get_type())
+                {
+                    _set_type(type);
+                }
+            });
         }
 
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
@@ -77,7 +84,12 @@ inline namespace _v1
                 referenced = replaced;
             }
 
-            return std::make_unique<expression_ref>(referenced);
+            auto ret = std::make_unique<expression_ref>(referenced);
+            if (auto type = try_get_type())
+            {
+                ret->_set_type(type);
+            }
+            return ret;
         }
 
         virtual future<expression *> _simplify_expr(recursive_context ctx) override

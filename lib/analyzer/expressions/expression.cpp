@@ -101,7 +101,7 @@ inline namespace _v1
                     return instlit;
                 },
 
-                [](const auto &) -> std::unique_ptr<expression> { assert(0); })));
+                [](auto &&) -> std::unique_ptr<expression> { assert(0); })));
     }
 
     void expression::generate_interface(proto::entity & entity) const
