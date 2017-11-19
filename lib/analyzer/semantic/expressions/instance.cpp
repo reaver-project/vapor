@@ -59,6 +59,7 @@ inline namespace _v1
             .then([&] { return when_all(fmap(_arguments, [&](auto && arg) { return arg->analyze(ctx); })); })
             .then([&] {
                 _definitions = _late_preanalysis(_scope.get(), _typeclass_scope, fmap(_arguments, [](auto && arg) { return arg.get(); }));
+                _scope->close();
 
                 return when_all(fmap(_definitions, [&](auto && stmt) { return stmt->analyze(ctx); }));
             });

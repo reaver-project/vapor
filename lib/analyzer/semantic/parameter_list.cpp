@@ -44,53 +44,6 @@ inline namespace _v1
         // TODO: drop the +1 once overload_set's thingies stop being members
         std::size_t i = 0 + 1;
 
-        function * original_overload = nullptr;
-        if (ctx)
-        {
-            auto symb = ctx->instance.tc_scope->get(ctx->function_name);
-            assert(symb);
-            auto oset = symb->get_expression()->as<overload_set>();
-            assert(oset);
-
-            auto && overloads = oset->get_overloads();
-
-            // TODO: drop the +1 once overload_set's thingies stop being members
-            auto pred = [&](auto && fn) { return fn->parameters().size() == param_list.parameters.size() + 1; };
-            auto count = std::count_if(overloads.begin(), overloads.end(), pred);
-            if (count != 1)
-            {
-                if (count == 0)
-                {
-                    assert(!"no matching typeclass function found");
-                }
-
-                else
-                {
-                    assert(!"overloaded function with the same arity can't yet be used to infer types");
-                }
-            }
-
-            auto it = std::find_if(overloads.begin(), overloads.end(), pred);
-            assert(it != overloads.end());
-            original_overload = *it;
-        }
-
-        auto get_replacements = [&] {
-            replacements repl;
-
-            auto && args = ctx->instance.arguments;
-            auto && params = ctx->instance.tc_scope->parent()->symbols_in_order();
-
-            assert(args.size() == params.size());
-
-            for (std::size_t i = 0; i < args.size(); ++i)
-            {
-                repl.add_replacement(params[i]->get_expression(), args[i]);
-            }
-
-            return repl;
-        };
-
         return fmap(param_list.parameters, [&](auto && param_parse) {
             assert(param_parse.type || ctx);
 
@@ -102,8 +55,8 @@ inline namespace _v1
 
                 else if (ctx)
                 {
-                    auto repl = get_replacements();
-                    return repl.claim(original_overload->parameters()[i]);
+                    auto repl = ctx->instance.get_replacements();
+                    return repl.claim(ctx->original_overload->parameters()[i]->as<parameter>()->get_type_expression());
                 }
 
                 assert(!"a type not provided outside of an instance context");

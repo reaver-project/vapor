@@ -54,6 +54,11 @@ inline namespace _v1
             _template_params = std::move(params);
         }
 
+        expression * get_type_expression() const
+        {
+            return _type_expression.get();
+        }
+
     private:
         virtual future<> _analyze(analysis_context & ctx) override
         {

@@ -55,28 +55,69 @@ inline namespace _v1
     std::unique_ptr<function_definition> preanalyze_function_definition(precontext & prectx,
         const parser::function_definition & parse,
         scope *& lex_scope,
-        std::optional<instance_context> inst_ctx)
+        std::optional<instance_context> ctx)
     {
         auto function_scope = lex_scope->clone_local();
 
-        std::optional<instance_function_context> ctx;
-        if (inst_ctx)
+        function * original_overload = nullptr;
+        std::optional<instance_function_context> fn_ctx;
+        if (ctx)
         {
-            ctx.emplace(instance_function_context{ inst_ctx.value(), parse.signature.name.value.string });
+            auto symb = ctx->tc_scope->get(parse.signature.name.value.string);
+            assert(symb);
+            auto oset = symb->get_expression()->as<overload_set>();
+            assert(oset);
+
+            auto && overloads = oset->get_overloads();
+
+            auto pred = [&](auto && fn) {
+                auto fn_params_size = fn->parameters().size();
+                bool has_parameters = parse.signature.parameters.has_value();
+                auto parse_params_size = has_parameters ? parse.signature.parameters->parameters.size() : 0;
+                // TODO: drop the +1 once overload_set's thingies stop being members
+                return fn_params_size == parse_params_size + 1;
+            };
+            auto count = std::count_if(overloads.begin(), overloads.end(), pred);
+            if (count != 1)
+            {
+                if (count == 0)
+                {
+                    assert(!"no matching typeclass function found");
+                }
+
+                else
+                {
+                    assert(!"overloaded function with the same arity can't yet be used to infer types");
+                }
+            }
+
+            auto it = std::find_if(overloads.begin(), overloads.end(), pred);
+            assert(it != overloads.end());
+            original_overload = *it;
+
+            fn_ctx.emplace(instance_function_context{ ctx.value(), original_overload });
         }
 
         parameter_list params;
         if (parse.signature.parameters)
         {
-            params = preanalyze_parameter_list(prectx, parse.signature.parameters.value(), function_scope.get(), ctx);
+            params = preanalyze_parameter_list(prectx, parse.signature.parameters.value(), function_scope.get(), fn_ctx);
         }
         function_scope->close();
-        auto function_scope_ptr = function_scope.get();
+
+        auto ret_type = fmap(parse.signature.return_type, [&](auto && ret_type) { return preanalyze_expression(prectx, ret_type, function_scope.get()); });
+        if (!ret_type && ctx)
+        {
+            auto repl = ctx->get_replacements();
+            auto original_ret = original_overload->get_return_type().try_get();
+            assert(original_ret);
+            ret_type = repl.claim(original_ret.value());
+        }
 
         auto ret = std::make_unique<function_definition>(make_node(parse),
             parse.signature.name.value.string,
             std::move(params),
-            fmap(parse.signature.return_type, [&](auto && ret_type) { return preanalyze_expression(prectx, ret_type, function_scope.get()); }),
+            std::move(ret_type),
             preanalyze_block(prectx, *parse.body, function_scope.get(), true),
             std::move(function_scope));
 

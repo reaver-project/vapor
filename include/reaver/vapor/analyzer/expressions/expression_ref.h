@@ -43,13 +43,16 @@ inline namespace _v1
             os << styles::def << ctx << styles::rule_name << "expression-ref";
             os << styles::def << " @ " << styles::address << this << styles::def << ":\n";
 
-            auto expr_ctx = ctx.make_branch(false);
+            auto expr_ctx = ctx.make_branch(!try_get_type());
             os << styles::def << expr_ctx << styles::subrule_name << "referenced expression";
             os << styles::def << " @ " << styles::address << _referenced << '\n';
 
-            auto type_ctx = ctx.make_branch(true);
-            os << styles::def << type_ctx << styles::subrule_name << "referenced expression type:\n";
-            get_type()->print(os, type_ctx.make_branch(true));
+            if (try_get_type())
+            {
+                auto type_ctx = ctx.make_branch(true);
+                os << styles::def << type_ctx << styles::subrule_name << "referenced expression type:\n";
+                get_type()->print(os, type_ctx.make_branch(true));
+            }
         }
 
     private:
@@ -68,8 +71,15 @@ inline namespace _v1
             return _referenced->analyze(ctx).then([&] {
                 _referenced = _referenced->_get_replacement();
 
-                if (auto type = _referenced->try_get_type())
+                auto type = _referenced->try_get_type();
+                if (type)
                 {
+                    if (try_get_type())
+                    {
+                        assert(type == try_get_type());
+                        return;
+                    }
+
                     _set_type(type);
                 }
             });

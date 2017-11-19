@@ -24,23 +24,44 @@
 
 #include <string>
 
+#include "../expressions/expression.h"
+#include "../scope.h"
+#include "../simplification/replacements.h"
+#include "../symbol.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
     class scope;
-    class expression;
+    class function;
 
     struct instance_context
     {
         const scope * tc_scope;
         const std::vector<expression *> & arguments;
+
+        auto get_replacements() const
+        {
+            replacements repl;
+
+            auto && params = tc_scope->parent()->symbols_in_order();
+
+            assert(arguments.size() == params.size());
+
+            for (std::size_t i = 0; i < arguments.size(); ++i)
+            {
+                repl.add_replacement(params[i]->get_expression(), arguments[i]);
+            }
+
+            return repl;
+        };
     };
 
     struct instance_function_context
     {
         const instance_context & instance;
-        const std::u32string & function_name;
+        const function * original_overload;
     };
 }
 }
