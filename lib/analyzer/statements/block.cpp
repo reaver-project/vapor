@@ -40,7 +40,7 @@ inline namespace _v1
         auto scope = lex_scope->clone_local();
 
         auto statements = fmap(parse.block_value, [&](auto && row) {
-            return get<0>(fmap(row,
+            return std::get<0>(fmap(row,
                 make_overload_set([&](const parser::block & block) -> std::unique_ptr<statement> { return preanalyze_block(block, scope.get(), false); },
                     [&](const parser::statement & statement) {
                         auto scope_ptr = scope.get();
@@ -69,7 +69,7 @@ inline namespace _v1
         std::unique_ptr<scope> lex_scope,
         scope * original_scope,
         std::vector<std::unique_ptr<statement>> statements,
-        optional<std::unique_ptr<expression>> value_expr,
+        std::optional<std::unique_ptr<expression>> value_expr,
         bool is_top_level)
         : _scope{ std::move(lex_scope) },
           _original_scope{ original_scope },
@@ -116,7 +116,7 @@ inline namespace _v1
             auto value_ctx = ctx.make_branch(true);
             os << styles::def << value_ctx << styles::subrule_name << "value expression:\n";
 
-            _value_expr.get()->print(os, value_ctx.make_branch(true));
+            _value_expr.value()->print(os, value_ctx.make_branch(true));
         }
     }
 
@@ -125,8 +125,8 @@ inline namespace _v1
         auto statements = mbind(_statements, [&](auto && stmt) { return stmt->codegen_ir(ctx); });
         fmap(_value_expr, [&](auto && expr) {
             auto instructions = expr->codegen_ir(ctx);
-            instructions.emplace_back(
-                codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, {}, instructions.back().result });
+            instructions.emplace_back(codegen::ir::instruction{
+                std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, {}, instructions.back().result });
             std::move(instructions.begin(), instructions.end(), std::back_inserter(statements));
             return unit{};
         });
@@ -178,7 +178,7 @@ inline namespace _v1
                 }
                 else
                 {
-                    label = stmt.label;
+                    label = stmt.label.value();
                 }
 
                 labeled_return_values.emplace_back(codegen::ir::label{ label, {} });
@@ -219,14 +219,14 @@ inline namespace _v1
                     ++return_value_index;
                 }
 
-                statements.emplace_back(codegen::ir::instruction{ optional<std::u32string>{ U"return_phi" },
-                    none,
+                statements.emplace_back(codegen::ir::instruction{ std::optional<std::u32string>{ U"return_phi" },
+                    std::nullopt,
                     { boost::typeindex::type_id<codegen::ir::phi_instruction>() },
                     std::move(labeled_return_values),
                     codegen::ir::make_variable(return_type()->codegen_type(ctx)) });
 
-                statements.emplace_back(
-                    codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, {}, statements.back().result });
+                statements.emplace_back(codegen::ir::instruction{
+                    std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, {}, statements.back().result });
             }
         }
 

@@ -34,7 +34,7 @@ inline namespace _v1
     {
         range_type range;
         identifier name;
-        optional<expression> type;
+        std::optional<expression> type;
     };
 
     struct parameter_list

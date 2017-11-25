@@ -49,7 +49,7 @@ inline namespace _v1
     class scope;
 
     using statement_ir = std::vector<codegen::ir::instruction>;
-    using declaration_ir = std::vector<variant<std::shared_ptr<codegen::ir::variable>, codegen::ir::function>>;
+    using declaration_ir = std::vector<std::variant<std::shared_ptr<codegen::ir::variable>, codegen::ir::function>>;
 
     class statement
     {
@@ -138,7 +138,7 @@ inline namespace _v1
             auto ret = *_ir;
             if (_invalidate_ir(ctx))
             {
-                _ir = none;
+                _ir = std::nullopt;
             }
             return ret;
         }
@@ -148,7 +148,7 @@ inline namespace _v1
             return {};
         }
 
-        optional<ast_node> get_ast_info() const
+        std::optional<ast_node> get_ast_info() const
         {
             return _parse_info;
         }
@@ -182,10 +182,10 @@ inline namespace _v1
 
         std::mutex _future_lock;
         std::atomic<bool> _is_future_assigned{ false };
-        optional<future<>> _analysis_future;
-        mutable optional<statement_ir> _ir;
+        std::optional<future<>> _analysis_future;
+        mutable std::optional<statement_ir> _ir;
 
-        optional<ast_node> _parse_info;
+        std::optional<ast_node> _parse_info;
     };
 
     class null_statement : public statement

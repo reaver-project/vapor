@@ -37,8 +37,8 @@ inline namespace _v1
     {
         range_type range;
         ident_type identifier;
-        optional<expression> type_expression;
-        optional<expression> rhs;
+        std::optional<expression> type_expression;
+        std::optional<expression> rhs;
     };
 
     enum class declaration_mode

@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <reaver/variant.h>
+#include <variant>
 
 #include "../range.h"
 #include "helpers.h"
@@ -36,7 +36,7 @@ inline namespace _v1
     struct import_expression
     {
         range_type range;
-        variant<id_expression, string_literal> module_name = id_expression();
+        std::variant<id_expression, string_literal> module_name = id_expression();
     };
 
     bool operator==(const import_expression & lhs, const import_expression & rhs);

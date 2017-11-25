@@ -44,15 +44,19 @@ inline namespace _v1
     class block;
     class call_expression;
 
-    using function_codegen = reaver::function<codegen::ir::function(ir_generation_context &)>;
-    using function_hook = reaver::function<reaver::future<>(analysis_context &, call_expression *, std::vector<expression *>)>;
-    using function_eval = reaver::function<future<expression *>(recursive_context, std::vector<expression *>)>;
-    using scopes_generator = reaver::function<std::vector<codegen::ir::scope>(ir_generation_context &)>;
+    using function_codegen = reaver::unique_function<codegen::ir::function(ir_generation_context &) const>;
+    using function_hook = reaver::unique_function<reaver::future<>(analysis_context &, call_expression *, std::vector<expression *>)>;
+    using function_eval = reaver::unique_function<future<expression *>(recursive_context, std::vector<expression *>)>;
+    using scopes_generator = reaver::unique_function<std::vector<codegen::ir::scope>(ir_generation_context &) const>;
 
     class function
     {
     public:
-        function(std::string explanation, expression * ret, std::vector<expression *> params, function_codegen codegen, optional<range_type> range = none)
+        function(std::string explanation,
+            expression * ret,
+            std::vector<expression *> params,
+            function_codegen codegen,
+            std::optional<range_type> range = std::nullopt)
             : _explanation{ std::move(explanation) },
               _range{ std::move(range) },
               _return_type_expression{ ret },
@@ -119,7 +123,7 @@ inline namespace _v1
             auto scopes = [&]() -> std::vector<codegen::ir::scope> {
                 if (_scopes_generator)
                 {
-                    return _scopes_generator.get()(ctx);
+                    return _scopes_generator.value()(ctx);
                 }
                 return {};
             }();
@@ -146,7 +150,7 @@ inline namespace _v1
 
         future<expression *> get_return_type() const
         {
-            return _return_type_future.get();
+            return _return_type_future.value();
         }
 
         void set_name(std::u32string name)
@@ -198,25 +202,25 @@ inline namespace _v1
 
     private:
         std::string _explanation;
-        optional<range_type> _range;
+        std::optional<range_type> _range;
 
         block * _body = nullptr;
         mutable std::mutex _ret_lock;
         expression * _return_type_expression;
-        optional<future<expression *>> _return_type_future;
-        optional<manual_promise<expression *>> _return_type_promise;
+        std::optional<future<expression *>> _return_type_future;
+        std::optional<manual_promise<expression *>> _return_type_promise;
         // this is shared ONLY because unique_ptr would require the definition of `expression`
         std::shared_ptr<expression> _owned_expression;
 
         bool _is_member = false;
         std::vector<expression *> _parameters;
-        optional<std::u32string> _name;
+        std::optional<std::u32string> _name;
         function_codegen _codegen;
-        mutable optional<codegen::ir::function> _ir;
+        mutable std::optional<codegen::ir::function> _ir;
 
         std::vector<function_hook> _analysis_hooks;
-        optional<function_eval> _compile_time_eval;
-        optional<scopes_generator> _scopes_generator;
+        std::optional<function_eval> _compile_time_eval;
+        std::optional<scopes_generator> _scopes_generator;
 
         bool _entry = false;
         expression * _entry_expr = nullptr;
@@ -226,7 +230,7 @@ inline namespace _v1
         expression * return_type,
         std::vector<expression *> parameters,
         function_codegen codegen,
-        optional<range_type> range = none)
+        std::optional<range_type> range = std::nullopt)
     {
         return std::make_unique<function>(std::move(expl), std::move(return_type), std::move(parameters), std::move(codegen), std::move(range));
     }

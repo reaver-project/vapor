@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -49,7 +49,7 @@ MAYFLY_ADD_TESTCASE("if-then-else",
                 { statement{ { 12, 21 },
                     return_expression{ { 12, 20 }, { { 19, 20 }, integer_literal{ { 19, 20 }, { lexer::token_type::integer, UR"(1)", { 19, 20 } }, {} } } } } },
                 {} },
-            reaver::make_optional(reaver::recursive_wrapper<block>{ block{ { 29, 42 },
+            std::make_optional(reaver::recursive_wrapper<block>{ block{ { 29, 42 },
                 { statement{ { 31, 40 },
                     return_expression{ { 31, 39 }, { { 38, 39 }, integer_literal{ { 38, 39 }, { lexer::token_type::integer, UR"(2)", { 38, 39 } }, {} } } } } },
                 {} } }) },

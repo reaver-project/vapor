@@ -41,7 +41,7 @@ inline namespace _v1
     {
         range_type range;
         template_introducer parameters;
-        variant<typeclass_literal> expression = typeclass_literal{};
+        std::variant<typeclass_literal> expression = typeclass_literal{};
     };
 
     bool operator==(const template_introducer & lhs, const template_introducer & rhs);

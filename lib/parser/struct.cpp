@@ -36,7 +36,7 @@ inline namespace _v1
     {
         struct named_struct
         {
-            optional<identifier> name;
+            std::optional<identifier> name;
             struct_literal definition;
         };
 
@@ -84,7 +84,7 @@ inline namespace _v1
 
         declaration decl;
 
-        decl.identifier = std::move(struct_.name.get());
+        decl.identifier = std::move(struct_.name.value());
         decl.range = struct_.definition.range;
         decl.rhs = expression{ struct_.definition.range, std::move(struct_.definition) };
 

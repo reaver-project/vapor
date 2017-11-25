@@ -53,7 +53,7 @@ inline namespace _v1
             std::unique_ptr<scope> lex_scope,
             scope * original_scope,
             std::vector<std::unique_ptr<statement>> statements,
-            optional<std::unique_ptr<expression>> value_expr,
+            std::optional<std::unique_ptr<expression>> value_expr,
             bool is_top_level);
 
         type * value_type() const
@@ -75,7 +75,7 @@ inline namespace _v1
 
         bool has_return_expression() const
         {
-            return _value_expr;
+            return _value_expr.has_value();
         }
 
         expression * get_return_expression() const
@@ -106,14 +106,14 @@ inline namespace _v1
         std::unique_ptr<scope> _scope;
         const scope * const _original_scope;
         std::vector<std::unique_ptr<statement>> _statements;
-        optional<std::unique_ptr<expression>> _value_expr;
+        std::optional<std::unique_ptr<expression>> _value_expr;
         const bool _is_top_level = false;
 
         void _ensure_cache() const;
 
         mutable std::mutex _clone_cache_lock;
         bool _is_clone_cache = false;
-        mutable optional<std::unique_ptr<block>> _clone;
+        mutable std::optional<std::unique_ptr<block>> _clone;
     };
 
     std::unique_ptr<block> preanalyze_block(const parser::block & parse, scope * lex_scope, bool is_top_level);

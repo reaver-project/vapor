@@ -33,12 +33,12 @@ inline namespace _v1
 
         if (inst.label)
         {
-            ret += U"label `" + inst.label.get() + U"`:\n";
+            ret += U"label `" + inst.label.value() + U"`:\n";
         }
 
         if (inst.declared_variable)
         {
-            ret += generate_definition(*inst.declared_variable.get(), ctx);
+            ret += generate_definition(*inst.declared_variable.value(), ctx);
         }
 
         ret += _to_string(inst.result) + U" = " + utf32(inst.instruction.explain()) + U" ";

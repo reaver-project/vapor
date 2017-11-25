@@ -67,7 +67,7 @@ inline namespace _v1
             auto var = codegen::ir::make_variable(get_type()->codegen_type(ctx));
             var->parameter = true;
             return { codegen::ir::instruction{
-                none, none, { boost::typeindex::type_id<codegen::ir::materialization_instruction>() }, {}, { std::move(var) } } };
+                std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::materialization_instruction>() }, {}, { std::move(var) } } };
         }
 
         std::u32string _name;

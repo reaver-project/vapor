@@ -36,7 +36,7 @@ inline namespace _v1
     std::unique_ptr<postfix_expression> preanalyze_postfix_expression(const parser::postfix_expression & parse, scope * lex_scope)
     {
         return std::make_unique<postfix_expression>(make_node(parse),
-            get<0>(fmap(parse.base_expression,
+            std::get<0>(fmap(parse.base_expression,
                 make_overload_set([&](const parser::expression_list & expr_list) { return preanalyze_expression_list(expr_list, lex_scope); },
                     [&](const parser::identifier & ident) { return preanalyze_identifier(ident, lex_scope); }))),
             parse.modifier_type,
@@ -46,9 +46,9 @@ inline namespace _v1
 
     postfix_expression::postfix_expression(ast_node parse,
         std::unique_ptr<expression> base,
-        optional<lexer::token_type> mod,
+        std::optional<lexer::token_type> mod,
         std::vector<std::unique_ptr<expression>> arguments,
-        optional<std::u32string> accessed_member)
+        std::optional<std::u32string> accessed_member)
         : _base_expr{ std::move(base) }, _modifier{ mod }, _arguments{ std::move(arguments) }, _accessed_member{ std::move(accessed_member) }
     {
         _set_ast_info(parse);
@@ -78,7 +78,8 @@ inline namespace _v1
             }
 
             auto modifier_ctx = ctx.make_branch(false);
-            os << styles::def << modifier_ctx << styles::subrule_name << "modifier type: " << styles::string_value << lexer::token_types[+_modifier] << '\n';
+            os << styles::def << modifier_ctx << styles::subrule_name << "modifier type: " << styles::string_value << lexer::token_types[+_modifier.value()]
+               << '\n';
 
             if (_arguments.size())
             {
@@ -108,15 +109,15 @@ inline namespace _v1
         }
 
         auto base_variable_value = base_expr_instructions.back().result;
-        auto base_variable = get<std::shared_ptr<codegen::ir::variable>>(base_variable_value);
+        auto base_variable = std::get<std::shared_ptr<codegen::ir::variable>>(base_variable_value);
 
         if (_modifier == lexer::token_type::dot)
         {
-            auto access_instruction = codegen::ir::instruction{ none,
-                none,
+            auto access_instruction = codegen::ir::instruction{ std::nullopt,
+                std::nullopt,
                 { boost::typeindex::type_id<codegen::ir::member_access_instruction>() },
-                { base_variable, codegen::ir::label{ _accessed_member.get(), {} } },
-                { codegen::ir::make_variable(_referenced_expression.get()->get_type()->codegen_type(ctx)) } };
+                { base_variable, codegen::ir::label{ _accessed_member.value(), {} } },
+                { codegen::ir::make_variable(_referenced_expression.value()->get_type()->codegen_type(ctx)) } };
 
             base_expr_instructions.push_back(std::move(access_instruction));
 

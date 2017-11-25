@@ -34,7 +34,7 @@ inline namespace _v1
 
         fmap(_type_specifier, [&](auto && expr) {
             fut = fut.then([&]() { return expr->analyze(ctx); }).then([&]() {
-                auto && type_expr = _type_specifier.get();
+                auto && type_expr = _type_specifier.value();
                 assert(type_expr->get_type() == builtin_types().type.get());
                 assert(type_expr->is_constant());
             });
@@ -48,20 +48,20 @@ inline namespace _v1
             fmap(_type_specifier, [&](auto && expr) {
                 fut = fut.then([&]() {
                     auto type_var = expr->template as<type_expression>();
-                    assert(_init_expr.get()->get_type() == type_var->get_value());
+                    assert(_init_expr.value()->get_type() == type_var->get_value());
                 });
 
                 return unit{};
             });
 
             fut = fut.then([&] {
-                auto expression = _init_expr.get().get();
+                auto expression = _init_expr.value().get();
 
                 if (_type == declaration_type::member)
                 {
-                    _declared_member = make_member_expression(nullptr, _name, _init_expr.get()->get_type());
-                    _declared_member.get()->set_default_value(_init_expr.get().get());
-                    expression = _declared_member.get().get();
+                    _declared_member = make_member_expression(nullptr, _name, _init_expr.value()->get_type());
+                    _declared_member.value()->set_default_value(_init_expr.value().get());
+                    expression = _declared_member.value().get();
                 }
 
                 _declared_symbol->set_expression(expression);
@@ -74,10 +74,10 @@ inline namespace _v1
         {
             fut = fut.then([&]() {
                 assert(_type_specifier);
-                auto type = _type_specifier.get()->as<type_expression>()->get_value();
+                auto type = _type_specifier.value()->as<type_expression>()->get_value();
                 _declared_member = make_member_expression(nullptr, _name, type);
 
-                _declared_symbol->set_expression(_declared_member.get().get());
+                _declared_symbol->set_expression(_declared_member.value().get());
             });
         }
 

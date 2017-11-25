@@ -50,7 +50,7 @@ inline namespace _v1
     {
         struct named_typeclass
         {
-            optional<identifier> name;
+            std::optional<identifier> name;
             typeclass_literal definition;
         };
 
@@ -97,7 +97,7 @@ inline namespace _v1
 
         typeclass_definition decl;
 
-        decl.name = std::move(typeclass.name.get());
+        decl.name = std::move(typeclass.name.value());
         decl.definition = std::move(typeclass.definition);
 
         return decl;

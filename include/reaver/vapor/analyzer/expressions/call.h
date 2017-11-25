@@ -46,13 +46,13 @@ inline namespace _v1
             _replacement_expr = std::move(expr);
             if (auto * replacement_call_expr = _replacement_expr->as<call_expression>())
             {
-                replacement_call_expr->_set_ast_info(get_ast_info().get());
+                replacement_call_expr->_set_ast_info(get_ast_info().value());
             }
         }
 
         const range_type & get_range() const
         {
-            return get_ast_info().get().range;
+            return get_ast_info().value().range;
         }
 
         void set_ast_info(ast_node node)

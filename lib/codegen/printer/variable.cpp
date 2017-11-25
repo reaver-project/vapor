@@ -38,7 +38,7 @@ inline namespace _v1
 
         ctx.put_into_global += ctx.define_if_necessary(var.type);
         return U"define variable @ " + _pointer_to_string(&var) + U" : type @ " + _pointer_to_string(var.type.get()) + U" `"
-            + (var.name ? _scope_string(var.scopes) + U"." + var.name.get() : U"") + U"`\n";
+            + (var.name ? _scope_string(var.scopes) + U"." + var.name.value() : U"") + U"`\n";
     }
 
     std::u32string ir_printer::generate_definition(const ir::member_variable & mem_var, codegen_context & ctx)

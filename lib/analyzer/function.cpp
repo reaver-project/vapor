@@ -139,7 +139,7 @@ inline namespace _v1
 
         if (_range)
         {
-            os << " (" << styles::range << _range.get() << styles::def << ')';
+            os << " (" << styles::range << _range.value() << styles::def << ')';
         }
 
         os << ": " << _explanation << '\n';

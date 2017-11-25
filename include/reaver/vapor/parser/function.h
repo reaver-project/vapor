@@ -39,8 +39,8 @@ inline namespace _v1
     {
         range_type range;
         identifier name;
-        optional<parameter_list> parameters;
-        optional<expression> return_type;
+        std::optional<parameter_list> parameters;
+        std::optional<expression> return_type;
     };
 
     struct function_definition
@@ -56,12 +56,12 @@ inline namespace _v1
     function_declaration parse_function_declaration(context & ctx, parameter_type_mode mode = parameter_type_mode::required);
     function_definition parse_function_definition(context & ctx, parameter_type_mode mode);
     function_definition parse_function_definition(context & ctx,
-        optional<function_declaration> decl = none,
+        std::optional<function_declaration> decl = std::nullopt,
         parameter_type_mode mode = parameter_type_mode::required);
 
     void print(const function_declaration & f, std::ostream & os, print_context ctx);
     void print(const function_definition & f, std::ostream & os, print_context ctx);
 
-    variant<function_declaration, function_definition> parse_function(context & ctx);
+    std::variant<function_declaration, function_definition> parse_function(context & ctx);
 }
 }

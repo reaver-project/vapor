@@ -54,7 +54,7 @@ inline namespace _v1
     {
         struct named_template_expression
         {
-            optional<identifier> name;
+            std::optional<identifier> name;
             template_expression value;
         };
 
@@ -114,7 +114,7 @@ inline namespace _v1
 
         declaration decl;
 
-        decl.identifier = std::move(template_.name.get());
+        decl.identifier = std::move(template_.name.value());
         decl.range = template_.value.range;
         decl.rhs = expression{ template_.value.range, std::move(template_.value) };
 

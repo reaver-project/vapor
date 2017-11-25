@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016 Michał "Griwes" Dominiak
+ * Copyright © 2014-2017 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,9 +24,8 @@
 
 #include <atomic>
 #include <memory>
+#include <optional>
 #include <thread>
-
-#include <reaver/optional.h>
 
 #include <reaver/semaphore.h>
 
@@ -71,7 +70,7 @@ inline namespace _v1
                 pos.line = 1;
                 pos.file = std::move(filename);
 
-                auto get = [&]() -> optional<char32_t> {
+                auto get = [&]() -> std::optional<char32_t> {
                     if (begin == end)
                     {
                         return {};
@@ -91,7 +90,7 @@ inline namespace _v1
                     return *begin++;
                 };
 
-                auto peek = [&](std::size_t x = 0) -> optional<char32_t> {
+                auto peek = [&](std::size_t x = 0) -> std::optional<char32_t> {
                     for (std::size_t i = 0; i < x; ++i)
                     {
                         if (begin + i == end)

@@ -31,8 +31,8 @@ inline namespace _v1
 {
     statement_ir integer_constant::_codegen_ir(ir_generation_context &) const
     {
-        return { codegen::ir::instruction{ none,
-            none,
+        return { codegen::ir::instruction{ std::nullopt,
+            std::nullopt,
             { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
             {},
             codegen::ir::value{ codegen::ir::integer_value{ _value, 0 } } } };

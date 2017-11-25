@@ -60,7 +60,7 @@ inline namespace _v1
                         .then([](auto && symb) { return symb->get_expression_future(); })
                         .then([&](auto && var) {
                             _referenced_expression = var;
-                            this->_set_type(_referenced_expression.get()->get_type());
+                            this->_set_type(_referenced_expression.value()->get_type());
                         });
                 }
 
@@ -68,7 +68,7 @@ inline namespace _v1
                     .then([&](std::unique_ptr<expression> call_expr) {
                         if (auto call_expr_downcasted = call_expr->as<call_expression>())
                         {
-                            call_expr_downcasted->set_ast_info(get_ast_info().get());
+                            call_expr_downcasted->set_ast_info(get_ast_info().value());
                         }
                         _call_expression = std::move(call_expr);
                         return _call_expression->analyze(ctx);

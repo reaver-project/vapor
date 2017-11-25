@@ -28,7 +28,6 @@
 #include <unordered_map>
 
 #include <reaver/exception.h>
-#include <reaver/relaxed_constexpr.h>
 
 #include "../range.h"
 #include "../utf.h"
@@ -142,7 +141,7 @@ inline namespace _v1
         }
     };
 
-    inline relaxed_constexpr token_type suffix(token_type t)
+    inline constexpr token_type suffix(token_type t)
     {
         switch (t)
         {

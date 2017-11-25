@@ -69,8 +69,8 @@ inline namespace _v1
 
     declaration::declaration(ast_node parse,
         std::u32string name,
-        optional<std::unique_ptr<expression>> init_expr,
-        optional<std::unique_ptr<expression>> type_specifier,
+        std::optional<std::unique_ptr<expression>> init_expr,
+        std::optional<std::unique_ptr<expression>> type_specifier,
         scope * scope,
         declaration_type decl_type)
         : _name{ std::move(name) }, _type_specifier{ std::move(type_specifier) }, _init_expr{ std::move(init_expr) }, _type{ decl_type }
@@ -99,7 +99,7 @@ inline namespace _v1
         {
             auto init_expr_ctx = ctx.make_branch(true);
             os << styles::def << init_expr_ctx << styles::subrule_name << "initializer expression:\n";
-            _init_expr.get()->print(os, init_expr_ctx.make_branch(true));
+            _init_expr.value()->print(os, init_expr_ctx.make_branch(true));
         }
     }
 
@@ -111,11 +111,11 @@ inline namespace _v1
         }
 
         assert(_type == declaration_type::variable);
-        auto ir = _init_expr.get()->codegen_ir(ctx);
+        auto ir = _init_expr.value()->codegen_ir(ctx);
 
         if (ir.back().result.index() == 0)
         {
-            auto var = get<std::shared_ptr<codegen::ir::variable>>(ir.back().result);
+            auto var = std::get<std::shared_ptr<codegen::ir::variable>>(ir.back().result);
             ir.back().declared_variable = var;
             var->name = _name;
             var->temporary = false;

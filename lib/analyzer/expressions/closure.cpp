@@ -39,7 +39,7 @@ inline namespace _v1
 
         if (parse.parameters)
         {
-            params = preanalyze_parameter_list(parse.parameters.get(), local_scope.get());
+            params = preanalyze_parameter_list(parse.parameters.value(), local_scope.get());
         }
         local_scope->close();
         auto scope = local_scope.get();
@@ -55,7 +55,7 @@ inline namespace _v1
         std::unique_ptr<scope> sc,
         parameter_list params,
         std::unique_ptr<block> body,
-        optional<std::unique_ptr<expression>> return_type)
+        std::optional<std::unique_ptr<expression>> return_type)
         : _parameter_list{ std::move(params) }, _return_type{ std::move(return_type) }, _scope{ std::move(sc) }, _body{ std::move(body) }
     {
         _set_ast_info(parse);
@@ -96,12 +96,13 @@ inline namespace _v1
     {
         auto var = codegen::ir::make_variable(get_type()->codegen_type(ctx));
         var->scopes = _type->get_scope()->codegen_ir(ctx);
-        return { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::materialization_instruction>() }, {}, { std::move(var) } } };
+        return { codegen::ir::instruction{
+            std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::materialization_instruction>() }, {}, { std::move(var) } } };
     }
 
     declaration_ir closure::declaration_codegen_ir(ir_generation_context & ctx) const
     {
-        return { { get<std::shared_ptr<codegen::ir::variable>>(codegen_ir(ctx).back().result) } };
+        return { { std::get<std::shared_ptr<codegen::ir::variable>>(codegen_ir(ctx).back().result) } };
     }
 }
 }

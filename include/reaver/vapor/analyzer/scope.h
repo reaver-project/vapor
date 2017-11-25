@@ -122,7 +122,7 @@ inline namespace _v1
         {
             _shlock lock{ _lock };
             auto it = _symbols.find(name);
-            return it != _symbols.end() ? make_optional(it->second.get()) : none;
+            return it != _symbols.end() ? std::make_optional(it->second.get()) : std::nullopt;
         }
 
         bool init(const std::u32string & name, std::unique_ptr<symbol> symb);
@@ -227,8 +227,8 @@ inline namespace _v1
         const bool _is_shadowing_boundary = false;
         bool _is_closed = false;
 
-        optional<future<>> _close_future;
-        optional<manual_promise<void>> _close_promise;
+        std::optional<future<>> _close_future;
+        std::optional<manual_promise<void>> _close_promise;
     };
 }
 }

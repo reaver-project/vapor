@@ -51,7 +51,7 @@ inline namespace _v1
     struct expression
     {
         range_type range;
-        variant<literal<lexer::token_type::string>,
+        std::variant<literal<lexer::token_type::string>,
             literal<lexer::token_type::integer>,
             literal<lexer::token_type::boolean>,
             member_expression, // this might need to be pulled into postfix expressions later on

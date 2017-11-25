@@ -96,7 +96,8 @@ inline namespace _v1
             auto ir = fmap(_fields_in_order, [&](auto && field) { return field->codegen_ir(ctx); });
             auto result = codegen::ir::struct_value{ _type->codegen_type(ctx), fmap(ir, [&](auto && field_ir) { return field_ir.back().result; }) };
 
-            return { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, std::move(result) } };
+            return { codegen::ir::instruction{
+                std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, std::move(result) } };
         }
 
         virtual bool _is_equal(const expression * rhs) const override

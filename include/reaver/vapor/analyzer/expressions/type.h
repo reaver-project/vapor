@@ -59,7 +59,7 @@ inline namespace _v1
 
         virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override
         {
-            return { { get<std::shared_ptr<codegen::ir::variable>>(_codegen_ir(ctx).back().result) } };
+            return { { std::get<std::shared_ptr<codegen::ir::variable>>(_codegen_ir(ctx).back().result) } };
         }
 
     private:
@@ -73,7 +73,8 @@ inline namespace _v1
             auto ret = codegen::ir::make_variable(codegen::ir::builtin_types().type);
             ret->refers_to = _type->codegen_type(ctx);
 
-            return { codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, std::move(ret) } };
+            return { codegen::ir::instruction{
+                std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, std::move(ret) } };
         }
 
         virtual bool _is_equal(const expression * rhs) const override

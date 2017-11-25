@@ -41,7 +41,7 @@ inline namespace _v1
     if_statement::if_statement(ast_node parse,
         std::unique_ptr<expression> condition,
         std::unique_ptr<statement> then,
-        optional<std::unique_ptr<statement>> else_)
+        std::optional<std::unique_ptr<statement>> else_)
         : _condition{ std::move(condition) }, _then_block{ std::move(then) }, _else_block{ std::move(else_) }
     {
         _set_ast_info(parse);
@@ -65,7 +65,7 @@ inline namespace _v1
         {
             auto else_ctx = ctx.make_branch(true);
             os << styles::def << else_ctx << styles::subrule_name << "else block:\n";
-            _else_block.get()->print(os, ctx.make_branch(true));
+            _else_block.value()->print(os, ctx.make_branch(true));
         }
     }
 
@@ -93,7 +93,7 @@ inline namespace _v1
             statement_ir ir;
             if (_else_block)
             {
-                ir = _else_block.get()->codegen_ir(ctx);
+                ir = _else_block.value()->codegen_ir(ctx);
             }
             else
             {

@@ -22,8 +22,8 @@
 
 #pragma once
 
-#include <reaver/optional.h>
-#include <reaver/variant.h>
+#include <optional>
+#include <variant>
 
 #include "../../utf.h"
 #include "boolean.h"
@@ -43,12 +43,12 @@ inline namespace _v1
         {
             virtual ~variable() = default;
 
-            variable(std::shared_ptr<variable_type> type, optional<std::u32string> name) : type{ std::move(type) }, name{ std::move(name) }
+            variable(std::shared_ptr<variable_type> type, std::optional<std::u32string> name) : type{ std::move(type) }, name{ std::move(name) }
             {
             }
 
             std::shared_ptr<variable_type> type;
-            optional<std::u32string> name;
+            std::optional<std::u32string> name;
             bool declared = false;
             bool destroyed = false;
             bool parameter = false;
@@ -77,12 +77,12 @@ inline namespace _v1
             std::vector<scope> scopes;
         };
 
-        inline std::shared_ptr<variable> make_variable(std::shared_ptr<variable_type> type, optional<std::u32string> name = none)
+        inline std::shared_ptr<variable> make_variable(std::shared_ptr<variable_type> type, std::optional<std::u32string> name = std::nullopt)
         {
             return std::make_shared<variable>(variable{ std::move(type), std::move(name) });
         }
 
-        struct value : public variant<std::shared_ptr<variable>, integer_value, boolean_value, struct_value, label>
+        struct value : public std::variant<std::shared_ptr<variable>, integer_value, boolean_value, struct_value, label>
         {
             using variant::variant;
         };

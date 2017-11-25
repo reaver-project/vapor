@@ -103,15 +103,13 @@ inline namespace _v1
             if (is_binary_operator(type) && !(mode == expression_special_modes::assignment && type == lexer::token_type::assign))
             {
                 auto p1 = precedence({ type, operator_type::binary });
-                auto p2 = ctx.operator_stack.size() ? make_optional(precedence(ctx.operator_stack.back())) : none;
+                auto p2 = ctx.operator_stack.size() ? std::make_optional(precedence(ctx.operator_stack.back())) : std::nullopt;
                 while (ctx.operator_stack.empty() || p1 < *p2 || (p1 == *p2 && associativity(type) == assoc::right))
                 {
-                    visit(
-                        [&](const auto & value) -> unit {
-                            ret.range = value.range;
-                            return {};
-                        },
-                        ret.expression_value);
+                    fmap(ret.expression_value, [&](const auto & value) -> unit {
+                        ret.range = value.range;
+                        return {};
+                    });
                     ret.expression_value = parse_binary_expression(ctx, std::move(ret));
 
                     if (!peek(ctx))
@@ -130,12 +128,10 @@ inline namespace _v1
             }
         }
 
-        visit(
-            [&](const auto & value) -> unit {
-                ret.range = value.range;
-                return {};
-            },
-            ret.expression_value);
+        fmap(ret.expression_value, [&](const auto & value) -> unit {
+            ret.range = value.range;
+            return {};
+        });
 
         return ret;
     }

@@ -43,13 +43,14 @@ inline namespace _v1
             [=](ir_generation_context & ctx) {
                 auto ret = codegen::ir::function{ U"operator()",
                     {},
-                    fmap(_parameter_list, [&](auto && param) { return get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
+                    fmap(
+                        _parameter_list, [&](auto && param) { return std::get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
                     _body->codegen_return(ctx),
                     _body->codegen_ir(ctx) };
                 ret.is_member = true;
                 return ret;
             },
-            get_ast_info().get().range);
+            get_ast_info().value().range);
         _function->set_name(U"operator()");
         _function->make_member();
         _function->set_scopes_generator([this](auto && ctx) { return this->_overload_set->get_type()->codegen_scopes(ctx); });

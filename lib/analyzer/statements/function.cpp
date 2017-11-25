@@ -40,7 +40,7 @@ inline namespace _v1
         parameter_list params;
         if (parse.signature.parameters)
         {
-            params = preanalyze_parameter_list(parse.signature.parameters.get(), function_scope.get());
+            params = preanalyze_parameter_list(parse.signature.parameters.value(), function_scope.get());
         }
         function_scope->close();
 
@@ -55,7 +55,7 @@ inline namespace _v1
     function_definition::function_definition(ast_node parse,
         std::u32string name,
         parameter_list params,
-        optional<std::unique_ptr<expression>> return_type,
+        std::optional<std::unique_ptr<expression>> return_type,
         std::unique_ptr<block> body,
         std::unique_ptr<scope> scope)
         : _name{ std::move(name) },

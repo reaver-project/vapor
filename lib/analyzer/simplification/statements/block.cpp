@@ -63,7 +63,7 @@ inline namespace _v1
 
         if (!_is_clone_cache)
         {
-            return repl.claim(_clone.get().get());
+            return repl.claim(_clone.value().get());
         }
 
         auto ret = std::unique_ptr<block>(new block(*this));

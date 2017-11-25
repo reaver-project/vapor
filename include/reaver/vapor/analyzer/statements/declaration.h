@@ -45,8 +45,8 @@ inline namespace _v1
     public:
         declaration(ast_node parse,
             std::u32string name,
-            optional<std::unique_ptr<expression>> init_expr,
-            optional<std::unique_ptr<expression>> type_specifier,
+            std::optional<std::unique_ptr<expression>> init_expr,
+            std::optional<std::unique_ptr<expression>> type_specifier,
             scope * scope,
             declaration_type decl_type);
 
@@ -63,7 +63,7 @@ inline namespace _v1
         auto declared_member() const
         {
             assert(_declared_member);
-            return _declared_member.get().get();
+            return _declared_member->get();
         }
 
         auto initializer_expression() const
@@ -81,9 +81,9 @@ inline namespace _v1
 
         std::u32string _name;
         symbol * _declared_symbol;
-        optional<std::unique_ptr<expression>> _type_specifier;
-        optional<std::unique_ptr<expression>> _init_expr;
-        optional<std::unique_ptr<member_expression>> _declared_member;
+        std::optional<std::unique_ptr<expression>> _type_specifier;
+        std::optional<std::unique_ptr<expression>> _init_expr;
+        std::optional<std::unique_ptr<member_expression>> _declared_member;
         declaration_type _type;
     };
 }

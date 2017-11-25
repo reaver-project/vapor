@@ -34,7 +34,7 @@ inline namespace _v1
 {
     namespace ir
     {
-        using module_symbols_t = std::vector<variant<std::shared_ptr<variable>, function>>;
+        using module_symbols_t = std::vector<std::variant<std::shared_ptr<variable>, function>>;
 
         struct module
         {

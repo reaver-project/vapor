@@ -46,8 +46,8 @@ inline namespace _v1
 
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
         {
-            return { codegen::ir::instruction{ none,
-                none,
+            return { codegen::ir::instruction{ std::nullopt,
+                std::nullopt,
                 { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
                 {},
                 codegen::ir::make_variable(get_type()->codegen_type(ctx)) } };

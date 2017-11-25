@@ -55,12 +55,12 @@ MAYFLY_ADD_TESTCASE("non-member, explicit type, initializer", [] {
         reaver::get(analysis_future);
 
         MAYFLY_CHECK(decl->declared_symbol()->get_expression()->get_type() == builtin_types().integer.get());
-        MAYFLY_CHECK(decl->initializer_expression().get()->get_type() == builtin_types().integer.get());
+        MAYFLY_CHECK(decl->initializer_expression().value()->get_type() == builtin_types().integer.get());
 
         integer_constant expected_value{ 1 };
-        MAYFLY_CHECK(decl->initializer_expression().get()->is_equal(&expected_value));
+        MAYFLY_CHECK(decl->initializer_expression().value()->is_equal(&expected_value));
 
-        auto init_expr = decl->initializer_expression().get();
+        auto init_expr = decl->initializer_expression().value();
         cached_results res;
         simplification_context simpl_ctx{ res };
         auto simpl_future = decl->simplify({ simpl_ctx });
@@ -99,10 +99,10 @@ MAYFLY_ADD_TESTCASE("non-member, deduced type, initializer", [] {
         reaver::get(analysis_future);
 
         MAYFLY_CHECK(decl->declared_symbol()->get_expression()->get_type() == builtin_types().integer.get());
-        MAYFLY_CHECK(decl->initializer_expression().get()->get_type() == builtin_types().integer.get());
+        MAYFLY_CHECK(decl->initializer_expression().value()->get_type() == builtin_types().integer.get());
 
         integer_constant expected_value{ 1 };
-        MAYFLY_CHECK(decl->initializer_expression().get()->is_equal(&expected_value));
+        MAYFLY_CHECK(decl->initializer_expression().value()->is_equal(&expected_value));
     }
 });
 
@@ -120,10 +120,10 @@ MAYFLY_ADD_TESTCASE("member, deduced type, initializer", [] {
         reaver::get(analysis_future);
 
         MAYFLY_CHECK(decl->declared_symbol()->get_expression()->get_type() == builtin_types().integer.get());
-        MAYFLY_CHECK(decl->initializer_expression().get()->get_type() == builtin_types().integer.get());
+        MAYFLY_CHECK(decl->initializer_expression().value()->get_type() == builtin_types().integer.get());
 
         integer_constant expected_value{ 1 };
-        MAYFLY_CHECK(decl->initializer_expression().get()->is_equal(&expected_value));
+        MAYFLY_CHECK(decl->initializer_expression().value()->is_equal(&expected_value));
         MAYFLY_CHECK(decl->declared_symbol()->get_expression()->is_member());
         MAYFLY_CHECK(decl->declared_symbol()->get_expression()->get_default_value()->is_equal(&expected_value));
     }

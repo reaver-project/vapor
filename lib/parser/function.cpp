@@ -66,10 +66,10 @@ inline namespace _v1
 
     function_definition parse_function_definition(context & ctx, parameter_type_mode mode)
     {
-        return parse_function_definition(ctx, none, mode);
+        return parse_function_definition(ctx, std::nullopt, mode);
     }
 
-    function_definition parse_function_definition(context & ctx, optional<function_declaration> decl, parameter_type_mode mode)
+    function_definition parse_function_definition(context & ctx, std::optional<function_declaration> decl, parameter_type_mode mode)
     {
         function_definition ret;
 
@@ -89,7 +89,7 @@ inline namespace _v1
         return ret;
     }
 
-    variant<function_declaration, function_definition> parse_function(context & ctx)
+    std::variant<function_declaration, function_definition> parse_function(context & ctx)
     {
         auto decl = parse_function_declaration(ctx);
 

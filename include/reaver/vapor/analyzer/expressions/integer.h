@@ -68,7 +68,7 @@ inline namespace _v1
 
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
-            return std::make_unique<integer_constant>(_value, get_ast_info().get());
+            return std::make_unique<integer_constant>(_value, get_ast_info().value());
         }
 
         virtual future<expression *> _simplify_expr(recursive_context) override

@@ -61,7 +61,7 @@ inline namespace _v1
 
         virtual future<function *> get_constructor(std::vector<const expression *>) const override
         {
-            return _aggregate_ctor_future.get();
+            return _aggregate_ctor_future.value();
         }
 
         virtual future<std::vector<function *>> get_candidates(lexer::token_type op) const override
@@ -76,7 +76,7 @@ inline namespace _v1
 
         auto get_ast_info() const
         {
-            return make_optional(_parse);
+            return std::make_optional(_parse);
         }
 
         virtual type * get_member_type(const std::u32string & name) const override
@@ -99,16 +99,16 @@ inline namespace _v1
         std::vector<member_expression *> _data_members;
 
         std::unique_ptr<function> _aggregate_ctor;
-        mutable optional<future<function *>> _aggregate_ctor_future;
-        optional<manual_promise<function *>> _aggregate_ctor_promise;
+        mutable std::optional<future<function *>> _aggregate_ctor_future;
+        std::optional<manual_promise<function *>> _aggregate_ctor_promise;
 
         std::unique_ptr<function> _aggregate_copy_ctor;
-        mutable optional<future<function *>> _aggregate_copy_ctor_future;
-        optional<manual_promise<function *>> _aggregate_copy_ctor_promise;
+        mutable std::optional<future<function *>> _aggregate_copy_ctor_future;
+        std::optional<manual_promise<function *>> _aggregate_copy_ctor_promise;
         std::unique_ptr<expression> _this_argument;
         std::vector<std::unique_ptr<expression>> _member_copy_arguments;
 
-        mutable optional<std::u32string> _codegen_type_name_value;
+        mutable std::optional<std::u32string> _codegen_type_name_value;
 
         virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
         {

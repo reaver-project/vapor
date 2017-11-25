@@ -29,7 +29,7 @@ inline namespace _v1
 {
     std::shared_ptr<ir::variable_type> ir::get_type(const ir::value & val)
     {
-        return get<0>(fmap(val,
+        return std::get<0>(fmap(val,
             make_overload_set([](const std::shared_ptr<variable> & var) { return var->type; },
                 [](const ir::integer_value &) { return ir::builtin_types().integer; },
                 [](auto &&) {

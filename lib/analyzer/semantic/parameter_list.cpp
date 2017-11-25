@@ -38,7 +38,7 @@ inline namespace _v1
             assert(param_parse.type);
 
             auto param =
-                std::make_unique<parameter>(make_node(param_parse), param_parse.name.value.string, preanalyze_expression(param_parse.type.get(), lex_scope));
+                std::make_unique<parameter>(make_node(param_parse), param_parse.name.value.string, preanalyze_expression(param_parse.type.value(), lex_scope));
 
             auto symb = make_symbol(param_parse.name.value.string, param.get());
             lex_scope->init(param_parse.name.value.string, std::move(symb));

@@ -37,7 +37,7 @@ inline namespace _v1
 
         auto ret = std::make_unique<owning_call_expression>(_function, fmap(_args, [&](auto arg) { return repl.copy_claim(arg); }));
 
-        ret->set_ast_info(get_ast_info().get());
+        ret->set_ast_info(get_ast_info().value());
 
         if (_cloned_type_expr)
         {

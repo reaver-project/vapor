@@ -54,7 +54,8 @@ inline namespace _v1
     statement_ir return_statement::_codegen_ir(ir_generation_context & ctx) const
     {
         auto ret = _value_expr->codegen_ir(ctx);
-        ret.push_back({ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { ret.back().result }, ret.back().result });
+        ret.push_back(
+            { std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { ret.back().result }, ret.back().result });
 
         return ret;
     }

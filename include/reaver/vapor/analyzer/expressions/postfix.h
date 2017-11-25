@@ -36,9 +36,9 @@ inline namespace _v1
     public:
         postfix_expression(ast_node parse,
             std::unique_ptr<expression> base,
-            optional<lexer::token_type> mod,
+            std::optional<lexer::token_type> mod,
             std::vector<std::unique_ptr<expression>> arguments,
-            optional<std::u32string> accessed_member);
+            std::optional<std::u32string> accessed_member);
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
@@ -53,7 +53,7 @@ inline namespace _v1
             return [](auto && self) {
                 if (self->_accessed_member)
                 {
-                    return self->_referenced_expression.get()->_get_replacement();
+                    return self->_referenced_expression.value()->_get_replacement();
                 }
 
                 if (self->_modifier)
@@ -88,7 +88,7 @@ inline namespace _v1
         {
             if (_referenced_expression)
             {
-                return _referenced_expression.get()->is_equal(rhs);
+                return _referenced_expression.value()->is_equal(rhs);
             }
 
             if (_call_expression)
@@ -100,12 +100,12 @@ inline namespace _v1
         }
 
         std::unique_ptr<expression> _base_expr;
-        optional<lexer::token_type> _modifier;
+        std::optional<lexer::token_type> _modifier;
         std::vector<std::unique_ptr<expression>> _arguments;
         std::unique_ptr<expression> _call_expression;
 
-        optional<std::u32string> _accessed_member;
-        optional<expression *> _referenced_expression;
+        std::optional<std::u32string> _accessed_member;
+        std::optional<expression *> _referenced_expression;
     };
 }
 }

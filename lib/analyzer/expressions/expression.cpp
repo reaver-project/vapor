@@ -41,7 +41,7 @@ inline namespace _v1
 {
     std::unique_ptr<expression> preanalyze_expression(const parser::_v1::expression & expr, scope * lex_scope)
     {
-        return get<0>(fmap(expr.expression_value,
+        return std::get<0>(fmap(expr.expression_value,
             make_overload_set(
                 [](const parser::string_literal & string) -> std::unique_ptr<expression> {
                     assert(0);
@@ -87,7 +87,7 @@ inline namespace _v1
                     return memexpr;
                 },
 
-                [](auto &&) -> std::unique_ptr<expression> { assert(0); })));
+                [](const auto &) -> std::unique_ptr<expression> { assert(0); })));
     }
 }
 }
