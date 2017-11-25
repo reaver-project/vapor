@@ -28,7 +28,6 @@
 #include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/return.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/parser.h"
 
 namespace reaver::vapor::analyzer
 {

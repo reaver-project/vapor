@@ -24,7 +24,6 @@
 #include "vapor/analyzer/expressions/boolean.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/parser/lambda_expression.h"
 
 namespace reaver::vapor::analyzer
 {

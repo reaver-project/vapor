@@ -29,7 +29,6 @@
 #include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/function.h"
 #include "vapor/codegen/ir/function.h"
-#include "vapor/parser/lambda_expression.h"
 
 namespace reaver::vapor::analyzer
 {

@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/parser/template.h"
+#include "vapor/parser/expr.h"
 
 namespace reaver::vapor::parser
 {

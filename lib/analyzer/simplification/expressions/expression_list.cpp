@@ -25,8 +25,6 @@
 #include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/parser/expression_list.h"
-#include "vapor/parser/lambda_expression.h"
 
 namespace reaver::vapor::analyzer
 {

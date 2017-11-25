@@ -28,7 +28,6 @@
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/semantic/overloads.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/parser.h"
 
 namespace reaver::vapor::analyzer
 {

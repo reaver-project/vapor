@@ -22,6 +22,7 @@
 
 #include "vapor/analyzer/statements/declaration.h"
 #include "vapor/parser/declaration.h"
+#include "vapor/parser/expr.h"
 
 namespace reaver::vapor::analyzer
 {
