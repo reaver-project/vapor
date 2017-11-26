@@ -87,8 +87,8 @@ inline namespace _v1
             auto base = arguments_values[0];
         }
 
-        auto call_expr_instruction = codegen::ir::instruction{ none,
-            none,
+        auto call_expr_instruction = codegen::ir::instruction{ std::nullopt,
+            std::nullopt,
             { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
             std::move(arguments_values),
             { codegen::ir::make_variable(get_type()->codegen_type(ctx)) } };

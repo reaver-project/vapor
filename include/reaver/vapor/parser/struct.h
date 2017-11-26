@@ -34,7 +34,7 @@ inline namespace _v1
     struct struct_literal
     {
         range_type range;
-        std::vector<variant<declaration, function_definition>> members;
+        std::vector<std::variant<declaration, function_definition>> members;
     };
 
     bool operator==(const struct_literal & lhs, const struct_literal & rhs);

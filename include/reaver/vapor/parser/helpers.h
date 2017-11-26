@@ -100,24 +100,24 @@ inline namespace _v1
         return std::move(*ctx.begin++);
     }
 
-    inline optional<lexer::token &> peek(context & ctx)
+    inline lexer::token * peek(context & ctx)
     {
         if (ctx.begin != ctx.end)
         {
-            return { *ctx.begin };
+            return &*ctx.begin;
         }
 
-        return {};
+        return nullptr;
     }
 
-    inline optional<lexer::token &> peek(context & ctx, lexer::token_type expected)
+    inline lexer::token * peek(context & ctx, lexer::token_type expected)
     {
         if (ctx.begin != ctx.end && ctx.begin->type == expected)
         {
-            return { *ctx.begin };
+            return &*ctx.begin;
         }
 
-        return {};
+        return nullptr;
     };
 }
 }

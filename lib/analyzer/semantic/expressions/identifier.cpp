@@ -21,7 +21,6 @@
  **/
 
 #include "vapor/analyzer/expressions/identifier.h"
-#include "vapor/parser.h"
 
 namespace reaver::vapor::analyzer
 {

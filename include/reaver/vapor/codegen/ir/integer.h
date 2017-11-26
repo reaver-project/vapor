@@ -22,9 +22,9 @@
 
 #pragma once
 
-#include <boost/multiprecision/cpp_int.hpp>
+#include <optional>
 
-#include <reaver/optional.h>
+#include <boost/multiprecision/cpp_int.hpp>
 
 namespace reaver::vapor::codegen
 {
@@ -35,7 +35,7 @@ inline namespace _v1
         struct integer_value
         {
             boost::multiprecision::cpp_int value;
-            optional<std::size_t> size = none;
+            std::optional<std::size_t> size = std::nullopt;
         };
 
         struct integer_addition_instruction

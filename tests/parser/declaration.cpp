@@ -34,43 +34,43 @@ MAYFLY_ADD_TESTCASE("with deduced type",
     test(UR"(let foo = 1;)",
         declaration{ { 0, 11 },
             { { 4, 7 }, { lexer::token_type::identifier, UR"(foo)", { 4, 7 } } },
-            reaver::none,
-            reaver::make_optional<expression>({ { 10, 11 }, integer_literal{ { 10, 11 }, { lexer::token_type::integer, UR"(1)", { 10, 11 } }, {} } }) },
+            std::nullopt,
+            std::make_optional<expression>({ { 10, 11 }, integer_literal{ { 10, 11 }, { lexer::token_type::integer, UR"(1)", { 10, 11 } }, {} } }) },
         [](auto && ctx) { return parse_declaration(ctx); }));
 
 MAYFLY_ADD_TESTCASE("with explicit type",
     test(UR"(let foo : int = 1;)",
         declaration{ { 0, 17 },
             { { 4, 7 }, { lexer::token_type::identifier, UR"(foo)", { 4, 7 } } },
-            reaver::make_optional<expression>({ { 10, 13 },
-                postfix_expression{ { 10, 13 }, identifier{ { 10, 13 }, { lexer::token_type::identifier, UR"(int)", { 10, 13 } } }, reaver::none, {} } }),
-            reaver::make_optional<expression>({ { 16, 17 }, integer_literal{ { 16, 17 }, { lexer::token_type::integer, UR"(1)", { 16, 17 } }, {} } }) },
+            std::make_optional<expression>({ { 10, 13 },
+                postfix_expression{ { 10, 13 }, identifier{ { 10, 13 }, { lexer::token_type::identifier, UR"(int)", { 10, 13 } } }, std::nullopt, {} } }),
+            std::make_optional<expression>({ { 16, 17 }, integer_literal{ { 16, 17 }, { lexer::token_type::integer, UR"(1)", { 16, 17 } }, {} } }) },
         [](auto && ctx) { return parse_declaration(ctx); }));
 
 MAYFLY_ADD_TESTCASE("member with deduced type",
     test(UR"(let foo = 1;)",
         declaration{ { 0, 11 },
             { { 4, 7 }, { lexer::token_type::identifier, UR"(foo)", { 4, 7 } } },
-            reaver::none,
-            reaver::make_optional<expression>({ { 10, 11 }, integer_literal{ { 10, 11 }, { lexer::token_type::integer, UR"(1)", { 10, 11 } }, {} } }) },
+            std::nullopt,
+            std::make_optional<expression>({ { 10, 11 }, integer_literal{ { 10, 11 }, { lexer::token_type::integer, UR"(1)", { 10, 11 } }, {} } }) },
         [](auto && ctx) { return parse_declaration(ctx, declaration_mode::member_declaration); }));
 
 MAYFLY_ADD_TESTCASE("member with explicit type",
     test(UR"(let foo : int = 1;)",
         declaration{ { 0, 17 },
             { { 4, 7 }, { lexer::token_type::identifier, UR"(foo)", { 4, 7 } } },
-            reaver::make_optional<expression>({ { 10, 13 },
-                postfix_expression{ { 10, 13 }, identifier{ { 10, 13 }, { lexer::token_type::identifier, UR"(int)", { 10, 13 } } }, reaver::none, {} } }),
-            reaver::make_optional<expression>({ { 16, 17 }, integer_literal{ { 16, 17 }, { lexer::token_type::integer, UR"(1)", { 16, 17 } }, {} } }) },
+            std::make_optional<expression>({ { 10, 13 },
+                postfix_expression{ { 10, 13 }, identifier{ { 10, 13 }, { lexer::token_type::identifier, UR"(int)", { 10, 13 } } }, std::nullopt, {} } }),
+            std::make_optional<expression>({ { 16, 17 }, integer_literal{ { 16, 17 }, { lexer::token_type::integer, UR"(1)", { 16, 17 } }, {} } }) },
         [](auto && ctx) { return parse_declaration(ctx, declaration_mode::member_declaration); }));
 
 MAYFLY_ADD_TESTCASE("member without initializer",
     test(UR"(let foo : int;)",
         declaration{ { 0, 13 },
             { { 4, 7 }, { lexer::token_type::identifier, UR"(foo)", { 4, 7 } } },
-            reaver::make_optional<expression>({ { 10, 13 },
-                postfix_expression{ { 10, 13 }, identifier{ { 10, 13 }, { lexer::token_type::identifier, UR"(int)", { 10, 13 } } }, reaver::none, {} } }),
-            reaver::none },
+            std::make_optional<expression>({ { 10, 13 },
+                postfix_expression{ { 10, 13 }, identifier{ { 10, 13 }, { lexer::token_type::identifier, UR"(int)", { 10, 13 } } }, std::nullopt, {} } }),
+            std::nullopt },
         [](auto && ctx) { return parse_declaration(ctx, declaration_mode::member_declaration); }));
 
 MAYFLY_END_SUITE;

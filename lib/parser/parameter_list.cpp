@@ -35,7 +35,7 @@ inline namespace _v1
         {
             auto name = parse_literal<lexer::token_type::identifier>(ctx);
 
-            optional<expression> type_expr;
+            std::optional<expression> type_expr;
             auto end = name.range.end();
 
             if (mode == parameter_type_mode::required || peek(ctx, lexer::token_type::colon))
@@ -80,7 +80,7 @@ inline namespace _v1
             {
                 auto type_ctx = param_ctx.make_branch(true);
                 os << styles::def << type_ctx << styles::subrule_name << "type:\n";
-                print(parameter.type.get(), os, type_ctx.make_branch(true));
+                print(parameter.type.value(), os, type_ctx.make_branch(true));
             }
         }
     }

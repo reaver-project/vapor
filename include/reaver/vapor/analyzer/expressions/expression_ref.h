@@ -97,7 +97,7 @@ inline namespace _v1
         {
             auto referenced_ir = _referenced->codegen_ir(ctx);
             return { codegen::ir::instruction{
-                none, none, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, { referenced_ir.back().result } } };
+                std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, { referenced_ir.back().result } } };
         }
 
         virtual bool _is_equal(const expression * rhs) const override

@@ -20,6 +20,9 @@
  *
  **/
 
+#include <reaver/overloads.h>
+#include <reaver/variant.h>
+
 #include "generator.h"
 
 #include "ir/instruction.h" // TODO: remove
@@ -53,18 +56,18 @@ inline namespace _v1
         static std::u32string variable_of(const ir::value & val, codegen_context & ctx)
         {
             assert(val.index() == 0);
-            return variable_name(*get<std::shared_ptr<ir::variable>>(val), ctx);
+            return variable_name(*std::get<std::shared_ptr<ir::variable>>(val), ctx);
         }
 
         static std::u32string type_of(const ir::value & val, codegen_context & ctx)
         {
-            return get<std::u32string>(fmap(val,
+            return std::get<std::u32string>(fmap(val,
                 make_overload_set(
                     [&](const ir::integer_value & val) {
                         assert(val.size);
 
                         std::ostringstream os;
-                        os << "i" << val.size.get();
+                        os << "i" << val.size.value();
                         return utf32(os.str());
                     },
                     [&](const ir::boolean_value &) -> std::u32string { return U"i1"; },
@@ -88,7 +91,7 @@ inline namespace _v1
 
         static std::u32string value_of(const ir::value & val, codegen_context & ctx)
         {
-            return get<std::u32string>(fmap(val,
+            return std::get<std::u32string>(fmap(val,
                 make_overload_set(
                     [&](const codegen::ir::integer_value & val) {
                         std::ostringstream os;

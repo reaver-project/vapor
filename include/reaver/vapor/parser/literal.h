@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <reaver/optional.h>
+#include <optional>
 
 #include "../print_helpers.h"
 #include "../range.h"
@@ -37,7 +37,7 @@ inline namespace _v1
     {
         range_type range;
         lexer::token value;
-        optional<lexer::token> suffix = {};
+        std::optional<lexer::token> suffix = {};
     };
 
     template<lexer::token_type TokenType>

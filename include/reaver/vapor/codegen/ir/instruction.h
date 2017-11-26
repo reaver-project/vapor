@@ -69,8 +69,8 @@ inline namespace _v1
 
         struct instruction
         {
-            optional<std::u32string> label;
-            optional<std::shared_ptr<variable>> declared_variable;
+            std::optional<std::u32string> label;
+            std::optional<std::shared_ptr<variable>> declared_variable;
 
             instruction_type instruction;
             std::vector<value> operands;
@@ -110,7 +110,7 @@ inline namespace _v1
 
         inline auto get_ir_variable(const std::vector<instruction> & ir)
         {
-            return get<std::shared_ptr<variable>>(ir.back().result);
+            return std::get<std::shared_ptr<variable>>(ir.back().result);
         }
     };
 }

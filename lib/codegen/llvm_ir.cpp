@@ -41,7 +41,7 @@ inline namespace _v1
 
         for (auto && symbol : module.symbols)
         {
-            ret += get<0>(fmap(symbol,
+            ret += std::get<0>(fmap(symbol,
                 make_overload_set([&](std::shared_ptr<ir::variable> & var) { return this->generate_definition(*var, ctx); },
                     [&](ir::function & fn) { return this->generate_definition(fn, ctx); })));
         }
@@ -82,7 +82,7 @@ inline namespace _v1
             var.name = utf32(std::to_string(ctx.unnamed_variable_index++));
         }
 
-        return (ctx.in_function_definition ? U"%\"" : U"@\"") + var.name.get() + U"\"";
+        return (ctx.in_function_definition ? U"%\"" : U"@\"") + var.name.value() + U"\"";
     }
 }
 }

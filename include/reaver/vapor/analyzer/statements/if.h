@@ -32,7 +32,7 @@ inline namespace _v1
     class if_statement : public statement
     {
     public:
-        if_statement(ast_node parse, std::unique_ptr<expression> condition, std::unique_ptr<statement> then, optional<std::unique_ptr<statement>> else_);
+        if_statement(ast_node parse, std::unique_ptr<expression> condition, std::unique_ptr<statement> then, std::optional<std::unique_ptr<statement>> else_);
 
         virtual std::vector<const return_statement *> get_returns() const override
         {
@@ -54,7 +54,7 @@ inline namespace _v1
 
         std::unique_ptr<expression> _condition;
         std::unique_ptr<statement> _then_block;
-        optional<std::unique_ptr<statement>> _else_block;
+        std::optional<std::unique_ptr<statement>> _else_block;
     };
 }
 }

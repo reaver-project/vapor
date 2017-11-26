@@ -75,7 +75,7 @@ inline namespace _v1
         }
 
         mutable std::mutex _functions_lock;
-        mutable optional<std::u32string> _codegen_type_name;
+        mutable std::optional<std::u32string> _codegen_type_name;
         std::vector<function *> _functions;
     };
 }

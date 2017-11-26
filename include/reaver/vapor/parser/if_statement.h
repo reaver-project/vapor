@@ -35,7 +35,7 @@ inline namespace _v1
         range_type range;
         expression condition;
         recursive_wrapper<block> then_block;
-        optional<recursive_wrapper<block>> else_block;
+        std::optional<recursive_wrapper<block>> else_block;
     };
 
     bool operator==(const if_statement & lhs, const if_statement & rhs);

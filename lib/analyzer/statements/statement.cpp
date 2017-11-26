@@ -37,7 +37,7 @@ inline namespace _v1
 {
     std::unique_ptr<statement> preanalyze_statement(const parser::statement & parse, scope *& lex_scope)
     {
-        return get<0>(fmap(parse.statement_value,
+        return std::get<0>(fmap(parse.statement_value,
             make_overload_set(
                 [&](const parser::declaration & decl) -> std::unique_ptr<statement> {
                     auto ret = preanalyze_declaration(decl, lex_scope);

@@ -24,8 +24,7 @@
 #include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/return.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/parser/expression_list.h"
-#include "vapor/parser/lambda_expression.h"
+#include "vapor/parser/expr.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -139,7 +138,7 @@ inline namespace _v1
 
         if (_range)
         {
-            os << " (" << styles::range << _range.get() << styles::def << ')';
+            os << " (" << styles::range << _range.value() << styles::def << ')';
         }
 
         os << ": " << _explanation << '\n';

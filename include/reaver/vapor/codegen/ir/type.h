@@ -46,7 +46,7 @@ inline namespace _v1
             std::size_t offset;
         };
 
-        using member = variant<member_variable, codegen::ir::function>;
+        using member = std::variant<member_variable, codegen::ir::function>;
 
         struct variable_type
         {

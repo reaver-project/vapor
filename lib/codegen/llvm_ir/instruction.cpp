@@ -57,7 +57,7 @@ inline namespace _v1
 
         if (inst.result.index() == 0)
         {
-            auto && var = *get<std::shared_ptr<ir::variable>>(inst.result);
+            auto && var = *std::get<std::shared_ptr<ir::variable>>(inst.result);
             if (!var.declared)
             {
                 var.declared = true;

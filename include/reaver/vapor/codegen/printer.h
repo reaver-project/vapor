@@ -26,6 +26,8 @@
 
 #include <boost/algorithm/string/join.hpp>
 
+#include <reaver/prelude/functor.h>
+
 #include "generator.h"
 #include "ir/scope.h"
 #include "ir/variable.h"

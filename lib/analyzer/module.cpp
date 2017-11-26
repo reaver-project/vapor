@@ -31,9 +31,12 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    module::module(const parser::module & parse) : _parse{ parse }, _scope{ std::make_unique<scope>() }
+    module::module(const parser::module & parse)
+        : _parse{ make_node(parse) }, _scope{ std::make_unique<scope>() }, _name{ fmap(parse.name.id_expression_value, [](auto && elem) -> decltype(auto) {
+              return elem.value.string;
+          }) }
     {
-        _statements = fmap(_parse.statements, [&](const auto & statement) {
+        _statements = fmap(parse.statements, [&](const auto & statement) {
             auto scope_ptr = _scope.get();
             auto ret = preanalyze_statement(statement, scope_ptr);
             if (scope_ptr != _scope.get())
@@ -58,7 +61,7 @@ inline namespace _v1
         // set entry(int32) as the entry point
         if (auto entry = _scope->try_get(U"entry"))
         {
-            auto type = entry.get()->get_type();
+            auto type = entry.value()->get_type();
             auto future = type->get_candidates(lexer::token_type::round_bracket_open);
             auto overloads = reaver::get(future);
 
@@ -67,7 +70,7 @@ inline namespace _v1
             assert(overloads[0]->parameters().size() == 1);
             assert(overloads[0]->parameters()[0]->get_type() == ctx.sized_integers.at(32).get());
 
-            overloads[0]->mark_as_entry(ctx, entry.get()->get_expression());
+            overloads[0]->mark_as_entry(ctx, entry.value()->get_expression());
         }
 
         logger::dlog() << "Analysis of module " << utf8(name()) << " finished.";
@@ -124,8 +127,7 @@ inline namespace _v1
         auto ctx = ir_generation_context{};
 
         codegen::ir::module mod;
-        mod.name = fmap(_parse.name.id_expression_value, [&](auto && ident) { return ident.value.string; });
-
+        mod.name = _name;
         mod.symbols = mbind(_scope->symbols_in_order(), [&](auto && symbol) {
             return mbind(symbol->codegen_ir(ctx), [&](auto && decl) {
                 return get<0>(fmap(decl,

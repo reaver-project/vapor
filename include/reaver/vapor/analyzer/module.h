@@ -55,7 +55,7 @@ inline namespace _v1
 
         std::u32string name() const
         {
-            return boost::join(fmap(_parse.name.id_expression_value, [](auto && elem) -> decltype(auto) { return elem.value.string; }), ".");
+            return boost::join(_name, ".");
         }
 
         void print(std::ostream & os, print_context ctx) const;
@@ -63,14 +63,15 @@ inline namespace _v1
 
         auto get_ast_info() const
         {
-            return make_optional(std::ref(_parse));
+            return std::make_optional(_parse);
         }
 
     private:
-        const parser::module & _parse;
+        ast_node _parse;
         std::unique_ptr<scope> _scope;
         std::vector<std::unique_ptr<statement>> _statements;
         std::vector<future<>> _analysis_futures;
+        std::vector<std::u32string> _name;
     };
 }
 }

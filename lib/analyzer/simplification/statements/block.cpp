@@ -28,7 +28,6 @@
 #include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/return.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/parser.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -63,7 +62,7 @@ inline namespace _v1
 
         if (!_is_clone_cache)
         {
-            return repl.claim(_clone.get().get());
+            return repl.claim(_clone.value().get());
         }
 
         auto ret = std::unique_ptr<block>(new block(*this));

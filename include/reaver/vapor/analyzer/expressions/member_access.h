@@ -90,7 +90,7 @@ inline namespace _v1
 
             assert(!_assignment_expr);
 
-            std::unique_ptr<member_access_expression> ret{ new member_access_expression{ get_ast_info().get(), nullptr } };
+            std::unique_ptr<member_access_expression> ret{ new member_access_expression{ get_ast_info().value(), nullptr } };
             ret->_base = replaced_base;
             ret->_set_type(get_type());
             ret->_name = _name;

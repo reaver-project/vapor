@@ -20,9 +20,12 @@
  *
  **/
 
-#include "vapor/codegen/printer.h"
+#include <reaver/overloads.h>
+#include <reaver/variant.h>
+
 #include "vapor/codegen/ir/module.h"
 #include "vapor/codegen/ir/variable.h"
+#include "vapor/codegen/printer.h"
 
 namespace reaver::vapor::codegen
 {
@@ -34,7 +37,7 @@ inline namespace _v1
 
         for (auto && symbol : module.symbols)
         {
-            ret += get<0>(fmap(symbol,
+            ret += std::get<0>(fmap(symbol,
                 make_overload_set([&](std::shared_ptr<ir::variable> & var) { return this->generate_definition(*var, ctx); },
                     [&](ir::function & fn) { return this->generate_definition(fn, ctx); })));
         }
@@ -44,7 +47,7 @@ inline namespace _v1
 
     std::u32string ir_printer::_to_string(const ir::value & val)
     {
-        return get<std::u32string>(fmap(val,
+        return std::get<std::u32string>(fmap(val,
             make_overload_set(
                 [&](const ir::integer_value & val) {
                     std::stringstream ss;
@@ -52,14 +55,14 @@ inline namespace _v1
 
                     if (val.size)
                     {
-                        ss << "_" << val.size.get();
+                        ss << "_" << val.size.value();
                     }
 
                     return utf32(ss.str());
                 },
                 [&](const ir::boolean_value & val) -> std::u32string { return val.value ? U"true" : U"false"; },
                 [&](const std::shared_ptr<ir::variable> & var) {
-                    return U"variable @ " + _pointer_to_string(var.get()) + U" `" + (var->name ? _scope_string(var->scopes) + U"." + var->name.get() : U"")
+                    return U"variable @ " + _pointer_to_string(var.get()) + U" `" + (var->name ? _scope_string(var->scopes) + U"." + var->name.value() : U"")
                         + U"`";
                 },
                 [&](const ir::label & label) { return (label.scopes.empty() ? U"" : _scope_string(label.scopes) + U".") + label.name; },

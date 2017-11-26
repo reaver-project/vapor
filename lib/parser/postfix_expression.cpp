@@ -68,7 +68,7 @@ inline namespace _v1
         else
         {
             ret.base_expression = parse_literal<lexer::token_type::identifier>(ctx);
-            auto & range = get<identifier>(ret.base_expression).range;
+            auto & range = std::get<identifier>(ret.base_expression).range;
             start = range.start();
             end = range.end();
         }

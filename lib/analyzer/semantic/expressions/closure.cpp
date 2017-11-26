@@ -66,14 +66,14 @@ inline namespace _v1
                             U"operator()",
                             {},
                             fmap(_parameter_list,
-                                [&](auto && param) { return get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
+                                [&](auto && param) { return std::get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
                             _body->codegen_return(ctx),
                             _body->codegen_ir(ctx),
                         };
                         ret.is_member = true;
                         return ret;
                     },
-                    get_ast_info().get().range);
+                    get_ast_info().value().range);
 
                 function->set_name(U"operator()");
                 function->set_body(_body.get());

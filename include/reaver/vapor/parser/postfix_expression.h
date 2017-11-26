@@ -22,7 +22,10 @@
 
 #pragma once
 
-#include <reaver/optional.h>
+#include <optional>
+
+#include <reaver/variant.h>
+
 #include "../range.h"
 #include "helpers.h"
 #include "literal.h"
@@ -37,10 +40,10 @@ inline namespace _v1
     struct postfix_expression
     {
         range_type range;
-        variant<identifier, recursive_wrapper<expression_list>> base_expression = identifier();
-        optional<lexer::token_type> modifier_type = none;
+        std::variant<identifier, recursive_wrapper<expression_list>> base_expression = identifier();
+        std::optional<lexer::token_type> modifier_type = std::nullopt;
         std::vector<expression> arguments = {};
-        optional<identifier> accessed_member = none;
+        std::optional<identifier> accessed_member = std::nullopt;
     };
 
     bool operator==(const postfix_expression & lhs, const postfix_expression & rhs);

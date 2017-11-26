@@ -70,7 +70,7 @@ inline namespace _v1
 
         closure * _closure;
         std::unique_ptr<function> _function;
-        mutable optional<std::u32string> _codegen_type_name;
+        mutable std::optional<std::u32string> _codegen_type_name;
     };
 }
 }

@@ -29,7 +29,7 @@ inline namespace _v1
     std::unique_ptr<statement> declaration::_clone_with_replacement(replacements & repl) const
     {
         assert(_type == declaration_type::variable);
-        return repl.claim(_init_expr.get().get());
+        return repl.claim(_init_expr.value().get());
     }
 
     future<statement *> declaration::_simplify(recursive_context ctx)
@@ -39,7 +39,7 @@ inline namespace _v1
         fmap(_init_expr, [&](auto && expr) {
             fut = expr->simplify_expr(ctx)
                       .then([&, ctx](auto && simplified) {
-                          replace_uptr(_init_expr.get(), simplified, ctx.proper);
+                          replace_uptr(_init_expr.value(), simplified, ctx.proper);
                           return _declared_symbol->simplify(ctx);
                       })
                       .then([&]() -> statement * { return _init_expr->release(); });

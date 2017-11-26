@@ -41,7 +41,7 @@ MAYFLY_ADD_TESTCASE("single complete parameter",
                     expression{ { 10, 14 },
                         postfix_expression{ { 10, 14 },
                             identifier{ { 10, 14 }, { lexer::token_type::identifier, UR"(type)", { 10, 14 } } },
-                            reaver::none,
+                            std::nullopt,
                             {} } } } } } },
         &parse_template_introducer));
 

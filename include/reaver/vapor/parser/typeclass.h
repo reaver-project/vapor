@@ -34,7 +34,7 @@ inline namespace _v1
     struct typeclass_literal
     {
         range_type range;
-        std::vector<variant<function_declaration, function_definition>> members;
+        std::vector<std::variant<function_declaration, function_definition>> members;
     };
 
     struct typeclass_definition

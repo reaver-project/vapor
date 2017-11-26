@@ -28,7 +28,6 @@
 #include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
-#include "vapor/parser.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -48,7 +47,7 @@ inline namespace _v1
         }
 
         assert(_arguments.empty());
-        auto ret = std::unique_ptr<postfix_expression>(new postfix_expression(get_ast_info().get(), std::move(base), _modifier, {}, _accessed_member));
+        auto ret = std::unique_ptr<postfix_expression>(new postfix_expression(get_ast_info().value(), std::move(base), _modifier, {}, _accessed_member));
 
         auto type = ret->_base_expr->get_type();
 
@@ -104,8 +103,8 @@ inline namespace _v1
                         return make_ready_future<expression *>(this);
                     }
 
-                    assert(_referenced_expression.get()->is_member());
-                    auto member = _base_expr->get_member(_referenced_expression.get()->as<member_expression>()->get_name());
+                    assert(_referenced_expression.value()->is_member());
+                    auto member = _base_expr->get_member(_referenced_expression.value()->as<member_expression>()->get_name());
                     assert(member);
 
                     if (!member->is_constant())

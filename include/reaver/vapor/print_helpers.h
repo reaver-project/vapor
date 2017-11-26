@@ -22,7 +22,8 @@
 
 #pragma once
 
-#include <reaver/optional.h>
+#include <optional>
+
 #include <reaver/style.h>
 
 #include "range.h"
@@ -93,10 +94,10 @@ inline namespace _v1
         static constexpr const char * indent = "    ";
         static constexpr const char * nested_indent = "│   ";
 
-        mutable optional<std::string> _own_branch;
-        mutable optional<std::string> _own_branch_indent;
-        mutable optional<std::string> _own_last_branch;
-        mutable optional<std::string> _own_last_branch_indent;
+        mutable std::optional<std::string> _own_branch;
+        mutable std::optional<std::string> _own_branch_indent;
+        mutable std::optional<std::string> _own_last_branch;
+        mutable std::optional<std::string> _own_last_branch_indent;
         std::string_view _prefix = nothing;
         std::string_view _indent = nothing;
     };
@@ -122,7 +123,7 @@ inline namespace _v1
         if (auto parse = ptr->get_ast_info())
         {
             os << styles::def << ", AST node";
-            print_address_range(os, parse.get());
+            print_address_range(os, parse.value());
         }
     }
 

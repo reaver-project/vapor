@@ -62,7 +62,7 @@ inline namespace _v1
                 ret.else_block = parse_block(ctx);
             }
 
-            ret.range = { start, ret.else_block->range.end() };
+            ret.range = { start, ret.else_block.value()->range.end() };
         }
 
         else

@@ -57,11 +57,11 @@ inline namespace _v1
         std::u32string base_variable;
         if (actual_argument_offset == 2) // member call
         {
-            auto is_type = get<0>(inst.operands.front())->type == ir::builtin_types().type;
+            auto is_type = std::get<0>(inst.operands.front())->type == ir::builtin_types().type;
             base_variable = variable_of(inst.operands.front(), ctx) + (is_type ? U"::" : U".");
         }
 
-        auto call_operand = get<codegen::ir::label>(inst.operands[actual_argument_offset - 1]);
+        auto call_operand = std::get<codegen::ir::label>(inst.operands[actual_argument_offset - 1]);
         std::u32string call_operand_str;
 
         for (auto && scope : call_operand.scopes)

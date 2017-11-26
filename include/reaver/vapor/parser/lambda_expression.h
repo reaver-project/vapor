@@ -37,9 +37,9 @@ inline namespace _v1
     struct lambda_expression
     {
         range_type range;
-        optional<capture_list> captures;
-        optional<parameter_list> parameters;
-        optional<expression> return_type;
+        std::optional<capture_list> captures;
+        std::optional<parameter_list> parameters;
+        std::optional<expression> return_type;
         block body;
     };
 

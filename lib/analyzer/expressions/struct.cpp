@@ -23,7 +23,7 @@
 #include "vapor/analyzer/expressions/struct.h"
 #include "vapor/analyzer/statements/declaration.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/parser/struct.h"
+#include "vapor/parser/expr.h"
 
 namespace reaver::vapor::analyzer
 {

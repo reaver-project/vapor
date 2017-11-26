@@ -31,6 +31,6 @@ inline namespace _v1
     class postfix_expression;
     class binary_expression;
 
-    using expression_context = std::vector<variant<postfix_expression *, binary_expression *>>;
+    using expression_context = std::vector<std::variant<postfix_expression *, binary_expression *>>;
 }
 }

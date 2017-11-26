@@ -190,7 +190,7 @@ inline namespace _v1
         std::unique_ptr<type> _pack_type;
         void _init_pack_type();
 
-        mutable optional<std::shared_ptr<codegen::ir::variable_type>> _codegen_t;
+        mutable std::optional<std::shared_ptr<codegen::ir::variable_type>> _codegen_t;
     };
 
     class type_type : public type

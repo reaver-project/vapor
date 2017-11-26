@@ -25,8 +25,6 @@
 #include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/parser/expression_list.h"
-#include "vapor/parser/lambda_expression.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -43,7 +41,7 @@ inline namespace _v1
 
     std::unique_ptr<expression> expression_list::_clone_expr_with_replacement(replacements & repl) const
     {
-        auto ret = std::make_unique<expression_list>(get_ast_info().get());
+        auto ret = std::make_unique<expression_list>(get_ast_info().value());
 
         ret->value = fmap(value, [&](auto && expr) { return repl.claim(expr.get()); });
 

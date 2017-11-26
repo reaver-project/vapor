@@ -24,7 +24,6 @@
 #include "vapor/analyzer/expressions/boolean.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/parser/lambda_expression.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -33,7 +32,7 @@ inline namespace _v1
     std::unique_ptr<statement> if_statement::_clone_with_replacement(replacements & repl) const
     {
         auto ret = std::unique_ptr<if_statement>(
-            new if_statement(get_ast_info().get(), repl.claim(_condition.get()), repl.claim(_then_block.get()), fmap(_else_block, [&](auto && block) {
+            new if_statement(get_ast_info().value(), repl.claim(_condition.get()), repl.claim(_then_block.get()), fmap(_else_block, [&](auto && block) {
                 return repl.claim(block.get());
             })));
 
@@ -49,8 +48,8 @@ inline namespace _v1
 
         if (_else_block)
         {
-            future = future.then([&, ctx] { return _else_block.get()->simplify(ctx); }).then([&, ctx](auto && simpl) {
-                replace_uptr(_else_block.get(), simpl, ctx.proper);
+            future = future.then([&, ctx] { return _else_block.value()->simplify(ctx); }).then([&, ctx](auto && simpl) {
+                replace_uptr(_else_block.value(), simpl, ctx.proper);
             });
         }
 
@@ -72,7 +71,7 @@ inline namespace _v1
                 {
                     if (_else_block)
                     {
-                        return _else_block.get().release();
+                        return _else_block.value().release();
                     }
 
                     return make_null_statement().release();

@@ -102,18 +102,19 @@ inline namespace _v1
                 auto result = codegen::ir::make_variable(ir_type);
 
                 auto scopes = this->get_scope()->codegen_ir(ctx);
-                scopes.emplace_back(_codegen_type_name_value.get(), codegen::ir::scope_type::type);
+                scopes.emplace_back(_codegen_type_name_value.value(), codegen::ir::scope_type::type);
 
                 return { U"constructor",
                     std::move(scopes),
                     args,
                     result,
-                    { codegen::ir::instruction{ none,
-                          none,
+                    { codegen::ir::instruction{ std::nullopt,
+                          std::nullopt,
                           { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() },
                           fmap(args, [](auto && arg) -> codegen::ir::value { return arg; }),
                           result },
-                        codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
+                        codegen::ir::instruction{
+                            std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
             });
 
         _aggregate_ctor->set_scopes_generator([this](auto && ctx) { return this->codegen_scopes(ctx); });
@@ -163,18 +164,19 @@ inline namespace _v1
                 auto result = codegen::ir::make_variable(ir_type);
 
                 auto scopes = this->get_scope()->codegen_ir(ctx);
-                scopes.emplace_back(_codegen_type_name_value.get(), codegen::ir::scope_type::type);
+                scopes.emplace_back(_codegen_type_name_value.value(), codegen::ir::scope_type::type);
 
                 return { U"replacing_copy_constructor",
                     std::move(scopes),
                     args,
                     result,
-                    { codegen::ir::instruction{ none,
-                          none,
+                    { codegen::ir::instruction{ std::nullopt,
+                          std::nullopt,
                           { boost::typeindex::type_id<codegen::ir::aggregate_init_instruction>() },
                           fmap(args, [](auto && arg) -> codegen::ir::value { return arg; }),
                           result },
-                        codegen::ir::instruction{ none, none, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
+                        codegen::ir::instruction{
+                            std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
             });
 
         _aggregate_copy_ctor->set_scopes_generator([this](auto && ctx) { return this->codegen_scopes(ctx); });
@@ -225,7 +227,7 @@ inline namespace _v1
 
         // TODO: actual name tracking for this shit
         _codegen_type_name_value = U"struct_" + utf32(std::to_string(ctx.struct_index++));
-        auto type = codegen::ir::variable_type{ _codegen_type_name_value.get(), get_scope()->codegen_ir(ctx), 0, {} };
+        auto type = codegen::ir::variable_type{ _codegen_type_name_value.value(), get_scope()->codegen_ir(ctx), 0, {} };
 
         auto members = fmap(_data_members, [&](auto && member) { return codegen::ir::member{ member->member_codegen_ir(ctx) }; });
 

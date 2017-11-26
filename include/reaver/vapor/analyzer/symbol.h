@@ -109,8 +109,8 @@ inline namespace _v1
         std::u32string _name;
 
         expression * _expression;
-        optional<future<expression *>> _future;
-        optional<manual_promise<expression *>> _promise;
+        std::optional<future<expression *>> _future;
+        std::optional<manual_promise<expression *>> _promise;
     };
 
     inline auto make_symbol(std::u32string name, expression * expression = nullptr)

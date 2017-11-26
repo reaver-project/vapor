@@ -44,7 +44,7 @@ inline namespace _v1
         function_definition(ast_node parse,
             std::u32string name,
             parameter_list params,
-            optional<std::unique_ptr<expression>> return_type,
+            std::optional<std::unique_ptr<expression>> return_type,
             std::unique_ptr<block> body,
             std::unique_ptr<scope> scope);
 
@@ -69,7 +69,7 @@ inline namespace _v1
         std::u32string _name;
         parameter_list _parameter_list;
 
-        optional<std::unique_ptr<expression>> _return_type;
+        std::optional<std::unique_ptr<expression>> _return_type;
         std::unique_ptr<block> _body;
         std::unique_ptr<scope> _scope;
         std::unique_ptr<function> _function;

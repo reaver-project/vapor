@@ -82,12 +82,12 @@ inline namespace _v1
 
         // TODO: the operand generated for this instruction should probably be ir::member_variable directly
         // this also means that member_variable needs *index* in addition to offset
-        auto member_name = get<ir::label>(inst.operands[1]).name;
-        auto & members = get<std::shared_ptr<ir::variable>>(inst.operands[0])->type->members;
+        auto member_name = std::get<ir::label>(inst.operands[1]).name;
+        auto & members = std::get<std::shared_ptr<ir::variable>>(inst.operands[0])->type->members;
 
         std::size_t index = 0;
         auto member_ir = std::find_if(members.begin(), members.end(), [&](auto && v) {
-            return get<bool>(fmap(v,
+            return std::get<bool>(fmap(v,
                 make_overload_set(
                     [&](const ir::member_variable & member) {
                         ++index;

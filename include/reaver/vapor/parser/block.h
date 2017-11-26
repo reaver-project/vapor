@@ -36,8 +36,8 @@ inline namespace _v1
     struct block
     {
         range_type range;
-        std::vector<variant<recursive_wrapper<block>, recursive_wrapper<statement>>> block_value;
-        optional<expression_list> value_expression;
+        std::vector<std::variant<recursive_wrapper<block>, recursive_wrapper<statement>>> block_value;
+        std::optional<expression_list> value_expression;
     };
 
     bool operator==(const block & lhs, const block & rhs);

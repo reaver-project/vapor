@@ -1,6 +1,6 @@
 CXX = c++
 LD = c++
-CXXFLAGS += -O0 -Wall -std=c++1z -MP -MD -fPIC -Wno-unused-parameter -g -Wno-unused-private-field -Wnon-virtual-dtor -fno-omit-frame-pointer \
+CXXFLAGS += -O0 -Wall -std=c++17 -MP -MD -fPIC -Wno-unused-parameter -g -Wno-unused-private-field -Wnon-virtual-dtor -fno-omit-frame-pointer \
 	-Wno-unused-lambda-capture -Wno-unknown-warning-option # clang 5.0 trunk is retarded
 SOFLAGS += -shared
 LDFLAGS +=
