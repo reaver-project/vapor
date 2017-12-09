@@ -20,12 +20,11 @@
  *
  **/
 
-#include <boost/filesystem.hpp>
-
 #include <fstream>
 
 #include "vapor/analyzer.h"
 #include "vapor/codegen.h"
+#include "vapor/config/compiler_options.h"
 #include "vapor/lexer.h"
 #include "vapor/parser.h"
 #include "vapor/utf.h"
