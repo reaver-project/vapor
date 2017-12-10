@@ -33,7 +33,9 @@ inline namespace _v1
     class compiler_options
     {
     public:
-        compiler_options(std::unique_ptr<class language_options> lang_opt);
+        compiler_options(std::unique_ptr<class language_options> lang_opt) : _lang_opt{ std::move(lang_opt) }
+        {
+        }
 
         auto & language_options() const
         {
@@ -45,9 +47,14 @@ inline namespace _v1
             return _source_path;
         }
 
-        const std::optional<boost::filesystem::path> & output_path() const
+        boost::filesystem::path output_path() const
         {
-            return _output_path;
+            if (_output_path)
+            {
+                return _output_path.value();
+            }
+
+            return _source_path.value().string() + ".ll";
         }
 
         const std::vector<boost::filesystem::path> & module_paths() const
@@ -63,7 +70,7 @@ inline namespace _v1
 
         void set_output_path(boost::filesystem::path path)
         {
-            assert(!_source_path);
+            assert(!_output_path);
             _output_path = std::move(path);
         }
 

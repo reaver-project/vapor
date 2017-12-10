@@ -22,6 +22,7 @@
 
 #include <fstream>
 
+#include "cli/cli.h"
 #include "vapor/analyzer.h"
 #include "vapor/codegen.h"
 #include "vapor/config/compiler_options.h"
@@ -29,12 +30,25 @@
 #include "vapor/parser.h"
 #include "vapor/utf.h"
 
-int main() try
+int main(int argc, char ** argv) try
 {
     // force a single thread of execution
     reaver::default_executor(reaver::make_executor<reaver::thread_pool>(1));
 
-    std::ifstream input("tests-full/basic/basic.vpr");
+    auto[options, exit] = reaver::vapor::cli::get_options(argc, argv);
+
+    if (exit)
+    {
+        return 0;
+    }
+
+    // compiler_options should probably expose an ifstream, or maybe just the entire
+    // program buffer loaded into memory
+    // but I don't know which one is better right now
+    // would be useful for compiling from stdin
+    assert(options->source_path());
+
+    std::ifstream input(options->source_path()->string());
     std::string program_utf8{ std::istreambuf_iterator<char>(input.rdbuf()), std::istreambuf_iterator<char>() };
     auto program = boost::locale::conv::utf_to_utf<char32_t>(program_utf8);
 
@@ -80,8 +94,9 @@ int main() try
     reaver::logger::dlog() << "Generated LLVM IR:";
     reaver::logger::dlog() << generated_code;
 
-    boost::filesystem::create_directories("output");
-    std::ofstream out{ "output/output.ll", std::ios::trunc | std::ios::out };
+    auto output_path = options->output_path();
+    boost::filesystem::create_directories(output_path.parent_path());
+    std::ofstream out{ output_path.string(), std::ios::trunc | std::ios::out };
     out << generated_code;
 
     reaver::logger::default_logger().sync();
