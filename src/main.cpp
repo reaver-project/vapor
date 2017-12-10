@@ -20,53 +20,40 @@
  *
  **/
 
-#include <boost/filesystem.hpp>
-
 #include <fstream>
 
+#include "cli/cli.h"
 #include "vapor/analyzer.h"
 #include "vapor/codegen.h"
+#include "vapor/config/compiler_options.h"
 #include "vapor/lexer.h"
 #include "vapor/parser.h"
 #include "vapor/utf.h"
 
-std::u32string program = UR"program(module hello_world
-{
-    let int32 = sized_int(32);
-
-    let mn = struct { let m : int32; let n : int32; };
-
-    function ackermann(args : mn) -> int32
-    {
-        if (args.m == 0)
-        {
-            return args.n + 1;
-        }
-
-        if (args.n == 0)
-        {
-            return ackermann(args{ .m = .m - 1, .n = 1 });
-        }
-
-        return ackermann(args{ .m = .m - 1, .n = ackermann(args{ .n = .n - 1 }) });
-    }
-
-    let entry = λ(arg : int32) -> int32
-    {
-        let constant_foldable = ackermann(mn{ 2, 3 });
-        let non_constant_foldable = ackermann(mn{ arg, arg + 1 });
-
-        return constant_foldable - non_constant_foldable;
-    };
-})program";
-
-int main() try
+int main(int argc, char ** argv) try
 {
     // force a single thread of execution
     reaver::default_executor(reaver::make_executor<reaver::thread_pool>(1));
 
+    auto[options, exit] = reaver::vapor::cli::get_options(argc, argv);
+
+    if (exit)
+    {
+        return 0;
+    }
+
+    // compiler_options should probably expose an ifstream, or maybe just the entire
+    // program buffer loaded into memory
+    // but I don't know which one is better right now
+    // would be useful for compiling from stdin
+    assert(options->source_path());
+
+    std::ifstream input(options->source_path()->string());
+    std::string program_utf8{ std::istreambuf_iterator<char>(input.rdbuf()), std::istreambuf_iterator<char>() };
+    auto program = boost::locale::conv::utf_to_utf<char32_t>(program_utf8);
+
     reaver::logger::dlog() << "Input:";
-    reaver::logger::dlog() << reaver::vapor::utf8(program);
+    reaver::logger::dlog() << program_utf8;
     reaver::logger::dlog();
 
     reaver::logger::dlog() << "Tokens:";
@@ -107,8 +94,9 @@ int main() try
     reaver::logger::dlog() << "Generated LLVM IR:";
     reaver::logger::dlog() << generated_code;
 
-    boost::filesystem::create_directories("output");
-    std::ofstream out{ "output/output.ll", std::ios::trunc | std::ios::out };
+    auto output_path = options->output_path();
+    boost::filesystem::create_directories(output_path.parent_path());
+    std::ofstream out{ output_path.string(), std::ios::trunc | std::ios::out };
     out << generated_code;
 
     reaver::logger::default_logger().sync();

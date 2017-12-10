@@ -4,7 +4,7 @@ CXXFLAGS += -O0 -Wall -std=c++17 -MP -MD -fPIC -Wno-unused-parameter -g -Wno-unu
 	-Wno-unused-lambda-capture -Wno-unknown-warning-option # clang 5.0 trunk is retarded
 SOFLAGS += -shared
 LDFLAGS +=
-LIBRARIES += -pthread -lboost_system -lboost_filesystem -ldl
+LIBRARIES += -pthread -lboost_system -lboost_filesystem -lboost_program_options -ldl
 
 SOURCES := $(shell find lib -name "*.cpp")
 MAINSRC := $(shell find src -name "*.cpp" 2>/dev/null)
