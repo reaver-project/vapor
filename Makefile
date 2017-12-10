@@ -27,7 +27,7 @@ all: $(EXECUTABLE)
 library: $(LIBRARY)
 
 $(EXECUTABLE): $(MAINOBJ) $(LIBRARY)
-	$(LD) $(CXXFLAGS) $(LDFLAGS) $(MAINOBJ) -o $@ $(LIBRARIES) -L. $(LIBRARY)
+	$(LD) $(CXXFLAGS) $(LDFLAGS) $(MAINOBJ) -o $@ $(LIBRARIES) -L. $(LIBRARY) -Wl,-rpath,'$$ORIGIN'
 
 $(LIBRARY): $(OBJECTS)
 	$(LD) $(CXXFLAGS) $(SOFLAGS) $(OBJECTS) -o $@ $(LIBRARIES)
@@ -35,7 +35,7 @@ $(LIBRARY): $(OBJECTS)
 test: ./tests/test
 
 ./tests/test: $(TESTOBJ) $(LIBRARY)
-	$(LD) $(CXXFLAGS) $(LDFLAGS) $(TESTOBJ) -o $@ $(LIBRARIES) -lboost_iostreams -lboost_program_options -L. $(LIBRARY)
+	$(LD) $(CXXFLAGS) $(LDFLAGS) $(TESTOBJ) -o $@ $(LIBRARIES) -lboost_iostreams -L. $(LIBRARY) -Wl,-rpath,'$$ORIGIN/..'
 
 install: $(LIBRARY) $(EXECUTABLE)
 	@cp $(EXECUTABLE) $(DESTDIR)$(BINDIR)/$(EXECUTABLE)
