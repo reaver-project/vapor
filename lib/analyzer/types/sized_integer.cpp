@@ -75,7 +75,7 @@ inline namespace _v1
         fun->set_parameters({ lhs_arg, rhs_arg });
         fun->set_eval(eval);
         fun->mark_builtin();
-        fun->set_codegen([name, return_type, lhs = std::move(lhs), rhs = std::move(rhs)](ir_generation_context & ctx) {
+        fun->set_codegen([name = std::move(name), return_type, lhs = std::move(lhs), rhs = std::move(rhs)](ir_generation_context & ctx) {
             auto lhs_ir = get_ir_variable(lhs->codegen_ir(ctx));
             auto rhs_ir = get_ir_variable(rhs->codegen_ir(ctx));
 
