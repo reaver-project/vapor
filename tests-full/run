@@ -21,6 +21,9 @@
 # 3. This notice may not be removed or altered from any source distribution.
 #
 
+# TODO: make the runner print the time it took for each of the files
+# TODO: make the runner be able to run things in parallel
+
 import os
 import argparse
 import re
@@ -84,13 +87,20 @@ def test_file(file_path, test_dir):
 
         file_path += '.vprc'
 
+    name = os.path.splitext(os.path.basename(file_path))[0]
+
+    if pt:
+        print("##teamcity[testStarted name='%s' captureStandardOutput='true']" % name)
     print_if(ps, '-- Testing %s ' % os.path.relpath(file_path, test_dir), end = '', flush = True)
 
     test_info = parse_metadata(file_path)
     if test_info['failed']:
         failed_tests.append(os.path.relpath(file_path, test_dir))
-        print('%s%s-- Failed: %s:%s' % (bcolors.FAIL, bcolors.BOLD, os.path.relpath(file_path, test_dir), bcolors.ENDC))
+        print('\n%s%s-- Failed: %s:%s' % (bcolors.FAIL, bcolors.BOLD, os.path.relpath(file_path, test_dir), bcolors.ENDC))
         print('%s * %s%s' % (bcolors.FAIL, test_info['reason'], bcolors.ENDC))
+        if pt:
+            print("##teamcity[testFailed name='%s']" % name)
+            print("##teamcity[testFinished name='%s']" % name)
         return 1
 
     for step in test_info['steps']:
@@ -108,9 +118,14 @@ def test_file(file_path, test_dir):
             failed_tests.append(os.path.relpath(file_path, test_dir))
             print('\n%s%s-- Failed: %s:%s' % (bcolors.FAIL, bcolors.BOLD, os.path.relpath(file_path, test_dir), bcolors.ENDC))
             print('%s * Step `%s` failed: %s%s' % (bcolors.FAIL, step['name'], command, bcolors.ENDC))
+            if pt:
+                print("##teamcity[testFailed name='%s']" % name)
+                print("##teamcity[testFinished name='%s']" % name)
             return 1
 
     print_if(ps, '\n%s-- Passed: %s%s' % (bcolors.OKGREEN, os.path.relpath(file_path, test_dir), bcolors.ENDC))
+    if pt:
+        print("##teamcity[testFinished name='%s']" % name)
 
 
 if __name__ == '__main__':
@@ -124,8 +139,10 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--test', help = 'specify a single test file (otherwise runs all found)')
     parser.add_argument('-e', '--error-only', default = False, action = 'store_true', dest = 'error',
         help = 'only print error messages')
+    parser.add_argument('--teamcity', default = False, action = 'store_true', help = 'print TeamCity service messages')
 
     args = parser.parse_args()
+    pt = args.teamcity
     ps = not args.error
 
     print_if(ps, '%s-- Using vprc at %s%s' % (bcolors.OKBLUE, args.vprc_path, bcolors.ENDC))
@@ -135,11 +152,22 @@ if __name__ == '__main__':
 
     for root, dirs, files in os.walk(test_dir):
         print_if(ps, '-- Running %s' % os.path.relpath(root, test_dir))
+
+        if pt:
+            for dir in root.split(os.path.sep):
+                if dir != '.':
+                    print("##teamcity[SuiteStarted name='%s']" % dir)
+
         for file in files:
             if os.path.splitext(file)[1] != '.vpr':
                 continue
 
             test_file(os.path.join(root, file), test_dir)
+
+        if pt:
+            for dir in root.split(os.path.sep)[::-1]:
+                if dir != '.':
+                    print("##teamcity[SuiteFinished name='%s']" % dir)
 
     if len(failed_tests) != 0:
         print('\n%s%s-- Some tests failed:' % (bcolors.FAIL, bcolors.BOLD))
@@ -148,5 +176,5 @@ if __name__ == '__main__':
         print(bcolors.ENDC)
         exit(1)
 
-    print_if(ps, '%s-- All tests passed!%s' % (bcolors.OKGREEN, bcolors.ENDC))
+    print('%s-- All tests passed!%s' % (bcolors.OKGREEN, bcolors.ENDC))
 
