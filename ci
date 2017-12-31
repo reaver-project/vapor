@@ -26,6 +26,9 @@ function install_package() {
 install_package reaverlib master
 install_package mayfly develop
 
+apt-get update
+apt-get install -y python3
+
 # this is a stupid hack and ideally I'd just rename the current "llvm" images to "clang"
 # and have "llvm" images on top of boost, that'd just build specific versions of llvm
 # for this purpose here, if necessary
@@ -43,7 +46,6 @@ install_package mayfly develop
 # this will take a while to figure out. could just also drop gcc support, but that seems bad.)
 if ! which llc
 then
-    apt-get update
     apt-get install -y llvm
 fi
 
