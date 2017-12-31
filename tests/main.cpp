@@ -28,5 +28,5 @@
 
 auto init = reaver::once([]() {
     reaver::default_executor(reaver::make_executor<reaver::thread_pool>(1));
-    reaver::logger::default_logger().set_level(reaver::logger::trace);
+    // reaver::logger::default_logger().set_level(reaver::logger::trace);
 });

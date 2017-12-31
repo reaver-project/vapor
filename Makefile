@@ -37,12 +37,12 @@ test: ./tests/test
 ./tests/test: $(TESTOBJ) $(LIBRARY)
 	$(LD) $(CXXFLAGS) $(LDFLAGS) $(TESTOBJ) -o $@ $(LIBRARIES) -lboost_iostreams -L. $(LIBRARY) -Wl,-rpath,'$$ORIGIN/..'
 
-install: $(LIBRARY) $(EXECUTABLE)
-	@cp $(EXECUTABLE) $(DESTDIR)$(BINDIR)/$(EXECUTABLE)
-	@cp $(LIBRARY) $(DESTDIR)$(LIBDIR)/$(LIBRARY).1
-	@ln -sfn $(DESTDIR)$(LIBDIR)/$(LIBRARY).1 $(DESTDIR)$(LIBDIR)/$(LIBRARY)
-	@mkdir -p $(DESTDIR)$(INCLUDEDIR)/reaver
-	@cp -RT include $(DESTDIR)$(INCLUDEDIR)
+#install: $(LIBRARY) $(EXECUTABLE)
+#	@cp $(EXECUTABLE) $(DESTDIR)$(BINDIR)/$(EXECUTABLE)
+#	@cp $(LIBRARY) $(DESTDIR)$(LIBDIR)/$(LIBRARY).1
+#	@ln -sfn $(DESTDIR)$(LIBDIR)/$(LIBRARY).1 $(DESTDIR)$(LIBDIR)/$(LIBRARY)
+#	@mkdir -p $(DESTDIR)$(INCLUDEDIR)/reaver
+#	@cp -RT include $(DESTDIR)$(INCLUDEDIR)
 
 %.o: %.cpp
 	$(CXX) -c $(CXXFLAGS) $< -o $@ -I./include/reaver

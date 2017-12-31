@@ -1,0 +1,180 @@
+#!/usr/bin/env python3
+
+#
+# Vapor Compiler Licence
+#
+# Copyright © 2017 Michał "Griwes" Dominiak
+#
+# This software is provided 'as-is', without any express or implied
+# warranty. In no event will the authors be held liable for any damages
+# arising from the use of this software.
+#
+# Permission is granted to anyone to use this software for any purpose,
+# including commercial applications, and to alter it and redistribute it
+# freely, subject to the following restrictions:
+#
+# 1. The origin of this software must not be misrepresented; you must not
+#    claim that you wrote the original software. If you use this software
+#    in a product, an acknowledgment in the product documentation is required.
+# 2. Altered source versions must be plainly marked as such, and must not be
+#    misrepresented as being the original software.
+# 3. This notice may not be removed or altered from any source distribution.
+#
+
+# TODO: make the runner print the time it took for each of the files
+# TODO: make the runner be able to run things in parallel
+
+import os
+import argparse
+import re
+import subprocess
+
+
+command_re = re.compile(r'^// (.*): (.*)$')
+
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
+failed_tests = []
+
+
+def val_or_def(value, default):
+    if value is not None:
+        return value
+
+    return default
+
+
+def print_if(condition, string, **kwargs):
+    if condition:
+        print(string, **kwargs)
+
+
+def parse_metadata(file_path):
+    steps = []
+
+    with open(file_path, encoding = 'utf-8') as f:
+        for line in f:
+            match = command_re.match(line)
+            if match is None:
+                break
+
+            steps.append({ 'name': match.group(1), 'command': match.group(2) })
+
+
+    if len(steps) == 0:
+        return { 'failed': True, 'reason': 'no steps defined!' }
+
+    return { 'steps': steps, 'failed': False }
+
+
+def test_file(file_path, test_dir):
+    global failed_tests
+
+    if not os.path.exists(file_path):
+        if not os.path.exists(file_path + '.vprc'):
+            print('-- Invalid test name: %s' % file_path)
+            return 1
+
+        file_path += '.vprc'
+
+    name = os.path.splitext(os.path.basename(file_path))[0]
+
+    if pt:
+        print("##teamcity[testStarted name='%s' captureStandardOutput='true']" % name)
+    print_if(ps, '-- Testing %s ' % os.path.relpath(file_path, test_dir), end = '', flush = True)
+
+    test_info = parse_metadata(file_path)
+    if test_info['failed']:
+        failed_tests.append(os.path.relpath(file_path, test_dir))
+        print('\n%s%s-- Failed: %s:%s' % (bcolors.FAIL, bcolors.BOLD, os.path.relpath(file_path, test_dir), bcolors.ENDC))
+        print('%s * %s%s' % (bcolors.FAIL, test_info['reason'], bcolors.ENDC))
+        if pt:
+            print("##teamcity[testFailed name='%s']" % name)
+            print("##teamcity[testFinished name='%s']" % name)
+        return 1
+
+    for step in test_info['steps']:
+        command = step['command'].format(
+            input = file_path,
+            vprc = args.vprc_path,
+            runtime = os.path.join(os.path.dirname(args.vprc_path), 'runtime'),
+            llc = args.llc,
+            cc = args.cc
+        )
+        completed = subprocess.run(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        print_if(ps, '%s.%s' % (bcolors.OKGREEN if completed.returncode == 0 else bcolors.FAIL, bcolors.ENDC), end = '', flush = True)
+
+        if completed.returncode != 0:
+            failed_tests.append(os.path.relpath(file_path, test_dir))
+            print('\n%s%s-- Failed: %s:%s' % (bcolors.FAIL, bcolors.BOLD, os.path.relpath(file_path, test_dir), bcolors.ENDC))
+            print('%s * Step `%s` failed: %s%s' % (bcolors.FAIL, step['name'], command, bcolors.ENDC))
+            if pt:
+                print("##teamcity[testFailed name='%s']" % name)
+                print("##teamcity[testFinished name='%s']" % name)
+            return 1
+
+    print_if(ps, '\n%s-- Passed: %s%s' % (bcolors.OKGREEN, os.path.relpath(file_path, test_dir), bcolors.ENDC))
+    if pt:
+        print("##teamcity[testFinished name='%s']" % name)
+
+
+if __name__ == '__main__':
+    test_dir = os.path.dirname(__file__)
+
+    parser = argparse.ArgumentParser(description = 'Run end-to-end compiler tests for Vapor.')
+    parser.add_argument('--vprc-path', dest = 'vprc_path', default = os.path.abspath(os.path.join(test_dir, '..', 'vprc')),
+        help = 'provide a custom vprc binary')
+    parser.add_argument('--llc', default = val_or_def(os.environ.get('LLC'), 'llc'), help = 'provide a custom llc path')
+    parser.add_argument('--cc', default = val_or_def(os.environ.get('CC'), 'cc'), help = 'provide a custom cc path')
+    parser.add_argument('-t', '--test', help = 'specify a single test file (otherwise runs all found)')
+    parser.add_argument('-e', '--error-only', default = False, action = 'store_true', dest = 'error',
+        help = 'only print error messages')
+    parser.add_argument('--teamcity', default = False, action = 'store_true', help = 'print TeamCity service messages')
+
+    args = parser.parse_args()
+    pt = args.teamcity
+    ps = not args.error
+
+    print_if(ps, '%s-- Using vprc at %s%s' % (bcolors.OKBLUE, args.vprc_path, bcolors.ENDC))
+
+    if args.test is not None:
+        exit(test_file(args.test, test_dir))
+
+    for root, dirs, files in os.walk(test_dir):
+        print_if(ps, '-- Running %s' % os.path.relpath(root, test_dir))
+
+        if pt:
+            for dir in root.split(os.path.sep):
+                if dir != '.':
+                    print("##teamcity[testSuiteStarted name='%s']" % dir)
+
+        for file in files:
+            if os.path.splitext(file)[1] != '.vpr':
+                continue
+
+            test_file(os.path.join(root, file), test_dir)
+
+        if pt:
+            for dir in root.split(os.path.sep)[::-1]:
+                if dir != '.':
+                    print("##teamcity[testSuiteFinished name='%s']" % dir)
+
+    if len(failed_tests) != 0:
+        print('\n%s%s-- Some tests failed:' % (bcolors.FAIL, bcolors.BOLD))
+        for failed in failed_tests:
+            print(' * %s' % failed)
+        print(bcolors.ENDC)
+        exit(1)
+
+    print('%s-- All tests passed!%s' % (bcolors.OKGREEN, bcolors.ENDC))
+
