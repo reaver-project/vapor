@@ -156,7 +156,7 @@ if __name__ == '__main__':
         if pt:
             for dir in root.split(os.path.sep):
                 if dir != '.':
-                    print("##teamcity[SuiteStarted name='%s']" % dir)
+                    print("##teamcity[testSuiteStarted name='%s']" % dir)
 
         for file in files:
             if os.path.splitext(file)[1] != '.vpr':
@@ -167,7 +167,7 @@ if __name__ == '__main__':
         if pt:
             for dir in root.split(os.path.sep)[::-1]:
                 if dir != '.':
-                    print("##teamcity[SuiteFinished name='%s']" % dir)
+                    print("##teamcity[testSuiteFinished name='%s']" % dir)
 
     if len(failed_tests) != 0:
         print('\n%s%s-- Some tests failed:' % (bcolors.FAIL, bcolors.BOLD))
