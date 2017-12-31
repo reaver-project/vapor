@@ -62,7 +62,7 @@ def print_if(condition, string, **kwargs):
 def parse_metadata(file_path):
     steps = []
 
-    with open(file_path) as f:
+    with open(file_path, encoding = 'utf-8') as f:
         for line in f:
             match = command_re.match(line)
             if match is None:
