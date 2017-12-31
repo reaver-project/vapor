@@ -111,6 +111,11 @@ inline namespace _v1
                 }
                 _referenced = _referenced->_get_replacement();
 
+                if (!try_get_type() && _referenced->try_get_type())
+                {
+                    _set_type(_referenced->try_get_type());
+                }
+
                 return this;
             });
         }
