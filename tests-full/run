@@ -45,6 +45,7 @@ class bcolors:
 
 
 failed_tests = []
+passed_count = 0
 
 
 def val_or_def(value, default):
@@ -82,6 +83,7 @@ def parse_metadata(file_path):
 
 def test_file(file_path, test_dir):
     global failed_tests
+    global passed_count
 
     if not os.path.exists(os.path.join(test_dir, file_path)):
         if not os.path.exists(os.path.join(test_dir, file_path + '.vpr')):
@@ -134,6 +136,7 @@ def test_file(file_path, test_dir):
             return 1
 
     print_if(ps, '\n%s-- Passed: %s%s' % (bcolors.OKGREEN, os.path.relpath(file_path, test_dir), bcolors.ENDC))
+    passed_count += 1
     if pt:
         print("##teamcity[testFinished name='%s']" % name)
 
@@ -190,7 +193,10 @@ if __name__ == '__main__':
         for failed in failed_tests:
             print(' * %s' % failed)
         print(bcolors.ENDC)
+
+        print('%s%sPassed%s: %d / %d%s' % (bcolors.BOLD, bcolors.OKGREEN, bcolors.ENDC + bcolors.BOLD, passed_count, passed_count + len(failed_tests), bcolors.ENDC))
+        print('%s%sFailed%s: %d / %d%s' % (bcolors.BOLD, bcolors.FAIL, bcolors.ENDC + bcolors.BOLD, len(failed_tests), passed_count + len(failed_tests), bcolors.ENDC))
         exit(1)
 
-    print('%s-- All tests passed!%s' % (bcolors.OKGREEN, bcolors.ENDC))
+    print('%s%sPassed%s: %d / %d%s' % (bcolors.BOLD, bcolors.OKGREEN, bcolors.ENDC + bcolors.BOLD, passed_count, passed_count + len(failed_tests), bcolors.ENDC))
 
