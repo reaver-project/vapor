@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -39,6 +39,8 @@ inline namespace _v1
 
         token_types[+token_type::module] = "module";
         token_types[+token_type::import] = "import";
+        token_types[+token_type::export_] = "export";
+
         token_types[+token_type::let] = "let";
         token_types[+token_type::return_] = "return";
         token_types[+token_type::function] = "function";
@@ -122,6 +124,8 @@ inline namespace _v1
 
         { U"module", token_type::module },
         { U"import", token_type::import },
+        { U"export", token_type::export_ },
+
         { U"let", token_type::let },
         { U"return", token_type::return_ },
         { U"function", token_type::function },
