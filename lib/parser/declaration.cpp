@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2017 Michał "Griwes" Dominiak
+ * Copyright © 2015-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -54,7 +54,7 @@ inline namespace _v1
 
         else
         {
-            if (mode != declaration_mode::member_declaration || !ret.type_expression)
+            if (mode != declaration_mode::member || !ret.type_expression)
             {
                 const char * message = "a type specifier or an initializer expression";
 

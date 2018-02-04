@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2017 Michał "Griwes" Dominiak
+ * Copyright © 2015-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -51,8 +51,8 @@ inline namespace _v1
     void print(const id_expression & ide, std::ostream & os, print_context ctx)
     {
         os << styles::def << ctx << styles::rule_name << "id-expression";
-        os << styles::def << " @ " << styles::address << &ide;
-        os << styles::def << " (" << styles::range << ide.range << styles::def << "):\n";
+        print_address_range(os, ide);
+        os << '\n';
 
         std::size_t idx = 0;
         for (auto && identifier : ide.id_expression_value)

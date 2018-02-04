@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -34,11 +34,11 @@ inline namespace _v1
     class ast
     {
     public:
-        ast(parser::ast original_ast) : _original_ast{ std::move(original_ast) }
+        ast(std::unique_ptr<parser::ast> original_ast) : _original_ast{ std::move(original_ast) }
         {
             try
             {
-                _modules = fmap(_original_ast, [this](auto && m) {
+                _modules = fmap(_original_ast->module_definitions, [this](auto && m) {
                     auto ret = std::make_unique<module>(m);
                     ret->analyze(_ctx);
                     return ret;
@@ -93,7 +93,7 @@ inline namespace _v1
         }
 
     private:
-        parser::ast _original_ast;
+        std::unique_ptr<parser::ast> _original_ast;
         std::vector<std::unique_ptr<module>> _modules;
         analysis_context _ctx;
     };

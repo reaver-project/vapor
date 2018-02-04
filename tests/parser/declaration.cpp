@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -33,6 +33,7 @@ MAYFLY_BEGIN_SUITE("declaration");
 MAYFLY_ADD_TESTCASE("with deduced type",
     test(UR"(let foo = 1;)",
         declaration{ { 0, 11 },
+            std::nullopt,
             { { 4, 7 }, { lexer::token_type::identifier, UR"(foo)", { 4, 7 } } },
             std::nullopt,
             std::make_optional<expression>({ { 10, 11 }, integer_literal{ { 10, 11 }, { lexer::token_type::integer, UR"(1)", { 10, 11 } }, {} } }) },
@@ -41,6 +42,7 @@ MAYFLY_ADD_TESTCASE("with deduced type",
 MAYFLY_ADD_TESTCASE("with explicit type",
     test(UR"(let foo : int = 1;)",
         declaration{ { 0, 17 },
+            std::nullopt,
             { { 4, 7 }, { lexer::token_type::identifier, UR"(foo)", { 4, 7 } } },
             std::make_optional<expression>({ { 10, 13 },
                 postfix_expression{ { 10, 13 }, identifier{ { 10, 13 }, { lexer::token_type::identifier, UR"(int)", { 10, 13 } } }, std::nullopt, {} } }),
@@ -50,28 +52,31 @@ MAYFLY_ADD_TESTCASE("with explicit type",
 MAYFLY_ADD_TESTCASE("member with deduced type",
     test(UR"(let foo = 1;)",
         declaration{ { 0, 11 },
+            std::nullopt,
             { { 4, 7 }, { lexer::token_type::identifier, UR"(foo)", { 4, 7 } } },
             std::nullopt,
             std::make_optional<expression>({ { 10, 11 }, integer_literal{ { 10, 11 }, { lexer::token_type::integer, UR"(1)", { 10, 11 } }, {} } }) },
-        [](auto && ctx) { return parse_declaration(ctx, declaration_mode::member_declaration); }));
+        [](auto && ctx) { return parse_declaration(ctx, declaration_mode::member); }));
 
 MAYFLY_ADD_TESTCASE("member with explicit type",
     test(UR"(let foo : int = 1;)",
         declaration{ { 0, 17 },
+            std::nullopt,
             { { 4, 7 }, { lexer::token_type::identifier, UR"(foo)", { 4, 7 } } },
             std::make_optional<expression>({ { 10, 13 },
                 postfix_expression{ { 10, 13 }, identifier{ { 10, 13 }, { lexer::token_type::identifier, UR"(int)", { 10, 13 } } }, std::nullopt, {} } }),
             std::make_optional<expression>({ { 16, 17 }, integer_literal{ { 16, 17 }, { lexer::token_type::integer, UR"(1)", { 16, 17 } }, {} } }) },
-        [](auto && ctx) { return parse_declaration(ctx, declaration_mode::member_declaration); }));
+        [](auto && ctx) { return parse_declaration(ctx, declaration_mode::member); }));
 
 MAYFLY_ADD_TESTCASE("member without initializer",
     test(UR"(let foo : int;)",
         declaration{ { 0, 13 },
+            std::nullopt,
             { { 4, 7 }, { lexer::token_type::identifier, UR"(foo)", { 4, 7 } } },
             std::make_optional<expression>({ { 10, 13 },
                 postfix_expression{ { 10, 13 }, identifier{ { 10, 13 }, { lexer::token_type::identifier, UR"(int)", { 10, 13 } } }, std::nullopt, {} } }),
             std::nullopt },
-        [](auto && ctx) { return parse_declaration(ctx, declaration_mode::member_declaration); }));
+        [](auto && ctx) { return parse_declaration(ctx, declaration_mode::member); }));
 
 MAYFLY_END_SUITE;
 MAYFLY_END_SUITE;

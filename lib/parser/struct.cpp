@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -61,7 +61,7 @@ inline namespace _v1
 
             while (!peek(ctx, lexer::token_type::curly_bracket_close))
             {
-                ret.definition.members.push_back(parse_declaration(ctx, declaration_mode::member_declaration));
+                ret.definition.members.push_back(parse_declaration(ctx, declaration_mode::member));
                 expect(ctx, lexer::token_type::semicolon);
             }
 

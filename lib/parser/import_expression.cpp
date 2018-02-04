@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2017 Michał "Griwes" Dominiak
+ * Copyright © 2015-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -19,6 +19,8 @@
  * 3. This notice may not be removed or altered from any source distribution.
  *
  **/
+
+#include <reaver/variant.h>
 
 #include "vapor/parser/import_expression.h"
 
@@ -44,27 +46,27 @@ inline namespace _v1
         {
             ret.module_name = parse_id_expression(ctx);
         }
-        visit(
-            [&](const auto & elem) {
-                ret.range = { start, elem.range.end() };
-                return unit{};
-            },
-            ret.module_name);
+
+        fmap(ret.module_name, [&](const auto & elem) {
+            ret.range = { start, elem.range.end() };
+            return unit{};
+        });
 
         return ret;
     }
 
     void print(const import_expression & expr, std::ostream & os, print_context ctx)
     {
-        os << ctx << "`import-expression` at " << expr.range << '\n';
-        os << ctx << "{\n";
-        visit(
-            [&](const auto & elem) {
-                print(elem, os, ctx.make_branch(false));
-                return unit{};
-            },
-            expr.module_name);
-        os << ctx << "}\n";
+        os << styles::def << ctx << styles::rule_name << "import-expression";
+        print_address_range(os, expr);
+        os << '\n';
+
+        auto name_ctx = ctx.make_branch(true);
+        os << styles::def << name_ctx << styles::subrule_name << "name:\n";
+        fmap(expr.module_name, [&](const auto & elem) {
+            print(elem, os, ctx.make_branch(true));
+            return unit{};
+        });
     }
 }
 }
