@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -79,8 +79,13 @@ inline namespace _v1
 
         if (!_value_expr && _statements.size() == 1)
         {
-            return _statements.front()->simplify(ctx).then([&, ctx](auto && simpl) {
+            return _statements.front()->simplify(ctx).then([&, ctx](auto && simpl) -> statement * {
                 replace_uptr(_statements.front(), simpl, ctx.proper);
+
+                if (_is_top_level)
+                {
+                    return this;
+                }
                 return _statements.front().release();
             });
         }
