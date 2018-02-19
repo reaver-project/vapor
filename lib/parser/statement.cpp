@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2017 Michał "Griwes" Dominiak
+ * Copyright © 2015-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -32,7 +32,7 @@ inline namespace _v1
         return lhs.range == rhs.range && lhs.statement_value == rhs.statement_value;
     }
 
-    statement parse_statement(context & ctx)
+    statement parse_statement(context & ctx, statement_mode mode)
     {
         statement ret;
 
@@ -42,6 +42,27 @@ inline namespace _v1
         }
 
         auto type = peek(ctx)->type;
+        bool export_ = false;
+
+        if (type == lexer::token_type::export_)
+        {
+            if (mode != statement_mode::module)
+            {
+                throw expectation_failure{ "a non-exported statement", U"exported declaration", ctx.begin->range };
+            }
+
+            export_ = true;
+
+            auto cctx = ctx;
+            ++cctx.begin;
+
+            if (!peek(ctx))
+            {
+                throw expectation_failure{ "declaration" };
+            }
+
+            type = peek(cctx)->type;
+        }
 
         switch (type)
         {
@@ -66,6 +87,11 @@ inline namespace _v1
 
             case lexer::token_type::if_:
             {
+                if (export_)
+                {
+                    throw expectation_failure{ "exported-declaration", U"if-statement", ctx.begin->range };
+                }
+
                 auto if_ = parse_if_statement(ctx);
                 ret.range = if_.range;
                 ret.statement_value = std::move(if_);
@@ -73,10 +99,15 @@ inline namespace _v1
             }
 
             case lexer::token_type::let:
-                ret.statement_value = parse_declaration(ctx);
+                ret.statement_value = parse_declaration(ctx, mode == statement_mode::module ? declaration_mode::module_scope : declaration_mode::variable);
                 break;
 
             case lexer::token_type::return_:
+                if (export_)
+                {
+                    throw expectation_failure{ "exported-declaration", U"return-statement", ctx.begin->range };
+                }
+
                 ret.statement_value = parse_return_expression(ctx);
                 break;
 
@@ -89,20 +120,28 @@ inline namespace _v1
                 break;
 
             case lexer::token_type::default_:
+                if (export_)
+                {
+                    throw expectation_failure{ "exported-declaration", U"default-instance", ctx.begin->range };
+                }
+
                 ret.statement_value = parse_default_instance(ctx);
                 break;
 
             default:
+                if (export_)
+                {
+                    throw expectation_failure{ "exported-declaration", U"expression-list", ctx.begin->range };
+                }
+
                 ret.statement_value = parse_expression_list(ctx);
         }
 
         auto end = expect(ctx, lexer::token_type::semicolon).range.end();
-        visit(
-            [&](const auto & value) -> unit {
-                ret.range = { value.range.start(), end };
-                return {};
-            },
-            ret.statement_value);
+        fmap(ret.statement_value, [&](const auto & value) -> unit {
+            ret.range = { value.range.start(), end };
+            return {};
+        });
 
         return ret;
     }

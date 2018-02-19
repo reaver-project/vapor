@@ -37,7 +37,7 @@ inline namespace _v1
 
         while (!peek(ctx, lexer::token_type::curly_bracket_close))
         {
-            ret.statements.push_back(parse_statement(ctx));
+            ret.statements.push_back(parse_statement(ctx, statement_mode::module));
         }
 
         auto end = expect(ctx, lexer::token_type::curly_bracket_close).range.end();

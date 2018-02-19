@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -40,6 +40,12 @@ namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
+    enum class statement_mode
+    {
+        module,
+        default_
+    };
+
     struct statement
     {
         range_type range;
@@ -49,7 +55,7 @@ inline namespace _v1
 
     bool operator==(const statement & lhs, const statement & rhs);
 
-    statement parse_statement(context & ctx);
+    statement parse_statement(context & ctx, statement_mode mode = statement_mode::default_);
 
     void print(const statement & stmt, std::ostream & os, print_context ctx);
 }

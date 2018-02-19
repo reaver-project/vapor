@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2017 Michał "Griwes" Dominiak
+ * Copyright © 2015-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -41,6 +41,11 @@ inline namespace _v1
     function_declaration parse_function_declaration(context & ctx, parameter_type_mode mode)
     {
         function_declaration ret;
+
+        if (peek(ctx, lexer::token_type::export_))
+        {
+            ret.export_ = expect(ctx, lexer::token_type::export_);
+        }
 
         auto start = expect(ctx, lexer::token_type::function).range.start();
 

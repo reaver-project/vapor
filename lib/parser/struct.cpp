@@ -36,6 +36,7 @@ inline namespace _v1
     {
         struct named_struct
         {
+            std::optional<lexer::token> export_;
             std::optional<identifier> name;
             struct_literal definition;
         };
@@ -48,9 +49,14 @@ inline namespace _v1
 
         named_struct parse_struct(context & ctx, struct_type type)
         {
-            auto start = expect(ctx, lexer::token_type::struct_).range.start();
-
             named_struct ret;
+
+            if (type == struct_type::named && peek(ctx, lexer::token_type::export_))
+            {
+                ret.export_ = expect(ctx, lexer::token_type::export_);
+            }
+
+            auto start = expect(ctx, lexer::token_type::struct_).range.start();
 
             if (type == struct_type::named)
             {
@@ -87,6 +93,7 @@ inline namespace _v1
         decl.identifier = std::move(struct_.name.value());
         decl.range = struct_.definition.range;
         decl.rhs = expression{ struct_.definition.range, std::move(struct_.definition) };
+        decl.export_ = struct_.export_;
 
         return decl;
     }

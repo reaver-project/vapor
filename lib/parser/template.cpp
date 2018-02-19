@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -55,6 +55,7 @@ inline namespace _v1
     {
         struct named_template_expression
         {
+            std::optional<lexer::token> export_;
             std::optional<identifier> name;
             template_expression value;
         };
@@ -68,6 +69,11 @@ inline namespace _v1
         named_template_expression parse_template(context & ctx, template_type tpl_type)
         {
             named_template_expression ret;
+
+            if (tpl_type == template_type::named && peek(ctx, lexer::token_type::export_))
+            {
+                ret.export_ = expect(ctx, lexer::token_type::export_);
+            }
 
             ret.value.parameters = parse_template_introducer(ctx);
 
@@ -118,6 +124,7 @@ inline namespace _v1
         decl.identifier = std::move(template_.name.value());
         decl.range = template_.value.range;
         decl.rhs = expression{ template_.value.range, std::move(template_.value) };
+        decl.export_ = template_.export_;
 
         return decl;
     }

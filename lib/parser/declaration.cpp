@@ -36,6 +36,11 @@ inline namespace _v1
     {
         declaration ret;
 
+        if (peek(ctx, lexer::token_type::export_))
+        {
+            ret.export_ = expect(ctx, lexer::token_type::export_);
+        }
+
         auto start = expect(ctx, lexer::token_type::let).range.start();
         ret.identifier = parse_literal<lexer::token_type::identifier>(ctx);
 
