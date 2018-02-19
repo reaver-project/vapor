@@ -38,11 +38,21 @@ inline namespace _v1
 
         if (peek(ctx, lexer::token_type::export_))
         {
+            if (mode != declaration_mode::module_scope)
+            {
+                throw expectation_failure{ "declaration", U"export", ctx.begin->range };
+            }
+
             ret.export_ = expect(ctx, lexer::token_type::export_);
         }
 
         auto start = expect(ctx, lexer::token_type::let).range.start();
         ret.identifier = parse_literal<lexer::token_type::identifier>(ctx);
+
+        if (ret.export_)
+        {
+            start = ret.export_->range.start();
+        }
 
         if (peek(ctx, lexer::token_type::colon))
         {

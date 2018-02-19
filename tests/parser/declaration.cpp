@@ -78,5 +78,21 @@ MAYFLY_ADD_TESTCASE("member without initializer",
             std::nullopt },
         [](auto && ctx) { return parse_declaration(ctx, declaration_mode::member); }));
 
+MAYFLY_ADD_TESTCASE("with deduced type, exported",
+    test(UR"(export let foo = 1;)",
+        declaration{ { 0, 18 },
+            lexer::token{ lexer::token_type::export_, UR"(export)", { 0, 7 } },
+            { { 11, 14 }, { lexer::token_type::identifier, UR"(foo)", { 11, 14 } } },
+            std::nullopt,
+            std::make_optional<expression>({ { 17, 18 }, integer_literal{ { 17, 18 }, { lexer::token_type::integer, UR"(1)", { 17, 18 } }, {} } }) },
+        [](auto && ctx) { return parse_declaration(ctx, declaration_mode::module_scope); }));
+
+MAYFLY_ADD_TESTCASE("exported, invalid", test(UR"(export let foo = 1;)", 0, [](auto && ctx) {
+    auto ctx_orig = ctx;
+    MAYFLY_REQUIRE_THROWS_TYPE(expectation_failure, parse_declaration(ctx, declaration_mode::variable));
+    MAYFLY_REQUIRE_THROWS_TYPE(expectation_failure, parse_declaration(ctx_orig, declaration_mode::member));
+    return 0;
+}));
+
 MAYFLY_END_SUITE;
 MAYFLY_END_SUITE;
