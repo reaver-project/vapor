@@ -22,6 +22,12 @@
 
 #include "vapor/parser/module.h"
 
+// these are only included to work around https://gcc.gnu.org/bugzilla/show_bug.cgi?id=80654
+// TODO: stop this overzealous madness once GCC 7 is dropped
+#include "vapor/parser/lambda_expression.h"
+#include "vapor/parser/struct.h"
+#include "vapor/parser/template.h"
+
 namespace reaver::vapor::parser
 {
 inline namespace _v1
