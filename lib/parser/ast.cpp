@@ -29,42 +29,42 @@ namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
-    std::unique_ptr<ast> parse_ast(lexer::iterator begin, lexer::iterator end)
+    ast parse_ast(lexer::iterator begin, lexer::iterator end)
     {
-        auto ret = std::make_unique<ast>();
+        ast ret;
 
         auto ctx = context{ begin, end, {} };
 
         while (peek(ctx, lexer::token_type::import))
         {
-            ret->global_imports.push_back(parse_import_expression(ctx));
+            ret.global_imports.push_back(parse_import_expression(ctx));
             expect(ctx, lexer::token_type::semicolon);
         }
 
         while (ctx.begin != ctx.end)
         {
-            ret->module_definitions.push_back(parse_module(ctx));
+            ret.module_definitions.push_back(parse_module(ctx));
         }
 
         return ret;
     }
 
-    std::ostream & operator<<(std::ostream & os, const std::unique_ptr<ast> & ast)
+    std::ostream & operator<<(std::ostream & os, const ast & ast)
     {
         auto ctx = print_context{};
 
         os << styles::subrule_name << "import statements:\n";
         std::size_t idx = 0;
-        for (auto && import : ast->global_imports)
+        for (auto && import : ast.global_imports)
         {
-            print(import, os, ctx.make_branch(++idx == ast->global_imports.size()));
+            print(import, os, ctx.make_branch(++idx == ast.global_imports.size()));
         }
 
         os << styles::subrule_name << "module definitions:\n";
         idx = 0;
-        for (auto && module : ast->module_definitions)
+        for (auto && module : ast.module_definitions)
         {
-            print(module, os, ctx.make_branch(++idx == ast->module_definitions.size()));
+            print(module, os, ctx.make_branch(++idx == ast.module_definitions.size()));
         }
 
         return os;

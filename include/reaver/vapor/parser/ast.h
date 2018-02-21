@@ -35,11 +35,17 @@ inline namespace _v1
 
     struct ast
     {
+        ast() = default;
+        ast(const ast &) = delete;
+        ast(ast &&) = default;
+        ast & operator=(const ast &) = delete;
+        ast & operator=(ast &&) = default;
+
         std::vector<import_expression> global_imports;
         std::vector<module> module_definitions;
     };
 
-    std::unique_ptr<ast> parse_ast(lexer::iterator begin, lexer::iterator end = {});
-    std::ostream & operator<<(std::ostream & os, const std::unique_ptr<ast> & ast);
+    ast parse_ast(lexer::iterator begin, lexer::iterator end = {});
+    std::ostream & operator<<(std::ostream & os, const ast & ast);
 }
 }
