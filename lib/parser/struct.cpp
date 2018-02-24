@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -36,6 +36,7 @@ inline namespace _v1
     {
         struct named_struct
         {
+            std::optional<lexer::token> export_;
             std::optional<identifier> name;
             struct_literal definition;
         };
@@ -48,9 +49,14 @@ inline namespace _v1
 
         named_struct parse_struct(context & ctx, struct_type type)
         {
-            auto start = expect(ctx, lexer::token_type::struct_).range.start();
-
             named_struct ret;
+
+            if (type == struct_type::named && peek(ctx, lexer::token_type::export_))
+            {
+                ret.export_ = expect(ctx, lexer::token_type::export_);
+            }
+
+            auto start = expect(ctx, lexer::token_type::struct_).range.start();
 
             if (type == struct_type::named)
             {
@@ -61,7 +67,7 @@ inline namespace _v1
 
             while (!peek(ctx, lexer::token_type::curly_bracket_close))
             {
-                ret.definition.members.push_back(parse_declaration(ctx, declaration_mode::member_declaration));
+                ret.definition.members.push_back(parse_declaration(ctx, declaration_mode::member));
                 expect(ctx, lexer::token_type::semicolon);
             }
 
@@ -87,6 +93,7 @@ inline namespace _v1
         decl.identifier = std::move(struct_.name.value());
         decl.range = struct_.definition.range;
         decl.rhs = expression{ struct_.definition.range, std::move(struct_.definition) };
+        decl.export_ = struct_.export_;
 
         return decl;
     }

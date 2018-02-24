@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -49,13 +49,16 @@ inline namespace _v1
         os << styles::def << type_ctx << styles::subrule_name << "defined type:\n";
         _type->print(os, type_ctx.make_branch(true));
 
-        auto data_members_ctx = ctx.make_branch(true);
-        os << styles::def << data_members_ctx << styles::subrule_name << "data member definitions:\n";
-
-        std::size_t idx = 0;
-        for (auto && member : _type->get_data_member_decls())
+        if (!_type->get_data_member_decls().empty())
         {
-            member->print(os, data_members_ctx.make_branch(++idx == _type->get_data_member_decls().size()));
+            auto data_members_ctx = ctx.make_branch(true);
+            os << styles::def << data_members_ctx << styles::subrule_name << "data member definitions:\n";
+
+            std::size_t idx = 0;
+            for (auto && member : _type->get_data_member_decls())
+            {
+                member->print(os, data_members_ctx.make_branch(++idx == _type->get_data_member_decls().size()));
+            }
         }
     }
 

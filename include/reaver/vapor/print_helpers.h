@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -116,17 +116,6 @@ inline namespace _v1
     }
 
     // analyzer
-    template<typename T>
-    void print_address_range(std::ostream & os, const T * ptr)
-    {
-        os << styles::def << " @ " << styles::address << ptr;
-        if (auto parse = ptr->get_ast_info())
-        {
-            os << styles::def << ", AST node";
-            print_address_range(os, parse.value());
-        }
-    }
-
     struct ast_node
     {
         const void * address;
@@ -139,11 +128,21 @@ inline namespace _v1
         return ast_node{ &t, t.range };
     }
 
-    template<typename T>
-    void print_address_range(std::ostream & os, const ast_node & ref)
+    inline void print_address_range(std::ostream & os, const ast_node & ref)
     {
         os << styles::def << " @ " << styles::address << ref.address;
         os << styles::def << " (" << styles::range << ref.range << styles::def << "):";
+    }
+
+    template<typename T>
+    void print_address_range(std::ostream & os, const T * ptr)
+    {
+        os << styles::def << " @ " << styles::address << ptr;
+        if (auto parse = ptr->get_ast_info())
+        {
+            os << styles::def << ", AST node";
+            print_address_range(os, parse.value());
+        }
     }
 }
 }

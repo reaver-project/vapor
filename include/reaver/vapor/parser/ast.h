@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,71 +22,30 @@
 
 #pragma once
 
-#include <type_traits>
 #include <vector>
 
-#include <reaver/error.h>
-
-#include "../lexer/token.h"
-#include "helpers.h"
-#include "module.h"
-#include "statement.h"
+#include "../lexer/iterator.h"
 
 namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
-    class ast
+    struct import_expression;
+    struct module;
+
+    struct ast
     {
-    public:
-        ast(lexer::iterator begin, lexer::iterator end = {})
-        {
-            auto ctx = context{ begin, end, {} };
+        ast() = default;
+        ast(const ast &) = delete;
+        ast(ast &&) = default;
+        ast & operator=(const ast &) = delete;
+        ast & operator=(ast &&) = default;
 
-            while (ctx.begin != ctx.end)
-            {
-                _modules.push_back(parse_module(ctx));
-            }
-        }
-
-        auto begin()
-        {
-            return _modules.begin();
-        }
-
-        auto begin() const
-        {
-            return _modules.begin();
-        }
-
-        auto end()
-        {
-            return _modules.end();
-        }
-
-        auto end() const
-        {
-            return _modules.end();
-        }
-
-        template<typename F>
-        friend auto fmap(const ast & ast, F && f)
-        {
-            return fmap(ast._modules, std::forward<F>(f));
-        }
-
-    private:
-        std::vector<module> _modules;
+        std::vector<import_expression> global_imports;
+        std::vector<module> module_definitions;
     };
 
-    inline std::ostream & operator<<(std::ostream & os, const ast & ast)
-    {
-        for (auto && module : ast)
-        {
-            print(module, os, {});
-        }
-
-        return os;
-    }
+    ast parse_ast(lexer::iterator begin, lexer::iterator end = {});
+    std::ostream & operator<<(std::ostream & os, const ast & ast);
 }
 }

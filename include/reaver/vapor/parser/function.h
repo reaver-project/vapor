@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2017 Michał "Griwes" Dominiak
+ * Copyright © 2015-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -38,6 +38,7 @@ inline namespace _v1
     struct function_declaration
     {
         range_type range;
+        std::optional<lexer::token> export_;
         identifier name;
         std::optional<parameter_list> parameters;
         std::optional<expression> return_type;

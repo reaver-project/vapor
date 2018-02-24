@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -67,8 +67,8 @@ int main(int argc, char ** argv) try
     reaver::logger::default_logger().sync();
 
     reaver::logger::dlog() << "AST:";
-    reaver::vapor::parser::ast ast{ iterator };
-    reaver::logger::dlog() << ast;
+    auto ast = reaver::vapor::parser::parse_ast(iterator);
+    reaver::logger::dlog() << std::ref(ast);
 
     reaver::logger::default_logger().sync();
 

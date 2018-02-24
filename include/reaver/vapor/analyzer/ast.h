@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -38,7 +38,7 @@ inline namespace _v1
         {
             try
             {
-                _modules = fmap(_original_ast, [this](auto && m) {
+                _modules = fmap(_original_ast.module_definitions, [this](auto && m) {
                     auto ret = std::make_unique<module>(m);
                     ret->analyze(_ctx);
                     return ret;

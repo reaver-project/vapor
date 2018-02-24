@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -40,7 +40,7 @@ MAYFLY_ADD_TESTCASE("non-member, explicit type, initializer", [] {
         scope s1;
         auto current_scope = &s1;
 
-        auto ast = parse(U"let foo : int = 1;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::variable_declaration); });
+        auto ast = parse(U"let foo : int = 1;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::variable); });
 
         auto decl = preanalyze_declaration(ast, current_scope);
 
@@ -73,7 +73,7 @@ MAYFLY_ADD_TESTCASE("non-member, explicit type, initializer", [] {
         auto s2 = s1.clone_local();
         auto current_scope = s2.get();
 
-        auto ast = parse(U"let foo : int = 1;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::variable_declaration); });
+        auto ast = parse(U"let foo : int = 1;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::variable); });
 
         auto decl = preanalyze_declaration(ast, current_scope);
 
@@ -90,7 +90,7 @@ MAYFLY_ADD_TESTCASE("non-member, deduced type, initializer", [] {
         scope s1;
         auto current_scope = &s1;
 
-        auto ast = parse(U"let foo = 1;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::variable_declaration); });
+        auto ast = parse(U"let foo = 1;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::variable); });
 
         auto decl = preanalyze_declaration(ast, current_scope);
 
@@ -111,7 +111,7 @@ MAYFLY_ADD_TESTCASE("member, deduced type, initializer", [] {
         scope s1;
         auto current_scope = &s1;
 
-        auto ast = parse(U"let foo = 1;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::member_declaration); });
+        auto ast = parse(U"let foo = 1;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::member); });
 
         auto decl = preanalyze_member_declaration(ast, current_scope);
 
@@ -134,7 +134,7 @@ MAYFLY_ADD_TESTCASE("member, explicit type, no initializer", [] {
         scope s1;
         auto current_scope = &s1;
 
-        auto ast = parse(U"let foo : int;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::member_declaration); });
+        auto ast = parse(U"let foo : int;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::member); });
 
         auto decl = preanalyze_member_declaration(ast, current_scope);
 

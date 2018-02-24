@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,7 +20,10 @@
  *
  **/
 
+#include "vapor/parser/ast.h"
+#include "vapor/parser/import_expression.h"
 #include "vapor/parser/module.h"
+#include "vapor/print_helpers.h"
 
 // these are only included to work around https://gcc.gnu.org/bugzilla/show_bug.cgi?id=80654
 // TODO: stop this overzealous madness once GCC 7 is dropped
@@ -32,47 +35,45 @@ namespace reaver::vapor::parser
 {
 inline namespace _v1
 {
-    module parse_module(context & ctx)
+    ast parse_ast(lexer::iterator begin, lexer::iterator end)
     {
-        module ret;
+        ast ret;
 
-        auto start = expect(ctx, lexer::token_type::module).range.start();
-        ret.name = parse_id_expression(ctx);
+        auto ctx = context{ begin, end, {} };
 
-        expect(ctx, lexer::token_type::curly_bracket_open);
-
-        while (!peek(ctx, lexer::token_type::curly_bracket_close))
+        while (peek(ctx, lexer::token_type::import))
         {
-            ret.statements.push_back(parse_statement(ctx, statement_mode::module));
+            ret.global_imports.push_back(parse_import_expression(ctx));
+            expect(ctx, lexer::token_type::semicolon);
         }
 
-        auto end = expect(ctx, lexer::token_type::curly_bracket_close).range.end();
-
-        ret.range = { start, end };
+        while (ctx.begin != ctx.end)
+        {
+            ret.module_definitions.push_back(parse_module(ctx));
+        }
 
         return ret;
     }
 
-    void print(const module & mod, std::ostream & os, print_context ctx)
+    std::ostream & operator<<(std::ostream & os, const ast & ast)
     {
-        os << styles::def << ctx << styles::rule_name << "module";
-        print_address_range(os, mod);
+        auto ctx = print_context{};
 
-        auto name_ctx = ctx.make_branch(mod.statements.empty());
-        os << '\n' << name_ctx << styles::subrule_name << "name:\n";
-        print(mod.name, os, name_ctx.make_branch(true));
-
-        if (mod.statements.size())
+        os << styles::subrule_name << "import statements:\n";
+        std::size_t idx = 0;
+        for (auto && import : ast.global_imports)
         {
-            auto stmts_ctx = ctx.make_branch(true);
-            os << styles::def << stmts_ctx << styles::subrule_name << "statements:\n";
-
-            std::size_t idx = 0;
-            for (auto && statement : mod.statements)
-            {
-                print(statement, os, stmts_ctx.make_branch(++idx == mod.statements.size()));
-            }
+            print(import, os, ctx.make_branch(++idx == ast.global_imports.size()));
         }
+
+        os << styles::subrule_name << "module definitions:\n";
+        idx = 0;
+        for (auto && module : ast.module_definitions)
+        {
+            print(module, os, ctx.make_branch(++idx == ast.module_definitions.size()));
+        }
+
+        return os;
     }
 }
 }

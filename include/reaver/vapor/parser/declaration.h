@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -36,6 +36,7 @@ inline namespace _v1
     struct declaration
     {
         range_type range;
+        std::optional<lexer::token> export_;
         ident_type identifier;
         std::optional<expression> type_expression;
         std::optional<expression> rhs;
@@ -43,13 +44,14 @@ inline namespace _v1
 
     enum class declaration_mode
     {
-        variable_declaration,
-        member_declaration
+        module_scope,
+        variable,
+        member
     };
 
     bool operator==(const declaration & lhs, const declaration & rhs);
 
-    declaration parse_declaration(context & ctx, declaration_mode mode = declaration_mode::variable_declaration);
+    declaration parse_declaration(context & ctx, declaration_mode mode = declaration_mode::variable);
 
     void print(const declaration & decl, std::ostream & os, print_context ctx);
 }

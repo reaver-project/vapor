@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2017 Michał "Griwes" Dominiak
+ * Copyright © 2015-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -36,8 +36,23 @@ inline namespace _v1
     {
         declaration ret;
 
+        if (peek(ctx, lexer::token_type::export_))
+        {
+            if (mode != declaration_mode::module_scope)
+            {
+                throw expectation_failure{ "declaration", U"export", ctx.begin->range };
+            }
+
+            ret.export_ = expect(ctx, lexer::token_type::export_);
+        }
+
         auto start = expect(ctx, lexer::token_type::let).range.start();
         ret.identifier = parse_literal<lexer::token_type::identifier>(ctx);
+
+        if (ret.export_)
+        {
+            start = ret.export_->range.start();
+        }
 
         if (peek(ctx, lexer::token_type::colon))
         {
@@ -54,7 +69,7 @@ inline namespace _v1
 
         else
         {
-            if (mode != declaration_mode::member_declaration || !ret.type_expression)
+            if (mode != declaration_mode::member || !ret.type_expression)
             {
                 const char * message = "a type specifier or an initializer expression";
 
