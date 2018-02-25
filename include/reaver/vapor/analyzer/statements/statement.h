@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -26,6 +26,7 @@
 
 #include "../../codegen/ir/function.h"
 #include "../../codegen/ir/instruction.h"
+#include "../../codegen/ir/module.h"
 #include "../../codegen/ir/variable.h"
 #include "../../print_helpers.h"
 #include "../ir_context.h"
@@ -49,7 +50,7 @@ inline namespace _v1
     class scope;
 
     using statement_ir = std::vector<codegen::ir::instruction>;
-    using declaration_ir = std::vector<std::variant<std::shared_ptr<codegen::ir::variable>, codegen::ir::function>>;
+    using declaration_ir = std::vector<std::variant<std::shared_ptr<codegen::ir::variable>, codegen::ir::function, codegen::ir::module>>;
 
     class statement
     {

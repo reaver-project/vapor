@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -29,8 +29,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include "../codegen/ir/module.h"
-#include "../parser/id_expression.h"
-#include "../parser/module.h"
 #include "../range.h"
 #include "expressions/import.h"
 #include "function.h"
@@ -41,37 +39,63 @@
 #include "statements/statement.h"
 #include "symbol.h"
 
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct module;
+}
+}
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class module
+    class module : public statement
     {
     public:
-        module(const parser::module & parse);
-
-        void analyze(analysis_context &);
-        void simplify();
+        module(ast_node parse, std::vector<std::u32string> name, std::unique_ptr<scope> lex_scope, std::vector<std::unique_ptr<statement>> stmts);
 
         std::u32string name() const
         {
             return boost::join(_name, ".");
         }
 
-        void print(std::ostream & os, print_context ctx) const;
-        codegen::ir::module codegen_ir() const;
+        void print(std::ostream & os, print_context ctx) const override;
 
         auto get_ast_info() const
         {
             return std::make_optional(_parse);
         }
 
+        future<> simplify_module(recursive_context ctx)
+        {
+            return simplify(ctx).then([](auto &&) {});
+        }
+
+        virtual declaration_ir declaration_codegen_ir(ir_generation_context &) const override;
+
     private:
+        virtual future<> _analyze(analysis_context &) override;
+
+        virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override
+        {
+            assert(0);
+        }
+
+        virtual future<statement *> _simplify(recursive_context) override;
+
+        virtual statement_ir _codegen_ir(ir_generation_context &) const override
+        {
+            assert(0);
+        }
+
         ast_node _parse;
+        std::vector<std::u32string> _name;
         std::unique_ptr<scope> _scope;
         std::vector<std::unique_ptr<statement>> _statements;
-        std::vector<future<>> _analysis_futures;
-        std::vector<std::u32string> _name;
     };
+
+    std::unique_ptr<module> preanalyze_module(const parser::module & parse, scope * lex_scope);
 }
 }

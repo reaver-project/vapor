@@ -22,8 +22,11 @@
 
 #pragma once
 
+#include <reaver/future_get.h>
+
 #include "../codegen/ir/module.h"
 #include "../parser/ast.h"
+#include "../parser/module.h"
 #include "helpers.h"
 #include "module.h"
 
@@ -34,15 +37,12 @@ inline namespace _v1
     class ast
     {
     public:
-        ast(parser::ast original_ast) : _original_ast{ std::move(original_ast) }
+        ast(parser::ast original_ast) : _original_ast{ std::move(original_ast) }, _global_scope{ std::make_unique<scope>() }
         {
             try
             {
-                _modules = fmap(_original_ast.module_definitions, [this](auto && m) {
-                    auto ret = std::make_unique<module>(m);
-                    ret->analyze(_ctx);
-                    return ret;
-                });
+                assert(_original_ast.global_imports.empty());
+                _modules = fmap(_original_ast.module_definitions, [this](auto && m) { return preanalyze_module(m, _global_scope.get()); });
             }
 
             catch (exception & e)
@@ -79,22 +79,38 @@ inline namespace _v1
             return _modules.end();
         }
 
+        void analyze()
+        {
+            get(when_all(fmap(_modules, [this](auto && m) { return m->analyze(_ctx); })));
+        }
+
         void simplify()
         {
-            for (auto && module : _modules)
+            bool cont = true;
+            cached_results res;
+
+            while (cont)
             {
-                module->simplify();
+                simplification_context ctx{ res };
+                get(when_all(fmap(_modules, [&ctx](auto && m) { return m->simplify_module({ ctx }); })));
+
+                cont = ctx.did_something_happen();
             }
         }
 
         std::vector<codegen::ir::module> codegen_ir() const
         {
-            return fmap(_modules, [](auto && mod) { return mod->codegen_ir(); });
+            ir_generation_context ctx;
+
+            return mbind(
+                _modules, [&](auto && mod) { return fmap(mod->declaration_codegen_ir(ctx), [](auto && ir) { return get<codegen::ir::module>(ir); }); });
         }
 
     private:
         parser::ast _original_ast;
         std::vector<std::unique_ptr<module>> _modules;
+
+        std::unique_ptr<scope> _global_scope;
         analysis_context _ctx;
     };
 
