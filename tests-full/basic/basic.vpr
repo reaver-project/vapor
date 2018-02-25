@@ -4,7 +4,7 @@
 // link: {cc} {input}.o -o {input}.bin
 // run: {input}.bin 2
 
-module hello_world
+module main
 {
     let int32 = sized_int(32);
 

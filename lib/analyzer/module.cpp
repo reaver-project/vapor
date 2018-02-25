@@ -61,7 +61,26 @@ inline namespace _v1
 
     future<> module::_analyze(analysis_context & ctx)
     {
-        return when_all(fmap(_statements, [&](auto && stmt) { return stmt->analyze(ctx); }));
+        return when_all(fmap(_statements, [&](auto && stmt) { return stmt->analyze(ctx); })).then([this, &ctx] {
+            if (name() == U"main")
+            {
+                // set entry(int32) as the entry point
+                if (auto entry = _scope->try_get(U"entry"))
+                {
+                    auto type = entry.value()->get_type();
+                    return type->get_candidates(lexer::token_type::round_bracket_open).then([&ctx, expr = entry.value()->get_expression()](auto && overloads) {
+                        // maybe this can be relaxed in the future?
+                        assert(overloads.size() == 1);
+                        assert(overloads[0]->parameters().size() == 1);
+                        assert(overloads[0]->parameters()[0]->get_type() == ctx.sized_integers.at(32).get());
+
+                        overloads[0]->mark_as_entry(ctx, expr);
+                    });
+                }
+            }
+
+            return make_ready_future();
+        });
     }
 
     future<statement *> module::_simplify(recursive_context ctx)
