@@ -1,0 +1,22 @@
+// compile: {vprc} {input} -o {input}.ll
+// assemble: cat {runtime}/crt1.ll >> {input}.ll
+// assemble: {llc} {input}.ll -filetype=obj -relocation-model=pic
+// link: {cc} {input}.o -o {input}.bin
+// run: {input}.bin 2
+
+import ackermann;
+
+module main
+{
+    let int32 = sized_int(32);
+
+    let entry = λ(arg : int32) -> int32
+    {
+        let constant_foldable = ackermann.ackermann(ackermann.mn{ 2, 3 });
+        let non_constant_foldable = ackermann.ackermann(ackermann.mn{ arg, arg + 1 });
+
+        return constant_foldable - non_constant_foldable;
+    };
+}
+
+// vim: filetype=cpp
