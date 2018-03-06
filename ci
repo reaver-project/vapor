@@ -27,7 +27,7 @@ install_package reaverlib master
 install_package mayfly develop
 
 apt-get update
-apt-get install -y python3
+apt-get install -y python3 cmake
 
 # this is a stupid hack and ideally I'd just rename the current "llvm" images to "clang"
 # and have "llvm" images on top of boost, that'd just build specific versions of llvm
@@ -51,8 +51,11 @@ fi
 
 llc --version
 
+mkdir build
+pushd build
+cmake ..
 make -j${core_number} -l${core_number}
+make ci-tests -j${core_number} -l${core_number}
+popd
 
-make test -j${core_number} -l${core_number}
-./tests/test -j ${core_number} -l 3 -r teamcity
-./tests-full/run --teamcity
+./tests-full/run --teamcity --vprc-path build/bin/vprc

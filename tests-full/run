@@ -3,7 +3,7 @@
 #
 # Vapor Compiler Licence
 #
-# Copyright © 2017 Michał "Griwes" Dominiak
+# Copyright © 2017-2018 Michał "Griwes" Dominiak
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -107,7 +107,7 @@ def test_file(file_path, test_dir):
         command = step['command'].format(
             input = file_path,
             vprc = args.vprc_path,
-            runtime = os.path.join(os.path.dirname(args.vprc_path), 'runtime'),
+            runtime = os.path.abspath(os.path.join(test_dir, '..', 'runtime')),
             llc = args.llc,
             cc = args.cc
         )

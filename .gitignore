@@ -11,3 +11,4 @@ tests/test
 core
 tags
 .gdb_history
+build*
