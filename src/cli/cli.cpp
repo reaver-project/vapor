@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -36,7 +36,8 @@ options_result get_options(int argc, char ** argv)
 
     boost::program_options::options_description io("Input and output");
     io.add_options()
-        ("output,o", boost::program_options::value<std::string>(), "set the output file");
+        ("output,o", boost::program_options::value<std::string>(), "set the output file")
+        ("module-path,I", boost::program_options::value<std::vector<std::string>>()->composing(), "provided additional module search paths");
 
     boost::program_options::options_description hidden;
     hidden.add_options()
@@ -85,6 +86,14 @@ options_result get_options(int argc, char ** argv)
     if (variables.count("output"))
     {
         ret->set_output_path(variables["output"].as<std::string>());
+    }
+
+    if (variables.count("module-path"))
+    {
+        for (auto && path : variables["module-path"].as<std::vector<std::string>>())
+        {
+            ret->add_module_path(std::move(path));
+        }
     }
 
     return { std::move(ret), false };
