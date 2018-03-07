@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -39,7 +39,7 @@ namespace vapor
                 return [program = std::move(program), expected = std::move(expected)]()
                 {
                     std::vector<token> generated;
-                    std::copy(iterator{ program.begin(), program.end() }, iterator{}, std::back_inserter(generated));
+                    std::copy(iterator{ program.begin(), program.end(), std::nullopt }, iterator{}, std::back_inserter(generated));
 
                     MAYFLY_REQUIRE(expected == generated);
                 };

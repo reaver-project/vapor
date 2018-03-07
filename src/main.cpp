@@ -57,7 +57,7 @@ int main(int argc, char ** argv) try
     reaver::logger::dlog();
 
     reaver::logger::dlog() << "Tokens:";
-    reaver::vapor::lexer::iterator iterator{ program.begin(), program.end() };
+    reaver::vapor::lexer::iterator iterator{ program.begin(), program.end(), options->source_path()->native() };
     for (auto it = iterator; it; ++it)
     {
         reaver::logger::dlog() << *it;

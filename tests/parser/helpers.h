@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2017 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -55,7 +55,7 @@ namespace vapor
                 return [program = std::move(program), expected = std::move(expected), parser = std::move(parser)]()
                 {
                     context ctx;
-                    ctx.begin = lexer::iterator{ program.begin(), program.end() };
+                    ctx.begin = lexer::iterator{ program.begin(), program.end(), std::nullopt };
 
                     std::stringstream ss;
                     for (auto it = ctx.begin; it != ctx.end; ++it)

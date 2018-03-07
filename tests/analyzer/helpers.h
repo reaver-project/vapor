@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -35,7 +35,7 @@ inline namespace _v1
     auto parse(std::u32string program, F && parser)
     {
         parser::context ctx;
-        ctx.begin = lexer::iterator{ program.begin(), program.end() };
+        ctx.begin = lexer::iterator{ program.begin(), program.end(), std::nullopt };
 
         return parser(ctx);
     }

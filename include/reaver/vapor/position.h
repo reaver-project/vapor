@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016 Michał "Griwes" Dominiak
+ * Copyright © 2014-2016, 2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,7 +22,9 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
+#include <string_view>
 
 namespace reaver::vapor
 {
@@ -38,7 +40,7 @@ inline namespace _v1
         position & operator=(const position &) = default;
         position & operator=(position &&) = default;
 
-        position(std::size_t offset) : offset{ offset }
+        position(std::size_t offset, std::optional<std::string_view> file_path = std::nullopt) : offset{ offset }, file_path{ file_path }
         {
         }
 
@@ -65,12 +67,12 @@ inline namespace _v1
         std::size_t offset = 0;
         std::size_t line = 1;
         std::size_t column = 1;
-        std::string file;
+        std::optional<std::string_view> file_path;
     };
 
     inline bool operator!=(const position & lhs, const position & rhs)
     {
-        return lhs.offset != rhs.offset;
+        return lhs.offset != rhs.offset || lhs.file_path != rhs.file_path;
     }
 
     inline bool operator==(const position & lhs, const position & rhs)
