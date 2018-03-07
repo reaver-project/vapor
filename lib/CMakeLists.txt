@@ -17,10 +17,15 @@ foreach(abs_proto_file ${proto_files})
     )
 
     list(APPEND proto_sources "${CMAKE_BINARY_DIR}/${base}.pb.cc")
+    list(APPEND proto_headers "${CMAKE_BINARY_DIR}/${base}.pb.h")
 endforeach()
 
 add_custom_target(proto
     DEPENDS ${proto_sources}
+)
+
+add_custom_target(clean-proto
+    COMMAND rm -rf ${proto_sources} ${proto_headers}
 )
 
 set_source_files_properties(${proto_sources}
