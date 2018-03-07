@@ -10,6 +10,7 @@ foreach(abs_proto_file ${proto_files})
         OUTPUT
             "${CMAKE_BINARY_DIR}/${base}.pb.cc"
             "${CMAKE_BINARY_DIR}/${base}.pb.h"
+        COMMENT "Compiling ${base}.proto..."
         COMMAND $<TARGET_FILE:protoc> -I proto --cpp_out=${CMAKE_BINARY_DIR}/proto  "${proto_file}"
         DEPENDS protoc "${abs_proto_file}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -17,6 +18,10 @@ foreach(abs_proto_file ${proto_files})
 
     list(APPEND proto_sources "${CMAKE_BINARY_DIR}/${base}.pb.cc")
 endforeach()
+
+add_custom_target(proto
+    DEPENDS ${proto_sources}
+)
 
 set_source_files_properties(${proto_sources}
     PROPERTIES GENERATED TRUE
