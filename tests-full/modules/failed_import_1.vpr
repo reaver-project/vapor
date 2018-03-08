@@ -1,0 +1,5 @@
+// compile: ! {vprc} {input} -o {input}.ll -I {directory}/types
+
+import invalid_multi_file;
+
+// vim: filetype=cpp

@@ -1,0 +1,7 @@
+// IGNORE: true
+
+module some.invalid_name
+{
+}
+
+// vim: filetype=cpp

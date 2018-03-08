@@ -1,0 +1,12 @@
+// compile: {vprc} {input} -o {input}.ll -I {directory}/types
+
+import single_file;
+import single_file.submodule;
+
+import multi_file;
+import multi_file.multi_submodule;
+import multi_file.multi_submodule.inner;
+import multi_file.inner;
+import multi_file.embedded;
+
+// vim: filetype=cpp

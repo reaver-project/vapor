@@ -1,0 +1,11 @@
+// IGNORE: true
+
+module single_file
+{
+}
+
+module single_file.submodule
+{
+}
+
+// vim: filetype=cpp
