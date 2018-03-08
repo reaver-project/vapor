@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -32,10 +32,10 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<binary_expression> preanalyze_binary_expression(const parser::binary_expression & parse, scope * lex_scope)
+    std::unique_ptr<binary_expression> preanalyze_binary_expression(precontext & ctx, const parser::binary_expression & parse, scope * lex_scope)
     {
         return std::make_unique<binary_expression>(
-            make_node(parse), parse.op, preanalyze_expression(parse.lhs, lex_scope), preanalyze_expression(parse.rhs, lex_scope));
+            make_node(parse), parse.op, preanalyze_expression(ctx, parse.lhs, lex_scope), preanalyze_expression(ctx, parse.rhs, lex_scope));
     }
 
     binary_expression::binary_expression(ast_node parse, lexer::token op, std::unique_ptr<expression> lhs, std::unique_ptr<expression> rhs)

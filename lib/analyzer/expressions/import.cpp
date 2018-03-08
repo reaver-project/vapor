@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016, 2018 Michał "Griwes" Dominiak
+ * Copyright © 2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,45 +20,20 @@
  *
  **/
 
-#pragma once
+#include "vapor/analyzer/expressions/import.h"
+#include "vapor/analyzer/precontex.h"
+#include "vapor/analyzer/symbol.h"
+#include "vapor/parser/import_expression.h"
 
-#include <memory>
-
-#include "expression.h"
-
-namespace reaver::vapor::analyzer
-{
-inline namespace _v1
-{
-    class import_expression : public expression
-    {
-    };
-
-    enum class import_mode
-    {
-        statement,
-        expression
-    };
-}
-}
-
-namespace reaver::vapor::parser
-{
-inline namespace _v1
-{
-    struct import_expression;
-}
-}
+#include "ast.pb.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    struct precontext;
-
-    std::unique_ptr<import_expression> preanalyze_import(precontext & ctx,
-        const parser::import_expression & parse,
-        scope * lex_scope,
-        import_mode mode = import_mode::expression);
+    std::unique_ptr<import_expression> preanalyze_import(precontext & ctx, const parser::import_expression & parse, scope * lex_scope, import_mode mode)
+    {
+        assert(0);
+    }
 }
 }

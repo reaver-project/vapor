@@ -39,14 +39,6 @@
 #include "statements/statement.h"
 #include "symbol.h"
 
-namespace reaver::vapor::parser
-{
-inline namespace _v1
-{
-    struct module;
-}
-}
-
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -95,7 +87,23 @@ inline namespace _v1
         std::unique_ptr<scope> _scope;
         std::vector<std::unique_ptr<statement>> _statements;
     };
+}
+}
 
-    std::unique_ptr<module> preanalyze_module(const parser::module & parse, scope * lex_scope);
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct module;
+}
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    struct precontext;
+
+    std::unique_ptr<module> preanalyze_module(precontext & ctx, const parser::module & parse, scope * lex_scope);
 }
 }

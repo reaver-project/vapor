@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -30,12 +30,12 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<if_statement> preanalyze_if_statement(const parser::if_statement & parse, scope * lex_scope)
+    std::unique_ptr<if_statement> preanalyze_if_statement(precontext & ctx, const parser::if_statement & parse, scope * lex_scope)
     {
         return std::make_unique<if_statement>(make_node(parse),
-            preanalyze_expression(parse.condition, lex_scope),
-            preanalyze_block(parse.then_block, lex_scope, false),
-            fmap(parse.else_block, [&](auto && parse) -> std::unique_ptr<statement> { return preanalyze_block(parse, lex_scope, false); }));
+            preanalyze_expression(ctx, parse.condition, lex_scope),
+            preanalyze_block(ctx, parse.then_block, lex_scope, false),
+            fmap(parse.else_block, [&](auto && parse) -> std::unique_ptr<statement> { return preanalyze_block(ctx, parse, lex_scope, false); }));
     }
 
     if_statement::if_statement(ast_node parse,

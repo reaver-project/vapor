@@ -27,8 +27,10 @@
 #include "../codegen/ir/module.h"
 #include "../parser/ast.h"
 #include "../parser/module.h"
+#include "expressions/import.h"
 #include "helpers.h"
 #include "module.h"
+#include "precontex.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -37,12 +39,16 @@ inline namespace _v1
     class ast
     {
     public:
-        ast(parser::ast original_ast) : _original_ast{ std::move(original_ast) }, _global_scope{ std::make_unique<scope>() }
+        ast(parser::ast original_ast, const config::compiler_options & opts)
+            : _original_ast{ std::move(original_ast) }, _global_scope{ std::make_unique<scope>() }
         {
             try
             {
-                assert(_original_ast.global_imports.empty());
-                _modules = fmap(_original_ast.module_definitions, [this](auto && m) { return preanalyze_module(m, _global_scope.get()); });
+                precontext ctx{ opts };
+
+                _imports = fmap(
+                    _original_ast.global_imports, [this, &ctx](auto && im) { return preanalyze_import(ctx, im, _global_scope.get(), import_mode::statement); });
+                _modules = fmap(_original_ast.module_definitions, [this, &ctx](auto && m) { return preanalyze_module(ctx, m, _global_scope.get()); });
             }
 
             catch (exception & e)
@@ -109,6 +115,7 @@ inline namespace _v1
     private:
         parser::ast _original_ast;
         std::vector<std::unique_ptr<module>> _modules;
+        std::vector<std::unique_ptr<import_expression>> _imports;
 
         std::unique_ptr<scope> _global_scope;
         analysis_context _ctx;

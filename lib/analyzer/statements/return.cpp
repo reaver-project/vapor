@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -28,9 +28,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<return_statement> preanalyze_return(const parser::return_expression & parse, scope * lex_scope)
+    std::unique_ptr<return_statement> preanalyze_return(precontext & ctx, const parser::return_expression & parse, scope * lex_scope)
     {
-        return std::make_unique<return_statement>(make_node(parse), preanalyze_expression(parse.return_value, lex_scope));
+        return std::make_unique<return_statement>(make_node(parse), preanalyze_expression(ctx, parse.return_value, lex_scope));
     }
 
     return_statement::return_statement(ast_node parse, std::unique_ptr<expression> value) : _value_expr{ std::move(value) }

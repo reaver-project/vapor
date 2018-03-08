@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -36,12 +36,15 @@ MAYFLY_BEGIN_SUITE("statements");
 MAYFLY_BEGIN_SUITE("if");
 
 MAYFLY_ADD_TESTCASE("single branch, true", [] {
+    config::compiler_options opts{ std::make_unique<config::language_options>() };
+    precontext pctx{ opts };
+
     scope s;
     auto current_scope = &s;
 
     auto ast = parse(U"if (true) { return 1; }", parser::parse_if_statement);
 
-    std::unique_ptr<statement> if_stmt = preanalyze_if_statement(ast, current_scope);
+    std::unique_ptr<statement> if_stmt = preanalyze_if_statement(pctx, ast, current_scope);
     auto if_stmt_ptr = if_stmt.get();
 
     analysis_context ctx;
@@ -64,12 +67,15 @@ MAYFLY_ADD_TESTCASE("single branch, true", [] {
 });
 
 MAYFLY_ADD_TESTCASE("single branch, false", [] {
+    config::compiler_options opts{ std::make_unique<config::language_options>() };
+    precontext pctx{ opts };
+
     scope s;
     auto current_scope = &s;
 
     auto ast = parse(U"if (false) { return 1; }", parser::parse_if_statement);
 
-    std::unique_ptr<statement> if_stmt = preanalyze_if_statement(ast, current_scope);
+    std::unique_ptr<statement> if_stmt = preanalyze_if_statement(pctx, ast, current_scope);
     auto if_stmt_ptr = if_stmt.get();
 
     analysis_context ctx;
@@ -92,12 +98,15 @@ MAYFLY_ADD_TESTCASE("single branch, false", [] {
 });
 
 MAYFLY_ADD_TESTCASE("two branches, true", [] {
+    config::compiler_options opts{ std::make_unique<config::language_options>() };
+    precontext pctx{ opts };
+
     scope s;
     auto current_scope = &s;
 
     auto ast = parse(U"if (true) { return 0; } else { return 1; }", parser::parse_if_statement);
 
-    std::unique_ptr<statement> if_stmt = preanalyze_if_statement(ast, current_scope);
+    std::unique_ptr<statement> if_stmt = preanalyze_if_statement(pctx, ast, current_scope);
     auto if_stmt_ptr = if_stmt.get();
 
     analysis_context ctx;
@@ -122,12 +131,15 @@ MAYFLY_ADD_TESTCASE("two branches, true", [] {
 });
 
 MAYFLY_ADD_TESTCASE("two branches, false", [] {
+    config::compiler_options opts{ std::make_unique<config::language_options>() };
+    precontext pctx{ opts };
+
     scope s;
     auto current_scope = &s;
 
     auto ast = parse(U"if (false) { return 0; } else { return 1; }", parser::parse_if_statement);
 
-    std::unique_ptr<statement> if_stmt = preanalyze_if_statement(ast, current_scope);
+    std::unique_ptr<statement> if_stmt = preanalyze_if_statement(pctx, ast, current_scope);
     auto if_stmt_ptr = if_stmt.get();
 
     analysis_context ctx;
@@ -152,6 +164,9 @@ MAYFLY_ADD_TESTCASE("two branches, false", [] {
 });
 
 MAYFLY_ADD_TESTCASE("runtime condition", [] {
+    config::compiler_options opts{ std::make_unique<config::language_options>() };
+    precontext pctx{ opts };
+
     scope s;
     auto current_scope = &s;
     test_expression expr{ builtin_types().boolean.get() };
@@ -162,8 +177,8 @@ MAYFLY_ADD_TESTCASE("runtime condition", [] {
     auto ast_single = parse(U"if (condition) { return 0; }", parser::parse_if_statement);
     auto ast_double = parse(U"if (condition) { return 0; } else { return 1; }", parser::parse_if_statement);
 
-    auto if_stmt_single = preanalyze_if_statement(ast_single, current_scope);
-    auto if_stmt_double = preanalyze_if_statement(ast_double, current_scope);
+    auto if_stmt_single = preanalyze_if_statement(pctx, ast_single, current_scope);
+    auto if_stmt_double = preanalyze_if_statement(pctx, ast_double, current_scope);
 
     analysis_context ctx;
     auto analysis_future_single = if_stmt_single->analyze(ctx);

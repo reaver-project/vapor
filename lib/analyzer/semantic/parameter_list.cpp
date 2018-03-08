@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -33,13 +33,13 @@ inline namespace _v1
         _set_ast_info(parse);
     }
 
-    parameter_list preanalyze_parameter_list(const parser::parameter_list & param_list, scope * lex_scope)
+    parameter_list preanalyze_parameter_list(precontext & ctx, const parser::parameter_list & param_list, scope * lex_scope)
     {
         return fmap(param_list.parameters, [&](auto && param_parse) {
             assert(param_parse.type);
 
-            auto param =
-                std::make_unique<parameter>(make_node(param_parse), param_parse.name.value.string, preanalyze_expression(param_parse.type.value(), lex_scope));
+            auto param = std::make_unique<parameter>(
+                make_node(param_parse), param_parse.name.value.string, preanalyze_expression(ctx, param_parse.type.value(), lex_scope));
 
             auto symb = make_symbol(param_parse.name.value.string, param.get());
             lex_scope->init(param_parse.name.value.string, std::move(symb));

@@ -32,14 +32,14 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<module> preanalyze_module(const parser::module & parse, scope * lex_scope)
+    std::unique_ptr<module> preanalyze_module(precontext & ctx, const parser::module & parse, scope * lex_scope)
     {
         auto scope = lex_scope->clone_for_class();
         auto name = fmap(parse.name.id_expression_value, [](auto && elem) { return elem.value.string; });
 
         auto statements = fmap(parse.statements, [&](const auto & statement) {
             auto scope_ptr = scope.get();
-            auto ret = preanalyze_statement(statement, scope_ptr);
+            auto ret = preanalyze_statement(ctx, statement, scope_ptr);
             if (scope_ptr != scope.get())
             {
                 scope.release()->keep_alive();

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -33,14 +33,14 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<postfix_expression> preanalyze_postfix_expression(const parser::postfix_expression & parse, scope * lex_scope)
+    std::unique_ptr<postfix_expression> preanalyze_postfix_expression(precontext & ctx, const parser::postfix_expression & parse, scope * lex_scope)
     {
         return std::make_unique<postfix_expression>(make_node(parse),
             std::get<0>(fmap(parse.base_expression,
-                make_overload_set([&](const parser::expression_list & expr_list) { return preanalyze_expression_list(expr_list, lex_scope); },
-                    [&](const parser::identifier & ident) { return preanalyze_identifier(ident, lex_scope); }))),
+                make_overload_set([&](const parser::expression_list & expr_list) { return preanalyze_expression_list(ctx, expr_list, lex_scope); },
+                    [&](const parser::identifier & ident) { return preanalyze_identifier(ctx, ident, lex_scope); }))),
             parse.modifier_type,
-            fmap(parse.arguments, [&](auto && expr) { return preanalyze_expression(expr, lex_scope); }),
+            fmap(parse.arguments, [&](auto && expr) { return preanalyze_expression(ctx, expr, lex_scope); }),
             fmap(parse.accessed_member, [&](auto && member) { return member.value.string; }));
     }
 

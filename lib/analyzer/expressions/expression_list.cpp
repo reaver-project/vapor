@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -52,15 +52,15 @@ inline namespace _v1
         }
     }
 
-    std::unique_ptr<expression> preanalyze_expression_list(const parser::expression_list & expr, scope * lex_scope)
+    std::unique_ptr<expression> preanalyze_expression_list(precontext & ctx, const parser::expression_list & expr, scope * lex_scope)
     {
         if (expr.expressions.size() == 1)
         {
-            return preanalyze_expression(expr.expressions.front(), lex_scope);
+            return preanalyze_expression(ctx, expr.expressions.front(), lex_scope);
         }
 
         auto ret = std::make_unique<expression_list>(make_node(expr));
-        ret->value = fmap(expr.expressions, [&](auto && expr) { return preanalyze_expression(expr, lex_scope); });
+        ret->value = fmap(expr.expressions, [&](auto && expr) { return preanalyze_expression(ctx, expr, lex_scope); });
         ret->_set_ast_info(make_node(expr));
         return ret;
     }

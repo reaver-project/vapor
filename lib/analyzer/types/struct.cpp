@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -35,7 +35,7 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<struct_type> make_struct_type(const parser::struct_literal & parse, scope * lex_scope)
+    std::unique_ptr<struct_type> make_struct_type(precontext & ctx, const parser::struct_literal & parse, scope * lex_scope)
     {
         auto member_scope = lex_scope->clone_for_class();
 
@@ -46,7 +46,7 @@ inline namespace _v1
                 make_overload_set(
                     [&](const parser::declaration & decl) {
                         auto scope = member_scope.get();
-                        auto decl_stmt = preanalyze_member_declaration(decl, scope);
+                        auto decl_stmt = preanalyze_member_declaration(ctx, decl, scope);
                         assert(scope == member_scope.get());
 
                         decls.push_back(std::move(decl_stmt));

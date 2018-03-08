@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -43,6 +43,7 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     class scope;
+    struct precontext;
 
     class expression_list : public expression
     {
@@ -74,11 +75,11 @@ inline namespace _v1
             return std::all_of(value.begin(), value.end(), [](auto && expr) { return expr->is_constant(); });
         }
 
-        friend std::unique_ptr<expression> preanalyze_expression_list(const parser::expression_list &, scope *);
+        friend std::unique_ptr<expression> preanalyze_expression_list(precontext &, const parser::expression_list &, scope *);
 
         std::vector<std::unique_ptr<expression>> value;
     };
 
-    std::unique_ptr<expression> preanalyze_expression_list(const parser::expression_list & expr, scope * lex_scope);
+    std::unique_ptr<expression> preanalyze_expression_list(precontext & ctx, const parser::expression_list & expr, scope * lex_scope);
 }
 }

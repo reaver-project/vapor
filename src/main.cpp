@@ -73,7 +73,7 @@ int main(int argc, char ** argv) try
     reaver::logger::default_logger().sync();
 
     reaver::logger::dlog() << "Analyzed AST:";
-    reaver::vapor::analyzer::ast analyzed_ast{ std::move(ast) };
+    reaver::vapor::analyzer::ast analyzed_ast{ std::move(ast), *options };
     analyzed_ast.analyze();
     reaver::logger::dlog() << std::ref(analyzed_ast);
 

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -35,17 +35,17 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<statement> preanalyze_statement(const parser::statement & parse, scope *& lex_scope)
+    std::unique_ptr<statement> preanalyze_statement(precontext & ctx, const parser::statement & parse, scope *& lex_scope)
     {
         return std::get<0>(fmap(parse.statement_value,
             make_overload_set(
                 [&](const parser::declaration & decl) -> std::unique_ptr<statement> {
-                    auto ret = preanalyze_declaration(decl, lex_scope);
+                    auto ret = preanalyze_declaration(ctx, decl, lex_scope);
                     return ret;
                 },
 
                 [&](const parser::return_expression & ret_expr) -> std::unique_ptr<statement> {
-                    auto ret = preanalyze_return(ret_expr, lex_scope);
+                    auto ret = preanalyze_return(ctx, ret_expr, lex_scope);
                     return ret;
                 },
 
@@ -55,12 +55,12 @@ inline namespace _v1
                 },
 
                 [&](const parser::function_definition & func) -> std::unique_ptr<statement> {
-                    auto ret = preanalyze_function_definition(func, lex_scope);
+                    auto ret = preanalyze_function_definition(ctx, func, lex_scope);
                     return ret;
                 },
 
                 [&](const parser::if_statement & if_stmt) -> std::unique_ptr<statement> {
-                    auto ret = preanalyze_if_statement(if_stmt, lex_scope);
+                    auto ret = preanalyze_if_statement(ctx, if_stmt, lex_scope);
                     return ret;
                 },
 

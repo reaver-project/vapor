@@ -34,14 +34,6 @@
 #include "../simplification/context.h"
 #include "../simplification/replacements.h"
 
-namespace reaver::vapor::parser
-{
-inline namespace _v1
-{
-    struct statement;
-}
-}
-
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -217,8 +209,24 @@ inline namespace _v1
             return {};
         }
     };
+}
+}
 
-    std::unique_ptr<statement> preanalyze_statement(const parser::statement & parse, scope *& lex_scope);
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct statement;
+}
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    struct precontext;
+
+    std::unique_ptr<statement> preanalyze_statement(precontext & ctx, const parser::statement & parse, scope *& lex_scope);
 
     inline std::unique_ptr<statement> make_null_statement()
     {
