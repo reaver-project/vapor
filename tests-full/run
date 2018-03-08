@@ -106,6 +106,7 @@ def test_file(file_path, test_dir):
     for step in test_info['steps']:
         command = step['command'].format(
             input = file_path,
+            directory = os.path.dirname(file_path),
             vprc = args.vprc_path,
             runtime = os.path.abspath(os.path.join(test_dir, '..', 'runtime')),
             llc = args.llc,
