@@ -1,5 +1,5 @@
-// compile: {vprc} {input} -o {input}.ll
-// assemble: {llc} {input}.ll -filetype=obj -relocation-model=pic
+// IGNORE: true
+// belongs to simple_import.vpr
 
 module ackermann
 {

@@ -68,13 +68,16 @@ def parse_metadata(file_path):
             if match is None:
                 break
 
+            if match.group(1) == 'IGNORE' and match.group(2) == 'true':
+                return { 'ignored': True }
+
             steps.append({ 'name': match.group(1), 'command': match.group(2) })
 
 
     if len(steps) == 0:
-        return { 'failed': True, 'reason': 'no steps defined!' }
+        return { 'ignored': False, 'failed': True, 'reason': 'no steps defined!' }
 
-    return { 'steps': steps, 'failed': False }
+    return { 'ignored': False, 'steps': steps, 'failed': False }
 
 
 def test_file(file_path, test_dir):
@@ -89,11 +92,15 @@ def test_file(file_path, test_dir):
 
     name = os.path.splitext(os.path.basename(file_path))[0]
 
+    test_info = parse_metadata(file_path)
+
+    if test_info['ignored']:
+        return 0
+
     if pt:
         print("##teamcity[testStarted name='%s' captureStandardOutput='true']" % name)
     print_if(ps, '-- Testing %s ' % os.path.relpath(file_path, test_dir), end = '', flush = True)
 
-    test_info = parse_metadata(file_path)
     if test_info['failed']:
         failed_tests.append(os.path.relpath(file_path, test_dir))
         print('\n%s%s-- Failed: %s:%s' % (bcolors.FAIL, bcolors.BOLD, os.path.relpath(file_path, test_dir), bcolors.ENDC))
