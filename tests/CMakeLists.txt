@@ -7,7 +7,7 @@ add_executable(tests
 target_link_libraries(tests
     Threads::Threads
     ${Boost_LIBRARIES}
-    vprc
+    vprc-lib
 )
 
 include(ProcessorCount)

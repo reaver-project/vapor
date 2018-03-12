@@ -6,7 +6,7 @@ add_executable(vprc-exe
 target_link_libraries(vprc-exe
     Threads::Threads
     ${Boost_LIBRARIES}
-    vprc
+    vprc-lib
 )
 
 set_target_properties(vprc-exe

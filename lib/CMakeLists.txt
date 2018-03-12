@@ -34,11 +34,15 @@ set_source_files_properties(${proto_sources}
 
 include_directories("${CMAKE_BINARY_DIR}/proto")
 
-add_library(vprc SHARED
+add_library(vprc-lib SHARED
     ${sources}
     ${proto_sources}
 )
 
-target_link_libraries(vprc
+target_link_libraries(vprc-lib
     $<TARGET_FILE:libprotobuf>
+)
+
+set_target_properties(vprc-lib
+    PROPERTIES OUTPUT_NAME vprc
 )
