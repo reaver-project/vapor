@@ -22,6 +22,8 @@
 
 #include <fstream>
 
+#include <boost/program_options/errors.hpp>
+
 #include "cli/cli.h"
 #include "vapor/analyzer.h"
 #include "vapor/codegen.h"
@@ -112,6 +114,14 @@ catch (reaver::exception & e)
     {
         return 2;
     }
+
+    return 1;
+}
+
+catch (boost::program_options::error & e)
+{
+    reaver::logger::dlog(reaver::logger::error) << e.what();
+    reaver::logger::default_logger().sync();
 
     return 1;
 }
