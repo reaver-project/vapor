@@ -59,7 +59,7 @@ inline namespace _v1
                                                                                                                                                                \
     boost::filesystem::path compiler_options::name##_path() const                                                                                              \
     {                                                                                                                                                          \
-        if (privname##_path)                                                                                                                                   \
+        if (privname##_path && privname##_path != "")                                                                                                          \
         {                                                                                                                                                      \
             return privname##_path.value();                                                                                                                    \
         }                                                                                                                                                      \
@@ -119,6 +119,16 @@ inline namespace _v1
         auto module_name = utf8(name);
         boost::algorithm::replace_all(module_name, ".", std::string{ boost::filesystem::path::separator });
         _module_name_path = std::move(module_name);
+    }
+
+    bool compiler_options::should_generate_llvm_ir_file() const
+    {
+        return _llvm_path.has_value();
+    }
+
+    bool compiler_options::should_generate_assembly_file() const
+    {
+        return _assembly_path.has_value();
     }
 }
 }

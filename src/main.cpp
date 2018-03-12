@@ -51,6 +51,12 @@ int main(int argc, char ** argv) try
     assert(options->source_path());
 
     std::ifstream input(options->source_path()->string());
+    if (!input)
+    {
+        reaver::logger::dlog(reaver::logger::error) << "couldn't open the source file.";
+        return 1;
+    }
+
     std::string program_utf8{ std::istreambuf_iterator<char>(input.rdbuf()), std::istreambuf_iterator<char>() };
     auto program = boost::locale::conv::utf_to_utf<char32_t>(program_utf8);
 
