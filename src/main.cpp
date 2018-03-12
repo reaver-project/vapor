@@ -106,6 +106,7 @@ int main(int argc, char ** argv) try
 catch (reaver::exception & e)
 {
     e.print(reaver::logger::default_logger());
+    reaver::logger::default_logger().sync();
 
     if (e.level() >= reaver::logger::crash)
     {
@@ -118,6 +119,7 @@ catch (reaver::exception & e)
 catch (std::exception & e)
 {
     reaver::logger::dlog(reaver::logger::crash) << e.what();
+    reaver::logger::default_logger().sync();
 
     return 2;
 }

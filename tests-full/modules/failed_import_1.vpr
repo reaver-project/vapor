@@ -1,4 +1,4 @@
-// compile: ! {vprc} {input} -o {input}.ll -I {directory}/types
+// compile: ! {vprc} -i {input} -I {directory}/types
 
 import invalid_multi_file;
 

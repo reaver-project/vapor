@@ -1,4 +1,4 @@
-// compile: {vprc} {input} -o {input}.ll -I {directory}
+// compile: {vprc} -i {input} -I {directory}
 // assemble: cat {runtime}/crt1.ll >> {input}.ll
 // assemble: {llc} {input}.ll -filetype=obj -relocation-model=pic
 // link: {cc} {input}.o -o {input}.bin

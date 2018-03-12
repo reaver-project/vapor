@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -30,6 +30,19 @@ namespace reaver::vapor::config
 {
 inline namespace _v1
 {
+    namespace compilation_modes
+    {
+        enum compilation_modes : std::size_t
+        {
+            link = 0,
+            llvm_ir = 1 << 0,
+            assembly = 1 << 1,
+            object = 1 << 2
+        };
+    }
+
+    using modes_enum = compilation_modes::compilation_modes;
+
     class compiler_options
     {
     public:
@@ -47,44 +60,57 @@ inline namespace _v1
             return _source_path;
         }
 
-        boost::filesystem::path output_path() const
-        {
-            if (_output_path)
-            {
-                return _output_path.value();
-            }
+        void set_source_path(boost::filesystem::path path);
 
-            return _source_path.value().string() + ".ll";
+        modes_enum compilation_mode() const
+        {
+            return _mode;
         }
+
+        void set_compilation_mode(modes_enum mode)
+        {
+            _mode = mode;
+        }
+
+#define DEFINE_DIR(name, privname)                                                                                                                             \
+public:                                                                                                                                                        \
+    std::optional<boost::filesystem::path> name##_dir() const;                                                                                                 \
+    void set_##name##_dir(boost::filesystem::path dir);                                                                                                        \
+    boost::filesystem::path name##_path() const;                                                                                                               \
+    void set_##name##_path(boost::filesystem::path path);                                                                                                      \
+                                                                                                                                                               \
+private:                                                                                                                                                       \
+    std::optional<boost::filesystem::path> privname##_path;                                                                                                    \
+    std::optional<boost::filesystem::path> privname##_dir;                                                                                                     \
+                                                                                                                                                               \
+public:
+
+        DEFINE_DIR(module, _module)
+        DEFINE_DIR(llvm, _llvm)
+        DEFINE_DIR(assembly, _assembly)
+        DEFINE_DIR(object, _object)
+
+#undef DEFINE_DIR
+
+        boost::filesystem::path output_path() const;
+        void set_output_dir(boost::filesystem::path dir);
 
         const std::vector<boost::filesystem::path> & module_paths() const
         {
             return _module_paths;
         }
 
-        void set_source_path(boost::filesystem::path path)
-        {
-            assert(!_source_path);
-            _source_path = std::move(path);
-        }
-
-        void set_output_path(boost::filesystem::path path)
-        {
-            assert(!_output_path);
-            _output_path = std::move(path);
-        }
-
-        void add_module_path(boost::filesystem::path path)
-        {
-            _module_paths.push_back(std::move(path));
-        }
+        void add_module_path(boost::filesystem::path path);
+        void set_module_name(const std::u32string & name);
 
     private:
         std::unique_ptr<class language_options> _lang_opt;
 
+        modes_enum _mode = compilation_modes::link;
         std::optional<boost::filesystem::path> _source_path;
-        std::optional<boost::filesystem::path> _output_path;
+        std::optional<boost::filesystem::path> _output_dir;
         std::vector<boost::filesystem::path> _module_paths;
+        std::optional<boost::filesystem::path> _module_name_path;
     };
 }
 }
