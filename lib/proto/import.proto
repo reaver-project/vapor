@@ -24,14 +24,10 @@ syntax = "proto3";
 
 package reaver.vapor.proto._v1;
 
-import "import.proto";
-import "module.proto";
-
-message ast
+message import_
 {
-    int64 compilation_time = 1;
-    string module_source_hash = 2;
+    int64 target_compilation_time = 1;
+    string target_source_hash = 2;
 
-    repeated import_ imports = 3;
-    repeated module modules = 4;
+    repeated string name = 3;
 }

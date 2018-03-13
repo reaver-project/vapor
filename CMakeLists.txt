@@ -4,7 +4,7 @@ project(Vapor CXX)
 
 find_package(Threads REQUIRED)
 find_package(Boost 1.64 REQUIRED
-    COMPONENTS system program_options filesystem
+    COMPONENTS system program_options filesystem iostreams
 )
 include_directories(${Boost_INCLUDE_DIRS})
 

@@ -20,18 +20,16 @@
  *
  **/
 
-syntax = "proto3";
+#pragma once
 
-package reaver.vapor.proto._v1;
+#include "expression.h"
 
-import "import.proto";
-import "module.proto";
-
-message ast
+namespace reaver::vapor::analyzer
 {
-    int64 compilation_time = 1;
-    string module_source_hash = 2;
-
-    repeated import_ imports = 3;
-    repeated module modules = 4;
+inline namespace _v1
+{
+    class entity : public expression
+    {
+    };
+}
 }

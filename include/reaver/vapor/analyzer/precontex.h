@@ -23,6 +23,7 @@
 #pragma once
 
 #include "../config/compiler_options.h"
+#include "expressions/entity.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -31,6 +32,7 @@ inline namespace _v1
     struct precontext
     {
         const config::compiler_options & options;
+        std::unordered_map<std::string, std::unique_ptr<entity>> loaded_modules = {};
     };
 }
 }
