@@ -101,6 +101,7 @@ public:
         }
 
         void add_module_path(boost::filesystem::path path);
+        void add_first_module_path(boost::filesystem::path path);
         void set_module_name(const std::u32string & name);
 
         bool should_generate_llvm_ir_file() const;

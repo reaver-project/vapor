@@ -54,6 +54,7 @@ inline namespace _v1
                                                                                                                                                                \
     void compiler_options::set_##name##_dir(boost::filesystem::path dir)                                                                                       \
     {                                                                                                                                                          \
+        __VA_ARGS__;                                                                                                                                           \
         privname##_dir = std::move(dir);                                                                                                                       \
     }                                                                                                                                                          \
                                                                                                                                                                \
@@ -80,7 +81,7 @@ inline namespace _v1
         privname##_path = std::move(path);                                                                                                                     \
     }
 
-    DEFINE_DIR(module, _module, "m", )
+    DEFINE_DIR(module, _module, "m", add_first_module_path(dir))
     DEFINE_DIR(llvm, _llvm, ".ll", )
     DEFINE_DIR(assembly, _assembly, ".asm", )
     DEFINE_DIR(object, _object, ".o", )
@@ -111,6 +112,11 @@ inline namespace _v1
     void compiler_options::add_module_path(boost::filesystem::path path)
     {
         _module_paths.push_back(std::move(path));
+    }
+
+    void compiler_options::add_first_module_path(boost::filesystem::path path)
+    {
+        _module_paths.insert(_module_paths.begin(), std::move(path));
     }
 
     void compiler_options::set_module_name(const std::u32string & name)
