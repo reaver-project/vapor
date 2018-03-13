@@ -64,7 +64,7 @@ inline namespace _v1
         auto name_ctx = ctx.make_branch(true);
         os << styles::def << name_ctx << styles::subrule_name << "name:\n";
         fmap(expr.module_name, [&](const auto & elem) {
-            print(elem, os, ctx.make_branch(true));
+            print(elem, os, name_ctx.make_branch(true));
             return unit{};
         });
     }
