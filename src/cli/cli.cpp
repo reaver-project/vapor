@@ -61,16 +61,16 @@ options_result get_options(int argc, char ** argv)
             "set the object or executable output file")
 
         ("mdir", boost::program_options::value<std::string>()->value_name("module-output-dir")
-             ->notifier([&](auto val){ ret->set_module_dir(std::move(val)); }),
+            ->notifier([&](auto val){ ret->set_module_dir(std::move(val)); }),
             "set the module output directory (controls the default module interface output file's location, overriden by -m)")
         ("ldir", boost::program_options::value<std::string>()->value_name("llvm-ir-output-dir")
-             ->notifier([&](auto val){ ret->set_llvm_dir(std::move(val)); }),
+            ->notifier([&](auto val){ ret->set_llvm_dir(std::move(val)); }),
             "set the LLVM output directory (controls the default LLVM output file's location, overriden by -l)")
         ("adir", boost::program_options::value<std::string>()->value_name("assembly-output-dir")
-             ->notifier([&](auto val){ ret->set_assembly_dir(std::move(val)); }),
+            ->notifier([&](auto val){ ret->set_assembly_dir(std::move(val)); }),
             "set the assembly output directory (control the default assembly output file's location, oberriden by -s)")
         ("odir", boost::program_options::value<std::string>()->value_name("binary-output-dir")
-             ->notifier([&](auto val){ ret->set_object_dir(std::move(val)); }),
+            ->notifier([&](auto val){ ret->set_object_dir(std::move(val)); }),
             "set the object file output directory (controls the default output file's location, overriden by -o)")
 
         ("outdir", boost::program_options::value<std::string>()->value_name("output-directories"),
