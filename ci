@@ -27,7 +27,7 @@ install_package reaverlib master
 install_package mayfly develop
 
 apt-get update
-apt-get install -y python3 cmake
+apt-get install -y python3 cmake pkg-config libsodium-dev
 
 # this is a stupid hack and ideally I'd just rename the current "llvm" images to "clang"
 # and have "llvm" images on top of boost, that'd just build specific versions of llvm

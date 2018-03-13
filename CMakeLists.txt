@@ -10,7 +10,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 include(FindPkgConfig)
 
-pkg_check_modules(SODIUM libsodium>=1.0)
+pkg_check_modules(SODIUM REQUIRED libsodium>=1.0)
 include_directories(${SODIUM_INCLUDEDIR})
 link_directories(${SODIUM_LIBRARY_DIRS})
 
