@@ -41,6 +41,7 @@ add_library(vprc-lib SHARED
 
 target_link_libraries(vprc-lib
     $<TARGET_FILE:libprotobuf>
+    ${SODIUM_LIBRARIES}
 )
 
 set_target_properties(vprc-lib
