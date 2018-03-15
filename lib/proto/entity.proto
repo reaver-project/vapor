@@ -24,10 +24,6 @@ syntax = "proto3";
 
 package reaver.vapor.proto;
 
-import "entity.proto";
-
-message module
+message entity
 {
-    repeated string name = 1;
-    map<string, entity> symbols = 2;
 }

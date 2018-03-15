@@ -57,6 +57,11 @@ inline namespace _v1
             new_scope->close();
         }
 
+        if (parse.export_)
+        {
+            ret->mark_exported();
+        }
+
         return ret;
     }
 

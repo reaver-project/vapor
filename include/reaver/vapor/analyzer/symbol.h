@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -39,6 +39,16 @@ inline namespace _v1
     public:
         symbol(std::u32string name, expression * expression) : _name{ std::move(name) }, _expression{ expression }
         {
+        }
+
+        void mark_exported()
+        {
+            _is_exported = true;
+        }
+
+        bool is_exported() const
+        {
+            return _is_exported;
         }
 
         void set_expression(expression * var)
@@ -105,6 +115,8 @@ inline namespace _v1
 
     private:
         mutable std::shared_mutex _lock;
+
+        bool _is_exported = false;
 
         std::u32string _name;
 

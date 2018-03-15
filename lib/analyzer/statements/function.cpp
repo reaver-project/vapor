@@ -44,12 +44,19 @@ inline namespace _v1
         }
         function_scope->close();
 
-        return std::make_unique<function_definition>(make_node(parse),
+        auto ret = std::make_unique<function_definition>(make_node(parse),
             parse.signature.name.value.string,
             std::move(params),
             fmap(parse.signature.return_type, [&](auto && ret_type) { return preanalyze_expression(ctx, ret_type, function_scope.get()); }),
             preanalyze_block(ctx, *parse.body, function_scope.get(), true),
             std::move(function_scope));
+
+        if (parse.signature.export_)
+        {
+            lex_scope->get(parse.signature.name.value.string)->mark_exported();
+        }
+
+        return ret;
     }
 
     function_definition::function_definition(ast_node parse,

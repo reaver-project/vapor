@@ -50,6 +50,11 @@ inline namespace _v1
             scope * scope,
             declaration_type decl_type);
 
+        void mark_exported()
+        {
+            _declared_symbol->mark_exported();
+        }
+
         const auto & name() const
         {
             return _name;

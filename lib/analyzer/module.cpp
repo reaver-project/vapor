@@ -146,6 +146,18 @@ inline namespace _v1
     {
         auto name = fmap(_name, utf8);
         std::copy(name.begin(), name.end(), RepeatedFieldBackInserter(mod.mutable_name()));
+
+        auto & mut_symbols = *mod.mutable_symbols();
+
+        for (auto && symbol : _scope->declared_symbols())
+        {
+            if (!symbol.second->is_exported())
+            {
+                continue;
+            }
+
+            mut_symbols[utf8(symbol.first)];
+        }
     }
 }
 }
