@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -60,6 +60,11 @@ inline namespace _v1
             auto rhs_pack = rhs->as<pack_expression>();
             return _exprs.size() == rhs_pack->_exprs.size()
                 && std::equal(_exprs.begin(), _exprs.end(), rhs_pack->_exprs.begin(), [](auto && lhs, auto && rhs) { return lhs->is_equal(rhs); });
+        }
+
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
+        {
+            assert(0);
         }
 
         std::vector<expression *> _exprs;

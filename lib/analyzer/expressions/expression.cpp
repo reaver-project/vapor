@@ -35,6 +35,8 @@
 #include "vapor/analyzer/symbol.h"
 #include "vapor/parser/expr.h"
 
+#include "entity.pb.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -88,6 +90,13 @@ inline namespace _v1
                 },
 
                 [](const auto &) -> std::unique_ptr<expression> { assert(0); })));
+    }
+
+    void expression::generate_interface(proto::entity & entity) const
+    {
+        auto value = std::make_unique<google::protobuf::Any>();
+        value->PackFrom(*_generate_interface());
+        entity.set_allocated_value(value.release());
     }
 }
 }

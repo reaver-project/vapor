@@ -96,6 +96,7 @@ int main(int argc, char ** argv) try
     // only create the module interface file if there is an actual input file
     if (options->source_path())
     {
+        reaver::logger::dlog() << "Generating module interface file...";
         auto module_path = options->module_path();
         boost::filesystem::create_directories(module_path.parent_path());
         std::ofstream interface_file{ module_path.string() };
@@ -105,6 +106,7 @@ int main(int argc, char ** argv) try
             return 1;
         }
         analyzed_ast.serialize_to(interface_file);
+        reaver::logger::dlog() << "Done.";
     }
 
     auto ir = analyzed_ast.codegen_ir();

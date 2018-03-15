@@ -119,6 +119,11 @@ inline namespace _v1
             throw unexpected_call{ __PRETTY_FUNCTION__ };
         }
 
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
+        {
+            throw unexpected_call{ __PRETTY_FUNCTION__ };
+        }
+
         type * _analysis_type = nullptr;
         std::unique_ptr<expression> _clone_expr;
         std::unique_ptr<expression> _simplified_expr;

@@ -62,6 +62,11 @@ inline namespace _v1
             return value.back()->is_equal(rhs);
         }
 
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
+        {
+            assert(0);
+        }
+
     public:
         expression_list(ast_node node)
         {

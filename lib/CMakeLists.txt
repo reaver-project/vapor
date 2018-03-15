@@ -11,7 +11,7 @@ foreach(abs_proto_file ${proto_files})
             "${CMAKE_BINARY_DIR}/${base}.pb.cc"
             "${CMAKE_BINARY_DIR}/${base}.pb.h"
         COMMENT "Compiling ${base}.proto..."
-        COMMAND $<TARGET_FILE:protoc> -I proto --cpp_out=${CMAKE_BINARY_DIR}/proto  "${proto_file}"
+        COMMAND $<TARGET_FILE:protoc> -I proto -I ../vendor/protobuf/src --cpp_out=${CMAKE_BINARY_DIR}/proto  "${proto_file}"
         DEPENDS protoc "${abs_proto_file}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     )

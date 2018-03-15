@@ -24,6 +24,8 @@
 
 #include <memory>
 
+#include <google/protobuf/any.pb.h>
+
 #include <reaver/prelude/monad.h>
 
 #include "../helpers.h"
@@ -38,6 +40,11 @@ inline namespace _v1
     struct expression;
     struct expression_list;
 }
+}
+
+namespace reaver::vapor::proto
+{
+struct entity;
 }
 
 namespace reaver::vapor::analyzer
@@ -217,6 +224,8 @@ inline namespace _v1
             return this;
         }
 
+        void generate_interface(proto::entity &) const;
+
     protected:
         void _set_type(type * t)
         {
@@ -256,6 +265,11 @@ inline namespace _v1
         bool _is_pure() const
         {
             return true;
+        }
+
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const
+        {
+            assert(0);
         }
 
     private:

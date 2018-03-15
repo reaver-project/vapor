@@ -70,6 +70,11 @@ inline namespace _v1
                 std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::materialization_instruction>() }, {}, { std::move(var) } } };
         }
 
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
+        {
+            assert(0);
+        }
+
         std::u32string _name;
         std::unique_ptr<expression> _type_expression;
     };

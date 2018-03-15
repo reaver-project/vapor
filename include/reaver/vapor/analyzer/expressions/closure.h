@@ -54,6 +54,11 @@ inline namespace _v1
         virtual future<expression *> _simplify_expr(recursive_context) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
+        {
+            assert(0);
+        }
+
         parameter_list _parameter_list;
 
         std::optional<std::unique_ptr<expression>> _return_type;

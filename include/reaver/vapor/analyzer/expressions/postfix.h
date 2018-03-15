@@ -99,6 +99,11 @@ inline namespace _v1
             return _base_expr->is_equal(rhs);
         }
 
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
+        {
+            assert(0);
+        }
+
         std::unique_ptr<expression> _base_expr;
         std::optional<lexer::token_type> _modifier;
         std::vector<std::unique_ptr<expression>> _arguments;

@@ -109,6 +109,11 @@ inline namespace _v1
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
         virtual bool _invalidate_ir(ir_generation_context &) const override;
 
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
+        {
+            assert(0);
+        }
+
         std::u32string _name;
 
         expression * _referenced = nullptr;

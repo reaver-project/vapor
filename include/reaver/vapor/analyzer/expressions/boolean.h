@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -78,6 +78,11 @@ inline namespace _v1
         {
             auto rhs_bool = rhs->as<boolean_constant>();
             return rhs_bool && _value == rhs_bool->_value;
+        }
+
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
+        {
+            assert(0);
         }
 
         bool _value;

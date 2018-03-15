@@ -156,7 +156,7 @@ inline namespace _v1
                 continue;
             }
 
-            mut_symbols[utf8(symbol.first)];
+            symbol.second->get_expression()->generate_interface(mut_symbols[utf8(symbol.first)]);
         }
     }
 }
