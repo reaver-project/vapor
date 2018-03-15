@@ -22,6 +22,7 @@
 
 #include <numeric>
 
+#include <boost/algorithm/string/join.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 
 #include "vapor/analyzer/expressions/import.h"
@@ -112,12 +113,12 @@ inline namespace _v1
             throw exception{ logger::error } << "couldn't open module interface file: " << path;
         }
 
-        proto::_v1::ast ast;
+        proto::ast ast;
         if (!ast.ParseFromIstream(&interface_file))
         {
             throw exception{ logger::error } << "couldn't parse the serialized ast from the module interface file " << path;
         }
-        if (ast.has_compilation_info() || ast.modules_size() == 0)
+        if (!ast.has_compilation_info() || ast.modules_size() == 0)
         {
             throw exception{ logger::error } << "no valid serialized ast in the module interface file " << path;
         }
@@ -137,7 +138,12 @@ inline namespace _v1
             }
         }
 
-        assert(!"not finished: loading a compiled dependent module");
+        if (ast.imports_size())
+        {
+            throw exception{ logger::error } << "not implemented yet: loading a module with imports";
+        }
+
+        throw exception{ logger::error } << "not fully implemented yet: loading a compiled dependency";
     }
 
     entity * import_module(precontext & ctx, const std::vector<std::string> & module_name)
@@ -158,7 +164,7 @@ inline namespace _v1
             assert(!"some weird unknown extension found by find_module!");
         }
 
-        assert(0);
+        throw exception{ logger::error } << "couldn't find module `" << boost::algorithm::join(module_name, ".") << "`";
     }
 
     std::unique_ptr<import_expression> preanalyze_import(precontext & ctx, const parser::import_expression & parse, scope * lex_scope, import_mode mode)
@@ -174,6 +180,11 @@ inline namespace _v1
                 },
                 [&](auto && expr) -> unit { assert(0); }));
 
+        assert(0);
+    }
+
+    void import_expression::generate_interface(proto::import_ &) const
+    {
         assert(0);
     }
 }

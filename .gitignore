@@ -12,3 +12,4 @@ core
 tags
 .gdb_history
 build*
+*.vprm

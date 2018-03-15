@@ -53,7 +53,7 @@ int main(int argc, char ** argv) try
     std::ifstream input(options->source_path()->string());
     if (!input)
     {
-        reaver::logger::dlog(reaver::logger::error) << "couldn't open the source file.";
+        reaver::logger::dlog(reaver::logger::error) << "couldn't open the source file";
         return 1;
     }
 
@@ -92,6 +92,20 @@ int main(int argc, char ** argv) try
     reaver::logger::dlog() << std::ref(analyzed_ast);
 
     reaver::logger::default_logger().sync();
+
+    // only create the module interface file if there is an actual input file
+    if (options->source_path())
+    {
+        auto module_path = options->module_path();
+        boost::filesystem::create_directories(module_path.parent_path());
+        std::ofstream interface_file{ module_path.string() };
+        if (!interface_file)
+        {
+            reaver::logger::dlog(reaver::logger::error) << "couldn't open module interface output file";
+            return 1;
+        }
+        analyzed_ast.serialize_to(interface_file);
+    }
 
     auto ir = analyzed_ast.codegen_ir();
 

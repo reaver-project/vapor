@@ -22,7 +22,7 @@
 
 syntax = "proto3";
 
-package reaver.vapor.proto._v1;
+package reaver.vapor.proto;
 
 import "import.proto";
 import "module.proto";
@@ -30,7 +30,7 @@ import "module.proto";
 message compilation_information
 {
     int64 time = 1;
-    string source_hash = 2;
+    bytes source_hash = 2;
 }
 
 message ast

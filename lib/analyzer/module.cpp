@@ -28,6 +28,8 @@
 #include "vapor/parser.h"
 #include "vapor/parser/module.h"
 
+#include "module.pb.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -138,6 +140,12 @@ inline namespace _v1
         }
 
         return { { mod } };
+    }
+
+    void module::generate_interface(proto::module & mod) const
+    {
+        auto name = fmap(_name, utf8);
+        std::copy(name.begin(), name.end(), RepeatedFieldBackInserter(mod.mutable_name()));
     }
 }
 }

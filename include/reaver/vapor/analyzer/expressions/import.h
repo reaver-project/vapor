@@ -26,12 +26,19 @@
 
 #include "expression.h"
 
+namespace reaver::vapor::proto
+{
+struct import_;
+}
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
     class import_expression : public expression
     {
+    public:
+        void generate_interface(proto::import_ &) const;
     };
 
     enum class import_mode

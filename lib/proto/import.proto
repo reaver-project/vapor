@@ -22,7 +22,7 @@
 
 syntax = "proto3";
 
-package reaver.vapor.proto._v1;
+package reaver.vapor.proto;
 
 message import_
 {

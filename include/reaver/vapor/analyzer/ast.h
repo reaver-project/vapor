@@ -67,6 +67,8 @@ inline namespace _v1
         void simplify();
         std::vector<codegen::ir::module> codegen_ir() const;
 
+        void serialize_to(std::ostream &) const;
+
     private:
         parser::ast _original_ast;
         std::vector<std::unique_ptr<module>> _modules;
@@ -74,6 +76,8 @@ inline namespace _v1
 
         std::unique_ptr<scope> _global_scope;
         analysis_context _ctx;
+
+        std::optional<boost::filesystem::path> _source_path;
     };
 
     std::ostream & operator<<(std::ostream & os, std::reference_wrapper<ast> tree);

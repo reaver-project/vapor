@@ -39,6 +39,11 @@
 #include "statements/statement.h"
 #include "symbol.h"
 
+namespace reaver::vapor::proto
+{
+struct module;
+}
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -66,6 +71,8 @@ inline namespace _v1
         }
 
         virtual declaration_ir declaration_codegen_ir(ir_generation_context &) const override;
+
+        void generate_interface(proto::module &) const;
 
     private:
         virtual future<> _analyze(analysis_context &) override;

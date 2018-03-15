@@ -22,12 +22,18 @@
 
 #include "vapor/analyzer/ast.h"
 
+#include <boost/iostreams/device/mapped_file.hpp>
+
+#include "vapor/sha.h"
+
+#include "ast.pb.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
     ast::ast(parser::ast original_ast, const config::compiler_options & opts)
-        : _original_ast{ std::move(original_ast) }, _global_scope{ std::make_unique<scope>() }
+        : _original_ast{ std::move(original_ast) }, _global_scope{ std::make_unique<scope>() }, _source_path{ opts.source_path() }
     {
         try
         {
@@ -80,6 +86,34 @@ inline namespace _v1
         }
 
         return os;
+    }
+
+    void ast::serialize_to(std::ostream & os) const
+    {
+        proto::ast serialized;
+
+        auto info = std::make_unique<proto::compilation_information>();
+
+        auto time = std::chrono::system_clock::now().time_since_epoch();
+        info->set_time(std::chrono::duration_cast<std::chrono::seconds>(time).count());
+
+        boost::iostreams::mapped_file_source source{ _source_path->string() };
+        auto sha256sum = sha256(source.data(), source.size());
+        info->set_source_hash(sha256sum);
+
+        serialized.set_allocated_compilation_info(info.release());
+
+        for (auto && import : _imports)
+        {
+            import->generate_interface(*serialized.add_imports());
+        }
+
+        for (auto && module : _modules)
+        {
+            module->generate_interface(*serialized.add_modules());
+        }
+
+        serialized.SerializeToOstream(&os);
     }
 }
 }
