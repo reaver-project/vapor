@@ -27,11 +27,16 @@ package reaver.vapor.proto._v1;
 import "import.proto";
 import "module.proto";
 
+message compilation_information
+{
+    int64 time = 1;
+    string source_hash = 2;
+}
+
 message ast
 {
-    int64 compilation_time = 1;
-    string module_source_hash = 2;
+    compilation_information compilation_info = 1;
 
-    repeated import_ imports = 3;
-    repeated module modules = 4;
+    repeated import_ imports = 2;
+    repeated module modules = 3;
 }

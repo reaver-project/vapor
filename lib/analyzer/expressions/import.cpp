@@ -99,7 +99,7 @@ inline namespace _v1
 
     void compile_file(precontext & ctx, const boost::filesystem::path & path)
     {
-        assert(!"unimplemented: compiling a dependent module");
+        throw exception{ logger::error } << "unimplemented: compiling a module dependency: " << path;
     }
 
     entity * import_module(precontext & ctx, const std::vector<std::string> & module_name);
@@ -117,15 +117,19 @@ inline namespace _v1
         {
             throw exception{ logger::error } << "couldn't parse the serialized ast from the module interface file " << path;
         }
+        if (ast.has_compilation_info() || ast.modules_size() == 0)
+        {
+            throw exception{ logger::error } << "no valid serialized ast in the module interface file " << path;
+        }
 
         if (auto source_path = find_module(ctx, module_name, true))
         {
-            if (static_cast<std::int64_t>(boost::filesystem::last_write_time(source_path.value())) > ast.compilation_time())
+            if (static_cast<std::int64_t>(boost::filesystem::last_write_time(source_path.value())) > ast.compilation_info().time())
             {
                 boost::iostreams::mapped_file_source source{ source_path->string() };
                 auto sha256sum = sha256(source.data(), source.size());
 
-                if (sha256sum != ast.module_source_hash())
+                if (sha256sum != ast.compilation_info().source_hash())
                 {
                     compile_file(ctx, source_path.value());
                     return import_module(ctx, module_name);

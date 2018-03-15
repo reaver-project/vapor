@@ -39,29 +39,7 @@ inline namespace _v1
     class ast
     {
     public:
-        ast(parser::ast original_ast, const config::compiler_options & opts)
-            : _original_ast{ std::move(original_ast) }, _global_scope{ std::make_unique<scope>() }
-        {
-            try
-            {
-                precontext ctx{ opts };
-
-                _imports = fmap(
-                    _original_ast.global_imports, [this, &ctx](auto && im) { return preanalyze_import(ctx, im, _global_scope.get(), import_mode::statement); });
-                _modules = fmap(_original_ast.module_definitions, [this, &ctx](auto && m) { return preanalyze_module(ctx, m, _global_scope.get()); });
-            }
-
-            catch (exception & e)
-            {
-                default_error_engine().push(e);
-            }
-
-            if (!default_error_engine())
-            {
-                default_error_engine().print(logger::default_logger());
-            }
-        }
-
+        ast(parser::ast original_ast, const config::compiler_options & opts);
         ast(const ast &) = delete;
         ast(ast &&) = delete;
 
@@ -85,32 +63,9 @@ inline namespace _v1
             return _modules.end();
         }
 
-        void analyze()
-        {
-            get(when_all(fmap(_modules, [this](auto && m) { return m->analyze(_ctx); })));
-        }
-
-        void simplify()
-        {
-            bool cont = true;
-            cached_results res;
-
-            while (cont)
-            {
-                simplification_context ctx{ res };
-                get(when_all(fmap(_modules, [&ctx](auto && m) { return m->simplify_module({ ctx }); })));
-
-                cont = ctx.did_something_happen();
-            }
-        }
-
-        std::vector<codegen::ir::module> codegen_ir() const
-        {
-            ir_generation_context ctx;
-
-            return mbind(
-                _modules, [&](auto && mod) { return fmap(mod->declaration_codegen_ir(ctx), [](auto && ir) { return get<codegen::ir::module>(ir); }); });
-        }
+        void analyze();
+        void simplify();
+        std::vector<codegen::ir::module> codegen_ir() const;
 
     private:
         parser::ast _original_ast;
@@ -121,14 +76,6 @@ inline namespace _v1
         analysis_context _ctx;
     };
 
-    inline std::ostream & operator<<(std::ostream & os, std::reference_wrapper<ast> tree)
-    {
-        for (auto && module : tree.get())
-        {
-            module->print(os, {});
-        }
-
-        return os;
-    }
+    std::ostream & operator<<(std::ostream & os, std::reference_wrapper<ast> tree);
 }
 }
