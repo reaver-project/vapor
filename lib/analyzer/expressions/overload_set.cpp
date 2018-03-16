@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -32,6 +32,8 @@
 #include "vapor/codegen/ir/type.h"
 #include "vapor/parser.h"
 
+#include "expressions/overload_set.pb.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -59,6 +61,25 @@ inline namespace _v1
     {
         _function_defs.push_back(decl);
         _type->add_function(decl->get_function());
+    }
+
+    void overload_set::set_name(std::u32string name)
+    {
+        _type->set_name(std::move(name));
+    }
+
+    const std::u32string & overload_set::get_name() const
+    {
+        return _type->get_name();
+    }
+
+    std::unique_ptr<google::protobuf::Message> overload_set::_generate_interface() const
+    {
+        auto ret = std::make_unique<proto::overload_set>();
+
+        ret->set_name(utf8(_type->get_name()));
+
+        return ret;
     }
 }
 }

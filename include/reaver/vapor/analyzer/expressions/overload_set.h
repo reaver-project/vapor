@@ -42,6 +42,8 @@ inline namespace _v1
         }
 
         void add_function(function_definition * fn);
+        void set_name(std::u32string);
+        const std::u32string & get_name() const;
 
         virtual void print(std::ostream & os, print_context) const override
         {
@@ -53,11 +55,7 @@ inline namespace _v1
     private:
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
-
-        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
-        {
-            assert(0);
-        }
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override;
 
         std::vector<function_definition *> _function_defs;
         std::unique_ptr<overload_set_type> _type;

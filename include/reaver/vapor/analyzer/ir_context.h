@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -43,7 +43,6 @@ inline namespace _v1
         const function * function_to_generate();
 
         bool top_level_generation = true;
-        std::size_t overload_set_index = 0;
         std::size_t closure_index = 0;
         std::size_t label_index = 0;
         std::size_t struct_index = 0;
