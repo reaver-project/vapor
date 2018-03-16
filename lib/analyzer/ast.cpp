@@ -25,6 +25,7 @@
 #include <boost/iostreams/device/mapped_file.hpp>
 
 #include "vapor/sha.h"
+#include "vapor/parser/expr.h"
 
 #include "ast.pb.h"
 

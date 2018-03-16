@@ -22,6 +22,7 @@
 
 #include "vapor/analyzer/expressions/type.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/parser/expr.h"
 
 #include "expressions/type.pb.h"
 
