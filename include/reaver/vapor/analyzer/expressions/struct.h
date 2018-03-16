@@ -39,6 +39,8 @@ inline namespace _v1
             return _type->get_expression()->declaration_codegen_ir(ctx);
         }
 
+        virtual void set_name(std::u32string name) override;
+
     private:
         virtual expression * _get_replacement() override
         {
@@ -62,7 +64,7 @@ inline namespace _v1
 
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
         {
-            assert(0);
+            return _type->get_expression()->_do_generate_interface();
         }
 
         std::shared_ptr<struct_type> _type;

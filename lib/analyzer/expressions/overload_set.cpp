@@ -68,11 +68,6 @@ inline namespace _v1
         _type->set_name(std::move(name));
     }
 
-    const std::u32string & overload_set::get_name() const
-    {
-        return _type->get_name();
-    }
-
     std::unique_ptr<google::protobuf::Message> overload_set::_generate_interface() const
     {
         auto ret = std::make_unique<proto::overload_set>();

@@ -42,8 +42,7 @@ inline namespace _v1
         }
 
         void add_function(function_definition * fn);
-        void set_name(std::u32string);
-        const std::u32string & get_name() const;
+        virtual void set_name(std::u32string) override;
 
         virtual void print(std::ostream & os, print_context) const override
         {

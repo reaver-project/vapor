@@ -226,6 +226,15 @@ inline namespace _v1
 
         void generate_interface(proto::entity &) const;
 
+        std::unique_ptr<google::protobuf::Message> _do_generate_interface() const
+        {
+            return _generate_interface();
+        }
+
+        virtual void set_name([[maybe_unused]] std::u32string name)
+        {
+        }
+
     protected:
         void _set_type(type * t)
         {

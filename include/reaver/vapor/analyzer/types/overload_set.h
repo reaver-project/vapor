@@ -61,25 +61,13 @@ inline namespace _v1
 
         virtual future<std::vector<function *>> get_candidates(lexer::token_type bracket) const override;
 
-        const std::u32string & get_name() const
-        {
-            return _name;
-        }
-
-        void set_name(std::u32string name)
-        {
-            _name = std::move(name);
-        }
-
     private:
         virtual void _codegen_type(ir_generation_context &) const override;
 
         virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
         {
-            return _name;
+            return get_name();
         }
-
-        std::u32string _name;
 
         mutable std::mutex _functions_lock;
         std::vector<function *> _functions;

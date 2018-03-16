@@ -62,6 +62,11 @@ inline namespace _v1
         }
     }
 
+    void struct_literal::set_name(std::u32string name)
+    {
+        _type->set_name(std::move(name));
+    }
+
     statement_ir struct_literal::_codegen_ir(ir_generation_context & ctx) const
     {
         return {};

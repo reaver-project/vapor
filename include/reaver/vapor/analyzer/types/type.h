@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -176,6 +176,16 @@ inline namespace _v1
             return base_scopes;
         }
 
+        const std::u32string & get_name() const
+        {
+            return _name;
+        }
+
+        void set_name(std::u32string name)
+        {
+            _name = std::move(name);
+        }
+
     private:
         virtual void _codegen_type(ir_generation_context &) const = 0;
         virtual std::u32string _codegen_name(ir_generation_context &) const = 0;
@@ -191,6 +201,8 @@ inline namespace _v1
         void _init_pack_type();
 
         mutable std::optional<std::shared_ptr<codegen::ir::variable_type>> _codegen_t;
+
+        std::u32string _name;
     };
 
     class type_type : public type
