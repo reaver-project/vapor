@@ -90,6 +90,11 @@ inline namespace _v1
             return (*it)->get_type();
         }
 
+        virtual std::unique_ptr<proto::type> generate_interface() const override
+        {
+            assert(0);
+        }
+
     private:
         virtual void _codegen_type(ir_generation_context &) const override;
 

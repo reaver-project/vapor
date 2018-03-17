@@ -43,6 +43,11 @@ inline namespace _v1
 }
 }
 
+namespace reaver::vapor::proto
+{
+    struct type;
+}
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -186,6 +191,8 @@ inline namespace _v1
             _name = std::move(name);
         }
 
+        virtual std::unique_ptr<proto::type> generate_interface() const = 0;
+
     private:
         virtual void _codegen_type(ir_generation_context &) const = 0;
         virtual std::u32string _codegen_name(ir_generation_context &) const = 0;
@@ -205,38 +212,7 @@ inline namespace _v1
         std::u32string _name;
     };
 
-    class type_type : public type
-    {
-    public:
-        type_type() : type{ dont_init_expr }
-        {
-        }
-
-        virtual std::string explain() const override
-        {
-            return "type";
-        }
-
-        virtual future<std::vector<function *>> get_candidates(lexer::token_type token) const override;
-
-        virtual void print(std::ostream & os, print_context ctx) const override
-        {
-            os << styles::def << ctx << styles::type << "type" << styles::def << " @ " << styles::address << this << styles::def << ": builtin type\n";
-        }
-
-    private:
-        virtual void _codegen_type(ir_generation_context &) const override;
-        virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
-        {
-            return U"type";
-        }
-
-        mutable std::mutex _generic_ctor_lock;
-        mutable std::shared_ptr<function> _generic_ctor;
-        mutable std::unique_ptr<expression> _generic_ctor_first_arg;
-        mutable std::unique_ptr<expression> _generic_ctor_pack_arg;
-    };
-
+    std::unique_ptr<type> make_type_type();
     std::unique_ptr<type> make_integer_type();
     std::unique_ptr<type> make_boolean_type();
     std::unique_ptr<type> make_unconstrained_type();
@@ -256,7 +232,7 @@ inline namespace _v1
         static auto builtins = [] {
             builtin_types_t builtins;
 
-            builtins.type = std::make_unique<type_type>();
+            builtins.type = make_type_type();
             builtins.integer = make_integer_type();
             builtins.boolean = make_boolean_type();
             builtins.unconstrained = make_unconstrained_type();

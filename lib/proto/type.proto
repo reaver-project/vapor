@@ -24,6 +24,31 @@ syntax = "proto3";
 
 package reaver.vapor.proto;
 
-message type_expression
+import "google/protobuf/any.proto";
+
+message sized_integer
 {
+    int64 size = 1;
+}
+
+message complicated_type
+{
+    string name = 1;
+    google.protobuf.Any value = 2;
+}
+
+message type
+{
+    enum simple_builtin {
+        type_ = 0;
+        integer = 64;
+        boolean = 65;
+    }
+
+    oneof details {
+        simple_builtin builtin = 1;
+        sized_integer sized_int = 2;
+
+        complicated_type complicated = 65;
+    }
 }

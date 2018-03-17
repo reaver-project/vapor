@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -51,57 +51,96 @@ inline namespace _v1
         return _self_expression->_get_replacement();
     }
 
-    void type_type::_codegen_type(ir_generation_context &) const
+    class type_type : public type
     {
-        assert(0);
-    }
-
-    future<std::vector<function *>> type_type::get_candidates(lexer::token_type token) const
-    {
-        if (token != lexer::token_type::curly_bracket_open)
+    public:
+        type_type() : type{ dont_init_expr }
         {
-            assert(0);
-            return make_ready_future(std::vector<function *>{});
         }
 
-        [&] {
-            std::lock_guard<std::mutex> lock{ _generic_ctor_lock };
+        virtual std::string explain() const override
+        {
+            return "type";
+        }
 
-            if (_generic_ctor)
+        virtual future<std::vector<function *>> get_candidates(lexer::token_type token) const override
+        {
+            if (token != lexer::token_type::curly_bracket_open)
             {
-                return;
+                assert(0);
+                return make_ready_future(std::vector<function *>{});
             }
 
-            _generic_ctor_first_arg = make_runtime_value(builtin_types().type.get());
-            _generic_ctor_pack_arg = make_runtime_value(builtin_types().unconstrained->get_pack_type());
+            [&] {
+                std::lock_guard<std::mutex> lock{ _generic_ctor_lock };
 
-            _generic_ctor = make_function(
-                "generic constructor", nullptr, { _generic_ctor_first_arg.get(), _generic_ctor_pack_arg.get() }, [](auto &&) -> codegen::ir::function {
-                    assert(!"tried to codegen the generic constructor!");
+                if (_generic_ctor)
+                {
+                    return;
+                }
+
+                _generic_ctor_first_arg = make_runtime_value(builtin_types().type.get());
+                _generic_ctor_pack_arg = make_runtime_value(builtin_types().unconstrained->get_pack_type());
+
+                _generic_ctor = make_function(
+                    "generic constructor", nullptr, { _generic_ctor_first_arg.get(), _generic_ctor_pack_arg.get() }, [](auto &&) -> codegen::ir::function {
+                        assert(!"tried to codegen the generic constructor!");
+                    });
+
+                _generic_ctor->set_return_type(_generic_ctor_first_arg.get());
+
+                _generic_ctor->make_member();
+
+                _generic_ctor->add_analysis_hook([](auto && ctx, auto && call_expr, auto && args) {
+                    assert(args.size() != 0);
+                    assert(args.front()->get_type() == builtin_types().type.get());
+
+                    auto type_expr = args.front()->template as<type_expression>();
+                    auto actual_type = type_expr->get_value();
+                    args.erase(args.begin());
+                    auto actual_ctor = actual_type->get_constructor(fmap(args, [](auto && arg) -> const expression * { return arg; }));
+
+                    return actual_ctor.then([&ctx, args, call_expr](auto && ctor) { return select_overload(ctx, call_expr->get_range(), args, { ctor }); })
+                        .then([call_expr](auto && expr) { call_expr->replace_with(std::move(expr)); });
                 });
 
-            _generic_ctor->set_return_type(_generic_ctor_first_arg.get());
+                _generic_ctor->set_eval(
+                    [](auto &&, auto &&) -> future<expression *> { assert(!"a generic constructor call survived analysis; this is a compiler bug"); });
+            }();
 
-            _generic_ctor->make_member();
+            return make_ready_future(std::vector<function *>{ _generic_ctor.get() });
+        }
 
-            _generic_ctor->add_analysis_hook([](auto && ctx, auto && call_expr, auto && args) {
-                assert(args.size() != 0);
-                assert(args.front()->get_type() == builtin_types().type.get());
+        virtual void print(std::ostream & os, print_context ctx) const override
+        {
+            os << styles::def << ctx << styles::type << "type" << styles::def << " @ " << styles::address << this << styles::def << ": builtin type\n";
+        }
 
-                auto type_expr = args.front()->template as<type_expression>();
-                auto actual_type = type_expr->get_value();
-                args.erase(args.begin());
-                auto actual_ctor = actual_type->get_constructor(fmap(args, [](auto && arg) -> const expression * { return arg; }));
+        virtual std::unique_ptr<proto::type> generate_interface() const override
+        {
+            assert(0);
+        }
 
-                return actual_ctor.then([&ctx, args, call_expr](auto && ctor) { return select_overload(ctx, call_expr->get_range(), args, { ctor }); })
-                    .then([call_expr](auto && expr) { call_expr->replace_with(std::move(expr)); });
-            });
+    private:
+        virtual void _codegen_type(ir_generation_context &) const override
+        {
+            assert(0);
+        }
 
-            _generic_ctor->set_eval(
-                [](auto &&, auto &&) -> future<expression *> { assert(!"a generic constructor call survived analysis; this is a compiler bug"); });
-        }();
+        virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
+        {
+            return U"type";
+        }
 
-        return make_ready_future(std::vector<function *>{ _generic_ctor.get() });
+        mutable std::mutex _generic_ctor_lock;
+        mutable std::shared_ptr<function> _generic_ctor;
+        mutable std::unique_ptr<expression> _generic_ctor_first_arg;
+        mutable std::unique_ptr<expression> _generic_ctor_pack_arg;
+    };
+
+    std::unique_ptr<type> make_type_type()
+    {
+        return std::make_unique<type_type>();
     }
 }
 }

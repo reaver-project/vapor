@@ -144,6 +144,11 @@ inline namespace _v1
             os << styles::def << ctx << styles::rule_name << "test-type\n";
         }
 
+        virtual std::unique_ptr<proto::type> generate_interface() const override
+        {
+            assert(0);
+        }
+
     private:
         virtual void _codegen_type(ir_generation_context &) const override
         {

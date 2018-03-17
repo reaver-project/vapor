@@ -61,6 +61,11 @@ inline namespace _v1
 
         virtual future<std::vector<function *>> get_candidates(lexer::token_type bracket) const override;
 
+        virtual std::unique_ptr<proto::type> generate_interface() const override
+        {
+            assert(0);
+        }
+
     private:
         virtual void _codegen_type(ir_generation_context &) const override;
 

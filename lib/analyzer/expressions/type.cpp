@@ -24,7 +24,7 @@
 #include "vapor/analyzer/symbol.h"
 #include "vapor/parser/expr.h"
 
-#include "expressions/type.pb.h"
+#include "type.pb.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -57,9 +57,7 @@ inline namespace _v1
 
     std::unique_ptr<google::protobuf::Message> type_expression::_generate_interface() const
     {
-        auto ret = std::make_unique<proto::type_expression>();
-
-        return ret;
+        return _type->generate_interface();
     }
 }
 }

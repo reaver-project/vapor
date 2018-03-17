@@ -94,6 +94,8 @@ inline namespace _v1
 
     void expression::generate_interface(proto::entity & entity) const
     {
+        entity.set_allocated_type(_type->generate_interface().release());
+
         auto value = std::make_unique<google::protobuf::Any>();
         value->PackFrom(*_generate_interface());
         entity.set_allocated_value(value.release());

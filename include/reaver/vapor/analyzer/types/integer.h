@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -76,6 +76,11 @@ inline namespace _v1
         virtual void print(std::ostream & os, print_context ctx) const override
         {
             os << styles::def << ctx << styles::type << "integer" << styles::def << " @ " << styles::address << this << styles::def << ": builtin type\n";
+        }
+
+        virtual std::unique_ptr<proto::type> generate_interface() const override
+        {
+            assert(0);
         }
 
     private:
