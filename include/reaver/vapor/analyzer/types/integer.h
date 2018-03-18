@@ -28,6 +28,8 @@
 #include "../function.h"
 #include "type.h"
 
+#include "type.pb.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -80,7 +82,9 @@ inline namespace _v1
 
         virtual std::unique_ptr<proto::type> generate_interface() const override
         {
-            assert(0);
+            auto ret = std::make_unique<proto::type>();
+            ret->set_builtin(proto::type_simple_builtin_integer);
+            return ret;
         }
 
     private:

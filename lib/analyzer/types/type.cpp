@@ -30,6 +30,8 @@
 #include "vapor/analyzer/types/pack.h"
 #include "vapor/analyzer/types/unconstrained.h"
 
+#include "type.pb.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -49,6 +51,21 @@ inline namespace _v1
     expression * type::get_expression() const
     {
         return _self_expression->_get_replacement();
+    }
+
+    std::unique_ptr<proto::type> type::_pack(google::protobuf::Message * message) const
+    {
+        auto ret = std::make_unique<proto::type>();
+
+        auto complicated = std::make_unique<proto::complicated_type>();
+        complicated->set_name(utf8(_name));
+
+        auto value = std::make_unique<google::protobuf::Any>();
+        value->PackFrom(*message);
+        complicated->set_allocated_value(value.release());
+
+        ret->set_allocated_complicated(complicated.release());
+        return ret;
     }
 
     class type_type : public type
@@ -118,7 +135,9 @@ inline namespace _v1
 
         virtual std::unique_ptr<proto::type> generate_interface() const override
         {
-            assert(0);
+            auto ret = std::make_unique<proto::type>();
+            ret->set_builtin(proto::type_simple_builtin_type_);
+            return ret;
         }
 
     private:

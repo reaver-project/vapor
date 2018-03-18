@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -28,6 +28,9 @@
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/overload_set.h"
 #include "vapor/codegen/ir/type.h"
+
+#include "type.pb.h"
+#include "types/overload_set.pb.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -100,6 +103,12 @@ inline namespace _v1
         {
             function->print(os, ctx.make_branch(++idx == _functions.size()));
         }
+    }
+
+    std::unique_ptr<proto::type> overload_set_type::generate_interface() const
+    {
+        auto t = std::make_unique<proto::overload_set_type>();
+        return _pack(t.get());
     }
 }
 }

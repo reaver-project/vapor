@@ -90,10 +90,7 @@ inline namespace _v1
             return (*it)->get_type();
         }
 
-        virtual std::unique_ptr<proto::type> generate_interface() const override
-        {
-            assert(0);
-        }
+        virtual std::unique_ptr<proto::type> generate_interface() const override;
 
     private:
         virtual void _codegen_type(ir_generation_context &) const override;
@@ -113,16 +110,9 @@ inline namespace _v1
         std::unique_ptr<expression> _this_argument;
         std::vector<std::unique_ptr<expression>> _member_copy_arguments;
 
-        mutable std::optional<std::u32string> _codegen_type_name_value;
-
         virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
         {
-            if (!_codegen_type_name_value)
-            {
-                _codegen_type_name_value = U"struct_" + utf32(std::to_string(ctx.struct_index++));
-            }
-
-            return *_codegen_type_name_value;
+            return get_name();
         }
     };
 }

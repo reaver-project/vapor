@@ -97,7 +97,7 @@ inline namespace _v1
         entity.set_allocated_type(_type->generate_interface().release());
 
         auto value = std::make_unique<google::protobuf::Any>();
-        value->PackFrom(*_generate_interface());
+        value->PackFrom(*_get_replacement()->_generate_interface());
         entity.set_allocated_value(value.release());
     }
 }

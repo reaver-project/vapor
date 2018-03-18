@@ -31,6 +31,9 @@
 
 #include "vapor/analyzer/expressions/integer.h"
 
+#include "type.pb.h"
+#include "types/struct.pb.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -102,7 +105,7 @@ inline namespace _v1
                 auto result = codegen::ir::make_variable(ir_type);
 
                 auto scopes = this->get_scope()->codegen_ir(ctx);
-                scopes.emplace_back(_codegen_type_name_value.value(), codegen::ir::scope_type::type);
+                scopes.emplace_back(get_name(), codegen::ir::scope_type::type);
 
                 return { U"constructor",
                     std::move(scopes),
@@ -164,7 +167,7 @@ inline namespace _v1
                 auto result = codegen::ir::make_variable(ir_type);
 
                 auto scopes = this->get_scope()->codegen_ir(ctx);
-                scopes.emplace_back(_codegen_type_name_value.value(), codegen::ir::scope_type::type);
+                scopes.emplace_back(get_name(), codegen::ir::scope_type::type);
 
                 return { U"replacing_copy_constructor",
                     std::move(scopes),
@@ -225,9 +228,7 @@ inline namespace _v1
     {
         auto actual_type = *_codegen_t;
 
-        // TODO: actual name tracking for this shit
-        _codegen_type_name_value = U"struct_" + utf32(std::to_string(ctx.struct_index++));
-        auto type = codegen::ir::variable_type{ _codegen_type_name_value.value(), get_scope()->codegen_ir(ctx), 0, {} };
+        auto type = codegen::ir::variable_type{ get_name(), get_scope()->codegen_ir(ctx), 0, {} };
 
         auto members = fmap(_data_members, [&](auto && member) { return codegen::ir::member{ member->member_codegen_ir(ctx) }; });
 
@@ -254,6 +255,12 @@ inline namespace _v1
         os << styles::def << ctx << styles::type << "struct type";
         print_address_range(os, this);
         os << '\n';
+    }
+
+    std::unique_ptr<proto::type> struct_type::generate_interface() const
+    {
+        auto t = std::make_unique<proto::struct_type>();
+        return _pack(t.get());
     }
 }
 }

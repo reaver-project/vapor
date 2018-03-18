@@ -26,6 +26,8 @@
 
 #include <reaver/variant.h>
 
+#include <google/protobuf/message.h>
+
 #include "../../codegen/ir/type.h"
 #include "../../lexer/token.h"
 #include "../../print_helpers.h"
@@ -45,7 +47,7 @@ inline namespace _v1
 
 namespace reaver::vapor::proto
 {
-    struct type;
+struct type;
 }
 
 namespace reaver::vapor::analyzer
@@ -192,6 +194,9 @@ inline namespace _v1
         }
 
         virtual std::unique_ptr<proto::type> generate_interface() const = 0;
+
+    protected:
+        std::unique_ptr<proto::type> _pack(google::protobuf::Message *) const;
 
     private:
         virtual void _codegen_type(ir_generation_context &) const = 0;

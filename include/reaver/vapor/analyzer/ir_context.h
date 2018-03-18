@@ -45,7 +45,6 @@ inline namespace _v1
         bool top_level_generation = true;
         std::size_t closure_index = 0;
         std::size_t label_index = 0;
-        std::size_t struct_index = 0;
 
         void push_base_expression(const expression * expr)
         {

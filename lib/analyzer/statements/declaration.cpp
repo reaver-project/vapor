@@ -93,6 +93,11 @@ inline namespace _v1
         {
             assert(0);
         }
+
+        fmap(_init_expr, [&](auto && expr) {
+            expr->set_name(_name);
+            return unit{};
+        });
     }
 
     void declaration::print(std::ostream & os, print_context ctx) const

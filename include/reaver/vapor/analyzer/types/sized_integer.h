@@ -104,10 +104,7 @@ inline namespace _v1
             return _size;
         }
 
-        virtual std::unique_ptr<proto::type> generate_interface() const override
-        {
-            assert(0);
-        }
+        virtual std::unique_ptr<proto::type> generate_interface() const override;
 
     private:
         virtual void _codegen_type(ir_generation_context & ctx) const override;
