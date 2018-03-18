@@ -148,6 +148,13 @@ inline namespace _v1
 
     entity * import_module(precontext & ctx, const std::vector<std::string> & module_name)
     {
+        auto name = boost::algorithm::join(module_name, ".");
+        auto it = ctx.loaded_modules.find(name);
+        if (it != ctx.loaded_modules.end())
+        {
+            return it->second.get();
+        }
+
         if (auto found_module = find_module(ctx, module_name))
         {
             if (found_module->extension() == ".vprm")
