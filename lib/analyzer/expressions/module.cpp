@@ -24,7 +24,7 @@
 #include <reaver/prelude/monad.h>
 #include <reaver/traits.h>
 
-#include "vapor/analyzer/module.h"
+#include "vapor/analyzer/expressions/module.h"
 #include "vapor/parser.h"
 #include "vapor/parser/module.h"
 
@@ -85,13 +85,13 @@ inline namespace _v1
         });
     }
 
-    future<statement *> module::_simplify(recursive_context ctx)
+    future<expression *> module::_simplify_expr(recursive_context ctx)
     {
         return when_all(fmap(_statements,
                             [&](auto && stmt) {
                                 return stmt->simplify(ctx).then([&ctx = ctx.proper, &stmt](auto && simplified) { replace_uptr(stmt, simplified, ctx); });
                             }))
-            .then([this]() -> statement * { return this; });
+            .then([this]() -> expression * { return this; });
     }
 
     void module::print(std::ostream & os, print_context ctx) const

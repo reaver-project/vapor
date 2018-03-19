@@ -28,16 +28,16 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "../codegen/ir/module.h"
-#include "../range.h"
-#include "expressions/import.h"
-#include "function.h"
-#include "helpers.h"
-#include "ir_context.h"
-#include "scope.h"
-#include "statements/declaration.h"
-#include "statements/statement.h"
-#include "symbol.h"
+#include "../../codegen/ir/module.h"
+#include "../../range.h"
+#include "../function.h"
+#include "../helpers.h"
+#include "../ir_context.h"
+#include "../scope.h"
+#include "../statements/declaration.h"
+#include "../statements/statement.h"
+#include "../symbol.h"
+#include "import.h"
 
 namespace reaver::vapor::proto
 {
@@ -48,7 +48,7 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class module : public statement
+    class module : public expression
     {
     public:
         module(ast_node parse, std::vector<std::u32string> name, std::unique_ptr<scope> lex_scope, std::vector<std::unique_ptr<statement>> stmts);
@@ -77,12 +77,12 @@ inline namespace _v1
     private:
         virtual future<> _analyze(analysis_context &) override;
 
-        virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
         {
             assert(0);
         }
 
-        virtual future<statement *> _simplify(recursive_context) override;
+        virtual future<expression *> _simplify_expr(recursive_context) override;
 
         virtual statement_ir _codegen_ir(ir_generation_context &) const override
         {

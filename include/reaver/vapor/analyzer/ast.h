@@ -28,8 +28,8 @@
 #include "../parser/ast.h"
 #include "../parser/module.h"
 #include "expressions/import.h"
+#include "expressions/module.h"
 #include "helpers.h"
-#include "module.h"
 #include "precontex.h"
 
 namespace reaver::vapor::analyzer
