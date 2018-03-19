@@ -28,6 +28,7 @@
 #include "vapor/analyzer/expressions/import.h"
 #include "vapor/analyzer/precontex.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/types/module.h"
 #include "vapor/parser/import_expression.h"
 #include "vapor/sha.h"
 
@@ -146,13 +147,19 @@ inline namespace _v1
 
         for (auto && module : ast.modules())
         {
+            break;
+
             auto name = boost::algorithm::join(module.name(), ".");
 
-            auto ent = make_entity(make_module_type(name));
+            auto type = make_module_type(name);
+
+            for (auto entity : module.symbols())
+            {
+            }
 
             auto & saved = ctx.loaded_modules[name];
             assert(!saved);
-            saved = std::move(ent);
+            saved = make_entity(std::move(type));
         }
 
         throw exception{ logger::error } << "not fully implemented yet: loading a compiled dependency";

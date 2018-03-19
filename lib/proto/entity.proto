@@ -24,12 +24,15 @@ syntax = "proto3";
 
 package reaver.vapor.proto;
 
-import "google/protobuf/any.proto";
-
 import "type.proto";
+import "expressions/overload_set.proto";
 
 message entity
 {
     type type = 1;
-    google.protobuf.Any value = 2;
+
+    oneof value {
+        type type_value = 16;
+        overload_set overload_set = 17;
+    }
 }

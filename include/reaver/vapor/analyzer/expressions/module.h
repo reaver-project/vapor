@@ -37,6 +37,7 @@
 #include "../statements/declaration.h"
 #include "../statements/statement.h"
 #include "../symbol.h"
+#include "../types/module.h"
 #include "import.h"
 
 namespace reaver::vapor::proto

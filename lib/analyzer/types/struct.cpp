@@ -260,7 +260,7 @@ inline namespace _v1
     std::unique_ptr<proto::type> struct_type::generate_interface() const
     {
         auto t = std::make_unique<proto::struct_type>();
-        return _pack(t.get());
+        return _pack(t.release());
     }
 }
 }

@@ -70,11 +70,7 @@ inline namespace _v1
 
     std::unique_ptr<google::protobuf::Message> overload_set::_generate_interface() const
     {
-        auto ret = std::make_unique<proto::overload_set>();
-
-        ret->set_name(utf8(_type->get_name()));
-
-        return ret;
+        return std::make_unique<proto::overload_set>();
     }
 }
 }

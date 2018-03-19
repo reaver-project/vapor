@@ -108,7 +108,7 @@ inline namespace _v1
     std::unique_ptr<proto::type> overload_set_type::generate_interface() const
     {
         auto t = std::make_unique<proto::overload_set_type>();
-        return _pack(t.get());
+        return _pack(t.release());
     }
 }
 }

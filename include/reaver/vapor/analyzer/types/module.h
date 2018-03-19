@@ -22,24 +22,54 @@
 
 #pragma once
 
-#include "expression.h"
+#include <memory>
+#include <string>
+
+#include "type.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class entity : public expression
+    class module_type : public type
     {
+    public:
+        module_type(std::string name) : _name{ std::move(name) }
+        {
+        }
+
+        virtual std::string explain() const override
+        {
+            return "module type for module `" + _name + "`";
+        }
+
+        virtual void print(std::ostream & os, print_context ctx) const override
+        {
+            assert(0);
+        }
+
+        virtual std::unique_ptr<proto::type> generate_interface() const override
+        {
+            assert(0);
+        }
+
+    private:
+        virtual void _codegen_type(ir_generation_context &) const override
+        {
+            assert(0);
+        }
+
+        virtual std::u32string _codegen_name(ir_generation_context &) const override
+        {
+            assert(0);
+        }
+
+        std::string _name;
     };
 
-    inline std::unique_ptr<entity> make_entity(type *)
+    inline std::unique_ptr<module_type> make_module_type(std::string name)
     {
-        assert(0);
-    }
-
-    inline std::unique_ptr<entity> make_entity(std::unique_ptr<type>)
-    {
-        assert(0);
+        return std::make_unique<module_type>(name);
     }
 }
 }

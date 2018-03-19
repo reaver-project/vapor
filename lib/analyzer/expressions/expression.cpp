@@ -96,9 +96,26 @@ inline namespace _v1
     {
         entity.set_allocated_type(_type->generate_interface().release());
 
-        auto value = std::make_unique<google::protobuf::Any>();
-        value->PackFrom(*_get_replacement()->_generate_interface());
-        entity.set_allocated_value(value.release());
+        auto message = _get_replacement()->_generate_interface();
+
+        auto dynamic_switch = [&](auto &&... pairs) {
+            ((dynamic_cast<typename decltype(pairs.first)::type *>(message.get())
+                 && pairs.second(dynamic_cast<typename decltype(pairs.first)::type *>(message.release())))
+                    || ... || [&]() -> bool {
+                auto m = message.get();
+                throw exception{ logger::crash } << "unhandled serialized expression type: `" << typeid(*m).name() << "`";
+            }());
+        };
+
+#define HANDLE_TYPE(type, field_name)                                                                                                                          \
+    std::make_pair(id<proto::type>(), [&](auto ptr) {                                                                                                          \
+        entity.set_allocated_##field_name(ptr);                                                                                                                \
+        return true;                                                                                                                                           \
+    })
+
+        dynamic_switch(HANDLE_TYPE(type, type_value), HANDLE_TYPE(overload_set, overload_set));
+
+#undef HANDLE_TYPE
     }
 }
 }

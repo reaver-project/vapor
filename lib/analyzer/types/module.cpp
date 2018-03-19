@@ -20,40 +20,12 @@
  *
  **/
 
-syntax = "proto3";
+#include "vapor/analyzer/types/module.h"
+#include "vapor/analyzer/symbol.h"
 
-package reaver.vapor.proto;
-
-import "types/struct.proto";
-import "types/overload_set.proto";
-
-message sized_integer
+namespace reaver::vapor::analyzer
 {
-    int64 size = 1;
+inline namespace _v1
+{
 }
-
-message complicated_type
-{
-    string name = 1;
-
-    oneof details {
-        struct_type struct = 16;
-        overload_set_type overload_set = 17;
-    }
-}
-
-message type
-{
-    enum simple_builtin {
-        type_ = 0;
-        integer = 64;
-        boolean = 65;
-    }
-
-    oneof details {
-        simple_builtin builtin = 1;
-        sized_integer sized_int = 2;
-
-        complicated_type complicated = 65;
-    }
 }

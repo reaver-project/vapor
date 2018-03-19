@@ -21,6 +21,9 @@
  **/
 
 #include "vapor/analyzer/types/type.h"
+
+#include <reaver/id.h>
+
 #include "vapor/analyzer/expressions/call.h"
 #include "vapor/analyzer/expressions/runtime_value.h"
 #include "vapor/analyzer/expressions/type.h"
@@ -60,9 +63,20 @@ inline namespace _v1
         auto complicated = std::make_unique<proto::complicated_type>();
         complicated->set_name(utf8(_name));
 
-        auto value = std::make_unique<google::protobuf::Any>();
-        value->PackFrom(*message);
-        complicated->set_allocated_value(value.release());
+        auto dynamic_switch = [&](auto &&... pairs) {
+            ((dynamic_cast<typename decltype(pairs.first)::type *>(message) && pairs.second(dynamic_cast<typename decltype(pairs.first)::type *>(message)))
+                    || ... || [&]() -> bool { throw exception{ logger::crash } << "unhandled serialized type type: `" << typeid(*message).name() << "`"; }());
+        };
+
+#define HANDLE_TYPE(type, field_name)                                                                                                                          \
+    std::make_pair(id<proto::type>(), [&](auto ptr) {                                                                                                          \
+        complicated->set_allocated_##field_name(ptr);                                                                                                          \
+        return true;                                                                                                                                           \
+    })
+
+        dynamic_switch(HANDLE_TYPE(overload_set_type, overload_set), HANDLE_TYPE(struct_type, struct_));
+
+#undef HANDLE_TYPE
 
         ret->set_allocated_complicated(complicated.release());
         return ret;

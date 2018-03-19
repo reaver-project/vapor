@@ -26,5 +26,4 @@ package reaver.vapor.proto;
 
 message overload_set
 {
-    string name = 1;
 }

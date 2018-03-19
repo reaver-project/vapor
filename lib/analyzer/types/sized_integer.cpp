@@ -39,7 +39,10 @@ inline namespace _v1
     {
         auto sized = std::make_unique<proto::sized_integer>();
         sized->set_size(_size);
-        return _pack(sized.get());
+
+        auto type = std::make_unique<proto::type>();
+        type->set_allocated_sized_int(sized.release());
+        return type;
     }
 
     void sized_integer::_codegen_type(ir_generation_context &) const
