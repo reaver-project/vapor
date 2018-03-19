@@ -31,5 +31,19 @@ inline namespace _v1
     class entity : public expression
     {
     };
+
+    inline std::unique_ptr<entity> make_entity(type *)
+    {
+        assert(0);
+    }
+    inline std::unique_ptr<entity> make_entity(std::unique_ptr<type>)
+    {
+        assert(0);
+    }
+
+    inline std::unique_ptr<type> make_module_type(std::string name)
+    {
+        assert(0);
+    }
 }
 }

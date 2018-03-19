@@ -105,7 +105,7 @@ inline namespace _v1
 
     entity * import_module(precontext & ctx, const std::vector<std::string> & module_name);
 
-    entity * import_from_ast(precontext & ctx, const boost::filesystem::path & path, const std::vector<std::string> & module_name)
+    void import_from_ast(precontext & ctx, const boost::filesystem::path & path, const std::vector<std::string> & module_name)
     {
         std::ifstream interface_file{ path.string() };
         if (!interface_file)
@@ -133,7 +133,8 @@ inline namespace _v1
                 if (sha256sum != ast.compilation_info().source_hash())
                 {
                     compile_file(ctx, source_path.value());
-                    return import_module(ctx, module_name);
+                    import_module(ctx, module_name);
+                    return;
                 }
             }
         }
@@ -143,23 +144,46 @@ inline namespace _v1
             throw exception{ logger::error } << "not implemented yet: loading a module with imports";
         }
 
+        for (auto && module : ast.modules())
+        {
+            auto name = boost::algorithm::join(module.name(), ".");
+
+            auto ent = make_entity(make_module_type(name));
+
+            auto & saved = ctx.loaded_modules[name];
+            assert(!saved);
+            saved = std::move(ent);
+        }
+
         throw exception{ logger::error } << "not fully implemented yet: loading a compiled dependency";
     }
 
     entity * import_module(precontext & ctx, const std::vector<std::string> & module_name)
     {
-        auto name = boost::algorithm::join(module_name, ".");
-        auto it = ctx.loaded_modules.find(name);
-        if (it != ctx.loaded_modules.end())
+        auto return_cached = [&]() -> entity * {
+            auto name = boost::algorithm::join(module_name, ".");
+            auto it = ctx.loaded_modules.find(name);
+            if (it != ctx.loaded_modules.end())
+            {
+                return it->second.get();
+            }
+
+            return nullptr;
+        };
+
+        if (auto cached = return_cached())
         {
-            return it->second.get();
+            return cached;
         }
 
         if (auto found_module = find_module(ctx, module_name))
         {
             if (found_module->extension() == ".vprm")
             {
-                return import_from_ast(ctx, found_module.value(), module_name);
+                import_from_ast(ctx, found_module.value(), module_name);
+                auto cached = return_cached();
+                assert(cached);
+                return cached;
             }
 
             if (found_module->extension() == ".vpr")
