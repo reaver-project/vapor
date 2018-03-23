@@ -48,6 +48,7 @@ inline namespace _v1
 namespace reaver::vapor::proto
 {
 struct type;
+struct type_reference;
 }
 
 namespace reaver::vapor::analyzer
@@ -178,7 +179,7 @@ inline namespace _v1
 
         std::vector<codegen::ir::scope> codegen_scopes(ir_generation_context & ctx) const
         {
-            auto base_scopes = _member_scope->codegen_ir(ctx);
+            auto base_scopes = _member_scope->codegen_ir();
             base_scopes.push_back(codegen::ir::scope{ _codegen_name(ctx), codegen::ir::scope_type::type });
             return base_scopes;
         }
@@ -194,9 +195,7 @@ inline namespace _v1
         }
 
         virtual std::unique_ptr<proto::type> generate_interface() const = 0;
-
-    protected:
-        std::unique_ptr<proto::type> _pack(google::protobuf::Message *) const;
+        virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const = 0;
 
     private:
         virtual void _codegen_type(ir_generation_context &) const = 0;
@@ -215,6 +214,18 @@ inline namespace _v1
         mutable std::optional<std::shared_ptr<codegen::ir::variable_type>> _codegen_t;
 
         std::u32string _name;
+    };
+
+    class user_defined_type : public type
+    {
+    public:
+        using type::type;
+
+        virtual std::unique_ptr<proto::type> generate_interface() const final;
+        virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const final;
+
+    private:
+        virtual std::unique_ptr<google::protobuf::Message> _user_defined_interface() const = 0;
     };
 
     std::unique_ptr<type> make_type_type();
@@ -252,5 +263,9 @@ inline namespace _v1
 
         return builtins;
     }
+
+    struct precontext;
+
+    type * get_imported_type(precontext &, const proto::type_reference &);
 }
 }

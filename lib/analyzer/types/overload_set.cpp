@@ -29,7 +29,6 @@
 #include "vapor/analyzer/types/overload_set.h"
 #include "vapor/codegen/ir/type.h"
 
-#include "type.pb.h"
 #include "types/overload_set.pb.h"
 
 namespace reaver::vapor::analyzer
@@ -69,9 +68,9 @@ inline namespace _v1
             ctx.add_generated_function(fn);
             return codegen::ir::member{ fn->codegen_ir(ctx) };
         });
-        auto type = codegen::ir::variable_type{ _codegen_name(ctx), get_scope()->codegen_ir(ctx), 0, std::move(members) };
+        auto type = codegen::ir::variable_type{ _codegen_name(ctx), get_scope()->codegen_ir(), 0, std::move(members) };
 
-        auto scopes = get_scope()->codegen_ir(ctx);
+        auto scopes = get_scope()->codegen_ir();
         scopes.emplace_back(type.name, codegen::ir::scope_type::type);
 
         fmap(type.members, [&](auto && member) {
@@ -105,10 +104,10 @@ inline namespace _v1
         }
     }
 
-    std::unique_ptr<proto::type> overload_set_type::generate_interface() const
+    std::unique_ptr<google::protobuf::Message> overload_set_type::_user_defined_interface() const
     {
         auto t = std::make_unique<proto::overload_set_type>();
-        return _pack(t.release());
+        return t;
     }
 }
 }

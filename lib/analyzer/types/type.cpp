@@ -28,12 +28,15 @@
 #include "vapor/analyzer/expressions/runtime_value.h"
 #include "vapor/analyzer/expressions/type.h"
 #include "vapor/analyzer/function.h"
+#include "vapor/analyzer/precontex.h"
 #include "vapor/analyzer/semantic/overloads.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/pack.h"
+#include "vapor/analyzer/types/sized_integer.h"
 #include "vapor/analyzer/types/unconstrained.h"
 
-#include "type.pb.h"
+#include "expressions/type.pb.h"
+#include "type_reference.pb.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -54,32 +57,6 @@ inline namespace _v1
     expression * type::get_expression() const
     {
         return _self_expression->_get_replacement();
-    }
-
-    std::unique_ptr<proto::type> type::_pack(google::protobuf::Message * message) const
-    {
-        auto ret = std::make_unique<proto::type>();
-
-        auto complicated = std::make_unique<proto::complicated_type>();
-        complicated->set_name(utf8(_name));
-
-        auto dynamic_switch = [&](auto &&... pairs) {
-            ((dynamic_cast<typename decltype(pairs.first)::type *>(message) && pairs.second(dynamic_cast<typename decltype(pairs.first)::type *>(message)))
-                    || ... || [&]() -> bool { throw exception{ logger::crash } << "unhandled serialized type type: `" << typeid(*message).name() << "`"; }());
-        };
-
-#define HANDLE_TYPE(type, field_name)                                                                                                                          \
-    std::make_pair(id<proto::type>(), [&](auto ptr) {                                                                                                          \
-        complicated->set_allocated_##field_name(ptr);                                                                                                          \
-        return true;                                                                                                                                           \
-    })
-
-        dynamic_switch(HANDLE_TYPE(overload_set_type, overload_set), HANDLE_TYPE(struct_type, struct_));
-
-#undef HANDLE_TYPE
-
-        ret->set_allocated_complicated(complicated.release());
-        return ret;
     }
 
     class type_type : public type
@@ -150,7 +127,14 @@ inline namespace _v1
         virtual std::unique_ptr<proto::type> generate_interface() const override
         {
             auto ret = std::make_unique<proto::type>();
-            ret->set_builtin(proto::type_simple_builtin_type_);
+            ret->set_builtin(proto::type_);
+            return ret;
+        }
+
+        virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const override
+        {
+            auto ret = std::make_unique<proto::type_reference>();
+            ret->set_builtin(proto::type_);
             return ret;
         }
 
@@ -174,6 +158,102 @@ inline namespace _v1
     std::unique_ptr<type> make_type_type()
     {
         return std::make_unique<type_type>();
+    }
+
+    std::unique_ptr<proto::type> user_defined_type::generate_interface() const
+    {
+        auto ret = std::make_unique<proto::type>();
+        auto user_defined = std::make_unique<proto::user_defined_type>();
+
+        auto message = _user_defined_interface();
+
+        auto dynamic_switch = [&](auto &&... pairs) {
+            ((dynamic_cast<typename decltype(pairs.first)::type *>(message.get())
+                 && pairs.second(static_cast<typename decltype(pairs.first)::type *>(message.release())))
+                    || ... || [&]() -> bool {
+                auto m = message.get();
+                throw exception{ logger::crash } << "unhandled serialized type type: `" << typeid(*m).name() << "`";
+            }());
+        };
+
+#define HANDLE_TYPE(type, field_name)                                                                                                                          \
+    std::make_pair(id<proto::type>(), [&](auto ptr) {                                                                                                          \
+        user_defined->set_allocated_##field_name(ptr);                                                                                                         \
+        return true;                                                                                                                                           \
+    })
+
+        dynamic_switch(HANDLE_TYPE(overload_set_type, overload_set), HANDLE_TYPE(struct_type, struct_));
+
+#undef HANDLE_TYPE
+
+        ret->set_allocated_user_defined(user_defined.release());
+        return ret;
+    }
+
+    std::unique_ptr<proto::type_reference> user_defined_type::generate_interface_reference() const
+    {
+        auto user_defined = std::make_unique<proto::user_defined_reference>();
+
+        for (auto scope : get_scope()->codegen_ir())
+        {
+            switch (scope.type)
+            {
+                case codegen::ir::scope_type::module:
+                    *user_defined->add_module() = utf8(scope.name);
+                    break;
+
+                case codegen::ir::scope_type::type:
+                    *user_defined->add_scope() = utf8(scope.name);
+                    break;
+
+                default:
+                    assert(0);
+            }
+        }
+
+        user_defined->set_name(utf8(get_name()));
+
+        auto ret = std::make_unique<proto::type_reference>();
+        ret->set_allocated_user_defined(user_defined.release());
+
+        return ret;
+    }
+
+    type * get_imported_type(precontext & ctx, const proto::type_reference & type)
+    {
+        switch (type.details_case())
+        {
+            case proto::type_reference::DetailsCase::kBuiltin:
+                switch (type.builtin())
+                {
+                    case proto::type_:
+                        return builtin_types().type.get();
+                    case proto::integer:
+                        return builtin_types().integer.get();
+                    case proto::boolean:
+                        return builtin_types().boolean.get();
+
+                    default:
+                        assert(0);
+                }
+
+            case proto::type_reference::DetailsCase::kSizedInt:
+            {
+                auto size = type.sized_int().size();
+                auto & type = ctx.proper.sized_integers[size];
+                if (!type)
+                {
+                    type = make_sized_integer_type(size);
+                }
+                return type.get();
+            }
+
+            case proto::type_reference::kUserDefined:
+                assert(0);
+
+            default:
+                assert(0);
+        }
     }
 }
 }

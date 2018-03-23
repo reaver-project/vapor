@@ -36,7 +36,8 @@ MAYFLY_BEGIN_SUITE("struct value");
 
 MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
     config::compiler_options opts{ std::make_unique<config::language_options>() };
-    precontext pctx{ opts };
+    analysis_context ctx;
+    precontext pctx{ opts, ctx };
 
     scope s;
     auto current_scope = &s;
@@ -58,7 +59,6 @@ MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
     std::unique_ptr<statement> declaration = preanalyze_declaration(pctx, expression_ast, current_scope);
     current_scope->close();
 
-    analysis_context ctx;
     reaver::get(struct_decl->analyze(ctx));
     reaver::get(declaration->analyze(ctx));
 

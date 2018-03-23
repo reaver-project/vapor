@@ -20,21 +20,25 @@
  *
  **/
 
-#pragma once
+syntax = "proto3";
 
-#include "../config/compiler_options.h"
-#include "expressions/entity.h"
-#include "semantic/context.h"
+package reaver.vapor.proto;
 
-namespace reaver::vapor::analyzer
+import "type_parts.proto";
+
+message user_defined_reference
 {
-inline namespace _v1
-{
-    struct precontext
-    {
-        const config::compiler_options & options;
-        analysis_context & proper;
-        std::unordered_map<std::string, std::unique_ptr<entity>> loaded_modules = {};
-    };
+    repeated string module = 1;
+    repeated string scope = 2;
+    string name = 3;
 }
+
+message type_reference
+{
+    oneof details {
+        simple_builtin builtin = 1;
+        sized_integer sized_int = 2;
+
+        user_defined_reference user_defined = 65;
+    }
 }

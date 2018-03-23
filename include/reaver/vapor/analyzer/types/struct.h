@@ -33,7 +33,7 @@ inline namespace _v1
 {
     class declaration;
 
-    class struct_type : public type, public std::enable_shared_from_this<struct_type>
+    class struct_type : public user_defined_type, public std::enable_shared_from_this<struct_type>
     {
     public:
         struct_type(ast_node parse, std::unique_ptr<scope> member_scope, std::vector<std::unique_ptr<declaration>> member_decls);
@@ -90,9 +90,8 @@ inline namespace _v1
             return (*it)->get_type();
         }
 
-        virtual std::unique_ptr<proto::type> generate_interface() const override;
-
     private:
+        virtual std::unique_ptr<google::protobuf::Message> _user_defined_interface() const override;
         virtual void _codegen_type(ir_generation_context &) const override;
 
         ast_node _parse;

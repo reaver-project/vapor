@@ -76,7 +76,7 @@ inline namespace _v1
         std::shared_ptr<overload_set> keep_count;
         auto symbol = _scope->parent()->get_or_init(_name, [&] {
             keep_count = std::make_shared<overload_set>(_scope.get());
-            keep_count->set_name(_name);
+            keep_count->set_name(U"overload_set_type$" + _name);
             return make_symbol(_name, keep_count.get());
         });
 

@@ -24,12 +24,13 @@ syntax = "proto3";
 
 package reaver.vapor.proto;
 
-import "type.proto";
+import "type_reference.proto";
+import "expressions/type.proto";
 import "expressions/overload_set.proto";
 
 message entity
 {
-    type type = 1;
+    type_reference type = 1;
 
     oneof value {
         type type_value = 16;

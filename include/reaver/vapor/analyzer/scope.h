@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -182,12 +182,12 @@ inline namespace _v1
             _scope_type = type;
         }
 
-        std::vector<codegen::ir::scope> codegen_ir(ir_generation_context & ctx) const
+        std::vector<codegen::ir::scope> codegen_ir() const
         {
             std::vector<codegen::ir::scope> scopes;
             if (_parent)
             {
-                scopes = _parent->codegen_ir(ctx);
+                scopes = _parent->codegen_ir();
             }
 
             if (!_name.empty())

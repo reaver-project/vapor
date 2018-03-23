@@ -36,7 +36,8 @@ MAYFLY_BEGIN_SUITE("struct");
 
 MAYFLY_ADD_TESTCASE("empty struct", [] {
     config::compiler_options opts{ std::make_unique<config::language_options>() };
-    precontext pctx{ opts };
+    analysis_context ctx;
+    precontext pctx{ opts, ctx };
 
     scope s;
     auto current_scope = &s;
@@ -45,7 +46,6 @@ MAYFLY_ADD_TESTCASE("empty struct", [] {
 
     auto struct_lit = preanalyze_struct_literal(pctx, ast, current_scope);
 
-    analysis_context ctx;
     reaver::get(struct_lit->analyze(ctx));
 
     auto type_var = struct_lit->as<type_expression>();
@@ -63,7 +63,8 @@ MAYFLY_ADD_TESTCASE("empty struct", [] {
 
 MAYFLY_ADD_TESTCASE("struct with members", [] {
     config::compiler_options opts{ std::make_unique<config::language_options>() };
-    precontext pctx{ opts };
+    analysis_context ctx;
+    precontext pctx{ opts, ctx };
 
     scope s;
     auto current_scope = &s;
@@ -80,7 +81,6 @@ MAYFLY_ADD_TESTCASE("struct with members", [] {
 
     auto struct_lit = preanalyze_struct_literal(pctx, ast, current_scope);
 
-    analysis_context ctx;
     reaver::get(struct_lit->analyze(ctx));
 
     auto type_var = struct_lit->as<type_expression>();

@@ -37,7 +37,8 @@ MAYFLY_BEGIN_SUITE("declaration");
 
 MAYFLY_ADD_TESTCASE("non-member, explicit type, initializer", [] {
     config::compiler_options opts{ std::make_unique<config::language_options>() };
-    precontext pctx{ opts };
+    analysis_context ctx;
+    precontext pctx{ opts, ctx };
 
     {
         scope s1;
@@ -90,7 +91,8 @@ MAYFLY_ADD_TESTCASE("non-member, explicit type, initializer", [] {
 
 MAYFLY_ADD_TESTCASE("non-member, deduced type, initializer", [] {
     config::compiler_options opts{ std::make_unique<config::language_options>() };
-    precontext pctx{ opts };
+    analysis_context ctx;
+    precontext pctx{ opts, ctx };
 
     {
         scope s1;
@@ -114,7 +116,8 @@ MAYFLY_ADD_TESTCASE("non-member, deduced type, initializer", [] {
 
 MAYFLY_ADD_TESTCASE("member, deduced type, initializer", [] {
     config::compiler_options opts{ std::make_unique<config::language_options>() };
-    precontext pctx{ opts };
+    analysis_context ctx;
+    precontext pctx{ opts, ctx };
 
     {
         scope s1;
@@ -140,7 +143,8 @@ MAYFLY_ADD_TESTCASE("member, deduced type, initializer", [] {
 
 MAYFLY_ADD_TESTCASE("member, explicit type, no initializer", [] {
     config::compiler_options opts{ std::make_unique<config::language_options>() };
-    precontext pctx{ opts };
+    analysis_context ctx;
+    precontext pctx{ opts, ctx };
 
     {
         scope s1;

@@ -47,7 +47,7 @@ inline namespace _v1
     statement_ir overload_set::_codegen_ir(ir_generation_context & ctx) const
     {
         auto var = codegen::ir::make_variable(_type->codegen_type(ctx));
-        var->scopes = _type->get_scope()->codegen_ir(ctx);
+        var->scopes = _type->get_scope()->codegen_ir();
         return { codegen::ir::instruction{
             std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, codegen::ir::value{ std::move(var) } } };
     }

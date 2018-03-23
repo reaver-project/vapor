@@ -43,10 +43,10 @@ inline namespace _v1
     // a function that's in a different scope
     // but that's going to be funny
 
-    class overload_set_type : public type
+    class overload_set_type : public user_defined_type
     {
     public:
-        overload_set_type(scope * lex_scope) : type{ lex_scope }
+        overload_set_type(scope * lex_scope) : user_defined_type{ lex_scope }
         {
         }
 
@@ -61,9 +61,9 @@ inline namespace _v1
 
         virtual future<std::vector<function *>> get_candidates(lexer::token_type bracket) const override;
 
-        virtual std::unique_ptr<proto::type> generate_interface() const override;
-
     private:
+        virtual std::unique_ptr<google::protobuf::Message> _user_defined_interface() const override;
+
         virtual void _codegen_type(ir_generation_context &) const override;
 
         virtual std::u32string _codegen_name(ir_generation_context & ctx) const override

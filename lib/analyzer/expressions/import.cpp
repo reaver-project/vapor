@@ -147,14 +147,13 @@ inline namespace _v1
 
         for (auto && module : ast.modules())
         {
-            break;
-
             auto name = boost::algorithm::join(module.name(), ".");
 
             auto type = make_module_type(name);
 
             for (auto entity : module.symbols())
             {
+                auto type = get_imported_type(ctx, entity.second.type());
             }
 
             auto & saved = ctx.loaded_modules[name];

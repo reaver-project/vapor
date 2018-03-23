@@ -29,7 +29,7 @@
 #include "vapor/codegen/ir/type.h"
 #include "vapor/codegen/ir/variable.h"
 
-#include "type.pb.h"
+#include "type_reference.pb.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -41,6 +41,16 @@ inline namespace _v1
         sized->set_size(_size);
 
         auto type = std::make_unique<proto::type>();
+        type->set_allocated_sized_int(sized.release());
+        return type;
+    }
+
+    std::unique_ptr<proto::type_reference> sized_integer::generate_interface_reference() const
+    {
+        auto sized = std::make_unique<proto::sized_integer>();
+        sized->set_size(_size);
+
+        auto type = std::make_unique<proto::type_reference>();
         type->set_allocated_sized_int(sized.release());
         return type;
     }

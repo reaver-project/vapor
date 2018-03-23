@@ -24,6 +24,16 @@ syntax = "proto3";
 
 package reaver.vapor.proto;
 
+import "type_reference.proto";
+
+message data_field
+{
+    string name = 1;
+    type_reference type = 2;
+}
+
 message struct_type
 {
+    repeated data_field members = 1;
 }
+

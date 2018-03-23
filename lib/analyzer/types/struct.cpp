@@ -31,7 +31,6 @@
 
 #include "vapor/analyzer/expressions/integer.h"
 
-#include "type.pb.h"
 #include "types/struct.pb.h"
 
 namespace reaver::vapor::analyzer
@@ -73,7 +72,7 @@ inline namespace _v1
     struct_type::~struct_type() = default;
 
     struct_type::struct_type(ast_node parse, std::unique_ptr<scope> member_scope, std::vector<std::unique_ptr<declaration>> member_decls)
-        : type{ std::move(member_scope) }, _parse{ parse }, _data_members_declarations{ std::move(member_decls) }
+        : user_defined_type{ std::move(member_scope) }, _parse{ parse }, _data_members_declarations{ std::move(member_decls) }
     {
         auto ctor_pair = make_promise<function *>();
         _aggregate_ctor_future = std::move(ctor_pair.future);
@@ -104,7 +103,7 @@ inline namespace _v1
 
                 auto result = codegen::ir::make_variable(ir_type);
 
-                auto scopes = this->get_scope()->codegen_ir(ctx);
+                auto scopes = this->get_scope()->codegen_ir();
                 scopes.emplace_back(get_name(), codegen::ir::scope_type::type);
 
                 return { U"constructor",
@@ -166,7 +165,7 @@ inline namespace _v1
                 });
                 auto result = codegen::ir::make_variable(ir_type);
 
-                auto scopes = this->get_scope()->codegen_ir(ctx);
+                auto scopes = this->get_scope()->codegen_ir();
                 scopes.emplace_back(get_name(), codegen::ir::scope_type::type);
 
                 return { U"replacing_copy_constructor",
@@ -228,11 +227,11 @@ inline namespace _v1
     {
         auto actual_type = *_codegen_t;
 
-        auto type = codegen::ir::variable_type{ get_name(), get_scope()->codegen_ir(ctx), 0, {} };
+        auto type = codegen::ir::variable_type{ get_name(), get_scope()->codegen_ir(), 0, {} };
 
         auto members = fmap(_data_members, [&](auto && member) { return codegen::ir::member{ member->member_codegen_ir(ctx) }; });
 
-        auto scopes = this->get_scope()->codegen_ir(ctx);
+        auto scopes = this->get_scope()->codegen_ir();
         scopes.emplace_back(type.name, codegen::ir::scope_type::type);
 
         auto add_fn = [&](auto && fn) {
@@ -257,10 +256,10 @@ inline namespace _v1
         os << '\n';
     }
 
-    std::unique_ptr<proto::type> struct_type::generate_interface() const
+    std::unique_ptr<google::protobuf::Message> struct_type::_user_defined_interface() const
     {
         auto t = std::make_unique<proto::struct_type>();
-        return _pack(t.release());
+        return std::move(t);
     }
 }
 }

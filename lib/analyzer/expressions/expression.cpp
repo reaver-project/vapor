@@ -94,7 +94,7 @@ inline namespace _v1
 
     void expression::generate_interface(proto::entity & entity) const
     {
-        entity.set_allocated_type(_type->generate_interface().release());
+        entity.set_allocated_type(_type->generate_interface_reference().release());
 
         auto message = _get_replacement()->_generate_interface();
 

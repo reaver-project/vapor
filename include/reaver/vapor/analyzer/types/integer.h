@@ -28,7 +28,8 @@
 #include "../function.h"
 #include "type.h"
 
-#include "type.pb.h"
+#include "expressions/type.pb.h"
+#include "type_reference.pb.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -83,7 +84,14 @@ inline namespace _v1
         virtual std::unique_ptr<proto::type> generate_interface() const override
         {
             auto ret = std::make_unique<proto::type>();
-            ret->set_builtin(proto::type_simple_builtin_integer);
+            ret->set_builtin(proto::integer);
+            return ret;
+        }
+
+        virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const override
+        {
+            auto ret = std::make_unique<proto::type_reference>();
+            ret->set_builtin(proto::integer);
             return ret;
         }
 

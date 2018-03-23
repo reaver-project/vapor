@@ -60,6 +60,11 @@ inline namespace _v1
             assert(0);
         }
 
+        virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const override
+        {
+            assert(0);
+        }
+
     private:
         virtual void _codegen_type(ir_generation_context &) const override;
 
@@ -67,7 +72,7 @@ inline namespace _v1
         {
             if (!_codegen_type_name)
             {
-                _codegen_type_name = U"closure_" + utf32(std::to_string(ctx.closure_index++)), get_scope()->codegen_ir(ctx);
+                _codegen_type_name = U"closure_" + utf32(std::to_string(ctx.closure_index++)), get_scope()->codegen_ir();
             }
 
             return *_codegen_type_name;

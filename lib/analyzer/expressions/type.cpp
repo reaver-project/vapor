@@ -24,7 +24,7 @@
 #include "vapor/analyzer/symbol.h"
 #include "vapor/parser/expr.h"
 
-#include "type.pb.h"
+#include "expressions/type.pb.h"
 
 namespace reaver::vapor::analyzer
 {

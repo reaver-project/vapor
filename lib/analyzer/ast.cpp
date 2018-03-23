@@ -24,8 +24,8 @@
 
 #include <boost/iostreams/device/mapped_file.hpp>
 
-#include "vapor/sha.h"
 #include "vapor/parser/expr.h"
+#include "vapor/sha.h"
 
 #include "ast.pb.h"
 
@@ -38,7 +38,7 @@ inline namespace _v1
     {
         try
         {
-            precontext ctx{ opts };
+            precontext ctx{ opts, _ctx };
 
             _imports = fmap(
                 _original_ast.global_imports, [this, &ctx](auto && im) { return preanalyze_import(ctx, im, _global_scope.get(), import_mode::statement); });
