@@ -29,7 +29,9 @@ add_custom_target(clean-proto
 )
 
 set_source_files_properties(${proto_sources}
-    PROPERTIES GENERATED TRUE
+    PROPERTIES
+    GENERATED TRUE
+    COMPILE_FLAGS -Wno-error
 )
 
 include_directories("${CMAKE_BINARY_DIR}/proto")
