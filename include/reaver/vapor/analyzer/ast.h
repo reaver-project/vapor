@@ -30,7 +30,7 @@
 #include "expressions/import.h"
 #include "expressions/module.h"
 #include "helpers.h"
-#include "precontex.h"
+#include "precontext.h"
 
 namespace reaver::vapor::analyzer
 {

@@ -53,6 +53,10 @@ inline namespace _v1
 {
     class scope;
 
+    constexpr struct imported_tag_t
+    {
+    } imported_tag;
+
     class expression : public statement
     {
     public:
@@ -278,7 +282,14 @@ inline namespace _v1
 
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const
         {
-            assert(0);
+            auto replacement = _get_replacement();
+
+            if (this == replacement)
+            {
+                assert(0);
+            }
+
+            return replacement->_generate_interface();
         }
 
     private:

@@ -54,6 +54,7 @@ inline namespace _v1
         if (parse.signature.export_)
         {
             lex_scope->get(parse.signature.name.value.string)->mark_exported();
+            lex_scope->get(U"overload_set_type$" + parse.signature.name.value.string)->mark_exported();
         }
 
         return ret;
@@ -73,14 +74,22 @@ inline namespace _v1
     {
         _set_ast_info(parse);
 
-        std::shared_ptr<overload_set> keep_count;
-        auto symbol = _scope->parent()->get_or_init(_name, [&] {
-            keep_count = std::make_shared<overload_set>(_scope.get());
-            keep_count->set_name(U"overload_set_type$" + _name);
-            return make_symbol(_name, keep_count.get());
-        });
+        auto type_name = U"overload_set_type$" + _name;
 
-        _overload_set = symbol->get_expression()->as<overload_set>()->shared_from_this();
+        std::shared_ptr<overload_set> keep_count;
+        auto symbol = _scope->parent()->try_get(_name);
+
+        if (!symbol)
+        {
+            keep_count = std::make_shared<overload_set>(_scope.get());
+            symbol = _scope->parent()->init(_name, make_symbol(_name, keep_count.get()));
+
+            auto type = keep_count->get_type();
+            type->set_name(type_name);
+            _scope->parent()->init(type_name, make_symbol(type_name, type->get_expression()));
+        }
+
+        _overload_set = symbol.value()->get_expression()->as<overload_set>()->shared_from_this();
     }
 
     void function_definition::print(std::ostream & os, print_context ctx) const

@@ -20,18 +20,27 @@
  *
  **/
 
-syntax = "proto3";
+#include "vapor/analyzer/expressions/expression_ref.h"
+#include "vapor/analyzer/expressions/type.h"
+#include "vapor/analyzer/symbol.h"
 
-package reaver.vapor.proto;
+#include "expressions/type.pb.h"
+#include "type_reference.pb.h"
 
-message sized_integer
+namespace reaver::vapor::analyzer
 {
-    int64 size = 1;
-}
+inline namespace _v1
+{
+    std::unique_ptr<google::protobuf::Message> expression_ref::_generate_interface() const
+    {
+        if (get_type() == builtin_types().type.get())
+        {
+            auto ret = std::make_unique<proto::type>();
+            ret->set_allocated_reference(_referenced->as<type_expression>()->get_value()->generate_interface_reference().release());
+            return ret;
+        }
 
-enum simple_builtin {
-    type_ = 0;
-    integer = 64;
-    boolean = 65;
+        assert(0);
+    }
 }
-
+}

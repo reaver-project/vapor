@@ -96,7 +96,7 @@ inline namespace _v1
     {
         entity.set_allocated_type(_type->generate_interface_reference().release());
 
-        auto message = _get_replacement()->_generate_interface();
+        auto message = _generate_interface();
 
         auto dynamic_switch = [&](auto &&... pairs) {
             ((dynamic_cast<typename decltype(pairs.first)::type *>(message.get())

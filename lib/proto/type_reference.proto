@@ -24,7 +24,16 @@ syntax = "proto3";
 
 package reaver.vapor.proto;
 
-import "type_parts.proto";
+message sized_integer
+{
+    int64 size = 1;
+}
+
+enum simple_builtin {
+    type_ = 0;
+    integer = 64;
+    boolean = 65;
+}
 
 message user_defined_reference
 {

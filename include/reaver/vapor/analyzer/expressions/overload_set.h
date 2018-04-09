@@ -36,13 +36,16 @@ inline namespace _v1
     class overload_set : public expression, public std::enable_shared_from_this<overload_set>
     {
     public:
+        overload_set(imported_tag_t)
+        {
+        }
+
         overload_set(scope * lex_scope) : _type{ std::make_unique<overload_set_type>(lex_scope) }
         {
             _set_type(_type.get());
         }
 
         void add_function(function_definition * fn);
-        virtual void set_name(std::u32string) override;
 
         virtual void print(std::ostream & os, print_context) const override
         {

@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include "../types/unresolved.h"
 #include "expression.h"
 
 namespace reaver::vapor::analyzer
@@ -30,16 +31,32 @@ inline namespace _v1
 {
     class entity : public expression
     {
+    public:
+        entity(type *, std::unique_ptr<expression> value = nullptr);
+        entity(std::unique_ptr<type>, std::unique_ptr<expression> value = nullptr);
+        entity(std::shared_ptr<unresolved_type>, std::unique_ptr<expression> value = nullptr);
+
+        virtual void print(std::ostream &, print_context) const override;
+
+    private:
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
+        virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
+
+        std::optional<std::shared_ptr<unresolved_type>> _unresolved;
+        std::optional<std::unique_ptr<type>> _owned;
+        std::unique_ptr<expression> _wrapped;
     };
 
-    inline std::unique_ptr<entity> make_entity(type *)
+    inline std::unique_ptr<entity> make_entity(imported_type imported)
     {
-        assert(0);
+        return std::get<0>(fmap(imported, [](auto && imported) { return std::make_unique<entity>(std::move(imported)); }));
     }
 
-    inline std::unique_ptr<entity> make_entity(std::unique_ptr<type>)
+    inline std::unique_ptr<entity> make_entity(std::unique_ptr<type> owned)
     {
-        assert(0);
+        return std::make_unique<entity>(std::move(owned));
     }
+
+    std::unique_ptr<entity> get_entity(precontext &, const reaver::vapor::proto::entity &);
 }
 }

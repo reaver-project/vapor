@@ -24,24 +24,15 @@ syntax = "proto3";
 
 package reaver.vapor.proto;
 
-import "type_parts.proto";
+import "type_reference.proto";
 import "types/struct.proto";
 import "types/overload_set.proto";
-
-message user_defined_type
-{
-    oneof details {
-        struct_type struct = 16;
-        overload_set_type overload_set = 17;
-    }
-}
 
 message type
 {
     oneof details {
-        simple_builtin builtin = 1;
-        sized_integer sized_int = 2;
-
-        user_defined_type user_defined = 65;
+        type_reference reference = 1;
+        struct_type struct = 2;
+        overload_set_type overload_set = 3;
     }
 }

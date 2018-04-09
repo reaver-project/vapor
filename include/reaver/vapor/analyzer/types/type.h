@@ -263,9 +263,5 @@ inline namespace _v1
 
         return builtins;
     }
-
-    struct precontext;
-
-    type * get_imported_type(precontext &, const proto::type_reference &);
 }
 }

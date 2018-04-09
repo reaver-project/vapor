@@ -20,23 +20,46 @@
  *
  **/
 
-#include "vapor/analyzer/types/module.h"
-#include "vapor/analyzer/expressions/entity.h"
-#include "vapor/analyzer/symbol.h"
+#pragma once
+
+#include "../expressions/type.h"
+#include "type.h"
+
+#include <variant>
+
+namespace reaver::vapor::proto
+{
+class user_defined_reference;
+}
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void module_type::add_symbol(std::string name, std::unique_ptr<entity> entity)
-    {
-        auto symbol = make_symbol(utf32(name), entity.get());
-        _member_scope->init(utf32(name), std::move(symbol));
-    }
+    struct precontext;
 
-    void module_type::close_scope()
+    class unresolved_type
     {
-        _member_scope->close();
-    }
+    public:
+        unresolved_type(const proto::user_defined_reference * reference) : _reference{ reference }
+        {
+        }
+
+        void try_resolve(precontext &);
+
+        type * get_resolved() const
+        {
+            return _resolved;
+        }
+
+    private:
+        type * _resolved = nullptr;
+        const proto::user_defined_reference * _reference;
+    };
+
+    using imported_type = std::variant<type *, std::shared_ptr<unresolved_type>>;
+
+    std::unique_ptr<expression> get_imported_type(precontext &, const proto::type &);
+    imported_type get_imported_type_ref(precontext &, const proto::type_reference &);
 }
 }

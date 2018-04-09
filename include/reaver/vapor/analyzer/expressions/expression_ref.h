@@ -105,10 +105,7 @@ inline namespace _v1
             return _referenced->is_equal(rhs);
         }
 
-        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
-        {
-            assert(0);
-        }
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override;
 
     protected:
         expression * _referenced = nullptr;

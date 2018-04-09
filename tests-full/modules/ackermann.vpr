@@ -6,6 +6,7 @@ module ackermann
     let int32 = sized_int(32);
 
     export let mn = struct { let m : int32; let n : int32; };
+    export let mn_alias = mn;
 
     export function ackermann(args : mn) -> int32
     {

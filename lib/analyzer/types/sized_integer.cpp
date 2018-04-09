@@ -41,7 +41,7 @@ inline namespace _v1
         sized->set_size(_size);
 
         auto type = std::make_unique<proto::type>();
-        type->set_allocated_sized_int(sized.release());
+        type->set_allocated_reference(generate_interface_reference().release());
         return type;
     }
 

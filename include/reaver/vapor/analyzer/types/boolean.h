@@ -69,7 +69,7 @@ inline namespace _v1
         virtual std::unique_ptr<proto::type> generate_interface() const override
         {
             auto ret = std::make_unique<proto::type>();
-            ret->set_builtin(proto::boolean);
+            ret->set_allocated_reference(generate_interface_reference().release());
             return ret;
         }
 

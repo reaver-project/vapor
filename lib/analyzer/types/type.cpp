@@ -28,7 +28,7 @@
 #include "vapor/analyzer/expressions/runtime_value.h"
 #include "vapor/analyzer/expressions/type.h"
 #include "vapor/analyzer/function.h"
-#include "vapor/analyzer/precontex.h"
+#include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/semantic/overloads.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/pack.h"
@@ -127,7 +127,7 @@ inline namespace _v1
         virtual std::unique_ptr<proto::type> generate_interface() const override
         {
             auto ret = std::make_unique<proto::type>();
-            ret->set_builtin(proto::type_);
+            ret->set_allocated_reference(generate_interface_reference().release());
             return ret;
         }
 
@@ -163,7 +163,6 @@ inline namespace _v1
     std::unique_ptr<proto::type> user_defined_type::generate_interface() const
     {
         auto ret = std::make_unique<proto::type>();
-        auto user_defined = std::make_unique<proto::user_defined_type>();
 
         auto message = _user_defined_interface();
 
@@ -178,7 +177,7 @@ inline namespace _v1
 
 #define HANDLE_TYPE(type, field_name)                                                                                                                          \
     std::make_pair(id<proto::type>(), [&](auto ptr) {                                                                                                          \
-        user_defined->set_allocated_##field_name(ptr);                                                                                                         \
+        ret->set_allocated_##field_name(ptr);                                                                                                                  \
         return true;                                                                                                                                           \
     })
 
@@ -186,7 +185,6 @@ inline namespace _v1
 
 #undef HANDLE_TYPE
 
-        ret->set_allocated_user_defined(user_defined.release());
         return ret;
     }
 
@@ -217,43 +215,6 @@ inline namespace _v1
         ret->set_allocated_user_defined(user_defined.release());
 
         return ret;
-    }
-
-    type * get_imported_type(precontext & ctx, const proto::type_reference & type)
-    {
-        switch (type.details_case())
-        {
-            case proto::type_reference::DetailsCase::kBuiltin:
-                switch (type.builtin())
-                {
-                    case proto::type_:
-                        return builtin_types().type.get();
-                    case proto::integer:
-                        return builtin_types().integer.get();
-                    case proto::boolean:
-                        return builtin_types().boolean.get();
-
-                    default:
-                        assert(0);
-                }
-
-            case proto::type_reference::DetailsCase::kSizedInt:
-            {
-                auto size = type.sized_int().size();
-                auto & type = ctx.proper.sized_integers[size];
-                if (!type)
-                {
-                    type = make_sized_integer_type(size);
-                }
-                return type.get();
-            }
-
-            case proto::type_reference::kUserDefined:
-                assert(0);
-
-            default:
-                assert(0);
-        }
     }
 }
 }

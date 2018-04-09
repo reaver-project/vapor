@@ -125,7 +125,7 @@ inline namespace _v1
             return it != _symbols.end() ? std::make_optional(it->second.get()) : std::nullopt;
         }
 
-        bool init(const std::u32string & name, std::unique_ptr<symbol> symb);
+        symbol * init(const std::u32string & name, std::unique_ptr<symbol> symb);
 
         template<typename F>
         auto get_or_init(const std::u32string & name, F init)

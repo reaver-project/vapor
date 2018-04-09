@@ -22,19 +22,46 @@
 
 #pragma once
 
+#include <stack>
+
+#include <boost/filesystem.hpp>
+
 #include "../config/compiler_options.h"
 #include "expressions/entity.h"
 #include "semantic/context.h"
+
+namespace reaver::vapor::proto
+{
+class user_defined_reference;
+}
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    class unresolved_type;
+
+    struct user_defined_reference_compare
+    {
+        bool operator()(const proto::user_defined_reference * lhs, const proto::user_defined_reference * rhs) const;
+    };
+
+    struct user_defined_reference_hash
+    {
+        std::size_t operator()(const proto::user_defined_reference * obj) const;
+    };
+
     struct precontext
     {
         const config::compiler_options & options;
         analysis_context & proper;
         std::unordered_map<std::string, std::unique_ptr<entity>> loaded_modules = {};
+        std::unordered_map<const proto::user_defined_reference *, std::shared_ptr<unresolved_type>, user_defined_reference_hash, user_defined_reference_compare>
+            user_defined_types = {};
+
+        std::stack<boost::filesystem::path> current_file = {};
+        std::stack<std::string> current_scope = {};
+        std::string current_symbol = {};
     };
 }
 }

@@ -63,11 +63,6 @@ inline namespace _v1
         _type->add_function(decl->get_function());
     }
 
-    void overload_set::set_name(std::u32string name)
-    {
-        _type->set_name(std::move(name));
-    }
-
     std::unique_ptr<google::protobuf::Message> overload_set::_generate_interface() const
     {
         return std::make_unique<proto::overload_set>();

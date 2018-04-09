@@ -26,9 +26,10 @@
 #include <boost/iostreams/device/mapped_file.hpp>
 
 #include "vapor/analyzer/expressions/import.h"
-#include "vapor/analyzer/precontex.h"
+#include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/module.h"
+#include "vapor/analyzer/types/unresolved.h"
 #include "vapor/parser/import_expression.h"
 #include "vapor/sha.h"
 
@@ -111,17 +112,17 @@ inline namespace _v1
         std::ifstream interface_file{ path.string() };
         if (!interface_file)
         {
-            throw exception{ logger::error } << "couldn't open module interface file: " << path;
+            throw exception{ logger::fatal } << "couldn't open module interface file: " << path;
         }
 
         proto::ast ast;
         if (!ast.ParseFromIstream(&interface_file))
         {
-            throw exception{ logger::error } << "couldn't parse the serialized ast from the module interface file " << path;
+            throw exception{ logger::fatal } << "couldn't parse the serialized ast from the module interface file " << path;
         }
         if (!ast.has_compilation_info() || ast.modules_size() == 0)
         {
-            throw exception{ logger::error } << "no valid serialized ast in the module interface file " << path;
+            throw exception{ logger::fatal } << "no valid serialized ast in the module interface file " << path;
         }
 
         if (auto source_path = find_module(ctx, module_name, true))
@@ -140,28 +141,48 @@ inline namespace _v1
             }
         }
 
+        ctx.current_file.push(boost::filesystem::canonical(path));
+
         if (ast.imports_size())
         {
-            throw exception{ logger::error } << "not implemented yet: loading a module with imports";
+            throw exception{ logger::fatal } << "not implemented yet: loading a module with imports";
         }
 
         for (auto && module : ast.modules())
         {
             auto name = boost::algorithm::join(module.name(), ".");
+            ctx.current_scope.push(name);
 
             auto type = make_module_type(name);
 
-            for (auto entity : module.symbols())
+            // seems that protobuf's map doesn't have a deterministic order of iteration
+            // we can't let that happen in a compiler...
+            std::vector<std::pair<const std::string *, const proto::entity *>> symbols;
+            symbols.reserve(module.symbols().size());
+            for (auto && entity : module.symbols())
             {
-                auto type = get_imported_type(ctx, entity.second.type());
+                symbols.emplace_back(&entity.first, &entity.second);
             }
+            std::sort(symbols.begin(), symbols.end(), [](auto && lhs, auto && rhs) { return *lhs.first < *rhs.first; });
+
+            for (auto && imported_entity : symbols)
+            {
+                ctx.current_symbol = *imported_entity.first;
+                type->add_symbol(*imported_entity.first, get_entity(ctx, *imported_entity.second));
+            }
+
+            type->close_scope();
 
             auto & saved = ctx.loaded_modules[name];
             assert(!saved);
             saved = make_entity(std::move(type));
+
+            ctx.current_scope.pop();
         }
 
-        throw exception{ logger::error } << "not fully implemented yet: loading a compiled dependency";
+        ctx.current_file.pop();
+
+        throw exception{ logger::fatal } << "not fully implemented yet: loading a compiled dependency";
     }
 
     entity * import_module(precontext & ctx, const std::vector<std::string> & module_name)

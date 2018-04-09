@@ -31,6 +31,8 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    class entity;
+
     class module_type : public type
     {
     public:
@@ -57,6 +59,9 @@ inline namespace _v1
         {
             assert(0);
         }
+
+        void add_symbol(std::string name, std::unique_ptr<entity> ent);
+        void close_scope();
 
     private:
         virtual void _codegen_type(ir_generation_context &) const override

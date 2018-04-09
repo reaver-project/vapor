@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -77,7 +77,7 @@ inline namespace _v1
         }
     }
 
-    bool scope::init(const std::u32string & name, std::unique_ptr<symbol> symb)
+    symbol * scope::init(const std::u32string & name, std::unique_ptr<symbol> symb)
     {
         if (non_overridable().find(name) != non_overridable().end())
         {
@@ -92,7 +92,7 @@ inline namespace _v1
         {
             if (scope->_symbols.find(name) != scope->_symbols.end())
             {
-                return false;
+                return nullptr;
             }
 
             if (scope->_is_shadowing_boundary)
@@ -102,8 +102,7 @@ inline namespace _v1
         }
 
         _symbols_in_order.push_back(symb.get());
-        _symbols.emplace(name, std::move(symb));
-        return true;
+        return _symbols.emplace(name, std::move(symb)).first->second.get();
     }
 
     future<symbol *> scope::get_future(const std::u32string & name) const

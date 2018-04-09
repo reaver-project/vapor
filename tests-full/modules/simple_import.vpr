@@ -12,8 +12,8 @@ module main
 
     let entry = λ(arg : int32) -> int32
     {
-        let constant_foldable = ackermann.ackermann(ackermann.mn{ 2, 3 });
-        let non_constant_foldable = ackermann.ackermann(ackermann.mn{ arg, arg + 1 });
+        let constant_foldable = ackermann.ackermann(ackermann.mn_alias{ 2, 3 });
+        let non_constant_foldable = ackermann.ackermann(ackermann.mn_alias{ arg, arg + 1 });
 
         return constant_foldable - non_constant_foldable;
     };
