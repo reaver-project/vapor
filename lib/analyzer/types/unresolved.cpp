@@ -25,6 +25,7 @@
 #include <boost/functional/hash.hpp>
 
 #include "vapor/analyzer/expressions/expression_ref.h"
+#include "vapor/analyzer/expressions/unresolved_type.h"
 #include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/sized_integer.h"
@@ -61,15 +62,34 @@ inline namespace _v1
         return seed;
     }
 
+    std::unique_ptr<expression> unresolved_type::get_expression() const
+    {
+        return std::make_unique<unresolved_type_expression>(shared_from_this());
+    }
+
     std::unique_ptr<expression> get_imported_type(precontext & ctx, const proto::type & type)
     {
         switch (type.details_case())
         {
             case proto::type::DetailsCase::kReference:
+                switch (type.reference().details_case())
+                {
+                    case proto::type_reference::DetailsCase::kBuiltin:
+                    case proto::type_reference::DetailsCase::kSizedInt:
+                        return make_expression_ref(std::get<0>(get_imported_type_ref(ctx, type.reference()))->get_expression());
+
+                    case proto::type_reference::DetailsCase::kUserDefined:
+                        return std::get<1>(get_imported_type_ref(ctx, type.reference()))->get_expression();
+
+                    default:
+                        assert(0);
+                }
 
             case proto::type::DetailsCase::kStruct:
+                assert(0);
 
             case proto::type::DetailsCase::kOverloadSet:
+                assert(0);
 
             default:
                 assert(0);

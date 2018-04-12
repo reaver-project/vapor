@@ -22,46 +22,37 @@
 
 #pragma once
 
-#include "../expressions/type.h"
+#include "../types/unresolved.h"
 #include "type.h"
-
-#include <variant>
-
-namespace reaver::vapor::proto
-{
-class user_defined_reference;
-}
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    struct precontext;
-
-    class unresolved_type : public std::enable_shared_from_this<unresolved_type>
+    class unresolved_type_expression : public expression
     {
     public:
-        unresolved_type(const proto::user_defined_reference * reference) : _reference{ reference }
+        unresolved_type_expression(std::shared_ptr<const unresolved_type> type) : _type{ std::move(type) }
         {
         }
 
-        bool try_resolve(precontext &);
-
-        type * get_resolved() const
+        virtual void print(std::ostream &, print_context) const override
         {
-            return _resolved;
+            assert(0);
         }
-
-        std::unique_ptr<expression> get_expression() const;
 
     private:
-        type * _resolved = nullptr;
-        const proto::user_defined_reference * _reference;
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+        {
+            assert(0);
+        }
+
+        virtual statement_ir _codegen_ir(ir_generation_context &) const override
+        {
+            assert(0);
+        }
+
+        std::shared_ptr<const unresolved_type> _type;
     };
-
-    using imported_type = std::variant<type *, std::shared_ptr<unresolved_type>>;
-
-    std::unique_ptr<expression> get_imported_type(precontext &, const proto::type &);
-    imported_type get_imported_type_ref(precontext &, const proto::type_reference &);
 }
 }
