@@ -259,6 +259,15 @@ inline namespace _v1
     std::unique_ptr<google::protobuf::Message> struct_type::_user_defined_interface() const
     {
         auto t = std::make_unique<proto::struct_type>();
+
+        for (auto && member : _data_members)
+        {
+            auto proto_member = t->add_data_members();
+
+            proto_member->set_name(utf8(member->get_name()));
+            proto_member->set_allocated_type(member->get_type()->generate_interface_reference().release());
+        }
+
         return std::move(t);
     }
 }

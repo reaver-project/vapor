@@ -34,6 +34,6 @@ message data_field
 
 message struct_type
 {
-    repeated data_field members = 1;
+    repeated data_field data_members = 1;
 }
 
