@@ -23,6 +23,7 @@
 #pragma once
 
 #include <memory>
+#include <set>
 #include <shared_mutex>
 
 #include "expressions/expression.h"
@@ -49,6 +50,26 @@ inline namespace _v1
         bool is_exported() const
         {
             return _is_exported;
+        }
+
+        void mark_associated()
+        {
+            _is_associated = true;
+        }
+
+        bool is_associated() const
+        {
+            return _is_associated;
+        }
+
+        void add_associated(std::u32string assoc)
+        {
+            _associated.emplace(std::move(assoc));
+        }
+
+        const std::set<std::u32string> & get_associated() const
+        {
+            return _associated;
         }
 
         void set_expression(expression * var)
@@ -117,6 +138,8 @@ inline namespace _v1
         mutable std::shared_mutex _lock;
 
         bool _is_exported = false;
+        bool _is_associated = false;
+        std::set<std::u32string> _associated;
 
         std::u32string _name;
 

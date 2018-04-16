@@ -36,11 +36,12 @@ inline namespace _v1
     class overload_set : public expression, public std::enable_shared_from_this<overload_set>
     {
     public:
-        overload_set(imported_tag_t)
+        overload_set(scope * lex_scope) : _type{ std::make_unique<overload_set_type>(lex_scope) }
         {
+            _set_type(_type.get());
         }
 
-        overload_set(scope * lex_scope) : _type{ std::make_unique<overload_set_type>(lex_scope) }
+        overload_set(std::unique_ptr<overload_set_type> t) : _type{ std::move(t) }
         {
             _set_type(_type.get());
         }

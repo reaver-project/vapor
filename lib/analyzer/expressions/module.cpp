@@ -28,6 +28,7 @@
 #include "vapor/parser.h"
 #include "vapor/parser/module.h"
 
+#include "entity.pb.h"
 #include "module.pb.h"
 
 namespace reaver::vapor::analyzer
@@ -156,7 +157,13 @@ inline namespace _v1
                 continue;
             }
 
-            symbol.second->get_expression()->generate_interface(mut_symbols[utf8(symbol.first)]);
+            auto & symb = mut_symbols[utf8(symbol.first)];
+            symbol.second->get_expression()->generate_interface(symb);
+            symb.set_is_associated(symbol.second->is_associated());
+            for (auto && assoc : symbol.second->get_associated())
+            {
+                *symb.add_associated_entities() = utf8(assoc);
+            }
         }
     }
 }

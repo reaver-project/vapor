@@ -27,9 +27,8 @@
 #include "vapor/analyzer/expressions/struct_value.h"
 #include "vapor/analyzer/statements/declaration.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/types/unresolved.h"
 #include "vapor/parser/expr.h"
-
-#include "vapor/analyzer/expressions/integer.h"
 
 #include "types/struct.pb.h"
 
@@ -67,6 +66,23 @@ inline namespace _v1
         member_scope->close();
 
         return std::make_unique<struct_type>(make_node(parse), std::move(member_scope), std::move(decls));
+    }
+
+    std::unique_ptr<struct_type> import_struct_type(precontext & ctx, const proto::struct_type & str)
+    {
+        auto member_scope = std::make_unique<scope>();
+
+        std::vector<std::unique_ptr<declaration>> decls;
+
+        for (auto && member : str.data_members())
+        {
+            decls.push_back(std::make_unique<declaration>(
+                ast_node{}, utf32(member.name()), std::nullopt, get_imported_type_ref_expr(ctx, member.type()), member_scope.get(), declaration_type::member));
+        }
+
+        member_scope->close();
+
+        return std::make_unique<struct_type>(ast_node{}, std::move(member_scope), std::move(decls));
     }
 
     struct_type::~struct_type() = default;

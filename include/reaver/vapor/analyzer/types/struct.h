@@ -125,6 +125,11 @@ inline namespace _v1
 }
 }
 
+namespace reaver::vapor::proto
+{
+struct struct_type;
+}
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -132,5 +137,6 @@ inline namespace _v1
     struct precontext;
 
     std::unique_ptr<struct_type> make_struct_type(precontext & ctx, const parser::struct_literal & parse, scope * lex_scope);
+    std::unique_ptr<struct_type> import_struct_type(precontext & ctx, const proto::struct_type &);
 }
 }

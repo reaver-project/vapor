@@ -53,8 +53,13 @@ inline namespace _v1
 
         if (parse.signature.export_)
         {
-            lex_scope->get(parse.signature.name.value.string)->mark_exported();
-            lex_scope->get(U"overload_set_type$" + parse.signature.name.value.string)->mark_exported();
+            auto expr_symbol = lex_scope->get(parse.signature.name.value.string);
+            expr_symbol->mark_exported();
+            expr_symbol->add_associated(U"overload_set_type$" + parse.signature.name.value.string);
+
+            auto type_symbol = lex_scope->get(U"overload_set_type$" + parse.signature.name.value.string);
+            type_symbol->mark_exported();
+            type_symbol->mark_associated();
         }
 
         return ret;

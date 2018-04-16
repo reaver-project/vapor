@@ -76,3 +76,18 @@ inline namespace _v1
     };
 }
 }
+
+namespace reaver::vapor::proto
+{
+class overload_set_type;
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    class precontext;
+
+    std::unique_ptr<overload_set_type> import_overload_set_type(precontext &, const proto::overload_set_type &);
+}
+}

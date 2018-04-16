@@ -23,6 +23,7 @@
 #include <numeric>
 
 #include "vapor/analyzer/expressions/expression.h"
+#include "vapor/analyzer/expressions/type.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
@@ -35,6 +36,13 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    std::unique_ptr<overload_set_type> import_overload_set_type(precontext & ctx, const proto::overload_set_type &)
+    {
+        auto ret = std::make_unique<overload_set_type>(nullptr);
+
+        return ret;
+    }
+
     void overload_set_type::add_function(function * fn)
     {
         std::unique_lock<std::mutex> lock{ _functions_lock };

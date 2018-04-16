@@ -167,8 +167,20 @@ inline namespace _v1
 
             for (auto && imported_entity : symbols)
             {
+                if (imported_entity.second->is_associated())
+                {
+                    assert(imported_entity.second->associated_entities_size() == 0);
+                    continue;
+                }
+
+                std::map<std::string, const proto::entity *> associated;
+                for (auto && assoc : imported_entity.second->associated_entities())
+                {
+                    associated.emplace(assoc, &module.symbols().at(assoc));
+                }
+
                 ctx.current_symbol = *imported_entity.first;
-                type->add_symbol(*imported_entity.first, get_entity(ctx, *imported_entity.second));
+                type->add_symbol(*imported_entity.first, get_entity(ctx, *imported_entity.second, associated));
             }
 
             type->close_scope();

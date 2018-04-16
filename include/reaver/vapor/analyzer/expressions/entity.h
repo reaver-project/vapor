@@ -57,6 +57,6 @@ inline namespace _v1
         return std::make_unique<entity>(std::move(owned));
     }
 
-    std::unique_ptr<entity> get_entity(precontext &, const reaver::vapor::proto::entity &);
+    std::unique_ptr<entity> get_entity(precontext &, const proto::entity &, const std::map<std::string, const proto::entity *> & associated = {});
 }
 }

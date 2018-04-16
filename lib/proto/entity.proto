@@ -31,6 +31,8 @@ import "expressions/overload_set.proto";
 message entity
 {
     type_reference type = 1;
+    repeated string associated_entities = 2;
+    bool is_associated = 3;
 
     oneof value {
         type type_value = 16;

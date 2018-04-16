@@ -63,5 +63,6 @@ inline namespace _v1
 
     std::unique_ptr<expression> get_imported_type(precontext &, const proto::type &);
     imported_type get_imported_type_ref(precontext &, const proto::type_reference &);
+    std::unique_ptr<expression> get_imported_type_ref_expr(precontext &, const proto::type_reference &);
 }
 }

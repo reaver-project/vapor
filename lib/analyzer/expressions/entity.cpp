@@ -63,7 +63,7 @@ inline namespace _v1
         assert(0);
     }
 
-    std::unique_ptr<entity> get_entity(precontext & ctx, const reaver::vapor::proto::entity & ent)
+    std::unique_ptr<entity> get_entity(precontext & ctx, const proto::entity & ent, const std::map<std::string, const proto::entity *> & associated)
     {
         auto type = get_imported_type_ref(ctx, ent.type());
 
@@ -74,7 +74,11 @@ inline namespace _v1
                     return get_imported_type(ctx, ent.type_value());
 
                 case proto::entity::kOverloadSet:
-                    return std::make_unique<overload_set>(imported_tag);
+                {
+                    assert(ent.associated_entities_size() == 1);
+                    auto type = import_overload_set_type(ctx, associated.at(ent.associated_entities(0))->type_value().overload_set());
+                    return std::make_unique<overload_set>(std::move(type));
+                }
 
                 default:
                     throw exception{ logger::fatal } << "unknown expression kind of symbol `" << ctx.current_scope.top() << "." << ctx.current_symbol
