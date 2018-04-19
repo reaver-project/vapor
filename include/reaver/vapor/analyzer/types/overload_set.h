@@ -31,6 +31,7 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     class function;
+    struct imported_function;
 
     // TODO: combined_overload_set and combined_overload_set_type
     // those need to be distinct from normal ones for code generation reasons (SCOPES!)
@@ -51,6 +52,7 @@ inline namespace _v1
         }
 
         void add_function(function * fn);
+        void add_function(imported_function fn);
 
         virtual std::string explain() const override
         {
@@ -71,8 +73,9 @@ inline namespace _v1
             return get_name();
         }
 
-        mutable std::mutex _functions_lock;
         std::vector<function *> _functions;
+        // shared so that this is destructible without knowing the definition
+        std::vector<std::shared_ptr<imported_function>> _imported_functions;
     };
 }
 }

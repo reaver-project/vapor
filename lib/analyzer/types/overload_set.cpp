@@ -22,12 +22,14 @@
 
 #include <numeric>
 
+#include "vapor/analyzer/expressions/entity.h"
 #include "vapor/analyzer/expressions/expression.h"
 #include "vapor/analyzer/expressions/type.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/overload_set.h"
+#include "vapor/analyzer/types/unresolved.h"
 #include "vapor/codegen/ir/type.h"
 
 #include "types/overload_set.pb.h"
@@ -36,17 +38,48 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<overload_set_type> import_overload_set_type(precontext & ctx, const proto::overload_set_type &)
+    struct imported_function
+    {
+        std::unique_ptr<expression> return_type;
+        std::vector<std::unique_ptr<expression>> parameters;
+        std::unique_ptr<function> function;
+    };
+
+    std::unique_ptr<overload_set_type> import_overload_set_type(precontext & ctx, const proto::overload_set_type & type)
     {
         auto ret = std::make_unique<overload_set_type>(nullptr);
+
+        assert(type.functions_size() != 0);
+
+        for (auto && overload : type.functions())
+        {
+            imported_function imported;
+            imported.return_type = get_imported_type_ref_expr(ctx, overload.return_type());
+
+            for (auto && param : overload.parameters())
+            {
+                auto type = get_imported_type_ref(ctx, param.type());
+                imported.parameters.push_back(make_entity(std::move(type)));
+            }
+
+            imported.function = make_function("overloadable function",
+                imported.return_type.get(),
+                fmap(imported.parameters, [](auto && param) { return param.get(); }),
+                [](ir_generation_context &) -> codegen::ir::function { assert(0); });
+
+            if (overload.is_member())
+            {
+                imported.function->make_member();
+            }
+
+            ret->add_function(std::move(imported));
+        }
 
         return ret;
     }
 
     void overload_set_type::add_function(function * fn)
     {
-        std::unique_lock<std::mutex> lock{ _functions_lock };
-
         if (std::find_if(_functions.begin(), _functions.end(), [&](auto && f) { return f->parameters() == fn->parameters(); }) != _functions.end())
         {
             assert(0);
@@ -55,10 +88,14 @@ inline namespace _v1
         _functions.push_back(fn);
     }
 
+    void overload_set_type::add_function(imported_function fn)
+    {
+        add_function(fn.function.get());
+        _imported_functions.push_back(std::make_shared<imported_function>(std::move(fn)));
+    }
+
     future<std::vector<function *>> overload_set_type::get_candidates(lexer::token_type bracket) const
     {
-        std::unique_lock<std::mutex> lock{ _functions_lock };
-
         if (bracket == lexer::token_type::round_bracket_open)
         {
             assert(_functions.size());
@@ -115,6 +152,22 @@ inline namespace _v1
     std::unique_ptr<google::protobuf::Message> overload_set_type::_user_defined_interface() const
     {
         auto t = std::make_unique<proto::overload_set_type>();
+
+        for (auto && func : _functions)
+        {
+            auto fn = t->add_functions();
+            fn->set_allocated_return_type(
+                func->get_return_type().try_get().value()->as<type_expression>()->get_value()->generate_interface_reference().release());
+
+            for (auto && param : func->parameters())
+            {
+                auto & par = *fn->add_parameters();
+                par.set_allocated_type(param->get_type()->generate_interface_reference().release());
+            }
+
+            fn->set_is_member(func->is_member());
+        }
+
         return t;
     }
 }

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -64,7 +64,7 @@ inline namespace _v1
                     assert(type_expr->get_type() == builtin_types().type.get());
                     assert(type_expr->is_constant());
 
-                    _function->set_return_type(_return_type->get());
+                    _function->set_return_type(_return_type.value()->_get_replacement());
                 });
             }
 

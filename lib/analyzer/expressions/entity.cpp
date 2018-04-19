@@ -22,6 +22,7 @@
 
 #include "vapor/analyzer/expressions/entity.h"
 #include "vapor/analyzer/expressions/overload_set.h"
+#include "vapor/analyzer/function.h"
 #include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/unresolved.h"

@@ -24,7 +24,24 @@ syntax = "proto3";
 
 package reaver.vapor.proto;
 
+import "type_reference.proto";
+
+message function_parameter
+{
+    reserved 1;
+    type_reference type = 2;
+}
+
+message function_signature
+{
+    type_reference return_type = 1;
+    repeated function_parameter parameters = 2;
+
+    bool is_member = 32;
+}
+
 message overload_set_type
 {
+    repeated function_signature functions = 1;
 }
 
