@@ -75,7 +75,8 @@ inline namespace _v1
         std::vector<std::unique_ptr<import_expression>> _imports;
 
         std::unique_ptr<scope> _global_scope;
-        analysis_context _ctx;
+        analysis_context _proper;
+        precontext _ctx;
 
         std::optional<boost::filesystem::path> _source_path;
     };

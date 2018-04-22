@@ -37,8 +37,9 @@ inline namespace _v1
     {
         return std::make_unique<postfix_expression>(make_node(parse),
             std::get<0>(fmap(parse.base_expression,
-                make_overload_set([&](const parser::expression_list & expr_list) { return preanalyze_expression_list(ctx, expr_list, lex_scope); },
-                    [&](const parser::identifier & ident) { return preanalyze_identifier(ctx, ident, lex_scope); }))),
+                make_overload_set([&](const parser::expression_list & expr_list)
+                                      -> std::unique_ptr<expression> { return preanalyze_expression_list(ctx, expr_list, lex_scope); },
+                    [&](const parser::identifier & ident) -> std::unique_ptr<expression> { return preanalyze_identifier(ctx, ident, lex_scope); }))),
             parse.modifier_type,
             fmap(parse.arguments, [&](auto && expr) { return preanalyze_expression(ctx, expr, lex_scope); }),
             fmap(parse.accessed_member, [&](auto && member) { return member.value.string; }));

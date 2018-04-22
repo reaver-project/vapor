@@ -34,15 +34,20 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     ast::ast(parser::ast original_ast, const config::compiler_options & opts)
-        : _original_ast{ std::move(original_ast) }, _global_scope{ std::make_unique<scope>() }, _source_path{ opts.source_path() }
+        : _original_ast{ std::move(original_ast) }, _global_scope{ std::make_unique<scope>() }, _ctx{ opts, _proper }, _source_path{ opts.source_path() }
     {
         try
         {
-            precontext ctx{ opts, _ctx };
+            _imports =
+                fmap(_original_ast.global_imports, [this](auto && im) { return preanalyze_import(_ctx, im, _global_scope.get(), import_mode::statement); });
+            _modules = fmap(_original_ast.module_definitions, [this](auto && m) { return preanalyze_module(_ctx, m, _global_scope.get()); });
 
-            _imports = fmap(
-                _original_ast.global_imports, [this, &ctx](auto && im) { return preanalyze_import(ctx, im, _global_scope.get(), import_mode::statement); });
-            _modules = fmap(_original_ast.module_definitions, [this, &ctx](auto && m) { return preanalyze_module(ctx, m, _global_scope.get()); });
+            for (auto && entity : _ctx.loaded_modules)
+            {
+                entity.second->get_type()->get_scope()->close();
+            }
+
+            _global_scope->close();
         }
 
         catch (exception & e)
@@ -55,7 +60,7 @@ inline namespace _v1
 
     void ast::analyze()
     {
-        get(when_all(fmap(_modules, [this](auto && m) { return m->analyze(_ctx); })));
+        get(when_all(fmap(_modules, [this](auto && m) { return m->analyze(_proper); })));
     }
 
     void ast::simplify()
@@ -106,7 +111,8 @@ inline namespace _v1
 
         for (auto && import : _imports)
         {
-            import->generate_interface(*serialized.add_imports());
+            assert(0);
+            // import->generate_interface(*serialized.add_imports());
         }
 
         for (auto && module : _modules)

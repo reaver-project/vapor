@@ -180,10 +180,10 @@ inline namespace _v1
                 }
 
                 ctx.current_symbol = *imported_entity.first;
-                type->add_symbol(*imported_entity.first, get_entity(ctx, *imported_entity.second, associated));
+                auto ent = get_entity(ctx, *imported_entity.second, associated);
+                type->add_symbol(*imported_entity.first, ent.get());
+                ctx.imported_entities.insert(std::move(ent));
             }
-
-            type->close_scope();
 
             auto & saved = ctx.loaded_modules[name];
             assert(!saved);
@@ -194,7 +194,7 @@ inline namespace _v1
 
         ctx.current_file.pop();
 
-        throw exception{ logger::fatal } << "not fully implemented yet: loading a compiled dependency";
+        // throw exception{ logger::fatal } << "not fully implemented yet: loading a compiled dependency";
     }
 
     entity * import_module(precontext & ctx, const std::vector<std::string> & module_name)
@@ -239,21 +239,36 @@ inline namespace _v1
 
     std::unique_ptr<import_expression> preanalyze_import(precontext & ctx, const parser::import_expression & parse, scope * lex_scope, import_mode mode)
     {
-        fmap(parse.module_name,
+        auto expr = std::get<0>(fmap(parse.module_name,
             make_overload_set(
                 [&](const parser::id_expression & expr) {
                     auto module = fmap(expr.id_expression_value, [](auto && id) { return utf8(id.value.string); });
                     auto ent = import_module(ctx, module);
                     assert(ent);
-                    assert(0);
-                    return unit{};
-                },
-                [&](auto && expr) -> unit { assert(0); }));
 
-        assert(0);
+                    if (mode == import_mode::statement)
+                    {
+                        auto scope = lex_scope;
+
+                        for (auto it = expr.id_expression_value.begin(); it != expr.id_expression_value.end() - 1; ++it)
+                        {
+                            auto sub = lex_scope->get_or_init(
+                                it->value.string, [&]() -> std::unique_ptr<symbol> { assert(!"need to properly implement imports of nested modules!"); });
+                            assert(sub->get_type() && dynamic_cast<module_type *>(sub->get_type()));
+                            scope = sub->get_type()->get_scope();
+                        }
+
+                        scope->init(expr.id_expression_value.back().value.string, make_symbol(expr.id_expression_value.back().value.string, ent));
+                    }
+
+                    return std::make_unique<import_expression>(make_node(parse), ent);
+                },
+                [&](auto && expr) -> std::unique_ptr<import_expression> { assert(0); })));
+
+        return expr;
     }
 
-    void import_expression::generate_interface(proto::import_ &) const
+    void import_expression::print(std::ostream &, print_context) const
     {
         assert(0);
     }

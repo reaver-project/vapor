@@ -28,9 +28,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void module_type::add_symbol(std::string name, std::unique_ptr<entity> entity)
+    void module_type::add_symbol(std::string name, entity * entity)
     {
-        auto symbol = make_symbol(utf32(name), entity.get());
+        auto symbol = make_symbol(utf32(name), entity);
         _member_scope->init(utf32(name), std::move(symbol));
     }
 

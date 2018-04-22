@@ -133,7 +133,7 @@ inline namespace _v1
         virtual std::string explain() const = 0;
         virtual void print(std::ostream & os, print_context ctx) const = 0;
 
-        virtual const scope * get_scope() const
+        scope * get_scope() const
         {
             return _member_scope.get();
         }

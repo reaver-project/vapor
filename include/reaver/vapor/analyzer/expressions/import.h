@@ -35,10 +35,30 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    class entity;
+
     class import_expression : public expression
     {
     public:
-        void generate_interface(proto::import_ &) const;
+        import_expression(ast_node node, entity * module) : _node{ std::move(node) }, _module{ module }
+        {
+        }
+
+        virtual void print(std::ostream &, print_context) const override;
+
+    private:
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+        {
+            assert(0);
+        }
+
+        virtual statement_ir _codegen_ir(ir_generation_context &) const override
+        {
+            assert(0);
+        }
+
+        ast_node _node;
+        entity * _module;
     };
 
     enum class import_mode
