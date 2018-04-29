@@ -27,7 +27,7 @@ package reaver.vapor.proto;
 message import_
 {
     int64 target_compilation_time = 1;
-    string target_source_hash = 2;
+    bytes target_source_hash = 2;
 
-    repeated string name = 3;
+    repeated string name = 9;
 }

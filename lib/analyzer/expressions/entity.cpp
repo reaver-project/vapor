@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/expressions/entity.h"
+#include "vapor/analyzer/expressions/runtime_value.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/symbol.h"
@@ -75,6 +76,16 @@ inline namespace _v1
         }
 
         return fut;
+    }
+
+    future<expression *> entity::_simplify_expr(recursive_context ctx)
+    {
+        if (_wrapped)
+        {
+            return make_ready_future(_wrapped.release());
+        }
+
+        return make_ready_future(make_runtime_value(get_type()).release());
     }
 
     std::unique_ptr<expression> entity::_clone_expr_with_replacement(replacements & repl) const

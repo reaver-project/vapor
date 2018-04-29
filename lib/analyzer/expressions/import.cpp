@@ -194,6 +194,10 @@ inline namespace _v1
             assert(!saved);
             saved = make_entity(std::move(type));
 
+            saved->set_timestamp(ast.compilation_info().time());
+            saved->set_source_hash(ast.compilation_info().source_hash());
+            saved->set_import_name({ module.name().begin(), module.name().end() });
+
             ctx.current_scope.pop();
         }
 

@@ -50,16 +50,47 @@ inline namespace _v1
 
         virtual expression * _get_replacement() override
         {
-            return _wrapped->_get_replacement();
+            return _wrapped ? _wrapped->_get_replacement() : this;
         }
 
         virtual const expression * _get_replacement() const override
         {
-            return _wrapped->_get_replacement();
+            return _wrapped ? _wrapped->_get_replacement() : this;
+        }
+
+        void set_source_hash(std::string hash)
+        {
+            _source_hash = std::move(hash);
+        }
+
+        auto & get_source_hash() const
+        {
+            return _source_hash;
+        }
+
+        void set_timestamp(std::int64_t timestamp)
+        {
+            _timestamp = timestamp;
+        }
+
+        auto get_timestamp() const
+        {
+            return _timestamp;
+        }
+
+        void set_import_name(std::vector<std::string> name)
+        {
+            _name = std::move(name);
+        }
+
+        auto & get_import_name() const
+        {
+            return _name;
         }
 
     private:
         virtual future<> _analyze(analysis_context &) override;
+        virtual future<expression *> _simplify_expr(recursive_context) override;
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
 
@@ -68,6 +99,10 @@ inline namespace _v1
         std::unique_ptr<expression> _wrapped;
 
         std::map<std::string, expression *> _associated;
+
+        std::string _source_hash;
+        std::int64_t _timestamp;
+        std::vector<std::string> _name;
     };
 
     inline std::unique_ptr<entity> make_entity(imported_type imported)

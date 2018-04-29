@@ -111,10 +111,16 @@ inline namespace _v1
 
         serialized.set_allocated_compilation_info(info.release());
 
-        for (auto && import : _imports)
+        for (auto && [name, module] : _ctx.loaded_modules)
         {
-            assert(0);
-            // import->generate_interface(*serialized.add_imports());
+            auto & imp = *serialized.add_imports();
+
+            imp.set_target_compilation_time(module->get_timestamp());
+            imp.set_target_source_hash(module->get_source_hash());
+            for (auto && string : module->get_import_name())
+            {
+                *imp.add_name() = string;
+            }
         }
 
         for (auto && module : _modules)
