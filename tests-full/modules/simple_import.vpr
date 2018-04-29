@@ -12,6 +12,9 @@ module main
 
     let entry = λ(arg : int32) -> int32
     {
+        // this is currently not constant foldable
+        // because modules only export signatures
+        // TODO: fix that
         let constant_foldable = ackermann.ackermann(ackermann.alias{ 2, 3 });
         let non_constant_foldable = ackermann.ackermann(ackermann.alias{ arg, arg + 1 });
 
