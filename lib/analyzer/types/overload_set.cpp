@@ -42,7 +42,7 @@ inline namespace _v1
     {
         std::unique_ptr<expression> return_type;
         std::vector<std::unique_ptr<expression>> parameters;
-        std::unique_ptr<function> function;
+        std::unique_ptr<class function> function;
     };
 
     std::unique_ptr<overload_set_type> import_overload_set_type(precontext & ctx, const proto::overload_set_type & type)
