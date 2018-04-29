@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -415,10 +415,19 @@ inline namespace _v1
         std::vector<expression *> arguments)
     {
         // mutable for `arguments`
-        return base_expr->get_type()->get_candidates(bracket_type).then([&ctx, &range, arguments, base_expr](auto && overloads) mutable {
-            assert(overloads.size());
-            return select_overload(ctx, range, std::move(arguments), overloads, base_expr);
-        });
+        return base_expr->get_type()
+            ->get_candidates(bracket_type)
+            .then([&ctx](auto overloads) {
+                return when_all(fmap(overloads,
+                                    [&ctx](auto && overload) {
+                                        return when_all(fmap(overload->parameters(), [&ctx](auto && overload) { return overload->analyze(ctx); }));
+                                    }))
+                    .then([overloads] { return overloads; });
+            })
+            .then([&ctx, &range, arguments, base_expr](auto overloads) mutable {
+                assert(overloads.size());
+                return select_overload(ctx, range, std::move(arguments), overloads, base_expr);
+            });
     }
 }
 }

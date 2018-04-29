@@ -40,7 +40,7 @@ inline namespace _v1
             nullptr,
             {},
             [=](ir_generation_context & ctx) {
-                auto ret = codegen::ir::function{ U"operator()",
+                auto ret = codegen::ir::function{ U"call",
                     {},
                     fmap(
                         _parameter_list, [&](auto && param) { return std::get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
@@ -50,7 +50,7 @@ inline namespace _v1
                 return ret;
             },
             get_ast_info().value().range);
-        _function->set_name(U"operator()");
+        _function->set_name(U"call");
         _function->make_member();
         _function->set_scopes_generator([this](auto && ctx) { return this->_overload_set->get_type()->codegen_scopes(ctx); });
         _overload_set->add_function(this);

@@ -60,6 +60,8 @@ inline namespace _v1
         std::unordered_map<const proto::user_defined_reference *, std::shared_ptr<unresolved_type>, user_defined_reference_hash, user_defined_reference_compare>
             user_defined_types = {};
 
+        scope * global_scope = nullptr;
+
         std::stack<boost::filesystem::path> current_file = {};
         std::stack<std::string> current_scope = {};
         std::string current_symbol = {};

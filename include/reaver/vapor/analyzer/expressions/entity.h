@@ -38,13 +38,36 @@ inline namespace _v1
 
         virtual void print(std::ostream &, print_context) const override;
 
+        void add_associated(std::string name, expression * expr)
+        {
+            _associated.emplace(std::move(name), expr);
+        }
+
+        const auto & get_associated() const
+        {
+            return _associated;
+        }
+
+        virtual expression * _get_replacement() override
+        {
+            return _wrapped->_get_replacement();
+        }
+
+        virtual const expression * _get_replacement() const override
+        {
+            return _wrapped->_get_replacement();
+        }
+
     private:
+        virtual future<> _analyze(analysis_context &) override;
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
 
         std::optional<std::shared_ptr<unresolved_type>> _unresolved;
         std::optional<std::unique_ptr<type>> _owned;
         std::unique_ptr<expression> _wrapped;
+
+        std::map<std::string, expression *> _associated;
     };
 
     inline std::unique_ptr<entity> make_entity(imported_type imported)

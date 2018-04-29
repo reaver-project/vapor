@@ -36,6 +36,8 @@ inline namespace _v1
     ast::ast(parser::ast original_ast, const config::compiler_options & opts)
         : _original_ast{ std::move(original_ast) }, _global_scope{ std::make_unique<scope>() }, _ctx{ opts, _proper }, _source_path{ opts.source_path() }
     {
+        _ctx.global_scope = _global_scope.get();
+
         try
         {
             _imports =

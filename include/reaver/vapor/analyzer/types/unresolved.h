@@ -41,22 +41,22 @@ inline namespace _v1
     class unresolved_type : public std::enable_shared_from_this<unresolved_type>
     {
     public:
-        unresolved_type(const proto::user_defined_reference * reference) : _reference{ reference }
-        {
-        }
-
-        bool try_resolve(precontext &);
+        unresolved_type(const proto::user_defined_reference * reference, scope * lex_scope);
+        future<> resolve(analysis_context &);
 
         type * get_resolved() const
         {
             return _resolved;
         }
 
-        std::unique_ptr<expression> get_expression() const;
+        std::unique_ptr<expression> get_expression();
 
     private:
         type * _resolved = nullptr;
-        const proto::user_defined_reference * _reference;
+        scope * _lex_scope = nullptr;
+        std::unique_ptr<proto::user_defined_reference> _reference;
+
+        std::optional<future<>> _analysis_future;
     };
 
     using imported_type = std::variant<type *, std::shared_ptr<unresolved_type>>;

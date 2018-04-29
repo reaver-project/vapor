@@ -21,10 +21,10 @@
  **/
 
 #include "vapor/analyzer/expressions/entity.h"
-#include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/types/overload_set.h"
 #include "vapor/analyzer/types/unresolved.h"
 
 #include "entity.pb.h"
@@ -46,12 +46,35 @@ inline namespace _v1
         if (auto t = _unresolved.value()->get_resolved())
         {
             _set_type(t);
+            _unresolved.reset();
         }
     }
 
     void entity::print(std::ostream & os, print_context ctx) const
     {
         assert(0);
+    }
+
+    future<> entity::_analyze(analysis_context & ctx)
+    {
+        auto fut = [&] {
+            if (_unresolved)
+            {
+                return _unresolved.value()->resolve(ctx).then([&] {
+                    _set_type(_unresolved.value()->get_resolved());
+                    _unresolved.reset();
+                });
+            }
+
+            return make_ready_future();
+        }();
+
+        if (_wrapped)
+        {
+            fut = fut.then([&, this] { return _wrapped->analyze(ctx); });
+        }
+
+        return fut;
     }
 
     std::unique_ptr<expression> entity::_clone_expr_with_replacement(replacements & repl) const
@@ -68,24 +91,28 @@ inline namespace _v1
     {
         auto type = get_imported_type_ref(ctx, ent.type());
 
-        auto expr = [&]() -> std::unique_ptr<expression> {
-            switch (ent.value_case())
+        std::unique_ptr<expression> expr;
+
+        switch (ent.value_case())
+        {
+            case proto::entity::kTypeValue:
+                expr = get_imported_type(ctx, ent.type_value());
+                break;
+
+            case proto::entity::kOverloadSet:
             {
-                case proto::entity::kTypeValue:
-                    return get_imported_type(ctx, ent.type_value());
-
-                case proto::entity::kOverloadSet:
-                {
-                    assert(ent.associated_entities_size() == 1);
-                    auto type = import_overload_set_type(ctx, associated.at(ent.associated_entities(0))->type_value().overload_set());
-                    return std::make_unique<overload_set>(std::move(type));
-                }
-
-                default:
-                    throw exception{ logger::fatal } << "unknown expression kind of symbol `" << ctx.current_scope.top() << "." << ctx.current_symbol
-                                                     << "` in imported file " << ctx.current_file.top();
+                assert(ent.associated_entities_size() == 1);
+                auto type = import_overload_set_type(ctx, associated.at(ent.associated_entities(0))->type_value().overload_set());
+                auto type_expr = type->get_expression();
+                auto ret = std::make_unique<entity>(std::move(type));
+                ret->add_associated(ent.associated_entities(0), type_expr);
+                return ret;
             }
-        }();
+
+            default:
+                throw exception{ logger::fatal } << "unknown expression kind of symbol `" << ctx.current_scope.top() << "." << ctx.current_symbol
+                                                 << "` in imported file " << ctx.current_file.top();
+        }
 
         return std::get<0>(fmap(type, [&](auto && type) { return std::make_unique<entity>(std::move(type), std::move(expr)); }));
     }

@@ -102,6 +102,7 @@ inline namespace _v1
                 _generic_ctor->add_analysis_hook([](auto && ctx, auto && call_expr, auto && args) {
                     assert(args.size() != 0);
                     assert(args.front()->get_type() == builtin_types().type.get());
+                    assert(args.front()->is_constant());
 
                     auto type_expr = args.front()->template as<type_expression>();
                     auto actual_type = type_expr->get_value();

@@ -182,6 +182,11 @@ inline namespace _v1
                 ctx.current_symbol = *imported_entity.first;
                 auto ent = get_entity(ctx, *imported_entity.second, associated);
                 type->add_symbol(*imported_entity.first, ent.get());
+                for (auto && assoc : ent->get_associated())
+                {
+                    type->add_symbol(assoc.first, assoc.second);
+                }
+
                 ctx.imported_entities.insert(std::move(ent));
             }
 
@@ -193,8 +198,6 @@ inline namespace _v1
         }
 
         ctx.current_file.pop();
-
-        // throw exception{ logger::fatal } << "not fully implemented yet: loading a compiled dependency";
     }
 
     entity * import_module(precontext & ctx, const std::vector<std::string> & module_name)

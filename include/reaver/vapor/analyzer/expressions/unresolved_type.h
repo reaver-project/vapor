@@ -32,7 +32,7 @@ inline namespace _v1
     class unresolved_type_expression : public expression
     {
     public:
-        unresolved_type_expression(std::shared_ptr<const unresolved_type> type) : _type{ std::move(type) }
+        unresolved_type_expression(std::shared_ptr<unresolved_type> type) : _type{ std::move(type) }
         {
         }
 
@@ -42,6 +42,11 @@ inline namespace _v1
         }
 
     private:
+        virtual future<> _analyze(analysis_context & ctx) override
+        {
+            return _type->resolve(ctx);
+        }
+
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
         {
             assert(0);
@@ -52,7 +57,24 @@ inline namespace _v1
             assert(0);
         }
 
-        std::shared_ptr<const unresolved_type> _type;
+        template<typename T>
+        static auto _get_replacement_impl(T & t)
+        {
+            auto type = t._type->get_resolved();
+            return type ? type->get_expression() : &t;
+        }
+
+        virtual expression * _get_replacement() override
+        {
+            return _get_replacement_impl(*this);
+        }
+
+        virtual const expression * _get_replacement() const override
+        {
+            return _get_replacement_impl(*this);
+        }
+
+        std::shared_ptr<unresolved_type> _type;
     };
 }
 }

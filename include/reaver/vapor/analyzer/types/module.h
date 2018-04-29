@@ -60,7 +60,7 @@ inline namespace _v1
             assert(0);
         }
 
-        void add_symbol(std::string name, entity * ent);
+        void add_symbol(std::string name, expression * ent);
         void close_scope();
 
     private:

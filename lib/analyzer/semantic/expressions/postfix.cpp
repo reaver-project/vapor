@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -59,8 +59,9 @@ inline namespace _v1
                         .then([](auto && symb) { return symb->get_expression_future(); })
                         .then([&](auto && var) {
                             _referenced_expression = var;
-                            this->_set_type(_referenced_expression.value()->get_type());
-                        });
+                            return _referenced_expression.value()->analyze(ctx);
+                        })
+                        .then([&] { this->_set_type(_referenced_expression.value()->get_type()); });
                 }
 
                 return resolve_overload(ctx, get_ast_info()->range, _base_expr.get(), *_modifier, fmap(_arguments, [](auto && arg) { return arg.get(); }))
