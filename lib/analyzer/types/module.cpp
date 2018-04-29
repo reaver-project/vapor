@@ -38,5 +38,12 @@ inline namespace _v1
     {
         _member_scope->close();
     }
+
+    void module_type::print(std::ostream & os, print_context ctx) const
+    {
+        os << styles::def << ctx << styles::type << "module type";
+        os << styles::def << " @ " << styles::address << this;
+        os << styles::def << ": " << styles::string_value << _name << '\n';
+    }
 }
 }

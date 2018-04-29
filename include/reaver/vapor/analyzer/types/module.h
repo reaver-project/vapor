@@ -45,10 +45,7 @@ inline namespace _v1
             return "module type for module `" + _name + "`";
         }
 
-        virtual void print(std::ostream & os, print_context ctx) const override
-        {
-            assert(0);
-        }
+        virtual void print(std::ostream & os, print_context ctx) const override;
 
         virtual std::unique_ptr<proto::type> generate_interface() const override
         {
