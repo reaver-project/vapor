@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -82,7 +82,13 @@ inline namespace _v1
             var.name = utf32(std::to_string(ctx.unnamed_variable_index++));
         }
 
-        return (ctx.in_function_definition ? U"%\"" : U"@\"") + var.name.value() + U"\"";
+        std::u32string scopes;
+        for (auto && scope : var.scopes)
+        {
+            scopes += scope.name + U".";
+        }
+
+        return (ctx.in_function_definition ? U"%\"" : U"@\"") + scopes + var.name.value() + U"\"";
     }
 }
 }

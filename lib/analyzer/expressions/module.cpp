@@ -116,6 +116,8 @@ inline namespace _v1
 
     declaration_ir module::declaration_codegen_ir(ir_generation_context & ctx) const
     {
+        auto scopes = _scope->codegen_ir();
+
         codegen::ir::module mod;
         mod.name = _name;
         mod.symbols = mbind(_scope->symbols_in_order(), [&](auto && symbol) {
@@ -124,6 +126,7 @@ inline namespace _v1
                     make_overload_set(
                         [&](std::shared_ptr<codegen::ir::variable> symb) {
                             symb->declared = true;
+                            symb->scopes = scopes;
                             symb->name = symbol->get_name();
                             return codegen::ir::module_symbols_t{ symb };
                         },
