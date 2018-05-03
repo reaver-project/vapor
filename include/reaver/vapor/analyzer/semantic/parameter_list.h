@@ -57,6 +57,14 @@ inline namespace _v1
             });
         }
 
+        virtual future<expression *> _simplify_expr(recursive_context ctx) override
+        {
+            return _type_expression->simplify_expr(ctx).then([&ctx = ctx.proper, this](auto && simpl)->expression * {
+                replace_uptr(_type_expression, simpl, ctx);
+                return this;
+            });
+        }
+
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
             return make_expression_ref(const_cast<parameter *>(this));
