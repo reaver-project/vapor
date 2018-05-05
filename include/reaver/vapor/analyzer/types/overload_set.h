@@ -52,7 +52,7 @@ inline namespace _v1
         }
 
         void add_function(function * fn);
-        void add_function(imported_function fn);
+        void add_function(std::unique_ptr<imported_function> fn);
 
         virtual std::string explain() const override
         {

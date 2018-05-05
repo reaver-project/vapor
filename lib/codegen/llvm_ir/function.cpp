@@ -29,6 +29,8 @@ inline namespace _v1
 {
     std::u32string llvm_ir_generator::generate_definition(ir::function & fn, codegen_context & ctx)
     {
+        assert(fn.is_defined);
+
         std::u32string ret;
 
         if (auto type = fn.parent_type.lock())

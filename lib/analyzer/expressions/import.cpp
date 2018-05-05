@@ -30,6 +30,7 @@
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/module.h"
 #include "vapor/analyzer/types/unresolved.h"
+#include "vapor/codegen/ir/scope.h"
 #include "vapor/parser/import_expression.h"
 #include "vapor/sha.h"
 
@@ -150,10 +151,16 @@ inline namespace _v1
 
         for (auto && module : ast.modules())
         {
+            // TODO: support submodules (including the scope creation below...)
+            assert(module.name().size() == 1);
+
             auto name = boost::algorithm::join(module.name(), ".");
             ctx.current_scope.push(name);
 
-            auto type = make_module_type(name);
+            auto scope = ctx.global_scope->clone_for_class();
+            scope->set_name(utf32(name), codegen::ir::scope_type::module);
+            ctx.module_scope = scope.get();
+            auto type = std::make_unique<module_type>(std::move(scope), name);
 
             // seems that protobuf's map doesn't have a deterministic order of iteration
             // we can't let that happen in a compiler...
@@ -181,10 +188,12 @@ inline namespace _v1
 
                 ctx.current_symbol = *imported_entity.first;
                 auto ent = get_entity(ctx, *imported_entity.second, associated);
+                ent->set_name(utf32(*imported_entity.first));
                 type->add_symbol(*imported_entity.first, ent.get());
                 for (auto && assoc : ent->get_associated())
                 {
                     type->add_symbol(assoc.first, assoc.second);
+                    assoc.second->set_name(utf32(assoc.first));
                 }
 
                 ctx.imported_entities.insert(std::move(ent));

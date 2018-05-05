@@ -27,6 +27,7 @@
 #include "vapor/analyzer/expressions/type.h"
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
+#include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/overload_set.h"
 #include "vapor/analyzer/types/unresolved.h"
@@ -47,30 +48,42 @@ inline namespace _v1
 
     std::unique_ptr<overload_set_type> import_overload_set_type(precontext & ctx, const proto::overload_set_type & type)
     {
-        auto ret = std::make_unique<overload_set_type>(nullptr);
+        auto ret = std::make_unique<overload_set_type>(ctx.module_scope);
 
         assert(type.functions_size() != 0);
 
         for (auto && overload : type.functions())
         {
-            imported_function imported;
-            imported.return_type = get_imported_type_ref_expr(ctx, overload.return_type());
+            auto imported = std::make_unique<imported_function>();
+            imported->return_type = get_imported_type_ref_expr(ctx, overload.return_type());
 
             for (auto && param : overload.parameters())
             {
                 auto type = get_imported_type_ref(ctx, param.type());
-                imported.parameters.push_back(make_entity(std::move(type)));
+                imported->parameters.push_back(make_entity(std::move(type)));
             }
 
-            imported.function = make_function("overloadable function",
-                imported.return_type.get(),
-                fmap(imported.parameters, [](auto && param) { return param.get(); }),
-                [](ir_generation_context &) -> codegen::ir::function { assert(0); });
+            imported->function = make_function("overloadable function",
+                imported->return_type.get(),
+                fmap(imported->parameters, [](auto && param) { return param.get(); }),
+                [imported = imported.get()](ir_generation_context & ctx)->codegen::ir::function {
+                    auto ret = codegen::ir::function{ U"call",
+                        {},
+                        fmap(imported->parameters,
+                            [&](auto && param) { return std::get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
+                        codegen::ir::make_variable(imported->return_type->as<type_expression>()->get_value()->codegen_type(ctx)),
+                        {} };
+                    ret.is_member = true;
+                    ret.is_defined = false;
 
-            if (overload.is_member())
-            {
-                imported.function->make_member();
-            }
+                    return ret;
+                });
+
+            assert(overload.is_member());
+
+            imported->function->set_name(U"call");
+            imported->function->make_member();
+            imported->function->set_scopes_generator([type = ret.get()](auto && ctx) { return type->codegen_scopes(ctx); });
 
             ret->add_function(std::move(imported));
         }
@@ -88,10 +101,10 @@ inline namespace _v1
         _functions.push_back(fn);
     }
 
-    void overload_set_type::add_function(imported_function fn)
+    void overload_set_type::add_function(std::unique_ptr<imported_function> fn)
     {
-        add_function(fn.function.get());
-        _imported_functions.push_back(std::make_shared<imported_function>(std::move(fn)));
+        add_function(fn->function.get());
+        _imported_functions.push_back(std::move(fn));
     }
 
     future<std::vector<function *>> overload_set_type::get_candidates(lexer::token_type bracket) const

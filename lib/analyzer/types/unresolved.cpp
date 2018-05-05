@@ -120,7 +120,11 @@ inline namespace _v1
                 return get_imported_type_ref_expr(ctx, type.reference());
 
             case proto::type::DetailsCase::kStruct:
-                return std::make_unique<struct_literal>(ast_node{}, import_struct_type(ctx, type.struct_()));
+            {
+                auto ret = std::make_unique<struct_literal>(ast_node{}, import_struct_type(ctx, type.struct_()));
+                ret->set_name(utf32(ctx.current_symbol));
+                return ret;
+            }
 
             case proto::type::DetailsCase::kOverloadSet:
                 assert(!"overload sets should be associated!");

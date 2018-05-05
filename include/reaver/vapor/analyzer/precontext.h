@@ -61,6 +61,7 @@ inline namespace _v1
             user_defined_types = {};
 
         scope * global_scope = nullptr;
+        scope * module_scope = nullptr;
 
         std::stack<boost::filesystem::path> current_file = {};
         std::stack<std::string> current_scope = {};

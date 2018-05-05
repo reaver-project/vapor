@@ -54,12 +54,6 @@ inline namespace _v1
             arguments.pop_back();
         }
 
-        std::u32string base_variable;
-        if (actual_argument_offset == 2) // member call
-        {
-            base_variable = variable_of(inst.operands.front(), ctx) + U".";
-        }
-
         auto call_operand = std::get<codegen::ir::label>(inst.operands[actual_argument_offset - 1]);
         std::u32string call_operand_str;
 

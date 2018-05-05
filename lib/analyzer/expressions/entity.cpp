@@ -95,7 +95,16 @@ inline namespace _v1
 
     statement_ir entity::_codegen_ir(ir_generation_context & ctx) const
     {
-        assert(0);
+        if (_wrapped)
+        {
+            return _wrapped->codegen_ir(ctx);
+        }
+
+        return { codegen::ir::instruction{ std::nullopt,
+            std::nullopt,
+            { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
+            {},
+            codegen::ir::make_variable(get_type()->codegen_type(ctx)) } };
     }
 
     std::unique_ptr<entity> get_entity(precontext & ctx, const proto::entity & ent, const std::map<std::string, const proto::entity *> & associated)
@@ -114,6 +123,7 @@ inline namespace _v1
             {
                 assert(ent.associated_entities_size() == 1);
                 auto type = import_overload_set_type(ctx, associated.at(ent.associated_entities(0))->type_value().overload_set());
+                type->set_name(utf32(ent.associated_entities(0)));
                 auto type_expr = type->get_expression();
                 auto ret = std::make_unique<entity>(std::move(type));
                 ret->add_associated(ent.associated_entities(0), type_expr);

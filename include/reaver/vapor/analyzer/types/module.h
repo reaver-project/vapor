@@ -36,7 +36,7 @@ inline namespace _v1
     class module_type : public type
     {
     public:
-        module_type(std::string name) : _name{ std::move(name) }
+        module_type(std::unique_ptr<scope> lex_scope, std::string name) : type{ std::move(lex_scope) }, _name{ std::move(name) }
         {
         }
 
@@ -73,10 +73,5 @@ inline namespace _v1
 
         std::string _name;
     };
-
-    inline std::unique_ptr<module_type> make_module_type(std::string name)
-    {
-        return std::make_unique<module_type>(name);
-    }
 }
 }

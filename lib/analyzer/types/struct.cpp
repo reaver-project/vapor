@@ -25,6 +25,7 @@
 #include "vapor/analyzer/expressions/runtime_value.h"
 #include "vapor/analyzer/expressions/struct.h"
 #include "vapor/analyzer/expressions/struct_value.h"
+#include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/statements/declaration.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/unresolved.h"
@@ -70,7 +71,7 @@ inline namespace _v1
 
     std::unique_ptr<struct_type> import_struct_type(precontext & ctx, const proto::struct_type & str)
     {
-        auto member_scope = std::make_unique<scope>();
+        auto member_scope = ctx.module_scope->clone_for_class();
 
         std::vector<std::unique_ptr<declaration>> decls;
 
