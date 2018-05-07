@@ -25,6 +25,7 @@
 #include "vapor/analyzer/function.h"
 #include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/types/module.h"
 #include "vapor/analyzer/types/overload_set.h"
 #include "vapor/analyzer/types/unresolved.h"
 
@@ -105,6 +106,35 @@ inline namespace _v1
             { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
             {},
             codegen::ir::make_variable(get_type()->codegen_type(ctx)) } };
+    }
+
+    std::vector<codegen::ir::entity> entity::module_codegen_ir(ir_generation_context & ctx) const
+    {
+        assert(_owned);
+        assert(dynamic_cast<module_type *>(_owned.value().get()));
+
+        auto scopes = _owned.value()->get_scope()->codegen_ir();
+
+        auto mod = mbind(_owned.value()->get_scope()->symbols_in_order(), [&](auto && symbol) {
+            return fmap(symbol->codegen_ir(ctx), [&](auto && decl) {
+                return fmap(decl,
+                    make_overload_set(
+                        [&](std::shared_ptr<codegen::ir::variable> symb) {
+                            symb->imported = true;
+                            symb->declared = true;
+                            symb->scopes = scopes;
+                            symb->name = symbol->get_name();
+                            return symb;
+                        },
+                        [&](auto && symb) {
+                            symb.scopes = scopes;
+                            symb.name = symbol->get_name();
+                            return symb;
+                        }));
+            });
+        });
+
+        return mod;
     }
 
     std::unique_ptr<entity> get_entity(precontext & ctx, const proto::entity & ent, const std::map<std::string, const proto::entity *> & associated)

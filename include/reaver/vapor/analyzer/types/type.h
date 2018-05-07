@@ -148,6 +148,7 @@ inline namespace _v1
             if (!_codegen_t)
             {
                 _codegen_t = std::make_shared<codegen::ir::variable_type>();
+                _codegen_t.value()->scopes = _member_scope->codegen_ir();
                 _codegen_type(ctx);
             }
 

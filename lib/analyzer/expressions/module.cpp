@@ -118,32 +118,25 @@ inline namespace _v1
     {
         auto scopes = _scope->codegen_ir();
 
-        codegen::ir::module mod;
-        mod.name = _name;
-        mod.symbols = mbind(_scope->symbols_in_order(), [&](auto && symbol) {
-            return mbind(symbol->codegen_ir(ctx), [&](auto && decl) {
-                return get<0>(fmap(decl,
+        auto mod = mbind(_scope->symbols_in_order(), [&](auto && symbol) {
+            return fmap(symbol->codegen_ir(ctx), [&](auto && decl) {
+                return fmap(decl,
                     make_overload_set(
                         [&](std::shared_ptr<codegen::ir::variable> symb) {
                             symb->declared = true;
                             symb->scopes = scopes;
                             symb->name = symbol->get_name();
-                            return codegen::ir::module_symbols_t{ symb };
+                            return symb;
                         },
-                        [&](codegen::ir::module &) -> codegen::ir::module_symbols_t { assert(0); },
                         [&](auto && symb) {
+                            symb.scopes = scopes;
                             symb.name = symbol->get_name();
                             return symb;
-                        })));
+                        }));
             });
         });
 
-        while (auto fn = ctx.function_to_generate())
-        {
-            mod.symbols.push_back(fn->codegen_ir(ctx));
-        }
-
-        return { { mod } };
+        return mod;
     }
 
     void module::generate_interface(proto::module & mod) const

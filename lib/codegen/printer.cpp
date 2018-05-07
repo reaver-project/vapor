@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,7 +23,7 @@
 #include <reaver/overloads.h>
 #include <reaver/variant.h>
 
-#include "vapor/codegen/ir/module.h"
+#include "vapor/codegen/ir/entity.h"
 #include "vapor/codegen/ir/variable.h"
 #include "vapor/codegen/printer.h"
 
@@ -31,11 +31,11 @@ namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    std::u32string ir_printer::generate_definitions(ir::module & module, codegen_context & ctx)
+    std::u32string ir_printer::generate_definitions(std::vector<ir::entity> & module, codegen_context & ctx)
     {
         std::u32string ret;
 
-        for (auto && symbol : module.symbols)
+        for (auto && symbol : module)
         {
             ret += std::get<0>(fmap(symbol,
                 make_overload_set([&](std::shared_ptr<ir::variable> & var) { return this->generate_definition(*var, ctx); },

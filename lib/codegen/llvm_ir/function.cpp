@@ -29,8 +29,6 @@ inline namespace _v1
 {
     std::u32string llvm_ir_generator::generate_definition(ir::function & fn, codegen_context & ctx)
     {
-        assert(fn.is_defined);
-
         std::u32string ret;
 
         if (auto type = fn.parent_type.lock())
@@ -53,7 +51,9 @@ inline namespace _v1
             scopes += scope.name + U".";
         }
 
-        ret += U"define " + type_name(ir::get_type(fn.return_value), ctx);
+        ret += fn.is_defined ? U"define " : U"declare ";
+        ret += fn.is_builtin ? U"linkonce_odr " : U"";
+        ret += type_name(ir::get_type(fn.return_value), ctx);
         ret += U" @\"" + scopes + function_name(fn, ctx);
         ret += U"\"(\n";
         for (auto && param : fn.parameters)
@@ -67,19 +67,29 @@ inline namespace _v1
             ret.pop_back();
             ret.push_back(U'\n');
         }
-        ret += U")\n{\n";
+        ret += U")\n";
 
-        // there needs to be an entry label
-        ret += U"entry:\n";
-
-        for (auto && inst : fn.instructions)
+        if (fn.is_defined)
         {
-            ret += generate(inst, ctx);
+            ret += U"{\n";
+
+            // there needs to be an entry label
+            ret += U"entry:\n";
+
+            for (auto && inst : fn.instructions)
+            {
+                ret += generate(inst, ctx);
+            }
+
+            ret += U"}\n\n";
+        }
+
+        else
+        {
+            ret += U"\n";
         }
 
         ctx.in_function_definition = old;
-
-        ret += U"}\n\n";
 
         // quick and dirty, but this should work!
         if (fn.is_entry)

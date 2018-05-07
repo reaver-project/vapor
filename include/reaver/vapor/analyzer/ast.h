@@ -24,7 +24,7 @@
 
 #include <reaver/future_get.h>
 
-#include "../codegen/ir/module.h"
+#include "../codegen/ir/entity.h"
 #include "../parser/ast.h"
 #include "../parser/module.h"
 #include "expressions/import.h"
@@ -65,7 +65,7 @@ inline namespace _v1
 
         void analyze();
         void simplify();
-        std::vector<codegen::ir::module> codegen_ir() const;
+        std::vector<codegen::ir::entity> codegen_ir() const;
 
         void serialize_to(std::ostream &) const;
 

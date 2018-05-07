@@ -87,6 +87,7 @@ inline namespace _v1
         });
         fun->set_name(std::move(name));
         fun->set_eval(eval);
+        fun->mark_builtin();
         return fun;
     }
 

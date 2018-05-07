@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -53,6 +53,7 @@ inline namespace _v1
             bool destroyed = false;
             bool parameter = false;
             bool temporary = true;
+            bool imported = false;
             std::vector<scope> scopes = {};
 
             std::shared_ptr<variable_type> refers_to; // this is a huge hack

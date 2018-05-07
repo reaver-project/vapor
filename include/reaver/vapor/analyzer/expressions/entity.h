@@ -88,6 +88,8 @@ inline namespace _v1
             return _name;
         }
 
+        std::vector<codegen::ir::entity> module_codegen_ir(ir_generation_context & ctx) const;
+
     private:
         virtual future<> _analyze(analysis_context &) override;
         virtual future<expression *> _simplify_expr(recursive_context) override;

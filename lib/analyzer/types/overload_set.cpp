@@ -67,10 +67,15 @@ inline namespace _v1
                 imported->return_type.get(),
                 fmap(imported->parameters, [](auto && param) { return param.get(); }),
                 [imported = imported.get()](ir_generation_context & ctx)->codegen::ir::function {
+                    auto params = fmap(imported->parameters,
+                        [&](auto && param) { return std::get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); });
+                    // this is slightly messy, but cleaning it up before I have typeclasses would be wasteful
+                    // since I can fix it in an even better way when I have those
+                    params.erase(params.begin());
+
                     auto ret = codegen::ir::function{ U"call",
                         {},
-                        fmap(imported->parameters,
-                            [&](auto && param) { return std::get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
+                        std::move(params),
                         codegen::ir::make_variable(imported->return_type->as<type_expression>()->get_value()->codegen_type(ctx)),
                         {} };
                     ret.is_member = true;

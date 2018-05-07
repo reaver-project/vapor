@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -195,6 +195,11 @@ inline namespace _v1
             _is_member = true;
         }
 
+        void mark_builtin()
+        {
+            _is_builtin = true;
+        }
+
         void set_scopes_generator(scopes_generator generator)
         {
             _scopes_generator = std::move(generator);
@@ -213,6 +218,7 @@ inline namespace _v1
         std::shared_ptr<expression> _owned_expression;
 
         bool _is_member = false;
+        bool _is_builtin = false;
         std::vector<expression *> _parameters;
         std::optional<std::u32string> _name;
         function_codegen _codegen;

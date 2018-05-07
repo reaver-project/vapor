@@ -83,7 +83,9 @@ inline namespace _v1
 
         member_scope->close();
 
-        return std::make_unique<struct_type>(ast_node{}, std::move(member_scope), std::move(decls));
+        auto ret = std::make_unique<struct_type>(ast_node{}, std::move(member_scope), std::move(decls));
+        ret->mark_imported();
+        return ret;
     }
 
     struct_type::~struct_type() = default;
@@ -123,7 +125,7 @@ inline namespace _v1
                 auto scopes = this->get_scope()->codegen_ir();
                 scopes.emplace_back(get_name(), codegen::ir::scope_type::type);
 
-                return { U"constructor",
+                codegen::ir::function ret = { U"constructor",
                     std::move(scopes),
                     args,
                     result,
@@ -134,6 +136,8 @@ inline namespace _v1
                           result },
                         codegen::ir::instruction{
                             std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
+                ret.is_defined = !_is_imported;
+                return ret;
             });
 
         _aggregate_ctor->set_scopes_generator([this](auto && ctx) { return this->codegen_scopes(ctx); });
@@ -185,7 +189,7 @@ inline namespace _v1
                 auto scopes = this->get_scope()->codegen_ir();
                 scopes.emplace_back(get_name(), codegen::ir::scope_type::type);
 
-                return { U"replacing_copy_constructor",
+                codegen::ir::function ret = { U"replacing_copy_constructor",
                     std::move(scopes),
                     args,
                     result,
@@ -196,6 +200,8 @@ inline namespace _v1
                           result },
                         codegen::ir::instruction{
                             std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
+                ret.is_defined = !_is_imported;
+                return ret;
             });
 
         _aggregate_copy_ctor->set_scopes_generator([this](auto && ctx) { return this->codegen_scopes(ctx); });

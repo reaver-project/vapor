@@ -79,11 +79,26 @@ inline namespace _v1
         }
     }
 
-    std::vector<codegen::ir::module> ast::codegen_ir() const
+    std::vector<codegen::ir::entity> ast::codegen_ir() const
     {
         ir_generation_context ctx;
 
-        return mbind(_modules, [&](auto && mod) { return fmap(mod->declaration_codegen_ir(ctx), [](auto && ir) { return get<codegen::ir::module>(ir); }); });
+        std::vector<codegen::ir::entity> entities;
+        for (auto && [key, value] : _ctx.loaded_modules)
+        {
+            auto symbols = value->module_codegen_ir(ctx);
+            std::move(symbols.begin(), symbols.end(), std::back_inserter(entities));
+        }
+
+        auto symbols = mbind(_modules, [&](auto && mod) { return mod->declaration_codegen_ir(ctx); });
+        std::move(symbols.begin(), symbols.end(), std::back_inserter(entities));
+
+        while (auto fn = ctx.function_to_generate())
+        {
+            entities.emplace_back(fn->codegen_ir(ctx));
+        }
+
+        return entities;
     }
 
     std::ostream & operator<<(std::ostream & os, std::reference_wrapper<ast> tree)

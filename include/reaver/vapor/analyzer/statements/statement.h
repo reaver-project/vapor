@@ -24,9 +24,9 @@
 
 #include <reaver/future.h>
 
+#include "../../codegen/ir/entity.h"
 #include "../../codegen/ir/function.h"
 #include "../../codegen/ir/instruction.h"
-#include "../../codegen/ir/module.h"
 #include "../../codegen/ir/variable.h"
 #include "../../print_helpers.h"
 #include "../ir_context.h"
@@ -42,7 +42,7 @@ inline namespace _v1
     class scope;
 
     using statement_ir = std::vector<codegen::ir::instruction>;
-    using declaration_ir = std::vector<std::variant<std::shared_ptr<codegen::ir::variable>, codegen::ir::function, codegen::ir::module>>;
+    using declaration_ir = std::vector<codegen::ir::entity>;
 
     class statement
     {

@@ -28,7 +28,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "../../codegen/ir/module.h"
 #include "../../range.h"
 #include "../function.h"
 #include "../helpers.h"

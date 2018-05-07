@@ -152,10 +152,8 @@ inline namespace _v1
         if (!_ir)
         {
             _ir = _codegen(ctx);
-            if (_is_member)
-            {
-                _ir->is_member = true;
-            }
+            _ir->is_member = _is_member;
+            _ir->is_builtin = _is_builtin;
 
             if (_entry)
             {

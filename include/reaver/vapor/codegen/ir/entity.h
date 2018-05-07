@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,7 +22,8 @@
 
 #pragma once
 
-#include <ostream>
+#include <memory>
+#include <variant>
 #include <vector>
 
 #include "function.h"
@@ -34,13 +35,7 @@ inline namespace _v1
 {
     namespace ir
     {
-        using module_symbols_t = std::vector<std::variant<std::shared_ptr<variable>, function>>;
-
-        struct module
-        {
-            std::vector<std::u32string> name;
-            module_symbols_t symbols;
-        };
+        using entity = std::variant<std::shared_ptr<codegen::ir::variable>, codegen::ir::function>;
     }
 }
 }
