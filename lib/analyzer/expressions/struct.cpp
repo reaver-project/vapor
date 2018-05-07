@@ -67,6 +67,11 @@ inline namespace _v1
         _type->set_name(std::move(name));
     }
 
+    void struct_literal::mark_exported()
+    {
+        _type->mark_exported();
+    }
+
     statement_ir struct_literal::_codegen_ir(ir_generation_context & ctx) const
     {
         return {};

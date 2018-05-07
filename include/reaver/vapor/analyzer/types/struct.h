@@ -95,12 +95,18 @@ inline namespace _v1
             _is_imported = true;
         }
 
+        void mark_exported()
+        {
+            _is_exported = true;
+        }
+
     private:
         virtual std::unique_ptr<google::protobuf::Message> _user_defined_interface() const override;
         virtual void _codegen_type(ir_generation_context &) const override;
 
         ast_node _parse;
         bool _is_imported = false;
+        bool _is_exported = false;
 
         std::vector<std::unique_ptr<declaration>> _data_members_declarations;
         std::vector<member_expression *> _data_members;

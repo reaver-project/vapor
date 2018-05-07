@@ -239,6 +239,10 @@ inline namespace _v1
         {
         }
 
+        virtual void mark_exported()
+        {
+        }
+
     protected:
         void _set_type(type * t)
         {

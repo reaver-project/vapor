@@ -55,6 +55,11 @@ inline namespace _v1
 
         virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override;
 
+        virtual void mark_exported() override
+        {
+            _type->mark_exported();
+        }
+
     private:
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;

@@ -63,6 +63,11 @@ inline namespace _v1
 
         virtual future<std::vector<function *>> get_candidates(lexer::token_type bracket) const override;
 
+        void mark_exported()
+        {
+            _is_exported = true;
+        }
+
     private:
         virtual std::unique_ptr<google::protobuf::Message> _user_defined_interface() const override;
 
@@ -76,6 +81,8 @@ inline namespace _v1
         std::vector<function *> _functions;
         // shared so that this is destructible without knowing the definition
         std::vector<std::shared_ptr<imported_function>> _imported_functions;
+
+        bool _is_exported = false;
     };
 }
 }

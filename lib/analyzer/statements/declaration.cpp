@@ -60,6 +60,7 @@ inline namespace _v1
         if (parse.export_)
         {
             ret->mark_exported();
+            ret->declared_symbol()->get_expression_future().then([](auto && expr) { expr->mark_exported(); }).detach();
         }
 
         return ret;

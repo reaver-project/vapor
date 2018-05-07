@@ -41,6 +41,8 @@ inline namespace _v1
 
         virtual void set_name(std::u32string name) override;
 
+        virtual void mark_exported() override;
+
     private:
         virtual expression * _get_replacement() override
         {

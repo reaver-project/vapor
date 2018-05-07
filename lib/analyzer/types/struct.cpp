@@ -137,6 +137,7 @@ inline namespace _v1
                         codegen::ir::instruction{
                             std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
                 ret.is_defined = !_is_imported;
+                ret.is_exported = _is_exported;
                 return ret;
             });
 
@@ -201,6 +202,7 @@ inline namespace _v1
                         codegen::ir::instruction{
                             std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
                 ret.is_defined = !_is_imported;
+                ret.is_exported = _is_exported;
                 return ret;
             });
 

@@ -142,6 +142,7 @@ inline namespace _v1
                     [&](codegen::ir::function & fn) {
                         fn.scopes = scopes;
                         fn.parent_type = actual_type;
+                        fn.is_exported = _is_exported;
 
                         return unit{};
                     },

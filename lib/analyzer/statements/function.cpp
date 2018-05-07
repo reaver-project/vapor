@@ -56,6 +56,7 @@ inline namespace _v1
             auto expr_symbol = lex_scope->get(parse.signature.name.value.string);
             expr_symbol->mark_exported();
             expr_symbol->add_associated(U"overload_set_type$" + parse.signature.name.value.string);
+            expr_symbol->get_expression()->mark_exported();
 
             auto type_symbol = lex_scope->get(U"overload_set_type$" + parse.signature.name.value.string);
             type_symbol->mark_exported();
