@@ -1,7 +1,6 @@
 // compile: {vprc} -i {input}
-// assemble: cat {runtime}/crt1.ll >> {input}.ll
 // assemble: {llc} {input}.ll -filetype=obj -relocation-model=pic
-// link: {cc} {input}.o -o {input}.bin
+// link: {cc} {input}.o {runtime} -o {input}.bin
 // run: {input}.bin 2
 
 module main

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(Vapor CXX)
+project(Vapor C CXX)
 
 find_package(Threads REQUIRED)
 find_package(Boost 1.64 REQUIRED
@@ -13,6 +13,23 @@ include(FindPkgConfig)
 pkg_check_modules(SODIUM REQUIRED libsodium>=1.0)
 include_directories(${SODIUM_INCLUDEDIR})
 link_directories(${SODIUM_LIBRARY_DIRS})
+
+find_package(LLVM REQUIRED CONFIG)
+message(STATUS "LLVM version: ${LLVM_PACKAGE_VERSION}")
+message(STATUS "LLVM tools dir: ${LLVM_TOOLS_BINARY_DIR}")
+
+find_program(LLC llc ${LLVM_TOOLS_BINARY_DIR})
+if(NOT LLC)
+    message(FATAL_ERROR "Couldn't find llc!")
+endif()
+
+find_program(OPT opt ${LLVM_TOOLS_BINARY_DIR})
+if(NOT OPT)
+    message(FATAL_ERROR "Couldn't find opt!")
+endif()
+
+message(STATUS "LLC path: ${LLC}")
+message(STATUS "OPT path: ${OPT}")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -32,4 +49,5 @@ include_directories(vendor/protobuf/src SYSTEM)
 
 add_subdirectory(lib)
 add_subdirectory(src)
+add_subdirectory(runtime)
 add_subdirectory(tests EXCLUDE_FROM_ALL)

@@ -1,4 +1,8 @@
+source_filename = "vapor/runtime/crt1.ll"
+target triple = "x86_64-pc-linux-gnu"
+
 declare i32 @atoi(i8* nocapture) nounwind
+declare i32 @__entry_call_thunk(i32) nounwind
 
 define i32 @main(i32 %argc, i8** %argv) {
 entry:

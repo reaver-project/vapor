@@ -114,8 +114,8 @@ def test_file(file_path, test_dir):
         command = step['command'].format(
             input = file_path,
             directory = os.path.dirname(file_path),
-            vprc = args.vprc_path,
-            runtime = os.path.abspath(os.path.join(test_dir, '..', 'runtime')),
+            vprc = os.path.join(args.vpr_path, 'bin', 'vprc'),
+            runtime = os.path.join(args.vpr_path, 'lib', 'libvprrt.a'),
             llc = args.llc,
             cc = args.cc
         )
@@ -140,8 +140,7 @@ if __name__ == '__main__':
     test_dir = os.path.dirname(__file__)
 
     parser = argparse.ArgumentParser(description = 'Run end-to-end compiler tests for Vapor.')
-    parser.add_argument('--vprc-path', dest = 'vprc_path', default = os.path.abspath(os.path.join(test_dir, '..', 'vprc')),
-        help = 'provide a custom vprc binary')
+    parser.add_argument('--vpr-path', dest = 'vpr_path', help = 'provide the path to a Vapor build or install dir')
     parser.add_argument('--llc', default = val_or_def(os.environ.get('LLC'), 'llc'), help = 'provide a custom llc path')
     parser.add_argument('--cc', default = val_or_def(os.environ.get('CC'), 'cc'), help = 'provide a custom cc path')
     parser.add_argument('-t', '--test', help = 'specify a single test file (otherwise runs all found)')
@@ -152,8 +151,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     pt = args.teamcity
     ps = not args.error
-
-    print_if(ps, '%s-- Using vprc at %s%s' % (bcolors.OKBLUE, args.vprc_path, bcolors.ENDC))
 
     if args.test is not None:
         exit(test_file(args.test, test_dir))
