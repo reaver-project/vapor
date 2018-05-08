@@ -34,10 +34,10 @@ inline namespace _v1
     {
         enum compilation_modes : std::size_t
         {
-            link = 0,
             llvm_ir = 1 << 0,
             assembly = 1 << 1,
-            object = 1 << 2
+            object = 1 << 2,
+            link = 1 << 3
         };
     }
 
@@ -88,11 +88,11 @@ public:
         DEFINE_DIR(module, _module)
         DEFINE_DIR(llvm, _llvm)
         DEFINE_DIR(assembly, _assembly)
-        DEFINE_DIR(object, _object)
+        DEFINE_DIR(binary, _binary)
 
 #undef DEFINE_DIR
 
-        boost::filesystem::path output_path() const;
+        boost::filesystem::path object_path() const;
         void set_output_dir(boost::filesystem::path dir);
 
         const std::vector<boost::filesystem::path> & module_paths() const

@@ -1,5 +1,4 @@
-// compile: {vprc} -i {input} -I {directory}
-// assemble: {llc} {input}.ll -filetype=obj -relocation-model=pic
+// compile: {vprc} {input} -I {directory} -l -a -c
 // link: {cc} {runtime} {input}.o {directory}/ackermann.vpr.o -o {input}.bin
 // run: {input}.bin 2
 

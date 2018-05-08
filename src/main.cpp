@@ -22,6 +22,7 @@
 
 #include <fstream>
 
+#include <boost/process.hpp>
 #include <boost/program_options/errors.hpp>
 
 #include "cli/cli.h"
@@ -31,6 +32,20 @@
 #include "vapor/lexer.h"
 #include "vapor/parser.h"
 #include "vapor/utf.h"
+
+void run_process(const std::string & cmdline)
+{
+    reaver::logger::dlog() << "Running `" << cmdline << "`";
+
+    auto child = boost::process::child(cmdline, boost::process::std_out > stdout, boost::process::std_err > stderr);
+
+    child.wait();
+
+    if (child.exit_code() != 0)
+    {
+        throw reaver::exception{ reaver::logger::error } << "`" << cmdline << "` failed";
+    }
+}
 
 int main(int argc, char ** argv) try
 {
@@ -119,10 +134,56 @@ int main(int argc, char ** argv) try
     reaver::logger::dlog() << "Generated LLVM IR:";
     reaver::logger::dlog() << generated_code;
 
-    auto output_path = options->output_path();
-    boost::filesystem::create_directories(output_path.parent_path());
-    std::ofstream out{ output_path.string(), std::ios::trunc | std::ios::out };
-    out << generated_code;
+    namespace modes = reaver::vapor::config::compilation_modes;
+
+    auto name = options->llvm_path();
+
+    {
+        boost::filesystem::create_directories(name.parent_path());
+        std::ofstream out{ name.string(), std::ios::trunc | std::ios::out };
+        out << generated_code;
+    }
+
+    // figure out the path for llc and opt
+    boost::process::ipstream stream;
+    auto child = boost::process::child("llvm-config --bindir", boost::process::std_out > stream);
+    child.wait();
+
+    std::string llvm_bin_dir;
+
+    if (child.exit_code() != 0 || !std::getline(stream, llvm_bin_dir))
+    {
+        throw reaver::exception{ reaver::logger::fatal } << "llvm-config failed";
+    }
+
+    boost::filesystem::path lbd = llvm_bin_dir;
+
+    if (options->compilation_mode() == modes::assembly || options->should_generate_assembly_file())
+    {
+        auto name = options->assembly_path();
+
+        boost::filesystem::create_directories(name.parent_path());
+        run_process((lbd / "llc").string() + " " + options->llvm_path().string() + " -filetype=asm -relocation-model=pic -o " + name.string());
+    }
+
+    if (options->compilation_mode() >= modes::object)
+    {
+        auto name = options->compilation_mode() == modes::object ? options->binary_path() : options->object_path();
+
+        boost::filesystem::create_directories(name.parent_path());
+        run_process((lbd / "llc").string() + " " + options->llvm_path().string() + " -filetype=obj -relocation-model=pic -o " + name.string());
+    }
+
+    if (!options->should_generate_llvm_ir_file())
+    {
+        boost::filesystem::remove(options->llvm_path());
+    }
+
+    if (options->compilation_mode() >= modes::link)
+    {
+        boost::filesystem::create_directories(options->binary_path().parent_path());
+        assert("need to figure this shit out, yo");
+    }
 
     reaver::logger::default_logger().sync();
 }

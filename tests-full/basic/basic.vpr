@@ -1,5 +1,4 @@
-// compile: {vprc} -i {input}
-// assemble: {llc} {input}.ll -filetype=obj -relocation-model=pic
+// compile: {vprc} {input} -l -a -c
 // link: {cc} {input}.o {runtime} -o {input}.bin
 // run: {input}.bin 2
 

@@ -57,7 +57,7 @@ options_result get_options(int argc, char ** argv)
             "set the assembly output file; if the argument is nonexistant or an empty string, forces generation of an assembly file at the default path; "
             "only valid if mode is at least -s")
         ("o", boost::program_options::value<std::string>()->value_name("binary-output")
-            ->notifier([&](auto val){ ret->set_object_path(std::move(val)); }),
+            ->notifier([&](auto val){ ret->set_binary_path(std::move(val)); }),
             "set the object or executable output file")
 
         ("mdir", boost::program_options::value<std::string>()->value_name("module-output-dir")
@@ -70,7 +70,7 @@ options_result get_options(int argc, char ** argv)
             ->notifier([&](auto val){ ret->set_assembly_dir(std::move(val)); }),
             "set the assembly output directory (control the default assembly output file's location, oberriden by -s)")
         ("odir", boost::program_options::value<std::string>()->value_name("binary-output-dir")
-            ->notifier([&](auto val){ ret->set_object_dir(std::move(val)); }),
+            ->notifier([&](auto val){ ret->set_binary_dir(std::move(val)); }),
             "set the object file output directory (controls the default output file's location, overriden by -o)")
 
         ("outdir", boost::program_options::value<std::string>()->value_name("output-directories"),
@@ -137,15 +137,14 @@ options_result get_options(int argc, char ** argv)
     switch (compilation_mode)
     {
         case config::compilation_modes::llvm_ir:
+        case config::compilation_modes::assembly:
+        case config::compilation_modes::object:
             ret->set_compilation_mode(static_cast<config::modes_enum>(compilation_mode));
             break;
 
-        case config::compilation_modes::assembly:
-            throw exception{ logger::error } << "directly outputting assembly with vprc is not supported yet; use -i.";
-        case config::compilation_modes::object:
-            throw exception{ logger::error } << "directly creating an object file with vprc is not supported yet; use -i.";
-        case config::compilation_modes::link:
-            throw exception{ logger::error } << "directly linking with vprc is not supported yet; use -i.";
+        case 0:
+            throw exception{ logger::error } << "can't link with vprc yet";
+            break;
 
         default:
             throw exception{ logger::error } << "multiple compilation modes selected; choose at most one of -i, -s and -o.";

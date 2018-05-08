@@ -84,24 +84,18 @@ inline namespace _v1
     DEFINE_DIR(module, _module, "m", add_first_module_path(dir))
     DEFINE_DIR(llvm, _llvm, ".ll", )
     DEFINE_DIR(assembly, _assembly, ".asm", )
-    DEFINE_DIR(object, _object, ".o", )
+    DEFINE_DIR(binary, _binary, ".o", )
 
-    boost::filesystem::path compiler_options::output_path() const
+    boost::filesystem::path compiler_options::object_path() const
     {
-        switch (_mode)
+        if (auto dir = binary_dir())
         {
-            case compilation_modes::llvm_ir:
-                return llvm_path();
-            case compilation_modes::assembly:
-                assert(!"unsupported: getting assembly output");
-            case compilation_modes::object:
-                assert(!"unsupported: building an object file directly");
-            case compilation_modes::link:
-                assert(!"unsupported: linking with vprc directly?");
-
-            default:
-                __builtin_unreachable();
+            assert(_module_name_path);
+            auto ret = dir.value() / _module_name_path.value();
+            return ret.string() + ".o";
         }
+
+        return _source_path.value().string() + ".o";
     }
 
     void compiler_options::set_output_dir(boost::filesystem::path path)

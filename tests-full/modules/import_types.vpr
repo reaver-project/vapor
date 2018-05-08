@@ -1,4 +1,4 @@
-// compile: {vprc} -i {input} -I {directory}/types
+// compile: {vprc} {input} -I {directory}/types -i
 
 import single_file;
 import single_file.submodule;
