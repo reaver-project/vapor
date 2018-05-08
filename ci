@@ -58,4 +58,4 @@ make -j${core_number} -l${core_number}
 make ci-tests -j${core_number} -l${core_number}
 popd
 
-./tests-full/run --teamcity --vprc-path build/bin/vprc
+./tests-full/run --teamcity --vpr-path build
