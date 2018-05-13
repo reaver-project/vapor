@@ -24,6 +24,8 @@
 
 #include <boost/filesystem.hpp>
 
+#include <reaver/function.h>
+
 #include "language_options.h"
 
 namespace reaver::vapor::config
@@ -42,6 +44,8 @@ inline namespace _v1
     }
 
     using modes_enum = compilation_modes::compilation_modes;
+
+    using compilation_handler = unique_function<void(const boost::filesystem::path &) const>;
 
     class compiler_options
     {
@@ -70,6 +74,17 @@ inline namespace _v1
         void set_compilation_mode(modes_enum mode)
         {
             _mode = mode;
+        }
+
+        void set_compilation_handler(compilation_handler handler)
+        {
+            _compilation_handler = std::move(handler);
+        }
+
+        void compile_file(const boost::filesystem::path & file) const
+        {
+            assert(_compilation_handler);
+            _compilation_handler.value()(file);
         }
 
 #define DEFINE_DIR(name, privname)                                                                                                                             \
@@ -109,6 +124,8 @@ public:
 
     private:
         std::unique_ptr<class language_options> _lang_opt;
+
+        std::optional<compilation_handler> _compilation_handler;
 
         modes_enum _mode = compilation_modes::link;
         std::optional<boost::filesystem::path> _source_path;

@@ -101,11 +101,6 @@ inline namespace _v1
         return std::nullopt;
     }
 
-    void compile_file(precontext & ctx, const boost::filesystem::path & path)
-    {
-        throw exception{ logger::error } << "unimplemented: compiling a module dependency: " << path;
-    }
-
     entity * import_module(precontext & ctx, const std::vector<std::string> & module_name);
 
     void import_from_ast(precontext & ctx, const boost::filesystem::path & path, const std::vector<std::string> & module_name)
@@ -135,7 +130,7 @@ inline namespace _v1
 
                 if (sha256sum != ast.compilation_info().source_hash())
                 {
-                    compile_file(ctx, source_path.value());
+                    ctx.options.compile_file(source_path.value());
                     import_module(ctx, module_name);
                     return;
                 }
@@ -243,7 +238,7 @@ inline namespace _v1
 
             if (found_module->extension() == ".vpr")
             {
-                compile_file(ctx, found_module.value());
+                ctx.options.compile_file(found_module.value());
                 return import_module(ctx, module_name);
             }
 
