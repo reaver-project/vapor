@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -49,7 +49,7 @@ MAYFLY_ADD_TESTCASE("init and get", [] {
 
     MAYFLY_REQUIRE(!s.init(U"present", make_symbol(U"present")));
 
-    MAYFLY_CHECK_THROWS_TYPE(std::out_of_range, s.get(U"absent"));
+    MAYFLY_CHECK_THROWS_TYPE(reaver::vapor::analyzer::failed_lookup, s.get(U"absent"));
     MAYFLY_CHECK(!s.try_get(U"absent"));
 
     auto another = make_symbol(U"another");

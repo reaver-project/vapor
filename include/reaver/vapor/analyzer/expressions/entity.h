@@ -98,6 +98,16 @@ inline namespace _v1
             return _is_local;
         }
 
+        void save_symbol(symbol * symb)
+        {
+            _symbol = symb;
+        }
+
+        symbol * get_symbol() const
+        {
+            return _symbol;
+        }
+
         std::vector<codegen::ir::entity> module_codegen_ir(ir_generation_context & ctx) const;
 
     private:
@@ -117,6 +127,7 @@ inline namespace _v1
         std::vector<std::string> _name;
 
         bool _is_local = false;
+        symbol * _symbol = nullptr;
     };
 
     inline std::unique_ptr<entity> make_entity(imported_type imported)

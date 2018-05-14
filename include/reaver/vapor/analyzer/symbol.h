@@ -52,6 +52,21 @@ inline namespace _v1
             return _is_exported;
         }
 
+        void hide()
+        {
+            _hidden = true;
+        }
+
+        void unhide()
+        {
+            _hidden = false;
+        }
+
+        bool is_hidden() const
+        {
+            return _hidden;
+        }
+
         void mark_associated()
         {
             _is_associated = true;
@@ -138,6 +153,7 @@ inline namespace _v1
         mutable std::shared_mutex _lock;
 
         bool _is_exported = false;
+        bool _hidden = false;
         bool _is_associated = false;
         std::set<std::u32string> _associated;
 

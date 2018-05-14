@@ -44,32 +44,26 @@ inline namespace _v1
 
     void scope::close()
     {
+        if (_is_closed)
         {
-            _ulock lock{ _lock };
-
-            if (_is_closed)
-            {
-                return;
-            }
-
-            _is_closed = true;
-
-            for (auto && promise : _symbol_promises)
-            {
-                auto it = _symbols.find(promise.first);
-                if (it != _symbols.end())
-                {
-                    promise.second.set(it->second.get());
-                    continue;
-                }
-
-                promise.second.set(std::make_exception_ptr(failed_lookup{ promise.first }));
-            }
-
-            _symbol_promises.clear();
-
-            _close_promise->set();
+            return;
         }
+
+        _is_closed = true;
+
+        for (auto && promise : _symbol_promises)
+        {
+            auto it = _symbols.find(promise.first);
+            if (it != _symbols.end())
+            {
+                promise.second.set(it->second.get());
+                continue;
+            }
+
+            promise.second.set(std::make_exception_ptr(failed_lookup{ promise.first }));
+        }
+
+        _symbol_promises.clear();
 
         if (!_is_shadowing_boundary && _parent)
         {
@@ -85,8 +79,6 @@ inline namespace _v1
         }
 
         assert(!_is_closed);
-
-        _ulock lock{ _lock };
 
         for (auto scope = this; scope; scope = scope->_parent)
         {
@@ -105,27 +97,29 @@ inline namespace _v1
         return _symbols.emplace(name, std::move(symb)).first->second.get();
     }
 
-    future<symbol *> scope::get_future(const std::u32string & name) const
+    symbol * scope::get(const std::u32string & name) const
     {
+        auto symb = try_get(name);
+        if (!symb)
         {
-            _shlock lock{ _lock };
-            auto it = _symbol_futures.find(name);
-            if (it != _symbol_futures.end())
-            {
-                return it->second;
-            }
+            throw failed_lookup{ name };
+        }
+        return symb.value();
+    }
 
-            auto value_it = _symbols.find(name);
-            if (_is_closed && value_it == _symbols.end())
-            {
-                return make_exceptional_future<symbol *>(failed_lookup{ name });
-            }
+    std::optional<symbol *> scope::try_get(const std::u32string & name) const
+    {
+        auto it = _symbols.find(name);
+        if (it == _symbols.end() || it->second->is_hidden())
+        {
+            return std::nullopt;
         }
 
-        _ulock lock{ _lock };
+        return std::make_optional(it->second.get());
+    }
 
-        // need to repeat due to a logical race between the check before
-        // and re-locking the lock
+    future<symbol *> scope::get_future(const std::u32string & name) const
+    {
         auto it = _symbol_futures.find(name);
         if (it != _symbol_futures.end())
         {
@@ -133,6 +127,12 @@ inline namespace _v1
         }
 
         auto value_it = _symbols.find(name);
+
+        if (_is_closed && value_it == _symbols.end())
+        {
+            return make_exceptional_future<symbol *>(failed_lookup{ name });
+        }
+
         if (_is_closed && value_it != _symbols.end())
         {
             return _symbol_futures.emplace(name, make_ready_future(value_it->second.get())).first->second;
@@ -153,14 +153,10 @@ inline namespace _v1
             }
         }
 
+        auto it = _resolve_futures.find(name);
+        if (it != _resolve_futures.end())
         {
-            _shlock lock{ _lock };
-
-            auto it = _resolve_futures.find(name);
-            if (it != _resolve_futures.end())
-            {
-                return it->second;
-            }
+            return it->second;
         }
 
         auto pair = make_promise<symbol *>();
@@ -194,7 +190,6 @@ inline namespace _v1
             })
             .detach();
 
-        _ulock lock{ _lock };
         _resolve_futures.emplace(name, pair.future);
         return std::move(pair.future);
     }

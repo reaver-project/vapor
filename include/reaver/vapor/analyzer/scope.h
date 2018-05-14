@@ -59,28 +59,15 @@ inline namespace _v1
         {
         };
 
-        void _init_close()
-        {
-            auto pair = make_promise<void>();
-            _close_future = std::move(pair.future);
-            _close_promise = std::move(pair.promise);
-        }
-
     public:
         scope(bool is_local = false) : _is_local_scope{ is_local }
         {
-            _init_close();
         }
-
-    private:
-        using _ulock = std::unique_lock<std::shared_mutex>;
-        using _shlock = std::shared_lock<std::shared_mutex>;
 
     public:
         scope(_key, scope * parent_scope, bool is_local, bool is_shadowing_boundary)
             : _parent{ parent_scope }, _is_local_scope{ is_local }, _is_shadowing_boundary{ is_shadowing_boundary }
         {
-            _init_close();
         }
 
         ~scope();
@@ -112,48 +99,17 @@ inline namespace _v1
             return std::make_unique<scope>(_key{}, this, false, true);
         }
 
-        auto get(const std::u32string & name) const
-        {
-            _shlock lock{ _lock };
-            return _symbols.at(name).get();
-        }
-
-        auto try_get(const std::u32string & name) const
-        {
-            _shlock lock{ _lock };
-            auto it = _symbols.find(name);
-            return it != _symbols.end() ? std::make_optional(it->second.get()) : std::nullopt;
-        }
+        symbol * get(const std::u32string & name) const;
+        std::optional<symbol *> try_get(const std::u32string & name) const;
 
         symbol * init(const std::u32string & name, std::unique_ptr<symbol> symb);
 
         template<typename F>
         auto get_or_init(const std::u32string & name, F init)
         {
-            if (non_overridable().find(name) != non_overridable().end())
+            if (auto symb = try_get(name))
             {
-                assert(0);
-            }
-
-            assert(!_is_closed);
-
-            {
-                _shlock lock{ _lock };
-                auto it = _symbols.find(name);
-                if (it != _symbols.end())
-                {
-                    return it->second.get();
-                }
-            }
-
-            _ulock lock{ _lock };
-
-            // need to repeat due to a logical race between the check before
-            // and re-locking the lock
-            auto it = _symbols.find(name);
-            if (it != _symbols.end())
-            {
-                return it->second.get();
+                return symb.value();
             }
 
             auto init_v = init();
@@ -211,8 +167,6 @@ inline namespace _v1
         }
 
     private:
-        mutable std::shared_mutex _lock;
-
         std::u32string _name;
         codegen::ir::scope_type _scope_type;
 
@@ -226,9 +180,6 @@ inline namespace _v1
         const bool _is_local_scope = false;
         const bool _is_shadowing_boundary = false;
         bool _is_closed = false;
-
-        std::optional<future<>> _close_future;
-        std::optional<manual_promise<void>> _close_promise;
     };
 }
 }

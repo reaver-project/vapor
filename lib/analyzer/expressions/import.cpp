@@ -183,7 +183,10 @@ inline namespace _v1
                 type = type_uptr.get();
 
                 saved = make_entity(std::move(type_uptr));
-                assert(old_scope->init(utf32(name_part), make_symbol(utf32(name_part), saved.get())));
+                auto symbol = make_symbol(utf32(name_part), saved.get());
+                symbol->hide();
+                saved->save_symbol(symbol.get());
+                assert(old_scope->init(utf32(name_part), std::move(symbol)));
 
                 saved->set_timestamp(ast->compilation_info().time());
                 saved->set_source_hash(ast->compilation_info().source_hash());
@@ -286,6 +289,7 @@ inline namespace _v1
 
                     if (mode == import_mode::statement)
                     {
+                        ent->get_symbol()->unhide();
                     }
 
                     return std::make_unique<import_expression>(make_node(parse), ent);
