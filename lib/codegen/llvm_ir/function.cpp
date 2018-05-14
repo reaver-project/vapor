@@ -52,7 +52,7 @@ inline namespace _v1
         }
 
         ret += fn.is_defined ? U"define " : U"declare ";
-        ret += fn.is_builtin ? U"linkonce_odr " : (!fn.is_defined || fn.is_exported ? U"" : U"private ");
+        ret += fn.is_builtin ? U"linkonce_odr " : (!fn.is_defined || fn.is_exported ? U"" : U"internal ");
         ret += type_name(ir::get_type(fn.return_value), ctx);
         ret += U" @\"" + scopes + function_name(fn, ctx);
         ret += U"\"(\n";
