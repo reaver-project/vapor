@@ -83,12 +83,14 @@ def parse_metadata(file_path):
 def test_file(file_path, test_dir):
     global failed_tests
 
-    if not os.path.exists(file_path):
-        if not os.path.exists(file_path + '.vprc'):
+    if not os.path.exists(os.path.join(test_dir, file_path)):
+        if not os.path.exists(os.path.join(test_dir, file_path + '.vpr')):
             print('-- Invalid test name: %s' % file_path)
             return 1
 
-        file_path += '.vprc'
+        file_path += '.vpr'
+
+    file_path = os.path.join(test_dir, file_path)
 
     name = os.path.splitext(os.path.basename(file_path))[0]
 
@@ -136,8 +138,17 @@ def test_file(file_path, test_dir):
         print("##teamcity[testFinished name='%s']" % name)
 
 
+def clear_artifacts(test_dir):
+    for root, dirs, files in os.walk(test_dir):
+        for file in files:
+            if os.path.splitext(file)[1] in ('.vprm', '.o', '.asm', '.ll', '.bin'):
+                os.unlink(os.path.join(root, file))
+
+
 if __name__ == '__main__':
     test_dir = os.path.dirname(__file__)
+
+    clear_artifacts(test_dir)
 
     parser = argparse.ArgumentParser(description = 'Run end-to-end compiler tests for Vapor.')
     parser.add_argument('--vpr-path', dest = 'vpr_path', help = 'provide the path to a Vapor build or install dir')
@@ -167,7 +178,7 @@ if __name__ == '__main__':
             if os.path.splitext(file)[1] != '.vpr':
                 continue
 
-            test_file(os.path.join(root, file), test_dir)
+            test_file(file, os.path.join(test_dir, root))
 
         if pt:
             for dir in root.split(os.path.sep)[::-1]:
