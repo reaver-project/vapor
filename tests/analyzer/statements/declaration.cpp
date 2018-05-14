@@ -49,10 +49,8 @@ MAYFLY_ADD_TESTCASE("non-member, explicit type, initializer", [] {
         auto decl = preanalyze_declaration(pctx, ast, current_scope);
 
         MAYFLY_CHECK(current_scope == &s1);
-        auto symbol_future = current_scope->get_future(U"foo");
-        MAYFLY_CHECK(!symbol_future.try_get());
         current_scope->close();
-        MAYFLY_CHECK(reaver::get(symbol_future) == decl->declared_symbol());
+        MAYFLY_CHECK(current_scope->get(U"foo") == decl->declared_symbol());
 
         analysis_context ctx{};
         auto analysis_future = decl->analyze(ctx);
@@ -82,8 +80,7 @@ MAYFLY_ADD_TESTCASE("non-member, explicit type, initializer", [] {
         auto decl = preanalyze_declaration(pctx, ast, current_scope);
 
         MAYFLY_CHECK(current_scope != s2.get());
-        auto symbol_future = current_scope->get_future(U"foo");
-        MAYFLY_CHECK(reaver::get(symbol_future) == decl->declared_symbol());
+        MAYFLY_CHECK(current_scope->get(U"foo") == decl->declared_symbol());
 
         s2.reset(current_scope);
     }

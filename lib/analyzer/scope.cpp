@@ -51,20 +51,6 @@ inline namespace _v1
 
         _is_closed = true;
 
-        for (auto && promise : _symbol_promises)
-        {
-            auto it = _symbols.find(promise.first);
-            if (it != _symbols.end())
-            {
-                promise.second.set(it->second.get());
-                continue;
-            }
-
-            promise.second.set(std::make_exception_ptr(failed_lookup{ promise.first }));
-        }
-
-        _symbol_promises.clear();
-
         if (!_is_shadowing_boundary && _parent)
         {
             _parent->close();
@@ -118,80 +104,38 @@ inline namespace _v1
         return std::make_optional(it->second.get());
     }
 
-    future<symbol *> scope::get_future(const std::u32string & name) const
-    {
-        auto it = _symbol_futures.find(name);
-        if (it != _symbol_futures.end())
-        {
-            return it->second;
-        }
-
-        auto value_it = _symbols.find(name);
-
-        if (_is_closed && value_it == _symbols.end())
-        {
-            return make_exceptional_future<symbol *>(failed_lookup{ name });
-        }
-
-        if (_is_closed && value_it != _symbols.end())
-        {
-            return _symbol_futures.emplace(name, make_ready_future(value_it->second.get())).first->second;
-        }
-
-        auto pair = make_promise<symbol *>();
-        _symbol_promises.emplace(name, std::move(pair.promise));
-        return _symbol_futures.emplace(name, std::move(pair.future)).first->second;
-    }
-
-    future<symbol *> scope::resolve(const std::u32string & name) const
+    symbol * scope::resolve(const std::u32string & name) const
     {
         {
             auto it = non_overridable().find(name);
             if (it != non_overridable().end())
             {
-                return make_ready_future(it->second.get());
+                return it->second.get();
             }
         }
 
-        auto it = _resolve_futures.find(name);
-        if (it != _resolve_futures.end())
+        auto it = _resolve_cache.find(name);
+        if (it != _resolve_cache.end())
         {
             return it->second;
         }
 
-        auto pair = make_promise<symbol *>();
+        auto scope = this;
 
-        get_future(name)
-            .then([promise = pair.promise](auto && symb) { promise.set(symb); })
-            .on_error([name, promise = pair.promise, parent = _parent](auto exptr) {
-                try
-                {
-                    std::rethrow_exception(exptr);
-                }
+        while (scope)
+        {
+            auto symb = scope->try_get(name);
 
-                catch (failed_lookup & ex)
-                {
-                    if (!parent)
-                    {
-                        promise.set(exptr);
-                        return;
-                    }
+            if (symb && !symb.value()->is_hidden())
+            {
+                _resolve_cache.emplace(name, symb.value());
+                return symb.value();
+            }
 
-                    parent->resolve(name)
-                        .then([promise = promise](auto && symb) { promise.set(symb); })
-                        .on_error([promise = promise](auto && ex) { promise.set(ex); })
-                        .detach();
-                }
+            scope = scope->_parent;
+        }
 
-                catch (...)
-                {
-                    promise.set(exptr);
-                }
-            })
-            .detach();
-
-        _resolve_futures.emplace(name, pair.future);
-        return std::move(pair.future);
+        throw failed_lookup(name);
     }
 
     const std::unordered_map<std::u32string, std::unique_ptr<symbol>> & non_overridable()

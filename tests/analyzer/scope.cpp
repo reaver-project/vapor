@@ -49,42 +49,12 @@ MAYFLY_ADD_TESTCASE("init and get", [] {
 
     MAYFLY_REQUIRE(!s.init(U"present", make_symbol(U"present")));
 
-    MAYFLY_CHECK_THROWS_TYPE(reaver::vapor::analyzer::failed_lookup, s.get(U"absent"));
+    MAYFLY_CHECK_THROWS_TYPE(failed_lookup, s.get(U"absent"));
     MAYFLY_CHECK(!s.try_get(U"absent"));
 
     auto another = make_symbol(U"another");
     auto another_ptr = another.get();
     MAYFLY_REQUIRE(s.get_or_init(U"another", [&] { return std::move(another); }) == another_ptr);
-});
-
-MAYFLY_ADD_TESTCASE("get_future", [] {
-    scope s{};
-
-    auto preexisting = make_symbol(U"preexisting");
-    auto preexisting_ptr = preexisting.get();
-    s.init(U"preexisting", std::move(preexisting));
-
-    auto preexisting_future = s.get_future(U"preexisting");
-    MAYFLY_REQUIRE(!preexisting_future.try_get());
-
-    auto added_after_future = s.get_future(U"added_after");
-    MAYFLY_REQUIRE(!added_after_future.try_get());
-
-    auto added_after = make_symbol(U"added_after");
-    auto added_after_ptr = added_after.get();
-    s.init(U"added_after", std::move(added_after));
-
-    auto failed_future = s.get_future(U"failed");
-
-    MAYFLY_REQUIRE(!failed_future.try_get());
-
-    s.close();
-
-    MAYFLY_REQUIRE(reaver::get(preexisting_future) == preexisting_ptr);
-    MAYFLY_REQUIRE(reaver::get(added_after_future) == added_after_ptr);
-
-    MAYFLY_REQUIRE_THROWS_TYPE(failed_lookup, reaver::get(failed_future));
-    MAYFLY_REQUIRE_THROWS_TYPE(failed_lookup, s.get_future(U"another_failed").try_get());
 });
 
 MAYFLY_ADD_TESTCASE("resolve", [] {
@@ -106,24 +76,19 @@ MAYFLY_ADD_TESTCASE("resolve", [] {
     auto overloaded_child_ptr = overloaded_child.get();
     child->init(U"overloaded", std::move(overloaded_child));
 
-    auto parent_only_future = child->resolve(U"parent_only");
-    auto child_only_future = child->resolve(U"child_only");
-    auto overloaded_future = child->resolve(U"overloaded");
-    auto failed_future = child->resolve(U"failed");
+    auto parent_only_symbol = child->resolve(U"parent_only");
+    auto child_only_symbol = child->resolve(U"child_only");
+    auto overloaded_symbol = child->resolve(U"overloaded");
+    MAYFLY_CHECK_THROWS_TYPE(failed_lookup, child->resolve(U"failed"));
 
     auto grandchild = child->clone_for_class();
 
-    auto grandchild_future = grandchild->resolve(U"parent_only");
+    auto grandchild_symbol = grandchild->resolve(U"parent_only");
 
-    grandchild->close();
-    child->close();
-    parent.close();
-
-    MAYFLY_CHECK(reaver::get(parent_only_future) == parent_only_ptr);
-    MAYFLY_CHECK(reaver::get(child_only_future) == child_only_ptr);
-    MAYFLY_CHECK(reaver::get(overloaded_future) == overloaded_child_ptr);
-    MAYFLY_CHECK_THROWS_TYPE(failed_lookup, reaver::get(failed_future));
-    MAYFLY_CHECK(reaver::get(grandchild_future) == parent_only_ptr);
+    MAYFLY_CHECK(parent_only_symbol == parent_only_ptr);
+    MAYFLY_CHECK(child_only_symbol == child_only_ptr);
+    MAYFLY_CHECK(overloaded_symbol == overloaded_child_ptr);
+    MAYFLY_CHECK(grandchild_symbol == parent_only_ptr);
 });
 
 MAYFLY_ADD_TESTCASE("is_local", [] {

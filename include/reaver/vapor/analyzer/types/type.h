@@ -24,6 +24,7 @@
 
 #include <memory>
 
+#include <reaver/future.h>
 #include <reaver/variant.h>
 
 #include <google/protobuf/message.h>

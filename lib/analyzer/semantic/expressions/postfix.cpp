@@ -55,8 +55,8 @@ inline namespace _v1
                 {
                     return _base_expr->get_type()
                         ->get_scope()
-                        ->get_future(*_accessed_member)
-                        .then([](auto && symb) { return symb->get_expression_future(); })
+                        ->get(*_accessed_member)
+                        ->get_expression_future()
                         .then([&](auto && var) {
                             _referenced_expression = var;
                             return _referenced_expression.value()->analyze(ctx);

@@ -27,7 +27,7 @@
 #include <string>
 #include <unordered_map>
 
-#include <reaver/future.h>
+#include <reaver/exception.h>
 #include <reaver/optional.h>
 
 #include "../codegen/ir/scope.h"
@@ -119,11 +119,7 @@ inline namespace _v1
             return ret;
         }
 
-        // this will always give you a thingy from *current* scope
-        // if you want to get from any of the scopes up
-        // do use resolve()
-        future<symbol *> get_future(const std::u32string & name) const;
-        future<symbol *> resolve(const std::u32string & name) const;
+        symbol * resolve(const std::u32string & name) const;
 
         const auto & declared_symbols() const
         {
@@ -174,9 +170,7 @@ inline namespace _v1
         std::unordered_set<std::unique_ptr<scope>> _keepalive;
         std::unordered_map<std::u32string, std::unique_ptr<symbol>> _symbols;
         std::vector<symbol *> _symbols_in_order;
-        mutable std::unordered_map<std::u32string, future<symbol *>> _symbol_futures;
-        mutable std::unordered_map<std::u32string, manual_promise<symbol *>> _symbol_promises;
-        mutable std::unordered_map<std::u32string, future<symbol *>> _resolve_futures;
+        mutable std::unordered_map<std::u32string, symbol *> _resolve_cache;
         const bool _is_local_scope = false;
         const bool _is_shadowing_boundary = false;
         bool _is_closed = false;
