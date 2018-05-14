@@ -2,6 +2,10 @@
 
 module multi_file.inner
 {
+    export function test() -> sized_int(32)
+    {
+        return 0;
+    }
 }
 
 // vim: filetype=cpp

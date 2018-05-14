@@ -6,6 +6,10 @@ module multi_file
 
 module multi_file.embedded
 {
+    export function test() -> sized_int(32)
+    {
+        return 0;
+    }
 }
 
 // vim: filetype=cpp

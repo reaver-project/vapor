@@ -1,4 +1,6 @@
-// compile: {vprc} {input} -I {directory}/types -i
+// compile: {vprc} {input} -I {directory}/types -c
+// link: {cc} {runtime} {input}.o {directory}/types/multi_file/inner.vpr.o {directory}/types/multi_file/module.vpr.o -o {input}.bin
+// run: {input}.bin 0
 
 import single_file;
 import single_file.submodule;
@@ -8,5 +10,13 @@ import multi_file.multi_submodule;
 import multi_file.multi_submodule.inner;
 import multi_file.inner;
 import multi_file.embedded;
+
+module main
+{
+    let entry = λ(arg : sized_int(32)) -> sized_int(32)
+    {
+        return multi_file.multi_submodule.inner.test() + multi_file.embedded.test();
+    };
+}
 
 // vim: filetype=cpp
