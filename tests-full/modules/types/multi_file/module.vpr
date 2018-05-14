@@ -6,9 +6,9 @@ module multi_file
 
 module multi_file.embedded
 {
-    export function test() -> sized_int(32)
+    export function test(arg : sized_int(32)) -> sized_int(32)
     {
-        return 0;
+        return arg;
     }
 }
 
