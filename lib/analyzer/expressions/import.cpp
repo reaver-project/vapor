@@ -111,24 +111,26 @@ inline namespace _v1
             throw exception{ logger::fatal } << "couldn't open module interface file: " << path;
         }
 
-        proto::ast ast;
-        if (!ast.ParseFromIstream(&interface_file))
+        auto ast = std::make_shared<proto::ast>();
+        ctx.imported_asts.push_back(ast);
+
+        if (!ast->ParseFromIstream(&interface_file))
         {
             throw exception{ logger::fatal } << "couldn't parse the serialized ast from the module interface file " << path;
         }
-        if (!ast.has_compilation_info() || ast.modules_size() == 0)
+        if (!ast->has_compilation_info() || ast->modules_size() == 0)
         {
             throw exception{ logger::fatal } << "no valid serialized ast in the module interface file " << path;
         }
 
         if (auto source_path = find_module(ctx, module_name, true))
         {
-            if (static_cast<std::int64_t>(boost::filesystem::last_write_time(source_path.value())) > ast.compilation_info().time())
+            if (static_cast<std::int64_t>(boost::filesystem::last_write_time(source_path.value())) > ast->compilation_info().time())
             {
                 boost::iostreams::mapped_file_source source{ source_path->string() };
                 auto sha256sum = sha256(source.data(), source.size());
 
-                if (sha256sum != ast.compilation_info().source_hash())
+                if (sha256sum != ast->compilation_info().source_hash())
                 {
                     ctx.options.compile_file(source_path.value());
                     import_module(ctx, module_name);
@@ -139,23 +141,56 @@ inline namespace _v1
 
         ctx.current_file.push(boost::filesystem::canonical(path));
 
-        if (ast.imports_size())
+        if (ast->imports_size())
         {
             throw exception{ logger::fatal } << "not implemented yet: loading a module with imports";
         }
 
-        for (auto && module : ast.modules())
+        for (auto && module : ast->modules())
         {
             // TODO: support submodules (including the scope creation below...)
-            assert(module.name().size() == 1);
+            assert(module.name().size() != 0);
 
             auto name = boost::algorithm::join(module.name(), ".");
             ctx.current_scope.push(name);
 
-            auto scope = ctx.global_scope->clone_for_class();
-            scope->set_name(utf32(name), codegen::ir::scope_type::module);
-            ctx.module_scope = scope.get();
-            auto type = std::make_unique<module_type>(std::move(scope), name);
+            std::string cumulative_name;
+
+            module_type * type = nullptr;
+            scope * lex_scope = ctx.global_scope;
+
+            // TODO: integrate this with the same stuff in preanalyze_module
+            for (auto && name_part : module.name())
+            {
+                cumulative_name = cumulative_name + (cumulative_name.empty() ? "" : ".") + name_part;
+                auto & saved = ctx.modules[cumulative_name];
+
+                if (saved)
+                {
+                    assert(dynamic_cast<module_type *>(saved->get_type()));
+                    lex_scope = saved->get_type()->get_scope();
+
+                    continue;
+                }
+
+                auto scope = lex_scope->clone_for_class();
+                scope->set_name(utf32(name_part), codegen::ir::scope_type::module);
+
+                auto old_scope = lex_scope;
+                lex_scope = scope.get();
+
+                auto type_uptr = std::make_unique<module_type>(std::move(scope), name_part);
+                type = type_uptr.get();
+
+                saved = make_entity(std::move(type_uptr));
+                assert(old_scope->init(utf32(name_part), make_symbol(utf32(name_part), saved.get())));
+
+                saved->set_timestamp(ast->compilation_info().time());
+                saved->set_source_hash(ast->compilation_info().source_hash());
+                saved->set_import_name({ module.name().begin(), module.name().end() });
+            }
+
+            ctx.module_scope = lex_scope;
 
             // seems that protobuf's map doesn't have a deterministic order of iteration
             // we can't let that happen in a compiler...
@@ -194,14 +229,6 @@ inline namespace _v1
                 ctx.imported_entities.insert(std::move(ent));
             }
 
-            auto & saved = ctx.loaded_modules[name];
-            assert(!saved);
-            saved = make_entity(std::move(type));
-
-            saved->set_timestamp(ast.compilation_info().time());
-            saved->set_source_hash(ast.compilation_info().source_hash());
-            saved->set_import_name({ module.name().begin(), module.name().end() });
-
             ctx.current_scope.pop();
         }
 
@@ -212,8 +239,8 @@ inline namespace _v1
     {
         auto return_cached = [&]() -> entity * {
             auto name = boost::algorithm::join(module_name, ".");
-            auto it = ctx.loaded_modules.find(name);
-            if (it != ctx.loaded_modules.end())
+            auto it = ctx.modules.find(name);
+            if (it != ctx.modules.end())
             {
                 return it->second.get();
             }
@@ -259,17 +286,6 @@ inline namespace _v1
 
                     if (mode == import_mode::statement)
                     {
-                        auto scope = lex_scope;
-
-                        for (auto it = expr.id_expression_value.begin(); it != expr.id_expression_value.end() - 1; ++it)
-                        {
-                            auto sub = lex_scope->get_or_init(
-                                it->value.string, [&]() -> std::unique_ptr<symbol> { assert(!"need to properly implement imports of nested modules!"); });
-                            assert(sub->get_type() && dynamic_cast<module_type *>(sub->get_type()));
-                            scope = sub->get_type()->get_scope();
-                        }
-
-                        scope->init(expr.id_expression_value.back().value.string, make_symbol(expr.id_expression_value.back().value.string, ent));
                     }
 
                     return std::make_unique<import_expression>(make_node(parse), ent);

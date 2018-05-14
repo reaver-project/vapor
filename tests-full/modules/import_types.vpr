@@ -1,5 +1,5 @@
 // compile: {vprc} {input} -I {directory}/types -c
-// link: {cc} {runtime} {input}.o {directory}/types/multi_file/inner.vpr.o {directory}/types/multi_file/module.vpr.o -o {input}.bin
+// link: {cc} {runtime} {input}.o {directory}/types/multi_file/multi_submodule/inner.vpr.o {directory}/types/multi_file/module.vpr.o -o {input}.bin
 // run: {input}.bin 0
 
 import single_file;
@@ -15,7 +15,7 @@ module main
 {
     let entry = λ(arg : sized_int(32)) -> sized_int(32)
     {
-        return multi_file.multi_submodule.inner.test() + multi_file.embedded.test();
+        return multi_file.multi_submodule.inner.test(arg) + multi_file.embedded.test(arg);
     };
 }
 

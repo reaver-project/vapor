@@ -88,6 +88,8 @@ inline namespace _v1
                     make_ready_future(_lex_scope),
                     [&, go_one_level](auto future, auto && kind) {
                         return std::accumulate(kind->begin(), kind->end(), future, [go_one_level](auto future, const auto & name) {
+                            logger::dlog() << name;
+                            logger::default_logger().sync();
                             return future.then([&name, go_one_level](auto scope) { return go_one_level(scope, name); });
                         });
                     })

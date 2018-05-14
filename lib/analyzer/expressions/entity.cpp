@@ -120,8 +120,8 @@ inline namespace _v1
                 return fmap(decl,
                     make_overload_set(
                         [&](std::shared_ptr<codegen::ir::variable> symb) {
-                            symb->imported = true;
-                            symb->declared = true;
+                            symb->imported = !_is_local;
+                            symb->declared = !_is_local;
                             symb->scopes = scopes;
                             symb->name = symbol->get_name();
                             return symb;

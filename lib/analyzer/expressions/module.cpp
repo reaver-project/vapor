@@ -25,6 +25,7 @@
 #include <reaver/traits.h>
 
 #include "vapor/analyzer/expressions/module.h"
+#include "vapor/analyzer/precontext.h"
 #include "vapor/parser.h"
 #include "vapor/parser/module.h"
 
@@ -37,28 +38,53 @@ inline namespace _v1
 {
     std::unique_ptr<module> preanalyze_module(precontext & ctx, const parser::module & parse, scope * lex_scope)
     {
-        auto scope = lex_scope->clone_for_class();
-        auto name = fmap(parse.name.id_expression_value, [](auto && elem) { return elem.value.string; });
+        std::string cumulative_name;
+        module_type * type = nullptr;
+
+        // TODO: integrate this with the same stuff in import_from_ast
+        auto name = fmap(parse.name.id_expression_value, [&](auto && elem) {
+            auto name_part = elem.value.string;
+
+            cumulative_name = cumulative_name + (cumulative_name.empty() ? "" : ".") + utf8(name_part);
+            auto & saved = ctx.modules[cumulative_name];
+
+            if (!saved)
+            {
+                auto scope = lex_scope->clone_for_class();
+                scope->set_name(name_part, codegen::ir::scope_type::module);
+
+                auto old_scope = lex_scope;
+                lex_scope = scope.get();
+
+                auto type_uptr = std::make_unique<module_type>(std::move(scope), utf8(name_part));
+                type = type_uptr.get();
+
+                saved = make_entity(std::move(type_uptr));
+                saved->mark_local();
+                assert(old_scope->init(name_part, make_symbol(name_part, saved.get())));
+            }
+
+            else
+            {
+                assert(dynamic_cast<module_type *>(saved->get_type()));
+                lex_scope = saved->get_type()->get_scope();
+            }
+
+            return name_part;
+        });
 
         auto statements = fmap(parse.statements, [&](const auto & statement) {
-            auto scope_ptr = scope.get();
+            auto scope_ptr = lex_scope;
             auto ret = preanalyze_statement(ctx, statement, scope_ptr);
-            if (scope_ptr != scope.get())
-            {
-                scope.release()->keep_alive();
-                scope.reset(scope_ptr);
-            }
+            assert(lex_scope == scope_ptr);
             return ret;
         });
 
-        scope->set_name(boost::join(name, "."), codegen::ir::scope_type::module);
-        scope->close();
-
-        return std::make_unique<module>(make_node(parse), std::move(name), std::move(scope), std::move(statements));
+        return std::make_unique<module>(make_node(parse), std::move(name), type, std::move(statements));
     }
 
-    module::module(ast_node parse, std::vector<std::u32string> name, std::unique_ptr<scope> lex_scope, std::vector<std::unique_ptr<statement>> stmts)
-        : _parse{ parse }, _name{ std::move(name) }, _scope{ std::move(lex_scope) }, _statements{ std::move(stmts) }
+    module::module(ast_node parse, std::vector<std::u32string> name, module_type * type, std::vector<std::unique_ptr<statement>> stmts)
+        : expression{ type }, _parse{ parse }, _type{ type }, _name{ std::move(name) }, _statements{ std::move(stmts) }
     {
     }
 
@@ -68,7 +94,7 @@ inline namespace _v1
             if (name() == U"main")
             {
                 // set entry(int32) as the entry point
-                if (auto entry = _scope->try_get(U"entry"))
+                if (auto entry = _type->get_scope()->try_get(U"entry"))
                 {
                     auto type = entry.value()->get_type();
                     return type->get_candidates(lexer::token_type::round_bracket_open).then([&ctx, expr = entry.value()->get_expression()](auto && overloads) {
@@ -116,9 +142,10 @@ inline namespace _v1
 
     declaration_ir module::declaration_codegen_ir(ir_generation_context & ctx) const
     {
-        auto scopes = _scope->codegen_ir();
+        auto scope = _type->get_scope();
+        auto scopes = scope->codegen_ir();
 
-        auto mod = mbind(_scope->symbols_in_order(), [&](auto && symbol) {
+        auto mod = mbind(scope->symbols_in_order(), [&](auto && symbol) {
             return fmap(symbol->codegen_ir(ctx), [&](auto && decl) {
                 return fmap(decl,
                     make_overload_set(
@@ -141,12 +168,14 @@ inline namespace _v1
 
     void module::generate_interface(proto::module & mod) const
     {
+        auto scope = _type->get_scope();
+
         auto name = fmap(_name, utf8);
         std::copy(name.begin(), name.end(), RepeatedFieldBackInserter(mod.mutable_name()));
 
         auto & mut_symbols = *mod.mutable_symbols();
 
-        for (auto && symbol : _scope->declared_symbols())
+        for (auto && symbol : scope->declared_symbols())
         {
             if (!symbol.second->is_exported())
             {

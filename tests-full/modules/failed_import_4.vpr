@@ -6,7 +6,7 @@ module main
 {
     let entry = λ(arg : sized_int(32)) -> sized_int(32)
     {
-        return multi_file.embedded.test();
+        return multi_file.embedded.test(arg);
     };
 }
 

@@ -51,7 +51,7 @@ inline namespace _v1
     class module : public expression
     {
     public:
-        module(ast_node parse, std::vector<std::u32string> name, std::unique_ptr<scope> lex_scope, std::vector<std::unique_ptr<statement>> stmts);
+        module(ast_node parse, std::vector<std::u32string> name, module_type * typr, std::vector<std::unique_ptr<statement>> stmts);
 
         std::u32string name() const
         {
@@ -90,8 +90,8 @@ inline namespace _v1
         }
 
         ast_node _parse;
+        module_type * _type = nullptr;
         std::vector<std::u32string> _name;
-        std::unique_ptr<scope> _scope;
         std::vector<std::unique_ptr<statement>> _statements;
     };
 }

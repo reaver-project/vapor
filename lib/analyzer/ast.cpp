@@ -44,7 +44,7 @@ inline namespace _v1
                 fmap(_original_ast.global_imports, [this](auto && im) { return preanalyze_import(_ctx, im, _global_scope.get(), import_mode::statement); });
             _modules = fmap(_original_ast.module_definitions, [this](auto && m) { return preanalyze_module(_ctx, m, _global_scope.get()); });
 
-            for (auto && entity : _ctx.loaded_modules)
+            for (auto && entity : _ctx.modules)
             {
                 entity.second->get_type()->get_scope()->close();
             }
@@ -84,14 +84,11 @@ inline namespace _v1
         ir_generation_context ctx;
 
         std::vector<codegen::ir::entity> entities;
-        for (auto && [key, value] : _ctx.loaded_modules)
+        for (auto && [key, value] : _ctx.modules)
         {
             auto symbols = value->module_codegen_ir(ctx);
             std::move(symbols.begin(), symbols.end(), std::back_inserter(entities));
         }
-
-        auto symbols = mbind(_modules, [&](auto && mod) { return mod->declaration_codegen_ir(ctx); });
-        std::move(symbols.begin(), symbols.end(), std::back_inserter(entities));
 
         while (auto fn = ctx.function_to_generate())
         {
@@ -126,8 +123,13 @@ inline namespace _v1
 
         serialized.set_allocated_compilation_info(info.release());
 
-        for (auto && [name, module] : _ctx.loaded_modules)
+        for (auto && [name, module] : _ctx.modules)
         {
+            if (module->is_local())
+            {
+                continue;
+            }
+
             auto & imp = *serialized.add_imports();
 
             imp.set_target_compilation_time(module->get_timestamp());

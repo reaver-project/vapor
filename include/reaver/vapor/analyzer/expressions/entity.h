@@ -88,6 +88,16 @@ inline namespace _v1
             return _name;
         }
 
+        void mark_local()
+        {
+            _is_local = true;
+        }
+
+        bool is_local() const
+        {
+            return _is_local;
+        }
+
         std::vector<codegen::ir::entity> module_codegen_ir(ir_generation_context & ctx) const;
 
     private:
@@ -105,6 +115,8 @@ inline namespace _v1
         std::string _source_hash;
         std::int64_t _timestamp;
         std::vector<std::string> _name;
+
+        bool _is_local = false;
     };
 
     inline std::unique_ptr<entity> make_entity(imported_type imported)

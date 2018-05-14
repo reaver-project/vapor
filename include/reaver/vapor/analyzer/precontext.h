@@ -32,6 +32,7 @@
 
 namespace reaver::vapor::proto
 {
+class ast;
 class user_defined_reference;
 }
 
@@ -55,7 +56,7 @@ inline namespace _v1
     {
         const config::compiler_options & options;
         analysis_context & proper;
-        std::unordered_map<std::string, std::unique_ptr<entity>> loaded_modules = {};
+        std::unordered_map<std::string, std::unique_ptr<entity>> modules = {};
         std::set<std::unique_ptr<entity>> imported_entities = {};
         std::unordered_map<const proto::user_defined_reference *, std::shared_ptr<unresolved_type>, user_defined_reference_hash, user_defined_reference_compare>
             user_defined_types = {};
@@ -66,6 +67,8 @@ inline namespace _v1
         std::stack<boost::filesystem::path> current_file = {};
         std::stack<std::string> current_scope = {};
         std::string current_symbol = {};
+
+        std::vector<std::shared_ptr<proto::ast>> imported_asts = {};
     };
 }
 }
