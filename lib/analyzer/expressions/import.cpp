@@ -148,11 +148,14 @@ inline namespace _v1
 
         for (auto && module : ast->modules())
         {
-            // TODO: support submodules (including the scope creation below...)
-            assert(module.name().size() != 0);
-
             auto name = boost::algorithm::join(module.name(), ".");
             ctx.current_scope.push(name);
+
+            if (static_cast<std::size_t>(module.name_size()) < module_name.size()
+                || std::mismatch(module_name.begin(), module_name.end(), module.name().begin()).first != module_name.end())
+            {
+                throw exception{ logger::error } << "invalid module name `" << name << "` in module file " << ctx.current_file.top();
+            }
 
             std::string cumulative_name;
 
