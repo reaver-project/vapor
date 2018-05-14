@@ -148,8 +148,6 @@ def clear_artifacts(test_dir):
 if __name__ == '__main__':
     test_dir = os.path.dirname(__file__)
 
-    clear_artifacts(test_dir)
-
     parser = argparse.ArgumentParser(description = 'Run end-to-end compiler tests for Vapor.')
     parser.add_argument('--vpr-path', dest = 'vpr_path', help = 'provide the path to a Vapor build or install dir')
     parser.add_argument('--llc', default = val_or_def(os.environ.get('LLC'), 'llc'), help = 'provide a custom llc path')
@@ -164,6 +162,7 @@ if __name__ == '__main__':
     ps = not args.error
 
     if args.test is not None:
+        clear_artifacts(test_dir)
         exit(test_file(args.test, test_dir))
 
     for root, dirs, files in os.walk(test_dir):
@@ -178,6 +177,7 @@ if __name__ == '__main__':
             if os.path.splitext(file)[1] != '.vpr':
                 continue
 
+            clear_artifacts(test_dir)
             test_file(file, os.path.join(test_dir, root))
 
         if pt:
