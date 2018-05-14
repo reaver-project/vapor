@@ -20,6 +20,7 @@
  *
  **/
 
+#include <boost/process.hpp>
 #include <boost/program_options.hpp>
 
 #include "cli.h"
@@ -149,6 +150,37 @@ options_result get_options(int argc, char ** argv)
         default:
             throw exception{ logger::error } << "multiple compilation modes selected; choose at most one of -i, -s and -o.";
     }
+
+    ret->set_compilation_handler([& ctx = *ret, vprc = argv[0]](const boost::filesystem::path & path) {
+        std::vector<std::string> argv;
+
+        argv.push_back(vprc);
+        argv.push_back("-c");
+        argv.push_back(path.string());
+
+#define HANDLE_DIR(name, flag)                                                                                                                                 \
+    auto name##_variable_from_macro = ctx.name##_dir();                                                                                                        \
+    if (name##_variable_from_macro)                                                                                                                            \
+    {                                                                                                                                                          \
+        argv.push_back(flag);                                                                                                                                  \
+        argv.push_back(name##_variable_from_macro.value().string());                                                                                           \
+    }
+
+        HANDLE_DIR(module, "--mdir");
+        HANDLE_DIR(llvm, "--ldir");
+        HANDLE_DIR(assembly, "--adir");
+        HANDLE_DIR(binary, "--odir");
+
+#undef HANDLE_DIR
+
+        logger::dlog() << "Compiling dependency: " << path << "...";
+        logger::default_logger().sync();
+
+        namespace bp = boost::process;
+        auto child = bp::child(argv, bp::std_out > stdout, bp::std_err > stderr, bp::std_in < stdin);
+
+        child.wait();
+    });
 
     return { std::move(ret), false };
 }
