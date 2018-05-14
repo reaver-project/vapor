@@ -178,7 +178,7 @@ if __name__ == '__main__':
                 continue
 
             clear_artifacts(test_dir)
-            test_file(file, os.path.join(test_dir, root))
+            test_file(file, root)
 
         if pt:
             for dir in root.split(os.path.sep)[::-1]:
