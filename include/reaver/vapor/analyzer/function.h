@@ -90,7 +90,6 @@ inline namespace _v1
 
         void print(std::ostream & os, print_context ctx) const;
 
-        future<> simplify(recursive_context);
         future<expression *> simplify(recursive_context, std::vector<expression *>);
 
         void mark_as_entry(analysis_context & ctx, expression * entry_expr)

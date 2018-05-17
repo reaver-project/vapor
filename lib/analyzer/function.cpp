@@ -30,16 +30,6 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    future<> function::simplify(recursive_context ctx)
-    {
-        if (_body)
-        {
-            return _body->simplify(ctx).then([&](auto && simplified) { _body = dynamic_cast<block *>(simplified); });
-        }
-
-        return make_ready_future();
-    }
-
     future<expression *> function::simplify(recursive_context ctx, std::vector<expression *> arguments)
     {
         if (_body)
