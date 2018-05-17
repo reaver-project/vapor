@@ -1,0 +1,15 @@
+// IGNORE: true
+
+module multi_file
+{
+}
+
+module multi_file.embedded
+{
+    export function test(arg : sized_int(32)) -> sized_int(32)
+    {
+        return arg;
+    }
+}
+
+// vim: filetype=cpp

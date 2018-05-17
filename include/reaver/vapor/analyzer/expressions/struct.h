@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -39,6 +39,10 @@ inline namespace _v1
             return _type->get_expression()->declaration_codegen_ir(ctx);
         }
 
+        virtual void set_name(std::u32string name) override;
+
+        virtual void mark_exported() override;
+
     private:
         virtual expression * _get_replacement() override
         {
@@ -60,6 +64,11 @@ inline namespace _v1
             assert(0);
         }
 
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
+        {
+            return _type->get_expression()->_do_generate_interface();
+        }
+
         std::shared_ptr<struct_type> _type;
     };
 }
@@ -77,6 +86,8 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<struct_literal> preanalyze_struct_literal(const parser::struct_literal & parse, scope * lex_scope);
+    struct precontext;
+
+    std::unique_ptr<struct_literal> preanalyze_struct_literal(precontext & ctx, const parser::struct_literal & parse, scope * lex_scope);
 }
 }

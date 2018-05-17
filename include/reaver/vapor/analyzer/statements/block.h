@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -40,8 +40,10 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    struct precontext;
+
     class block;
-    std::unique_ptr<block> preanalyze_block(const parser::block &, scope *, bool);
+    std::unique_ptr<block> preanalyze_block(precontext &, const parser::block &, scope *, bool);
 
     class return_statement;
     class scope;
@@ -116,6 +118,6 @@ inline namespace _v1
         mutable std::optional<std::unique_ptr<block>> _clone;
     };
 
-    std::unique_ptr<block> preanalyze_block(const parser::block & parse, scope * lex_scope, bool is_top_level);
+    std::unique_ptr<block> preanalyze_block(precontext & ctx, const parser::block & parse, scope * lex_scope, bool is_top_level);
 }
 }

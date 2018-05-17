@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -31,6 +31,7 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     class function;
+    struct imported_function;
 
     // TODO: combined_overload_set and combined_overload_set_type
     // those need to be distinct from normal ones for code generation reasons (SCOPES!)
@@ -43,14 +44,15 @@ inline namespace _v1
     // a function that's in a different scope
     // but that's going to be funny
 
-    class overload_set_type : public type
+    class overload_set_type : public user_defined_type
     {
     public:
-        overload_set_type(scope * lex_scope) : type{ lex_scope }
+        overload_set_type(scope * lex_scope) : user_defined_type{ lex_scope }
         {
         }
 
         void add_function(function * fn);
+        void add_function(std::unique_ptr<imported_function> fn);
 
         virtual std::string explain() const override
         {
@@ -61,22 +63,41 @@ inline namespace _v1
 
         virtual future<std::vector<function *>> get_candidates(lexer::token_type bracket) const override;
 
+        void mark_exported()
+        {
+            _is_exported = true;
+        }
+
     private:
+        virtual std::unique_ptr<google::protobuf::Message> _user_defined_interface() const override;
+
         virtual void _codegen_type(ir_generation_context &) const override;
 
         virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
         {
-            if (!_codegen_type_name)
-            {
-                _codegen_type_name = U"overload_set_" + utf32(std::to_string(ctx.overload_set_index++));
-            }
-
-            return *_codegen_type_name;
+            return get_name();
         }
 
-        mutable std::mutex _functions_lock;
-        mutable std::optional<std::u32string> _codegen_type_name;
         std::vector<function *> _functions;
+        // shared so that this is destructible without knowing the definition
+        std::vector<std::shared_ptr<imported_function>> _imported_functions;
+
+        bool _is_exported = false;
     };
+}
+}
+
+namespace reaver::vapor::proto
+{
+class overload_set_type;
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    class precontext;
+
+    std::unique_ptr<overload_set_type> import_overload_set_type(precontext &, const proto::overload_set_type &);
 }
 }

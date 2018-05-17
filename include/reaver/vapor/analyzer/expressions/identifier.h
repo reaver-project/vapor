@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -56,7 +56,9 @@ inline namespace _v1
         std::u32string _name;
     };
 
-    inline std::unique_ptr<identifier> preanalyze_identifier(const parser::identifier & parse, scope * lex_scope)
+    struct precontext;
+
+    inline std::unique_ptr<identifier> preanalyze_identifier(precontext &, const parser::identifier & parse, scope * lex_scope)
     {
         return std::make_unique<identifier>(parse.value.string, lex_scope, make_node(parse));
     }

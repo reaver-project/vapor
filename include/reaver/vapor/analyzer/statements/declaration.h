@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -49,6 +49,11 @@ inline namespace _v1
             std::optional<std::unique_ptr<expression>> type_specifier,
             scope * scope,
             declaration_type decl_type);
+
+        void mark_exported()
+        {
+            _declared_symbol->mark_exported();
+        }
 
         const auto & name() const
         {
@@ -100,7 +105,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<declaration> preanalyze_declaration(const parser::declaration & parse, scope *& lex_scope);
-    std::unique_ptr<declaration> preanalyze_member_declaration(const parser::declaration & parse, scope * lex_scope);
+    struct precontext;
+
+    std::unique_ptr<declaration> preanalyze_declaration(precontext & ctx, const parser::declaration & parse, scope *& lex_scope);
+    std::unique_ptr<declaration> preanalyze_member_declaration(precontext & ctx, const parser::declaration & parse, scope * lex_scope);
 }
 }

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -104,6 +104,11 @@ inline namespace _v1
         {
             auto rhs_struct = rhs->as<struct_expression>();
             return rhs_struct && _type == rhs_struct->_type && _fields == rhs_struct->_fields;
+        }
+
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
+        {
+            assert(0);
         }
 
         std::shared_ptr<struct_type> _type;

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -35,14 +35,17 @@ MAYFLY_BEGIN_SUITE("expressions");
 MAYFLY_BEGIN_SUITE("struct");
 
 MAYFLY_ADD_TESTCASE("empty struct", [] {
+    config::compiler_options opts{ std::make_unique<config::language_options>() };
+    analysis_context ctx;
+    precontext pctx{ opts, ctx };
+
     scope s;
     auto current_scope = &s;
 
     auto ast = parse(U"struct {}", parser::parse_struct_literal);
 
-    auto struct_lit = preanalyze_struct_literal(ast, current_scope);
+    auto struct_lit = preanalyze_struct_literal(pctx, ast, current_scope);
 
-    analysis_context ctx;
     reaver::get(struct_lit->analyze(ctx));
 
     auto type_var = struct_lit->as<type_expression>();
@@ -59,6 +62,10 @@ MAYFLY_ADD_TESTCASE("empty struct", [] {
 });
 
 MAYFLY_ADD_TESTCASE("struct with members", [] {
+    config::compiler_options opts{ std::make_unique<config::language_options>() };
+    analysis_context ctx;
+    precontext pctx{ opts, ctx };
+
     scope s;
     auto current_scope = &s;
 
@@ -72,9 +79,8 @@ MAYFLY_ADD_TESTCASE("struct with members", [] {
         )code",
         parser::parse_struct_literal);
 
-    auto struct_lit = preanalyze_struct_literal(ast, current_scope);
+    auto struct_lit = preanalyze_struct_literal(pctx, ast, current_scope);
 
-    analysis_context ctx;
     reaver::get(struct_lit->analyze(ctx));
 
     auto type_var = struct_lit->as<type_expression>();

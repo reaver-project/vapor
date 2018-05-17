@@ -22,6 +22,9 @@
 
 #include <fstream>
 
+#include <boost/process.hpp>
+#include <boost/program_options/errors.hpp>
+
 #include "cli/cli.h"
 #include "vapor/analyzer.h"
 #include "vapor/codegen.h"
@@ -29,6 +32,20 @@
 #include "vapor/lexer.h"
 #include "vapor/parser.h"
 #include "vapor/utf.h"
+
+void run_process(const std::string & cmdline)
+{
+    reaver::logger::dlog() << "Running `" << cmdline << "`";
+
+    auto child = boost::process::child(cmdline, boost::process::std_out > stdout, boost::process::std_err > stderr);
+
+    child.wait();
+
+    if (child.exit_code() != 0)
+    {
+        throw reaver::exception{ reaver::logger::error } << "`" << cmdline << "` failed";
+    }
+}
 
 int main(int argc, char ** argv) try
 {
@@ -49,6 +66,12 @@ int main(int argc, char ** argv) try
     assert(options->source_path());
 
     std::ifstream input(options->source_path()->string());
+    if (!input)
+    {
+        reaver::logger::dlog(reaver::logger::error) << "couldn't open the source file";
+        return 1;
+    }
+
     std::string program_utf8{ std::istreambuf_iterator<char>(input.rdbuf()), std::istreambuf_iterator<char>() };
     auto program = boost::locale::conv::utf_to_utf<char32_t>(program_utf8);
 
@@ -57,7 +80,7 @@ int main(int argc, char ** argv) try
     reaver::logger::dlog();
 
     reaver::logger::dlog() << "Tokens:";
-    reaver::vapor::lexer::iterator iterator{ program.begin(), program.end() };
+    reaver::vapor::lexer::iterator iterator{ program.begin(), program.end(), options->source_path()->native() };
     for (auto it = iterator; it; ++it)
     {
         reaver::logger::dlog() << *it;
@@ -73,7 +96,8 @@ int main(int argc, char ** argv) try
     reaver::logger::default_logger().sync();
 
     reaver::logger::dlog() << "Analyzed AST:";
-    reaver::vapor::analyzer::ast analyzed_ast{ std::move(ast) };
+    reaver::vapor::analyzer::ast analyzed_ast{ std::move(ast), *options };
+    analyzed_ast.analyze();
     reaver::logger::dlog() << std::ref(analyzed_ast);
 
     reaver::logger::default_logger().sync();
@@ -83,6 +107,22 @@ int main(int argc, char ** argv) try
     reaver::logger::dlog() << std::ref(analyzed_ast);
 
     reaver::logger::default_logger().sync();
+
+    // only create the module interface file if there is an actual input file
+    if (options->source_path())
+    {
+        reaver::logger::dlog() << "Generating module interface file...";
+        auto module_path = options->module_path();
+        boost::filesystem::create_directories(module_path.parent_path());
+        std::ofstream interface_file{ module_path.string() };
+        if (!interface_file)
+        {
+            reaver::logger::dlog(reaver::logger::error) << "couldn't open module interface output file";
+            return 1;
+        }
+        analyzed_ast.serialize_to(interface_file);
+        reaver::logger::dlog() << "Done.";
+    }
 
     auto ir = analyzed_ast.codegen_ir();
 
@@ -94,10 +134,56 @@ int main(int argc, char ** argv) try
     reaver::logger::dlog() << "Generated LLVM IR:";
     reaver::logger::dlog() << generated_code;
 
-    auto output_path = options->output_path();
-    boost::filesystem::create_directories(output_path.parent_path());
-    std::ofstream out{ output_path.string(), std::ios::trunc | std::ios::out };
-    out << generated_code;
+    namespace modes = reaver::vapor::config::compilation_modes;
+
+    auto name = options->llvm_path();
+
+    {
+        boost::filesystem::create_directories(name.parent_path());
+        std::ofstream out{ name.string(), std::ios::trunc | std::ios::out };
+        out << generated_code;
+    }
+
+    // figure out the path for llc and opt
+    boost::process::ipstream stream;
+    auto child = boost::process::child("llvm-config --bindir", boost::process::std_out > stream);
+    child.wait();
+
+    std::string llvm_bin_dir;
+
+    if (child.exit_code() != 0 || !std::getline(stream, llvm_bin_dir))
+    {
+        throw reaver::exception{ reaver::logger::fatal } << "llvm-config failed";
+    }
+
+    boost::filesystem::path lbd = llvm_bin_dir;
+
+    if (options->compilation_mode() == modes::assembly || options->should_generate_assembly_file())
+    {
+        auto name = options->assembly_path();
+
+        boost::filesystem::create_directories(name.parent_path());
+        run_process((lbd / "llc").string() + " " + options->llvm_path().string() + " -filetype=asm -relocation-model=pic -o " + name.string());
+    }
+
+    if (options->compilation_mode() >= modes::object)
+    {
+        auto name = options->compilation_mode() == modes::object ? options->binary_path() : options->object_path();
+
+        boost::filesystem::create_directories(name.parent_path());
+        run_process((lbd / "llc").string() + " " + options->llvm_path().string() + " -filetype=obj -relocation-model=pic -o " + name.string());
+    }
+
+    if (!options->should_generate_llvm_ir_file())
+    {
+        boost::filesystem::remove(options->llvm_path());
+    }
+
+    if (options->compilation_mode() >= modes::link)
+    {
+        boost::filesystem::create_directories(options->binary_path().parent_path());
+        assert("need to figure this shit out, yo");
+    }
 
     reaver::logger::default_logger().sync();
 }
@@ -105,6 +191,7 @@ int main(int argc, char ** argv) try
 catch (reaver::exception & e)
 {
     e.print(reaver::logger::default_logger());
+    reaver::logger::default_logger().sync();
 
     if (e.level() >= reaver::logger::crash)
     {
@@ -114,9 +201,18 @@ catch (reaver::exception & e)
     return 1;
 }
 
+catch (boost::program_options::error & e)
+{
+    reaver::logger::dlog(reaver::logger::error) << e.what();
+    reaver::logger::default_logger().sync();
+
+    return 1;
+}
+
 catch (std::exception & e)
 {
     reaver::logger::dlog(reaver::logger::crash) << e.what();
+    reaver::logger::default_logger().sync();
 
     return 2;
 }

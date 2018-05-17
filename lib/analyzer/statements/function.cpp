@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -33,23 +33,37 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<function_definition> preanalyze_function_definition(const parser::function_definition & parse, scope *& lex_scope)
+    std::unique_ptr<function_definition> preanalyze_function_definition(precontext & ctx, const parser::function_definition & parse, scope *& lex_scope)
     {
         auto function_scope = lex_scope->clone_local();
 
         parameter_list params;
         if (parse.signature.parameters)
         {
-            params = preanalyze_parameter_list(parse.signature.parameters.value(), function_scope.get());
+            params = preanalyze_parameter_list(ctx, parse.signature.parameters.value(), function_scope.get());
         }
         function_scope->close();
 
-        return std::make_unique<function_definition>(make_node(parse),
+        auto ret = std::make_unique<function_definition>(make_node(parse),
             parse.signature.name.value.string,
             std::move(params),
-            fmap(parse.signature.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, function_scope.get()); }),
-            preanalyze_block(*parse.body, function_scope.get(), true),
+            fmap(parse.signature.return_type, [&](auto && ret_type) { return preanalyze_expression(ctx, ret_type, function_scope.get()); }),
+            preanalyze_block(ctx, *parse.body, function_scope.get(), true),
             std::move(function_scope));
+
+        if (parse.signature.export_)
+        {
+            auto expr_symbol = lex_scope->get(parse.signature.name.value.string);
+            expr_symbol->mark_exported();
+            expr_symbol->add_associated(U"overload_set_type$" + parse.signature.name.value.string);
+            expr_symbol->get_expression()->mark_exported();
+
+            auto type_symbol = lex_scope->get(U"overload_set_type$" + parse.signature.name.value.string);
+            type_symbol->mark_exported();
+            type_symbol->mark_associated();
+        }
+
+        return ret;
     }
 
     function_definition::function_definition(ast_node parse,
@@ -66,13 +80,22 @@ inline namespace _v1
     {
         _set_ast_info(parse);
 
-        std::shared_ptr<overload_set> keep_count;
-        auto symbol = _scope->parent()->get_or_init(_name, [&] {
-            keep_count = std::make_shared<overload_set>(_scope.get());
-            return make_symbol(_name, keep_count.get());
-        });
+        auto type_name = U"overload_set_type$" + _name;
 
-        _overload_set = symbol->get_expression()->as<overload_set>()->shared_from_this();
+        std::shared_ptr<overload_set> keep_count;
+        auto symbol = _scope->parent()->try_get(_name);
+
+        if (!symbol)
+        {
+            keep_count = std::make_shared<overload_set>(_scope.get());
+            symbol = _scope->parent()->init(_name, make_symbol(_name, keep_count.get()));
+
+            auto type = keep_count->get_type();
+            type->set_name(type_name);
+            _scope->parent()->init(type_name, make_symbol(type_name, type->get_expression()));
+        }
+
+        _overload_set = symbol.value()->get_expression()->as<overload_set>()->shared_from_this();
     }
 
     void function_definition::print(std::ostream & os, print_context ctx) const

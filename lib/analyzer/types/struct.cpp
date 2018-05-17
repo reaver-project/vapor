@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -25,17 +25,19 @@
 #include "vapor/analyzer/expressions/runtime_value.h"
 #include "vapor/analyzer/expressions/struct.h"
 #include "vapor/analyzer/expressions/struct_value.h"
+#include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/statements/declaration.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/types/unresolved.h"
 #include "vapor/parser/expr.h"
 
-#include "vapor/analyzer/expressions/integer.h"
+#include "types/struct.pb.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<struct_type> make_struct_type(const parser::struct_literal & parse, scope * lex_scope)
+    std::unique_ptr<struct_type> make_struct_type(precontext & ctx, const parser::struct_literal & parse, scope * lex_scope)
     {
         auto member_scope = lex_scope->clone_for_class();
 
@@ -46,7 +48,7 @@ inline namespace _v1
                 make_overload_set(
                     [&](const parser::declaration & decl) {
                         auto scope = member_scope.get();
-                        auto decl_stmt = preanalyze_member_declaration(decl, scope);
+                        auto decl_stmt = preanalyze_member_declaration(ctx, decl, scope);
                         assert(scope == member_scope.get());
 
                         decls.push_back(std::move(decl_stmt));
@@ -67,10 +69,29 @@ inline namespace _v1
         return std::make_unique<struct_type>(make_node(parse), std::move(member_scope), std::move(decls));
     }
 
+    std::unique_ptr<struct_type> import_struct_type(precontext & ctx, const proto::struct_type & str)
+    {
+        auto member_scope = ctx.module_scope->clone_for_class();
+
+        std::vector<std::unique_ptr<declaration>> decls;
+
+        for (auto && member : str.data_members())
+        {
+            decls.push_back(std::make_unique<declaration>(
+                ast_node{}, utf32(member.name()), std::nullopt, get_imported_type_ref_expr(ctx, member.type()), member_scope.get(), declaration_type::member));
+        }
+
+        member_scope->close();
+
+        auto ret = std::make_unique<struct_type>(ast_node{}, std::move(member_scope), std::move(decls));
+        ret->mark_imported();
+        return ret;
+    }
+
     struct_type::~struct_type() = default;
 
     struct_type::struct_type(ast_node parse, std::unique_ptr<scope> member_scope, std::vector<std::unique_ptr<declaration>> member_decls)
-        : type{ std::move(member_scope) }, _parse{ parse }, _data_members_declarations{ std::move(member_decls) }
+        : user_defined_type{ std::move(member_scope) }, _parse{ parse }, _data_members_declarations{ std::move(member_decls) }
     {
         auto ctor_pair = make_promise<function *>();
         _aggregate_ctor_future = std::move(ctor_pair.future);
@@ -101,10 +122,10 @@ inline namespace _v1
 
                 auto result = codegen::ir::make_variable(ir_type);
 
-                auto scopes = this->get_scope()->codegen_ir(ctx);
-                scopes.emplace_back(_codegen_type_name_value.value(), codegen::ir::scope_type::type);
+                auto scopes = this->get_scope()->codegen_ir();
+                scopes.emplace_back(get_name(), codegen::ir::scope_type::type);
 
-                return { U"constructor",
+                codegen::ir::function ret = { U"constructor",
                     std::move(scopes),
                     args,
                     result,
@@ -115,6 +136,9 @@ inline namespace _v1
                           result },
                         codegen::ir::instruction{
                             std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
+                ret.is_defined = !_is_imported;
+                ret.is_exported = _is_exported;
+                return ret;
             });
 
         _aggregate_ctor->set_scopes_generator([this](auto && ctx) { return this->codegen_scopes(ctx); });
@@ -163,10 +187,10 @@ inline namespace _v1
                 });
                 auto result = codegen::ir::make_variable(ir_type);
 
-                auto scopes = this->get_scope()->codegen_ir(ctx);
-                scopes.emplace_back(_codegen_type_name_value.value(), codegen::ir::scope_type::type);
+                auto scopes = this->get_scope()->codegen_ir();
+                scopes.emplace_back(get_name(), codegen::ir::scope_type::type);
 
-                return { U"replacing_copy_constructor",
+                codegen::ir::function ret = { U"replacing_copy_constructor",
                     std::move(scopes),
                     args,
                     result,
@@ -177,6 +201,9 @@ inline namespace _v1
                           result },
                         codegen::ir::instruction{
                             std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { result }, result } } };
+                ret.is_defined = !_is_imported;
+                ret.is_exported = _is_exported;
+                return ret;
             });
 
         _aggregate_copy_ctor->set_scopes_generator([this](auto && ctx) { return this->codegen_scopes(ctx); });
@@ -225,13 +252,11 @@ inline namespace _v1
     {
         auto actual_type = *_codegen_t;
 
-        // TODO: actual name tracking for this shit
-        _codegen_type_name_value = U"struct_" + utf32(std::to_string(ctx.struct_index++));
-        auto type = codegen::ir::variable_type{ _codegen_type_name_value.value(), get_scope()->codegen_ir(ctx), 0, {} };
+        auto type = codegen::ir::variable_type{ get_name(), get_scope()->codegen_ir(), 0, {} };
 
         auto members = fmap(_data_members, [&](auto && member) { return codegen::ir::member{ member->member_codegen_ir(ctx) }; });
 
-        auto scopes = this->get_scope()->codegen_ir(ctx);
+        auto scopes = this->get_scope()->codegen_ir();
         scopes.emplace_back(type.name, codegen::ir::scope_type::type);
 
         auto add_fn = [&](auto && fn) {
@@ -254,6 +279,21 @@ inline namespace _v1
         os << styles::def << ctx << styles::type << "struct type";
         print_address_range(os, this);
         os << '\n';
+    }
+
+    std::unique_ptr<google::protobuf::Message> struct_type::_user_defined_interface() const
+    {
+        auto t = std::make_unique<proto::struct_type>();
+
+        for (auto && member : _data_members)
+        {
+            auto proto_member = t->add_data_members();
+
+            proto_member->set_name(utf8(member->get_name()));
+            proto_member->set_allocated_type(member->get_type()->generate_interface_reference().release());
+        }
+
+        return std::move(t);
     }
 }
 }

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -72,7 +72,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    inline std::unique_ptr<unary_expression> preanalyze_unary_expression(const parser::unary_expression &, scope *)
+    struct precontext;
+
+    inline std::unique_ptr<unary_expression> preanalyze_unary_expression(precontext & ctx, const parser::unary_expression &, scope *)
     {
         assert(0);
     }

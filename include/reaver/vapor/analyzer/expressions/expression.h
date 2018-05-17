@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,6 +24,8 @@
 
 #include <memory>
 
+#include <google/protobuf/any.pb.h>
+
 #include <reaver/prelude/monad.h>
 
 #include "../helpers.h"
@@ -40,11 +42,20 @@ inline namespace _v1
 }
 }
 
+namespace reaver::vapor::proto
+{
+struct entity;
+}
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
     class scope;
+
+    constexpr struct imported_tag_t
+    {
+    } imported_tag;
 
     class expression : public statement
     {
@@ -217,6 +228,21 @@ inline namespace _v1
             return this;
         }
 
+        void generate_interface(proto::entity &) const;
+
+        std::unique_ptr<google::protobuf::Message> _do_generate_interface() const
+        {
+            return _generate_interface();
+        }
+
+        virtual void set_name([[maybe_unused]] std::u32string name)
+        {
+        }
+
+        virtual void mark_exported()
+        {
+        }
+
     protected:
         void _set_type(type * t)
         {
@@ -258,6 +284,18 @@ inline namespace _v1
             return true;
         }
 
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const
+        {
+            auto replacement = _get_replacement();
+
+            if (this == replacement)
+            {
+                assert(0);
+            }
+
+            return replacement->_generate_interface();
+        }
+
     private:
         type * _type = nullptr;
         expression * _default_value = nullptr;
@@ -283,6 +321,7 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<expression> preanalyze_expression(const parser::expression & expr, scope * lex_scope);
+    struct precontext;
+    std::unique_ptr<expression> preanalyze_expression(precontext & ctx, const parser::expression & expr, scope * lex_scope);
 }
 }

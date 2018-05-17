@@ -3,7 +3,7 @@
 #
 # Vapor Compiler Licence
 #
-# Copyright © 2017 Michał "Griwes" Dominiak
+# Copyright © 2017-2018 Michał "Griwes" Dominiak
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -68,32 +68,41 @@ def parse_metadata(file_path):
             if match is None:
                 break
 
+            if match.group(1) == 'IGNORE' and match.group(2) == 'true':
+                return { 'ignored': True }
+
             steps.append({ 'name': match.group(1), 'command': match.group(2) })
 
 
     if len(steps) == 0:
-        return { 'failed': True, 'reason': 'no steps defined!' }
+        return { 'ignored': False, 'failed': True, 'reason': 'no steps defined!' }
 
-    return { 'steps': steps, 'failed': False }
+    return { 'ignored': False, 'steps': steps, 'failed': False }
 
 
 def test_file(file_path, test_dir):
     global failed_tests
 
-    if not os.path.exists(file_path):
-        if not os.path.exists(file_path + '.vprc'):
+    if not os.path.exists(os.path.join(test_dir, file_path)):
+        if not os.path.exists(os.path.join(test_dir, file_path + '.vpr')):
             print('-- Invalid test name: %s' % file_path)
             return 1
 
-        file_path += '.vprc'
+        file_path += '.vpr'
+
+    file_path = os.path.join(test_dir, file_path)
 
     name = os.path.splitext(os.path.basename(file_path))[0]
+
+    test_info = parse_metadata(file_path)
+
+    if test_info['ignored']:
+        return 0
 
     if pt:
         print("##teamcity[testStarted name='%s' captureStandardOutput='true']" % name)
     print_if(ps, '-- Testing %s ' % os.path.relpath(file_path, test_dir), end = '', flush = True)
 
-    test_info = parse_metadata(file_path)
     if test_info['failed']:
         failed_tests.append(os.path.relpath(file_path, test_dir))
         print('\n%s%s-- Failed: %s:%s' % (bcolors.FAIL, bcolors.BOLD, os.path.relpath(file_path, test_dir), bcolors.ENDC))
@@ -106,8 +115,9 @@ def test_file(file_path, test_dir):
     for step in test_info['steps']:
         command = step['command'].format(
             input = file_path,
-            vprc = args.vprc_path,
-            runtime = os.path.join(os.path.dirname(args.vprc_path), 'runtime'),
+            directory = os.path.dirname(file_path),
+            vprc = os.path.join(args.vpr_path, 'bin', 'vprc'),
+            runtime = os.path.join(args.vpr_path, 'lib', 'libvprrt.a'),
             llc = args.llc,
             cc = args.cc
         )
@@ -128,12 +138,18 @@ def test_file(file_path, test_dir):
         print("##teamcity[testFinished name='%s']" % name)
 
 
+def clear_artifacts(test_dir):
+    for root, dirs, files in os.walk(test_dir):
+        for file in files:
+            if os.path.splitext(file)[1] in ('.vprm', '.o', '.asm', '.ll', '.bin'):
+                os.unlink(os.path.join(root, file))
+
+
 if __name__ == '__main__':
     test_dir = os.path.dirname(__file__)
 
     parser = argparse.ArgumentParser(description = 'Run end-to-end compiler tests for Vapor.')
-    parser.add_argument('--vprc-path', dest = 'vprc_path', default = os.path.abspath(os.path.join(test_dir, '..', 'vprc')),
-        help = 'provide a custom vprc binary')
+    parser.add_argument('--vpr-path', dest = 'vpr_path', help = 'provide the path to a Vapor build or install dir')
     parser.add_argument('--llc', default = val_or_def(os.environ.get('LLC'), 'llc'), help = 'provide a custom llc path')
     parser.add_argument('--cc', default = val_or_def(os.environ.get('CC'), 'cc'), help = 'provide a custom cc path')
     parser.add_argument('-t', '--test', help = 'specify a single test file (otherwise runs all found)')
@@ -145,9 +161,8 @@ if __name__ == '__main__':
     pt = args.teamcity
     ps = not args.error
 
-    print_if(ps, '%s-- Using vprc at %s%s' % (bcolors.OKBLUE, args.vprc_path, bcolors.ENDC))
-
     if args.test is not None:
+        clear_artifacts(test_dir)
         exit(test_file(args.test, test_dir))
 
     for root, dirs, files in os.walk(test_dir):
@@ -162,7 +177,8 @@ if __name__ == '__main__':
             if os.path.splitext(file)[1] != '.vpr':
                 continue
 
-            test_file(os.path.join(root, file), test_dir)
+            clear_artifacts(test_dir)
+            test_file(file, root)
 
         if pt:
             for dir in root.split(os.path.sep)[::-1]:

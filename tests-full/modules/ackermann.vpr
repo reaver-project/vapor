@@ -1,0 +1,27 @@
+// IGNORE: true
+// belongs to simple_import.vpr
+
+module ackermann
+{
+    let int32 = sized_int(32);
+
+    export let mn = struct { let m : int32; let n : int32; };
+    export let alias = mn;
+
+    export function ackermann(args : mn) -> int32
+    {
+        if (args.m == 0)
+        {
+            return args.n + 1;
+        }
+
+        if (args.n == 0)
+        {
+            return ackermann(args{ .m = .m - 1, .n = 1 });
+        }
+
+        return ackermann(args{ .m = .m - 1, .n = ackermann(args{ .n = .n - 1 }) });
+    }
+}
+
+// vim: filetype=cpp

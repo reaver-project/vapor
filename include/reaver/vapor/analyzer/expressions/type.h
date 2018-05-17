@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -46,21 +46,8 @@ inline namespace _v1
             return _type;
         }
 
-        virtual void print(std::ostream & os, print_context ctx) const override
-        {
-            os << styles::def << ctx << styles::rule_name << "type-expression";
-            print_address_range(os, this);
-            os << '\n';
-
-            auto type_ctx = ctx.make_branch(true);
-            os << styles::def << type_ctx << styles::subrule_name << "value:\n";
-            _type->print(os, type_ctx.make_branch(true));
-        }
-
-        virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override
-        {
-            return { { std::get<std::shared_ptr<codegen::ir::variable>>(_codegen_ir(ctx).back().result) } };
-        }
+        virtual void print(std::ostream & os, print_context ctx) const override;
+        virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override;
 
     private:
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
@@ -68,20 +55,15 @@ inline namespace _v1
             return std::make_unique<type_expression>(_type);
         }
 
-        virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
-        {
-            auto ret = codegen::ir::make_variable(codegen::ir::builtin_types().type);
-            ret->refers_to = _type->codegen_type(ctx);
-
-            return { codegen::ir::instruction{
-                std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, std::move(ret) } };
-        }
+        virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
 
         virtual bool _is_equal(const expression * rhs) const override
         {
             auto type_rhs = rhs->as<type_expression>();
             return type_rhs && _type == type_rhs->_type;
         }
+
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override;
 
         type * _type;
     };

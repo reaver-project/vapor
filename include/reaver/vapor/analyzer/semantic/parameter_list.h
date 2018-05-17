@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -57,6 +57,14 @@ inline namespace _v1
             });
         }
 
+        virtual future<expression *> _simplify_expr(recursive_context ctx) override
+        {
+            return _type_expression->simplify_expr(ctx).then([&ctx = ctx.proper, this](auto && simpl)->expression * {
+                replace_uptr(_type_expression, simpl, ctx);
+                return this;
+            });
+        }
+
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
             return make_expression_ref(const_cast<parameter *>(this));
@@ -68,6 +76,11 @@ inline namespace _v1
             var->parameter = true;
             return { codegen::ir::instruction{
                 std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::materialization_instruction>() }, {}, { std::move(var) } } };
+        }
+
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
+        {
+            assert(0);
         }
 
         std::u32string _name;
@@ -90,6 +103,8 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    parameter_list preanalyze_parameter_list(const parser::parameter_list & param_list, scope * lex_scope);
+    struct precontext;
+
+    parameter_list preanalyze_parameter_list(precontext & ctx, const parser::parameter_list & param_list, scope * lex_scope);
 }
 }

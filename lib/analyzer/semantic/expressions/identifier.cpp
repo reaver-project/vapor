@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -28,7 +28,7 @@ inline namespace _v1
 {
     future<> identifier::_analyze(analysis_context & ctx)
     {
-        return _lex_scope->resolve(_name).then([](auto && symbol) { return symbol->get_expression_future(); }).then([this](auto && expression) {
+        return _lex_scope->resolve(_name)->get_expression_future().then([this](auto && expression) {
             _referenced = expression;
             this->_set_type(_referenced->get_type());
         });

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,6 +24,7 @@
 
 #include <reaver/future.h>
 
+#include "../../codegen/ir/entity.h"
 #include "../../codegen/ir/function.h"
 #include "../../codegen/ir/instruction.h"
 #include "../../codegen/ir/variable.h"
@@ -33,14 +34,6 @@
 #include "../simplification/context.h"
 #include "../simplification/replacements.h"
 
-namespace reaver::vapor::parser
-{
-inline namespace _v1
-{
-    struct statement;
-}
-}
-
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -49,7 +42,7 @@ inline namespace _v1
     class scope;
 
     using statement_ir = std::vector<codegen::ir::instruction>;
-    using declaration_ir = std::vector<std::variant<std::shared_ptr<codegen::ir::variable>, codegen::ir::function>>;
+    using declaration_ir = std::vector<codegen::ir::entity>;
 
     class statement
     {
@@ -216,8 +209,24 @@ inline namespace _v1
             return {};
         }
     };
+}
+}
 
-    std::unique_ptr<statement> preanalyze_statement(const parser::statement & parse, scope *& lex_scope);
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct statement;
+}
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    struct precontext;
+
+    std::unique_ptr<statement> preanalyze_statement(precontext & ctx, const parser::statement & parse, scope *& lex_scope);
 
     inline std::unique_ptr<statement> make_null_statement()
     {

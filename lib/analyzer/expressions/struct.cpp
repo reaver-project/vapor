@@ -29,9 +29,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<struct_literal> preanalyze_struct_literal(const parser::struct_literal & parse, scope * lex_scope)
+    std::unique_ptr<struct_literal> preanalyze_struct_literal(precontext & ctx, const parser::struct_literal & parse, scope * lex_scope)
     {
-        return std::make_unique<struct_literal>(make_node(parse), make_struct_type(parse, lex_scope));
+        return std::make_unique<struct_literal>(make_node(parse), make_struct_type(ctx, parse, lex_scope));
     }
 
     struct_literal::struct_literal(ast_node parse, std::unique_ptr<struct_type> type) : expression{ builtin_types().type.get() }, _type{ std::move(type) }
@@ -60,6 +60,16 @@ inline namespace _v1
                 member->print(os, data_members_ctx.make_branch(++idx == _type->get_data_member_decls().size()));
             }
         }
+    }
+
+    void struct_literal::set_name(std::u32string name)
+    {
+        _type->set_name(std::move(name));
+    }
+
+    void struct_literal::mark_exported()
+    {
+        _type->mark_exported();
     }
 
     statement_ir struct_literal::_codegen_ir(ir_generation_context & ctx) const

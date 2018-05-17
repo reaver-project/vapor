@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -44,32 +44,12 @@ inline namespace _v1
 
     void scope::close()
     {
+        if (_is_closed)
         {
-            _ulock lock{ _lock };
-
-            if (_is_closed)
-            {
-                return;
-            }
-
-            _is_closed = true;
-
-            for (auto && promise : _symbol_promises)
-            {
-                auto it = _symbols.find(promise.first);
-                if (it != _symbols.end())
-                {
-                    promise.second.set(it->second.get());
-                    continue;
-                }
-
-                promise.second.set(std::make_exception_ptr(failed_lookup{ promise.first }));
-            }
-
-            _symbol_promises.clear();
-
-            _close_promise->set();
+            return;
         }
+
+        _is_closed = true;
 
         if (!_is_shadowing_boundary && _parent)
         {
@@ -77,7 +57,7 @@ inline namespace _v1
         }
     }
 
-    bool scope::init(const std::u32string & name, std::unique_ptr<symbol> symb)
+    symbol * scope::init(const std::u32string & name, std::unique_ptr<symbol> symb)
     {
         if (non_overridable().find(name) != non_overridable().end())
         {
@@ -86,13 +66,11 @@ inline namespace _v1
 
         assert(!_is_closed);
 
-        _ulock lock{ _lock };
-
         for (auto scope = this; scope; scope = scope->_parent)
         {
             if (scope->_symbols.find(name) != scope->_symbols.end())
             {
-                return false;
+                return nullptr;
             }
 
             if (scope->_is_shadowing_boundary)
@@ -102,102 +80,62 @@ inline namespace _v1
         }
 
         _symbols_in_order.push_back(symb.get());
-        _symbols.emplace(name, std::move(symb));
-        return true;
+        return _symbols.emplace(name, std::move(symb)).first->second.get();
     }
 
-    future<symbol *> scope::get_future(const std::u32string & name) const
+    symbol * scope::get(const std::u32string & name) const
     {
+        auto symb = try_get(name);
+        if (!symb)
         {
-            _shlock lock{ _lock };
-            auto it = _symbol_futures.find(name);
-            if (it != _symbol_futures.end())
-            {
-                return it->second;
-            }
-
-            auto value_it = _symbols.find(name);
-            if (_is_closed && value_it == _symbols.end())
-            {
-                return make_exceptional_future<symbol *>(failed_lookup{ name });
-            }
+            throw failed_lookup{ name };
         }
-
-        _ulock lock{ _lock };
-
-        // need to repeat due to a logical race between the check before
-        // and re-locking the lock
-        auto it = _symbol_futures.find(name);
-        if (it != _symbol_futures.end())
-        {
-            return it->second;
-        }
-
-        auto value_it = _symbols.find(name);
-        if (_is_closed && value_it != _symbols.end())
-        {
-            return _symbol_futures.emplace(name, make_ready_future(value_it->second.get())).first->second;
-        }
-
-        auto pair = make_promise<symbol *>();
-        _symbol_promises.emplace(name, std::move(pair.promise));
-        return _symbol_futures.emplace(name, std::move(pair.future)).first->second;
+        return symb.value();
     }
 
-    future<symbol *> scope::resolve(const std::u32string & name) const
+    std::optional<symbol *> scope::try_get(const std::u32string & name) const
+    {
+        auto it = _symbols.find(name);
+        if (it == _symbols.end() || it->second->is_hidden())
+        {
+            return std::nullopt;
+        }
+
+        return std::make_optional(it->second.get());
+    }
+
+    symbol * scope::resolve(const std::u32string & name) const
     {
         {
             auto it = non_overridable().find(name);
             if (it != non_overridable().end())
             {
-                return make_ready_future(it->second.get());
+                return it->second.get();
             }
         }
 
+        auto it = _resolve_cache.find(name);
+        if (it != _resolve_cache.end())
         {
-            _shlock lock{ _lock };
-
-            auto it = _resolve_futures.find(name);
-            if (it != _resolve_futures.end())
-            {
-                return it->second;
-            }
+            return it->second;
         }
 
-        auto pair = make_promise<symbol *>();
+        auto scope = this;
 
-        get_future(name)
-            .then([promise = pair.promise](auto && symb) { promise.set(symb); })
-            .on_error([name, promise = pair.promise, parent = _parent](auto exptr) {
-                try
-                {
-                    std::rethrow_exception(exptr);
-                }
+        while (scope)
+        {
+            auto symb = scope->try_get(name);
 
-                catch (failed_lookup & ex)
-                {
-                    if (!parent)
-                    {
-                        promise.set(exptr);
-                        return;
-                    }
+            if (symb && !symb.value()->is_hidden())
+            {
+                _resolve_cache.emplace(name, symb.value());
+                return symb.value();
+            }
 
-                    parent->resolve(name)
-                        .then([promise = promise](auto && symb) { promise.set(symb); })
-                        .on_error([promise = promise](auto && ex) { promise.set(ex); })
-                        .detach();
-                }
+            scope = scope->_parent;
+        }
 
-                catch (...)
-                {
-                    promise.set(exptr);
-                }
-            })
-            .detach();
-
-        _ulock lock{ _lock };
-        _resolve_futures.emplace(name, pair.future);
-        return std::move(pair.future);
+        throw failed_lookup(name);
     }
 
     const std::unordered_map<std::u32string, std::unique_ptr<symbol>> & non_overridable()

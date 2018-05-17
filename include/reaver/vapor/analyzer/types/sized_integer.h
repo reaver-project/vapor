@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -103,6 +103,9 @@ inline namespace _v1
         {
             return _size;
         }
+
+        virtual std::unique_ptr<proto::type> generate_interface() const override;
+        virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const override;
 
     private:
         virtual void _codegen_type(ir_generation_context & ctx) const override;

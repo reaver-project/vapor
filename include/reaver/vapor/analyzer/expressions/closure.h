@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -54,6 +54,11 @@ inline namespace _v1
         virtual future<expression *> _simplify_expr(recursive_context) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
+        {
+            assert(0);
+        }
+
         parameter_list _parameter_list;
 
         std::optional<std::unique_ptr<expression>> _return_type;
@@ -76,6 +81,7 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<closure> preanalyze_closure(const parser::lambda_expression & parse, scope * lex_scope);
+    struct precontex;
+    std::unique_ptr<closure> preanalyze_closure(precontext & ctx, const parser::lambda_expression & parse, scope * lex_scope);
 }
 }

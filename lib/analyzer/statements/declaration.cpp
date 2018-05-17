@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -28,7 +28,11 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<declaration> _preanalyze_declaration(const parser::declaration & parse, scope * old_scope, scope * new_scope, declaration_type type)
+    std::unique_ptr<declaration> _preanalyze_declaration(precontext & ctx,
+        const parser::declaration & parse,
+        scope * old_scope,
+        scope * new_scope,
+        declaration_type type)
     {
         switch (type)
         {
@@ -43,8 +47,8 @@ inline namespace _v1
 
         auto ret = std::make_unique<declaration>(make_node(parse),
             parse.identifier.value.string,
-            fmap(parse.rhs, [&](auto && expr) { return preanalyze_expression(expr, old_scope); }),
-            fmap(parse.type_expression, [&](auto && expr) { return preanalyze_expression(expr, old_scope); }),
+            fmap(parse.rhs, [&](auto && expr) { return preanalyze_expression(ctx, expr, old_scope); }),
+            fmap(parse.type_expression, [&](auto && expr) { return preanalyze_expression(ctx, expr, old_scope); }),
             new_scope,
             type);
 
@@ -53,19 +57,25 @@ inline namespace _v1
             new_scope->close();
         }
 
+        if (parse.export_)
+        {
+            ret->mark_exported();
+            ret->declared_symbol()->get_expression_future().then([](auto && expr) { expr->mark_exported(); }).detach();
+        }
+
         return ret;
     }
 
-    std::unique_ptr<declaration> preanalyze_declaration(const parser::declaration & parse, scope *& lex_scope)
+    std::unique_ptr<declaration> preanalyze_declaration(precontext & ctx, const parser::declaration & parse, scope *& lex_scope)
     {
         auto old_scope = lex_scope;
         lex_scope = old_scope->clone_for_decl();
-        return _preanalyze_declaration(parse, old_scope, lex_scope, declaration_type::variable);
+        return _preanalyze_declaration(ctx, parse, old_scope, lex_scope, declaration_type::variable);
     }
 
-    std::unique_ptr<declaration> preanalyze_member_declaration(const parser::declaration & parse, scope * lex_scope)
+    std::unique_ptr<declaration> preanalyze_member_declaration(precontext & ctx, const parser::declaration & parse, scope * lex_scope)
     {
-        return _preanalyze_declaration(parse, lex_scope, lex_scope, declaration_type::member);
+        return _preanalyze_declaration(ctx, parse, lex_scope, lex_scope, declaration_type::member);
     }
 
     declaration::declaration(ast_node parse,
@@ -84,6 +94,11 @@ inline namespace _v1
         {
             assert(0);
         }
+
+        fmap(_init_expr, [&](auto && expr) {
+            expr->set_name(_name);
+            return unit{};
+        });
     }
 
     void declaration::print(std::ostream & os, print_context ctx) const

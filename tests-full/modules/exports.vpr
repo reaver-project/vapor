@@ -1,4 +1,4 @@
-// compile: {vprc} {input} -o {input}.ll
+// compile: {vprc} -i {input}
 
 module sample
 {

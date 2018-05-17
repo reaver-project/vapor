@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -35,16 +35,16 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<block> preanalyze_block(const parser::block & parse, scope * lex_scope, bool is_top_level)
+    std::unique_ptr<block> preanalyze_block(precontext & ctx, const parser::block & parse, scope * lex_scope, bool is_top_level)
     {
         auto scope = lex_scope->clone_local();
 
         auto statements = fmap(parse.block_value, [&](auto && row) {
             return std::get<0>(fmap(row,
-                make_overload_set([&](const parser::block & block) -> std::unique_ptr<statement> { return preanalyze_block(block, scope.get(), false); },
+                make_overload_set([&](const parser::block & block) -> std::unique_ptr<statement> { return preanalyze_block(ctx, block, scope.get(), false); },
                     [&](const parser::statement & statement) {
                         auto scope_ptr = scope.get();
-                        auto ret = preanalyze_statement(statement, scope_ptr);
+                        auto ret = preanalyze_statement(ctx, statement, scope_ptr);
                         if (scope_ptr != scope.get())
                         {
                             scope.release()->keep_alive();
@@ -61,7 +61,7 @@ inline namespace _v1
             std::move(scope),
             lex_scope,
             std::move(statements),
-            fmap(parse.value_expression, [&](auto && val_expr) { return preanalyze_expression_list(val_expr, scope_ptr); }),
+            fmap(parse.value_expression, [&](auto && val_expr) { return preanalyze_expression_list(ctx, val_expr, scope_ptr); }),
             is_top_level);
     }
 
@@ -132,13 +132,14 @@ inline namespace _v1
         });
 
         statement_ir scope_cleanup;
-        for (auto scope = _scope.get(); scope != _original_scope->parent(); scope = scope->parent())
+        // FIXME: actually implement destructors in a non-retarded manner
+        /*for (auto scope = _scope.get(); scope != _original_scope->parent(); scope = scope->parent())
         {
             std::transform(scope->symbols_in_order().rbegin(), scope->symbols_in_order().rend(), std::back_inserter(scope_cleanup), [&ctx](auto && symbol) {
                 auto ir = symbol->get_expression()->codegen_ir(ctx).back().result;
                 return codegen::ir::instruction{ {}, {}, { boost::typeindex::type_id<codegen::ir::destruction_instruction>() }, { ir }, ir };
             });
-        }
+        }*/
 
         for (std::size_t i = 0; i < statements.size(); ++i)
         {

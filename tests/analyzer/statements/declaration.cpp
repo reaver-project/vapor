@@ -36,19 +36,21 @@ MAYFLY_BEGIN_SUITE("statements");
 MAYFLY_BEGIN_SUITE("declaration");
 
 MAYFLY_ADD_TESTCASE("non-member, explicit type, initializer", [] {
+    config::compiler_options opts{ std::make_unique<config::language_options>() };
+    analysis_context ctx;
+    precontext pctx{ opts, ctx };
+
     {
         scope s1;
         auto current_scope = &s1;
 
         auto ast = parse(U"let foo : int = 1;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::variable); });
 
-        auto decl = preanalyze_declaration(ast, current_scope);
+        auto decl = preanalyze_declaration(pctx, ast, current_scope);
 
         MAYFLY_CHECK(current_scope == &s1);
-        auto symbol_future = current_scope->get_future(U"foo");
-        MAYFLY_CHECK(!symbol_future.try_get());
         current_scope->close();
-        MAYFLY_CHECK(reaver::get(symbol_future) == decl->declared_symbol());
+        MAYFLY_CHECK(current_scope->get(U"foo") == decl->declared_symbol());
 
         analysis_context ctx{};
         auto analysis_future = decl->analyze(ctx);
@@ -75,24 +77,27 @@ MAYFLY_ADD_TESTCASE("non-member, explicit type, initializer", [] {
 
         auto ast = parse(U"let foo : int = 1;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::variable); });
 
-        auto decl = preanalyze_declaration(ast, current_scope);
+        auto decl = preanalyze_declaration(pctx, ast, current_scope);
 
         MAYFLY_CHECK(current_scope != s2.get());
-        auto symbol_future = current_scope->get_future(U"foo");
-        MAYFLY_CHECK(reaver::get(symbol_future) == decl->declared_symbol());
+        MAYFLY_CHECK(current_scope->get(U"foo") == decl->declared_symbol());
 
         s2.reset(current_scope);
     }
 });
 
 MAYFLY_ADD_TESTCASE("non-member, deduced type, initializer", [] {
+    config::compiler_options opts{ std::make_unique<config::language_options>() };
+    analysis_context ctx;
+    precontext pctx{ opts, ctx };
+
     {
         scope s1;
         auto current_scope = &s1;
 
         auto ast = parse(U"let foo = 1;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::variable); });
 
-        auto decl = preanalyze_declaration(ast, current_scope);
+        auto decl = preanalyze_declaration(pctx, ast, current_scope);
 
         analysis_context ctx{};
         auto analysis_future = decl->analyze(ctx);
@@ -107,13 +112,17 @@ MAYFLY_ADD_TESTCASE("non-member, deduced type, initializer", [] {
 });
 
 MAYFLY_ADD_TESTCASE("member, deduced type, initializer", [] {
+    config::compiler_options opts{ std::make_unique<config::language_options>() };
+    analysis_context ctx;
+    precontext pctx{ opts, ctx };
+
     {
         scope s1;
         auto current_scope = &s1;
 
         auto ast = parse(U"let foo = 1;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::member); });
 
-        auto decl = preanalyze_member_declaration(ast, current_scope);
+        auto decl = preanalyze_member_declaration(pctx, ast, current_scope);
 
         analysis_context ctx{};
         auto analysis_future = decl->analyze(ctx);
@@ -130,13 +139,17 @@ MAYFLY_ADD_TESTCASE("member, deduced type, initializer", [] {
 });
 
 MAYFLY_ADD_TESTCASE("member, explicit type, no initializer", [] {
+    config::compiler_options opts{ std::make_unique<config::language_options>() };
+    analysis_context ctx;
+    precontext pctx{ opts, ctx };
+
     {
         scope s1;
         auto current_scope = &s1;
 
         auto ast = parse(U"let foo : int;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::member); });
 
-        auto decl = preanalyze_member_declaration(ast, current_scope);
+        auto decl = preanalyze_member_declaration(pctx, ast, current_scope);
 
         analysis_context ctx{};
         auto analysis_future = decl->analyze(ctx);

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -48,10 +48,12 @@ inline namespace _v1
         std::u32string scopes;
         for (auto && scope : fn.scopes)
         {
-            scopes += scope.name + U"::";
+            scopes += scope.name + U".";
         }
 
-        ret += U"define " + type_name(ir::get_type(fn.return_value), ctx);
+        ret += fn.is_defined ? U"define " : U"declare ";
+        ret += fn.is_builtin ? U"linkonce_odr " : (!fn.is_defined || fn.is_exported ? U"" : U"internal ");
+        ret += type_name(ir::get_type(fn.return_value), ctx);
         ret += U" @\"" + scopes + function_name(fn, ctx);
         ret += U"\"(\n";
         for (auto && param : fn.parameters)
@@ -65,19 +67,29 @@ inline namespace _v1
             ret.pop_back();
             ret.push_back(U'\n');
         }
-        ret += U")\n{\n";
+        ret += U")\n";
 
-        // there needs to be an entry label
-        ret += U"entry:\n";
-
-        for (auto && inst : fn.instructions)
+        if (fn.is_defined)
         {
-            ret += generate(inst, ctx);
+            ret += U"{\n";
+
+            // there needs to be an entry label
+            ret += U"entry:\n";
+
+            for (auto && inst : fn.instructions)
+            {
+                ret += generate(inst, ctx);
+            }
+
+            ret += U"}\n\n";
+        }
+
+        else
+        {
+            ret += U"\n";
         }
 
         ctx.in_function_definition = old;
-
-        ret += U"}\n\n";
 
         // quick and dirty, but this should work!
         if (fn.is_entry)

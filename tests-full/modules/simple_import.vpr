@@ -1,0 +1,23 @@
+// compile: {vprc} {input} -I {directory} -l -a -c
+// link: {cc} {runtime} {input}.o {directory}/ackermann.vpr.o -o {input}.bin
+// run: {input}.bin 2
+
+import ackermann;
+
+module main
+{
+    let int32 = sized_int(32);
+
+    let entry = λ(arg : int32) -> int32
+    {
+        // this is currently not constant foldable
+        // because modules only export signatures
+        // TODO: fix that
+        let constant_foldable = ackermann.ackermann(ackermann.alias{ 2, 3 });
+        let non_constant_foldable = ackermann.ackermann(ackermann.alias{ arg, arg + 1 });
+
+        return constant_foldable - non_constant_foldable;
+    };
+}
+
+// vim: filetype=cpp

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -30,7 +30,7 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<closure> preanalyze_closure(const parser::lambda_expression & parse, scope * lex_scope)
+    std::unique_ptr<closure> preanalyze_closure(precontext & ctx, const parser::lambda_expression & parse, scope * lex_scope)
     {
         assert(!parse.captures);
 
@@ -39,7 +39,7 @@ inline namespace _v1
 
         if (parse.parameters)
         {
-            params = preanalyze_parameter_list(parse.parameters.value(), local_scope.get());
+            params = preanalyze_parameter_list(ctx, parse.parameters.value(), local_scope.get());
         }
         local_scope->close();
         auto scope = local_scope.get();
@@ -47,8 +47,8 @@ inline namespace _v1
         return std::make_unique<closure>(make_node(parse),
             std::move(local_scope),
             std::move(params),
-            preanalyze_block(parse.body, scope, true),
-            fmap(parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ret_type, scope); }));
+            preanalyze_block(ctx, parse.body, scope, true),
+            fmap(parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ctx, ret_type, scope); }));
     }
 
     closure::closure(ast_node parse,
@@ -95,7 +95,7 @@ inline namespace _v1
     statement_ir closure::_codegen_ir(ir_generation_context & ctx) const
     {
         auto var = codegen::ir::make_variable(get_type()->codegen_type(ctx));
-        var->scopes = _type->get_scope()->codegen_ir(ctx);
+        var->scopes = _type->get_scope()->codegen_ir();
         return { codegen::ir::instruction{
             std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::materialization_instruction>() }, {}, { std::move(var) } } };
     }

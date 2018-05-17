@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,6 +27,9 @@
 #include "../../lexer/token.h"
 #include "../function.h"
 #include "type.h"
+
+#include "expressions/type.pb.h"
+#include "type_reference.pb.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -76,6 +79,20 @@ inline namespace _v1
         virtual void print(std::ostream & os, print_context ctx) const override
         {
             os << styles::def << ctx << styles::type << "integer" << styles::def << " @ " << styles::address << this << styles::def << ": builtin type\n";
+        }
+
+        virtual std::unique_ptr<proto::type> generate_interface() const override
+        {
+            auto ret = std::make_unique<proto::type>();
+            ret->set_allocated_reference(generate_interface_reference().release());
+            return ret;
+        }
+
+        virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const override
+        {
+            auto ret = std::make_unique<proto::type_reference>();
+            ret->set_builtin(proto::integer);
+            return ret;
         }
 
     private:

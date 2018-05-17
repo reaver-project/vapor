@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -33,6 +33,11 @@ inline namespace _v1
         {
             assert(var.refers_to);
             ctx.put_into_global_before += ctx.define_if_necessary(var.refers_to);
+            return {};
+        }
+
+        if (var.imported)
+        {
             return {};
         }
 

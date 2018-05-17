@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -29,10 +29,32 @@
 #include "vapor/codegen/ir/type.h"
 #include "vapor/codegen/ir/variable.h"
 
+#include "type_reference.pb.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    std::unique_ptr<proto::type> sized_integer::generate_interface() const
+    {
+        auto sized = std::make_unique<proto::sized_integer>();
+        sized->set_size(_size);
+
+        auto type = std::make_unique<proto::type>();
+        type->set_allocated_reference(generate_interface_reference().release());
+        return type;
+    }
+
+    std::unique_ptr<proto::type_reference> sized_integer::generate_interface_reference() const
+    {
+        auto sized = std::make_unique<proto::sized_integer>();
+        sized->set_size(_size);
+
+        auto type = std::make_unique<proto::type_reference>();
+        type->set_allocated_sized_int(sized.release());
+        return type;
+    }
+
     void sized_integer::_codegen_type(ir_generation_context &) const
     {
         _codegen_t = codegen::ir::builtin_types().sized_integer(_size);
@@ -65,6 +87,7 @@ inline namespace _v1
         });
         fun->set_name(std::move(name));
         fun->set_eval(eval);
+        fun->mark_builtin();
         return fun;
     }
 

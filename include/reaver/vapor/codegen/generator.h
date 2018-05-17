@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -28,6 +28,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include "ir/entity.h"
+
 namespace reaver::vapor::codegen
 {
 inline namespace _v1
@@ -39,7 +41,6 @@ inline namespace _v1
         struct function;
         struct instruction;
         struct member_variable;
-        struct module;
     }
 
     class code_generator;
@@ -84,7 +85,7 @@ inline namespace _v1
             return {};
         }
 
-        virtual std::u32string generate_declarations(ir::module &, codegen_context &) const
+        virtual std::u32string generate_declarations(std::vector<ir::entity> &, codegen_context &) const
         {
             return {};
         }
@@ -94,7 +95,7 @@ inline namespace _v1
             return {};
         }
 
-        virtual std::u32string generate_definitions(ir::module &, codegen_context &) = 0;
+        virtual std::u32string generate_definitions(std::vector<ir::entity> &, codegen_context &) = 0;
         virtual std::u32string generate_definition(std::shared_ptr<ir::variable_type> type, codegen_context &) = 0;
     };
 }

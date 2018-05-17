@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -46,7 +46,8 @@ inline namespace _v1
             friend class lexer::iterator;
 
             template<typename Iter>
-            _iterator_backend(Iter begin, Iter end, std::shared_ptr<_lexer_node> & node) : _thread{ [&]() { _worker(begin, end); } }
+            _iterator_backend(Iter begin, Iter end, std::shared_ptr<_lexer_node> & node, std::optional<std::string_view> filename)
+                : _thread{ [&]() { _worker(begin, end, filename); } }
             {
                 _sem.wait();
                 node = std::move(_initial);
@@ -60,7 +61,7 @@ inline namespace _v1
 
         private:
             template<typename Iter>
-            void _worker(Iter begin, Iter end, std::string filename = "")
+            void _worker(Iter begin, Iter end, std::optional<std::string_view> file_path)
             {
                 std::shared_ptr<_lexer_node> node = nullptr;
 
@@ -68,7 +69,7 @@ inline namespace _v1
                 pos.offset = -1;
                 pos.column = 0;
                 pos.line = 1;
-                pos.file = std::move(filename);
+                pos.file_path = file_path;
 
                 auto get = [&]() -> std::optional<char32_t> {
                     if (begin == end)

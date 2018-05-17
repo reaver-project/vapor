@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -49,6 +49,16 @@ inline namespace _v1
         virtual bool matches(type * other) const override
         {
             return true;
+        }
+
+        virtual std::unique_ptr<proto::type> generate_interface() const override
+        {
+            assert(0);
+        }
+
+        virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const override
+        {
+            assert(0);
         }
 
     private:

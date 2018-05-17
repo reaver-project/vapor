@@ -1,0 +1,13 @@
+// compile: ! {vprc} -i {input} -I {directory}/types
+
+import multi_file;
+
+module main
+{
+    let entry = λ(arg : sized_int(32)) -> sized_int(32)
+    {
+        return multi_file.embedded.test(arg);
+    };
+}
+
+// vim: filetype=cpp

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -41,6 +41,11 @@ inline namespace _v1
             _set_type(_type.get());
         }
 
+        overload_set(std::unique_ptr<overload_set_type> t) : _type{ std::move(t) }
+        {
+            _set_type(_type.get());
+        }
+
         void add_function(function_definition * fn);
 
         virtual void print(std::ostream & os, print_context) const override
@@ -50,9 +55,15 @@ inline namespace _v1
 
         virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override;
 
+        virtual void mark_exported() override
+        {
+            _type->mark_exported();
+        }
+
     private:
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override;
 
         std::vector<function_definition *> _function_defs;
         std::unique_ptr<overload_set_type> _type;

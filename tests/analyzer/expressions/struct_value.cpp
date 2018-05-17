@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -35,6 +35,10 @@ MAYFLY_BEGIN_SUITE("expressions");
 MAYFLY_BEGIN_SUITE("struct value");
 
 MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
+    config::compiler_options opts{ std::make_unique<config::language_options>() };
+    analysis_context ctx;
+    precontext pctx{ opts, ctx };
+
     scope s;
     auto current_scope = &s;
 
@@ -46,16 +50,15 @@ MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
             };
         )code",
         parser::parse_struct_declaration);
-    auto struct_decl = preanalyze_declaration(type_ast, current_scope);
+    auto struct_decl = preanalyze_declaration(pctx, type_ast, current_scope);
 
     auto expression_ast = parse(UR"code(
             let bar = foo{ 1, 2 };
         )code",
         [](auto && ctx) { return parser::parse_declaration(ctx); });
-    std::unique_ptr<statement> declaration = preanalyze_declaration(expression_ast, current_scope);
+    std::unique_ptr<statement> declaration = preanalyze_declaration(pctx, expression_ast, current_scope);
     current_scope->close();
 
-    analysis_context ctx;
     reaver::get(struct_decl->analyze(ctx));
     reaver::get(declaration->analyze(ctx));
 
@@ -97,7 +100,7 @@ MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
         )code",
         [](auto && ctx) { return parser::parse_expression(ctx); });
 
-    auto replaced_expr = preanalyze_expression(replacement_ast, current_scope);
+    auto replaced_expr = preanalyze_expression(pctx, replacement_ast, current_scope);
 
     reaver::get(replaced_expr->analyze(ctx));
     do
@@ -123,7 +126,7 @@ MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
             )code",
         [](auto && ctx) { return parser::parse_expression(ctx); });
 
-    auto designated_repl_expr = preanalyze_expression(designated_repl_ast, current_scope);
+    auto designated_repl_expr = preanalyze_expression(pctx, designated_repl_ast, current_scope);
 
     reaver::get(designated_repl_expr->analyze(ctx));
     do

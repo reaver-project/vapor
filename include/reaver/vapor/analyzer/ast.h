@@ -22,10 +22,15 @@
 
 #pragma once
 
-#include "../codegen/ir/module.h"
+#include <reaver/future_get.h>
+
+#include "../codegen/ir/entity.h"
 #include "../parser/ast.h"
+#include "../parser/module.h"
+#include "expressions/import.h"
+#include "expressions/module.h"
 #include "helpers.h"
-#include "module.h"
+#include "precontext.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -34,78 +39,38 @@ inline namespace _v1
     class ast
     {
     public:
-        ast(parser::ast original_ast) : _original_ast{ std::move(original_ast) }
-        {
-            try
-            {
-                _modules = fmap(_original_ast.module_definitions, [this](auto && m) {
-                    auto ret = std::make_unique<module>(m);
-                    ret->analyze(_ctx);
-                    return ret;
-                });
-            }
-
-            catch (exception & e)
-            {
-                default_error_engine().push(e);
-            }
-
-            if (!default_error_engine())
-            {
-                default_error_engine().print(logger::default_logger());
-            }
-        }
-
+        ast(parser::ast original_ast, const config::compiler_options & opts);
         ast(const ast &) = delete;
         ast(ast &&) = delete;
 
-        auto begin()
+        const auto & modules() const
         {
-            return _modules.begin();
+            return _modules;
         }
 
-        auto begin() const
+        const auto & imports() const
         {
-            return _modules.begin();
+            return _imports;
         }
 
-        auto end()
-        {
-            return _modules.end();
-        }
+        void analyze();
+        void simplify();
+        std::vector<codegen::ir::entity> codegen_ir() const;
 
-        auto end() const
-        {
-            return _modules.end();
-        }
-
-        void simplify()
-        {
-            for (auto && module : _modules)
-            {
-                module->simplify();
-            }
-        }
-
-        std::vector<codegen::ir::module> codegen_ir() const
-        {
-            return fmap(_modules, [](auto && mod) { return mod->codegen_ir(); });
-        }
+        void serialize_to(std::ostream &) const;
 
     private:
         parser::ast _original_ast;
         std::vector<std::unique_ptr<module>> _modules;
-        analysis_context _ctx;
+        std::vector<std::unique_ptr<import_expression>> _imports;
+
+        std::unique_ptr<scope> _global_scope;
+        analysis_context _proper;
+        precontext _ctx;
+
+        std::optional<boost::filesystem::path> _source_path;
     };
 
-    inline std::ostream & operator<<(std::ostream & os, std::reference_wrapper<ast> tree)
-    {
-        for (auto && module : tree.get())
-        {
-            module->print(os, {});
-        }
-
-        return os;
-    }
+    std::ostream & operator<<(std::ostream & os, std::reference_wrapper<ast> tree);
 }
 }

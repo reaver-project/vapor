@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -39,9 +39,9 @@ inline namespace _v1
     {
         auto actual_type = *_codegen_t;
 
-        auto type = codegen::ir::variable_type{ _codegen_name(ctx), get_scope()->codegen_ir(ctx), 0, {} };
+        auto type = codegen::ir::variable_type{ _codegen_name(ctx), get_scope()->codegen_ir(), 0, {} };
 
-        auto scopes = get_scope()->codegen_ir(ctx);
+        auto scopes = get_scope()->codegen_ir();
         scopes.emplace_back(type.name, codegen::ir::scope_type::type);
 
         auto fn = _function->codegen_ir(ctx);

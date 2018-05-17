@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,7 +27,7 @@
 #include <string>
 #include <unordered_map>
 
-#include <reaver/future.h>
+#include <reaver/exception.h>
 #include <reaver/optional.h>
 
 #include "../codegen/ir/scope.h"
@@ -59,28 +59,15 @@ inline namespace _v1
         {
         };
 
-        void _init_close()
-        {
-            auto pair = make_promise<void>();
-            _close_future = std::move(pair.future);
-            _close_promise = std::move(pair.promise);
-        }
-
     public:
         scope(bool is_local = false) : _is_local_scope{ is_local }
         {
-            _init_close();
         }
-
-    private:
-        using _ulock = std::unique_lock<std::shared_mutex>;
-        using _shlock = std::shared_lock<std::shared_mutex>;
 
     public:
         scope(_key, scope * parent_scope, bool is_local, bool is_shadowing_boundary)
             : _parent{ parent_scope }, _is_local_scope{ is_local }, _is_shadowing_boundary{ is_shadowing_boundary }
         {
-            _init_close();
         }
 
         ~scope();
@@ -112,48 +99,17 @@ inline namespace _v1
             return std::make_unique<scope>(_key{}, this, false, true);
         }
 
-        auto get(const std::u32string & name) const
-        {
-            _shlock lock{ _lock };
-            return _symbols.at(name).get();
-        }
+        symbol * get(const std::u32string & name) const;
+        std::optional<symbol *> try_get(const std::u32string & name) const;
 
-        auto try_get(const std::u32string & name) const
-        {
-            _shlock lock{ _lock };
-            auto it = _symbols.find(name);
-            return it != _symbols.end() ? std::make_optional(it->second.get()) : std::nullopt;
-        }
-
-        bool init(const std::u32string & name, std::unique_ptr<symbol> symb);
+        symbol * init(const std::u32string & name, std::unique_ptr<symbol> symb);
 
         template<typename F>
         auto get_or_init(const std::u32string & name, F init)
         {
-            if (non_overridable().find(name) != non_overridable().end())
+            if (auto symb = try_get(name))
             {
-                assert(0);
-            }
-
-            assert(!_is_closed);
-
-            {
-                _shlock lock{ _lock };
-                auto it = _symbols.find(name);
-                if (it != _symbols.end())
-                {
-                    return it->second.get();
-                }
-            }
-
-            _ulock lock{ _lock };
-
-            // need to repeat due to a logical race between the check before
-            // and re-locking the lock
-            auto it = _symbols.find(name);
-            if (it != _symbols.end())
-            {
-                return it->second.get();
+                return symb.value();
             }
 
             auto init_v = init();
@@ -163,11 +119,7 @@ inline namespace _v1
             return ret;
         }
 
-        // this will always give you a thingy from *current* scope
-        // if you want to get from any of the scopes up
-        // do use resolve()
-        future<symbol *> get_future(const std::u32string & name) const;
-        future<symbol *> resolve(const std::u32string & name) const;
+        symbol * resolve(const std::u32string & name) const;
 
         const auto & declared_symbols() const
         {
@@ -182,12 +134,12 @@ inline namespace _v1
             _scope_type = type;
         }
 
-        std::vector<codegen::ir::scope> codegen_ir(ir_generation_context & ctx) const
+        std::vector<codegen::ir::scope> codegen_ir() const
         {
             std::vector<codegen::ir::scope> scopes;
             if (_parent)
             {
-                scopes = _parent->codegen_ir(ctx);
+                scopes = _parent->codegen_ir();
             }
 
             if (!_name.empty())
@@ -211,8 +163,6 @@ inline namespace _v1
         }
 
     private:
-        mutable std::shared_mutex _lock;
-
         std::u32string _name;
         codegen::ir::scope_type _scope_type;
 
@@ -220,15 +170,10 @@ inline namespace _v1
         std::unordered_set<std::unique_ptr<scope>> _keepalive;
         std::unordered_map<std::u32string, std::unique_ptr<symbol>> _symbols;
         std::vector<symbol *> _symbols_in_order;
-        mutable std::unordered_map<std::u32string, future<symbol *>> _symbol_futures;
-        mutable std::unordered_map<std::u32string, manual_promise<symbol *>> _symbol_promises;
-        mutable std::unordered_map<std::u32string, future<symbol *>> _resolve_futures;
+        mutable std::unordered_map<std::u32string, symbol *> _resolve_cache;
         const bool _is_local_scope = false;
         const bool _is_shadowing_boundary = false;
         bool _is_closed = false;
-
-        std::optional<future<>> _close_future;
-        std::optional<manual_promise<void>> _close_promise;
     };
 }
 }

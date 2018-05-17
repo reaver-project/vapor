@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -109,6 +109,11 @@ inline namespace _v1
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
         virtual bool _invalidate_ir(ir_generation_context &) const override;
 
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
+        {
+            assert(0);
+        }
+
         std::u32string _name;
 
         expression * _referenced = nullptr;
@@ -131,7 +136,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<member_access_expression> preanalyze_member_access_expression(const parser::member_expression & parse, scope *);
+    struct precontext;
+
+    std::unique_ptr<member_access_expression> preanalyze_member_access_expression(precontext & ctx, const parser::member_expression & parse, scope *);
 
     inline std::unique_ptr<member_access_expression> make_member_access_expression(std::u32string name, type * ref_type)
     {

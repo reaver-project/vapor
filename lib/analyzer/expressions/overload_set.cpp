@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -32,6 +32,8 @@
 #include "vapor/codegen/ir/type.h"
 #include "vapor/parser.h"
 
+#include "expressions/overload_set.pb.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -45,7 +47,7 @@ inline namespace _v1
     statement_ir overload_set::_codegen_ir(ir_generation_context & ctx) const
     {
         auto var = codegen::ir::make_variable(_type->codegen_type(ctx));
-        var->scopes = _type->get_scope()->codegen_ir(ctx);
+        var->scopes = _type->get_scope()->codegen_ir();
         return { codegen::ir::instruction{
             std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, codegen::ir::value{ std::move(var) } } };
     }
@@ -59,6 +61,11 @@ inline namespace _v1
     {
         _function_defs.push_back(decl);
         _type->add_function(decl->get_function());
+    }
+
+    std::unique_ptr<google::protobuf::Message> overload_set::_generate_interface() const
+    {
+        return std::make_unique<proto::overload_set>();
     }
 }
 }

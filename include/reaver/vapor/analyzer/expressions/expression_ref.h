@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -104,6 +104,8 @@ inline namespace _v1
         {
             return _referenced->is_equal(rhs);
         }
+
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override;
 
     protected:
         expression * _referenced = nullptr;

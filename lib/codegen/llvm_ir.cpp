@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,7 +21,7 @@
  **/
 
 #include "vapor/codegen/llvm_ir.h"
-#include "vapor/codegen/ir/module.h"
+#include "vapor/codegen/ir/entity.h"
 #include "vapor/codegen/ir/type.h"
 
 namespace reaver::vapor::codegen
@@ -35,13 +35,13 @@ inline namespace _v1
 )code";
     }
 
-    std::u32string llvm_ir_generator::generate_definitions(ir::module & module, codegen_context & ctx)
+    std::u32string llvm_ir_generator::generate_definitions(std::vector<ir::entity> & module, codegen_context & ctx)
     {
         std::u32string ret;
 
-        for (auto && symbol : module.symbols)
+        for (auto && entity : module)
         {
-            ret += std::get<0>(fmap(symbol,
+            ret += std::get<0>(fmap(entity,
                 make_overload_set([&](std::shared_ptr<ir::variable> & var) { return this->generate_definition(*var, ctx); },
                     [&](ir::function & fn) { return this->generate_definition(fn, ctx); })));
         }
@@ -66,8 +66,14 @@ inline namespace _v1
             return U"i" + utf32(std::to_string(sized->integer_size));
         }
 
+        std::u32string scopes;
+        for (auto && scope : type->scopes)
+        {
+            scopes += scope.name + U".";
+        }
+
         ctx.put_into_global_before += ctx.define_if_necessary(type);
-        return U"%\"" + type->name + U"\"";
+        return U"%\"" + scopes + type->name + U"\"";
     }
 
     std::u32string llvm_ir_generator::function_name(ir::function & fn, codegen_context & ctx)
@@ -82,7 +88,13 @@ inline namespace _v1
             var.name = utf32(std::to_string(ctx.unnamed_variable_index++));
         }
 
-        return (ctx.in_function_definition ? U"%\"" : U"@\"") + var.name.value() + U"\"";
+        std::u32string scopes;
+        for (auto && scope : var.scopes)
+        {
+            scopes += scope.name + U".";
+        }
+
+        return (ctx.in_function_definition ? U"%\"" : U"@\"") + scopes + var.name.value() + U"\"";
     }
 }
 }

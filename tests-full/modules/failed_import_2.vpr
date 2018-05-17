@@ -1,0 +1,5 @@
+// compile: ! {vprc} -i {input} -I {directory}/types
+
+import single_file.nonexistent_submodule;
+
+// vim: filetype=cpp

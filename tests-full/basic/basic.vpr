@@ -1,10 +1,8 @@
-// compile: {vprc} {input} -o {input}.ll
-// assemble: cat {runtime}/crt1.ll >> {input}.ll
-// assemble: {llc} {input}.ll -filetype=obj -relocation-model=pic
-// link: {cc} {input}.o -o {input}.bin
+// compile: {vprc} {input} -l -a -c
+// link: {cc} {input}.o {runtime} -o {input}.bin
 // run: {input}.bin 2
 
-module hello_world
+module main
 {
     let int32 = sized_int(32);
 

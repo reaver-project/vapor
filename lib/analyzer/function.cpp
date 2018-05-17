@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -121,7 +121,7 @@ inline namespace _v1
             return (*_compile_time_eval)(ctx, arguments);
         }
 
-        assert(0);
+        return make_ready_future<expression *>(nullptr);
     }
 
     future<> function::run_analysis_hooks(analysis_context & ctx, call_expression * expr, std::vector<expression *> args)
@@ -152,10 +152,8 @@ inline namespace _v1
         if (!_ir)
         {
             _ir = _codegen(ctx);
-            if (_is_member)
-            {
-                _ir->is_member = true;
-            }
+            _ir->is_member = _is_member;
+            _ir->is_builtin = _is_builtin;
 
             if (_entry)
             {

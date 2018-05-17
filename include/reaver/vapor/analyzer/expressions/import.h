@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016, 2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,19 +24,77 @@
 
 #include <memory>
 
+#include "entity.h"
 #include "expression.h"
+
+namespace reaver::vapor::proto
+{
+struct import_;
+}
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    class entity;
+
     class import_expression : public expression
     {
+    public:
+        import_expression(ast_node node, entity * module) : expression{ module->get_type() }, _module{ module }
+        {
+            _set_ast_info(node);
+        }
+
+        virtual void print(std::ostream &, print_context) const override;
+
+        virtual expression * _get_replacement() override
+        {
+            return _module;
+        }
+
+        virtual const expression * _get_replacement() const override
+        {
+            return _module;
+        }
+
+    private:
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
+        virtual future<expression *> _simplify_expr(recursive_context ctx) override;
+
+        virtual statement_ir _codegen_ir(ir_generation_context &) const override
+        {
+            return {};
+        }
+
+        entity * _module;
     };
 
-    class import
+    enum class import_mode
     {
-    private:
+        statement,
+        expression
     };
+}
+}
+
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct import_expression;
+}
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    struct precontext;
+
+    std::unique_ptr<import_expression> preanalyze_import(precontext & ctx,
+        const parser::import_expression & parse,
+        scope * lex_scope,
+        import_mode mode = import_mode::expression);
 }
 }

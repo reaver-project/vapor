@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -99,6 +99,11 @@ inline namespace _v1
             return _base_expr->is_equal(rhs);
         }
 
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
+        {
+            assert(0);
+        }
+
         std::unique_ptr<expression> _base_expr;
         std::optional<lexer::token_type> _modifier;
         std::vector<std::unique_ptr<expression>> _arguments;
@@ -122,6 +127,8 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<postfix_expression> preanalyze_postfix_expression(const parser::postfix_expression & parse, scope * lex_scope);
+    struct precontext;
+
+    std::unique_ptr<postfix_expression> preanalyze_postfix_expression(precontext & ctx, const parser::postfix_expression & parse, scope * lex_scope);
 }
 }

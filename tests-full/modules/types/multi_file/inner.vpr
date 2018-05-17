@@ -1,0 +1,7 @@
+// IGNORE: true
+
+module multi_file.inner
+{
+}
+
+// vim: filetype=cpp

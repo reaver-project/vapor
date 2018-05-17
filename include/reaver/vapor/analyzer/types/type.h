@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,7 +24,10 @@
 
 #include <memory>
 
+#include <reaver/future.h>
 #include <reaver/variant.h>
+
+#include <google/protobuf/message.h>
 
 #include "../../codegen/ir/type.h"
 #include "../../lexer/token.h"
@@ -41,6 +44,12 @@ inline namespace _v1
         struct variable_type;
     }
 }
+}
+
+namespace reaver::vapor::proto
+{
+struct type;
+struct type_reference;
 }
 
 namespace reaver::vapor::analyzer
@@ -125,7 +134,7 @@ inline namespace _v1
         virtual std::string explain() const = 0;
         virtual void print(std::ostream & os, print_context ctx) const = 0;
 
-        virtual const scope * get_scope() const
+        scope * get_scope() const
         {
             return _member_scope.get();
         }
@@ -140,6 +149,7 @@ inline namespace _v1
             if (!_codegen_t)
             {
                 _codegen_t = std::make_shared<codegen::ir::variable_type>();
+                _codegen_t.value()->scopes = _member_scope->codegen_ir();
                 _codegen_type(ctx);
             }
 
@@ -171,10 +181,23 @@ inline namespace _v1
 
         std::vector<codegen::ir::scope> codegen_scopes(ir_generation_context & ctx) const
         {
-            auto base_scopes = _member_scope->codegen_ir(ctx);
+            auto base_scopes = _member_scope->codegen_ir();
             base_scopes.push_back(codegen::ir::scope{ _codegen_name(ctx), codegen::ir::scope_type::type });
             return base_scopes;
         }
+
+        const std::u32string & get_name() const
+        {
+            return _name;
+        }
+
+        void set_name(std::u32string name)
+        {
+            _name = std::move(name);
+        }
+
+        virtual std::unique_ptr<proto::type> generate_interface() const = 0;
+        virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const = 0;
 
     private:
         virtual void _codegen_type(ir_generation_context &) const = 0;
@@ -191,40 +214,23 @@ inline namespace _v1
         void _init_pack_type();
 
         mutable std::optional<std::shared_ptr<codegen::ir::variable_type>> _codegen_t;
+
+        std::u32string _name;
     };
 
-    class type_type : public type
+    class user_defined_type : public type
     {
     public:
-        type_type() : type{ dont_init_expr }
-        {
-        }
+        using type::type;
 
-        virtual std::string explain() const override
-        {
-            return "type";
-        }
-
-        virtual future<std::vector<function *>> get_candidates(lexer::token_type token) const override;
-
-        virtual void print(std::ostream & os, print_context ctx) const override
-        {
-            os << styles::def << ctx << styles::type << "type" << styles::def << " @ " << styles::address << this << styles::def << ": builtin type\n";
-        }
+        virtual std::unique_ptr<proto::type> generate_interface() const final;
+        virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const final;
 
     private:
-        virtual void _codegen_type(ir_generation_context &) const override;
-        virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
-        {
-            return U"type";
-        }
-
-        mutable std::mutex _generic_ctor_lock;
-        mutable std::shared_ptr<function> _generic_ctor;
-        mutable std::unique_ptr<expression> _generic_ctor_first_arg;
-        mutable std::unique_ptr<expression> _generic_ctor_pack_arg;
+        virtual std::unique_ptr<google::protobuf::Message> _user_defined_interface() const = 0;
     };
 
+    std::unique_ptr<type> make_type_type();
     std::unique_ptr<type> make_integer_type();
     std::unique_ptr<type> make_boolean_type();
     std::unique_ptr<type> make_unconstrained_type();
@@ -244,7 +250,7 @@ inline namespace _v1
         static auto builtins = [] {
             builtin_types_t builtins;
 
-            builtins.type = std::make_unique<type_type>();
+            builtins.type = make_type_type();
             builtins.integer = make_integer_type();
             builtins.boolean = make_boolean_type();
             builtins.unconstrained = make_unconstrained_type();
