@@ -43,24 +43,14 @@ inline namespace _v1
         ast(const ast &) = delete;
         ast(ast &&) = delete;
 
-        auto begin()
+        const auto & modules() const
         {
-            return _modules.begin();
+            return _modules;
         }
 
-        auto begin() const
+        const auto & imports() const
         {
-            return _modules.begin();
-        }
-
-        auto end()
-        {
-            return _modules.end();
-        }
-
-        auto end() const
-        {
-            return _modules.end();
+            return _imports;
         }
 
         void analyze();

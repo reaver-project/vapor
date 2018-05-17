@@ -24,6 +24,7 @@
 
 #include <memory>
 
+#include "entity.h"
 #include "expression.h"
 
 namespace reaver::vapor::proto
@@ -40,24 +41,32 @@ inline namespace _v1
     class import_expression : public expression
     {
     public:
-        import_expression(ast_node node, entity * module) : _node{ std::move(node) }, _module{ module }
+        import_expression(ast_node node, entity * module) : expression{ module->get_type() }, _module{ module }
         {
+            _set_ast_info(node);
         }
 
         virtual void print(std::ostream &, print_context) const override;
 
-    private:
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+        virtual expression * _get_replacement() override
         {
-            assert(0);
+            return _module;
         }
+
+        virtual const expression * _get_replacement() const override
+        {
+            return _module;
+        }
+
+    private:
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
+        virtual future<expression *> _simplify_expr(recursive_context ctx) override;
 
         virtual statement_ir _codegen_ir(ir_generation_context &) const override
         {
-            assert(0);
+            return {};
         }
 
-        ast_node _node;
         entity * _module;
     };
 

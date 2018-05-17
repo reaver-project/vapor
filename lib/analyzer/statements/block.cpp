@@ -132,13 +132,14 @@ inline namespace _v1
         });
 
         statement_ir scope_cleanup;
-        for (auto scope = _scope.get(); scope != _original_scope->parent(); scope = scope->parent())
+        // FIXME: actually implement destructors in a non-retarded manner
+        /*for (auto scope = _scope.get(); scope != _original_scope->parent(); scope = scope->parent())
         {
             std::transform(scope->symbols_in_order().rbegin(), scope->symbols_in_order().rend(), std::back_inserter(scope_cleanup), [&ctx](auto && symbol) {
                 auto ir = symbol->get_expression()->codegen_ir(ctx).back().result;
                 return codegen::ir::instruction{ {}, {}, { boost::typeindex::type_id<codegen::ir::destruction_instruction>() }, { ir }, ir };
             });
-        }
+        }*/
 
         for (std::size_t i = 0; i < statements.size(); ++i)
         {

@@ -100,7 +100,12 @@ inline namespace _v1
 
     std::ostream & operator<<(std::ostream & os, std::reference_wrapper<ast> tree)
     {
-        for (auto && module : tree.get())
+        for (auto && import : tree.get().imports())
+        {
+            import->print(os, {});
+        }
+
+        for (auto && module : tree.get().modules())
         {
             module->print(os, {});
         }

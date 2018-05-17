@@ -25,6 +25,7 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
 
+#include "vapor/analyzer/expressions/expression_ref.h"
 #include "vapor/analyzer/expressions/import.h"
 #include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/symbol.h"
@@ -302,9 +303,28 @@ inline namespace _v1
         return expr;
     }
 
-    void import_expression::print(std::ostream &, print_context) const
+    void import_expression::print(std::ostream & os, print_context ctx) const
     {
-        assert(0);
+        os << styles::def << ctx << styles::rule_name << "import-expression";
+        print_address_range(os, this);
+        os << ' ' << styles::string_value << boost::algorithm::join(_module->get_import_name(), ".") << '\n';
+
+        auto module_ctx = ctx.make_branch(true);
+        os << styles::def << module_ctx << styles::subrule_name << "referenced entity";
+        os << styles::def << " @ " << styles::address << _module << '\n';
+
+        // TODO: do I want to actually print the entity itself here?
+        // I think I don't, but I'll need that as a debug tool one day
+    }
+
+    std::unique_ptr<expression> import_expression::_clone_expr_with_replacement(replacements &) const
+    {
+        return std::make_unique<import_expression>(get_ast_info().value(), _module);
+    }
+
+    future<expression *> import_expression::_simplify_expr(recursive_context ctx)
+    {
+        return make_ready_future<expression *>(this);
     }
 }
 }

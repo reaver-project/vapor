@@ -59,9 +59,9 @@ inline namespace _v1
                     return pexpr;
                 },
 
-                [](const parser::import_expression & import) -> std::unique_ptr<expression> {
-                    assert(0);
-                    return std::unique_ptr<import_expression>();
+                [&](const parser::import_expression & import) -> std::unique_ptr<expression> {
+                    auto impexpr = preanalyze_import(ctx, import, lex_scope, import_mode::expression);
+                    return impexpr;
                 },
 
                 [&](const parser::lambda_expression & lambda_expr) -> std::unique_ptr<expression> {
