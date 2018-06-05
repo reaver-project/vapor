@@ -40,6 +40,8 @@ MAYFLY_ADD_TESTCASE("empty struct", [] {
     precontext pctx{ opts, ctx };
 
     scope s;
+    std::vector<std::shared_ptr<void>> keepalive;
+    initialize_global_scope(&s, keepalive);
     auto current_scope = &s;
 
     auto ast = parse(U"struct {}", parser::parse_struct_literal);
@@ -67,6 +69,8 @@ MAYFLY_ADD_TESTCASE("struct with members", [] {
     precontext pctx{ opts, ctx };
 
     scope s;
+    std::vector<std::shared_ptr<void>> keepalive;
+    initialize_global_scope(&s, keepalive);
     auto current_scope = &s;
 
     auto ast = parse(UR"code(

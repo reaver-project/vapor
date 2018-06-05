@@ -155,15 +155,7 @@ inline namespace _v1
                 }
 
             case proto::type_reference::DetailsCase::kSizedInt:
-            {
-                auto size = type.sized_int().size();
-                auto & type = ctx.proper.sized_integers[size];
-                if (!type)
-                {
-                    type = make_sized_integer_type(size);
-                }
-                return type.get();
-            }
+                return ctx.proper.get_sized_integer_type(type.sized_int().size());
 
             case proto::type_reference::kUserDefined:
             {
@@ -187,7 +179,7 @@ inline namespace _v1
         {
             case proto::type_reference::DetailsCase::kBuiltin:
             case proto::type_reference::DetailsCase::kSizedInt:
-                return make_expression_ref(std::get<0>(get_imported_type_ref(ctx, reference))->get_expression());
+                return make_expression_ref(std::get<0>(get_imported_type_ref(ctx, reference))->get_expression(), std::nullopt);
 
             case proto::type_reference::DetailsCase::kUserDefined:
                 return std::get<1>(get_imported_type_ref(ctx, reference))->get_expression();

@@ -79,12 +79,15 @@ inline namespace _v1
     private:
         virtual reaver::future<> _analyze(analysis_context &) override
         {
-            if (!_analysis_type)
+            if (!try_get_type())
             {
-                throw unexpected_call{ __PRETTY_FUNCTION__ };
-            }
+                if (!_analysis_type)
+                {
+                    throw unexpected_call{ __PRETTY_FUNCTION__ };
+                }
 
-            _set_type(std::move(_analysis_type));
+                _set_type(std::move(_analysis_type));
+            }
 
             return reaver::make_ready_future();
         }

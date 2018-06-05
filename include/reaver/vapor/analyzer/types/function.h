@@ -88,19 +88,5 @@ inline namespace _v1
             return hash;
         }
     };
-
-    inline auto get_function_type(type * return_type, std::vector<type *> parameter_types)
-    {
-        using map_type = std::unordered_map<function_type_elements, std::unique_ptr<function_type>, function_type_elements_hash>;
-        static map_type map;
-
-        auto & ret = map[std::make_pair(return_type, parameter_types)];
-        if (!ret)
-        {
-            ret = std::make_unique<function_type>(return_type, parameter_types);
-        }
-
-        return ret.get();
-    }
 }
 }

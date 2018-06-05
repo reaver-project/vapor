@@ -36,6 +36,10 @@ inline namespace _v1
     public:
         expression_ref(expression * expr) : _referenced{ expr }
         {
+            if (auto type = _referenced->try_get_type())
+            {
+                _set_type(type);
+            }
         }
 
         virtual void print(std::ostream & os, print_context ctx) const override
@@ -69,8 +73,6 @@ inline namespace _v1
         virtual future<> _analyze(analysis_context & ctx) override
         {
             return _referenced->analyze(ctx).then([&] {
-                _referenced = _referenced->_get_replacement();
-
                 auto type = _referenced->try_get_type();
                 if (type)
                 {
@@ -82,6 +84,8 @@ inline namespace _v1
 
                     _set_type(type);
                 }
+
+                assert(try_get_type());
             });
         }
 
@@ -95,9 +99,9 @@ inline namespace _v1
             }
 
             auto ret = std::make_unique<expression_ref>(referenced);
-            if (auto type = try_get_type())
+            if (auto ast_info = get_ast_info())
             {
-                ret->_set_type(type);
+                ret->_set_ast_info(ast_info.value());
             }
             return ret;
         }
@@ -134,13 +138,20 @@ inline namespace _v1
 
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override;
 
+        friend std::unique_ptr<expression> make_expression_ref(expression *, std::optional<ast_node>);
+
     protected:
         expression * _referenced = nullptr;
     };
 
-    inline std::unique_ptr<expression> make_expression_ref(expression * expr)
+    inline std::unique_ptr<expression> make_expression_ref(expression * expr, std::optional<ast_node> ast_info)
     {
-        return std::make_unique<expression_ref>(expr);
+        auto ret = std::make_unique<expression_ref>(expr);
+        if (ast_info)
+        {
+            ret->_set_ast_info(ast_info.value());
+        }
+        return ret;
     }
 }
 }

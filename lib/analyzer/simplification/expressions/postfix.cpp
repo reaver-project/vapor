@@ -100,7 +100,8 @@ inline namespace _v1
                 {
                     if (!_referenced_expression.value()->is_member())
                     {
-                        return _referenced_expression.value()->simplify_expr(ctx).then([](auto && simpl) { return make_expression_ref(simpl).release(); });
+                        return _referenced_expression.value()->simplify_expr(ctx).then(
+                            [](auto && simpl) { return make_expression_ref(simpl, std::nullopt).release(); });
                     }
 
                     if (!_base_expr->is_constant())

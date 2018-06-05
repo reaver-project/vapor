@@ -51,8 +51,6 @@ inline namespace _v1
 
     class symbol;
 
-    const std::unordered_map<std::u32string, std::unique_ptr<symbol>> & non_overridable();
-
     class scope
     {
         struct _key
@@ -66,7 +64,11 @@ inline namespace _v1
 
     public:
         scope(_key, scope * parent_scope, bool is_local, bool is_shadowing_boundary, const scope * other = nullptr)
-            : _parent{ parent_scope }, _combined_with{ other }, _is_local_scope{ is_local }, _is_shadowing_boundary{ is_shadowing_boundary }
+            : _parent{ parent_scope },
+              _global{ _parent ? _parent->_global : nullptr },
+              _combined_with{ other },
+              _is_local_scope{ is_local },
+              _is_shadowing_boundary{ is_shadowing_boundary }
         {
         }
 
@@ -167,11 +169,17 @@ inline namespace _v1
             assert(inserted);
         }
 
+        void mark_global()
+        {
+            _global = this;
+        }
+
     private:
         std::u32string _name;
         codegen::ir::scope_type _scope_type;
 
         scope * _parent = nullptr;
+        scope * _global = nullptr;
         const scope * _combined_with = nullptr;
         std::unordered_set<std::unique_ptr<scope>> _keepalive;
         std::unordered_map<std::u32string, std::unique_ptr<symbol>> _symbols;
@@ -181,5 +189,7 @@ inline namespace _v1
         const bool _is_shadowing_boundary = false;
         bool _is_closed = false;
     };
+
+    void initialize_global_scope(scope * lex_scope, std::vector<std::shared_ptr<void>> & keepalive_list);
 }
 }

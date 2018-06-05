@@ -42,6 +42,8 @@ MAYFLY_ADD_TESTCASE("non-member, explicit type, initializer", [] {
 
     {
         scope s1;
+        std::vector<std::shared_ptr<void>> keepalive;
+        initialize_global_scope(&s1, keepalive);
         auto current_scope = &s1;
 
         auto ast = parse(U"let foo : int = 1;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::variable); });
@@ -145,6 +147,8 @@ MAYFLY_ADD_TESTCASE("member, explicit type, no initializer", [] {
 
     {
         scope s1;
+        std::vector<std::shared_ptr<void>> keepalive;
+        initialize_global_scope(&s1, keepalive);
         auto current_scope = &s1;
 
         auto ast = parse(U"let foo : int;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::member); });

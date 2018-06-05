@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,35 +22,44 @@
 
 #pragma once
 
-#include "../simplification/context.h"
-#include "signature.h"
+#include <functional>
+#include <vector>
+
+#include <boost/functional/hash.hpp>
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
     class type;
-    class function_type;
 
-    class analysis_context
+    struct function_signature
     {
-    public:
-        analysis_context() : results{ std::make_shared<cached_results>() }, simplification_ctx{ std::make_shared<simplification_context>(*results) }
+        std::vector<type *> parameters;
+        type * return_type;
+    };
+
+    inline bool operator==(const function_signature & lhs, const function_signature & rhs)
+    {
+        return lhs.parameters == rhs.parameters && lhs.return_type == rhs.return_type;
+    }
+}
+}
+
+template<>
+struct std::hash<reaver::vapor::analyzer::_v1::function_signature>
+{
+    std::size_t operator()(const reaver::vapor::analyzer::function_signature & sig) const
+    {
+        std::size_t seed = 0;
+
+        boost::hash_combine(seed, sig.return_type);
+        boost::hash_combine(seed, sig.parameters.size());
+        for (auto && param_type : sig.parameters)
         {
+            boost::hash_combine(seed, param_type);
         }
 
-        function_type * get_function_type(function_signature sig);
-        type * get_sized_integer_type(std::size_t size);
-
-        std::shared_ptr<cached_results> results;
-        std::shared_ptr<simplification_context> simplification_ctx;
-
-        bool entry_point_marked = false;
-        bool entry_variable_marked = false;
-
-    private:
-        std::unordered_map<std::size_t, std::shared_ptr<type>> _sized_integers;
-        std::unordered_map<function_signature, std::shared_ptr<function_type>> _function_types;
-    };
-}
-}
+        return seed;
+    }
+};

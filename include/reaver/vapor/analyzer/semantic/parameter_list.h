@@ -82,7 +82,7 @@ inline namespace _v1
 
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
-            return make_expression_ref(const_cast<parameter *>(this));
+            return make_expression_ref(const_cast<parameter *>(this), get_ast_info());
         }
 
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override

@@ -74,7 +74,7 @@ inline namespace _v1
         {
             if (_referenced)
             {
-                return make_expression_ref(repl.get_replacement(_referenced));
+                return make_expression_ref(repl.get_replacement(_referenced), get_ast_info());
             }
 
             if (!_base)
@@ -85,7 +85,7 @@ inline namespace _v1
             auto replaced_base = repl.get_replacement(_base);
             if (auto repl = replaced_base->get_member(_name))
             {
-                return make_expression_ref(repl);
+                return make_expression_ref(repl, get_ast_info());
             }
 
             assert(!_assignment_expr);

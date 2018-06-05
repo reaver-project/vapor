@@ -54,6 +54,28 @@ inline namespace _v1
         }
 
     private:
+        virtual future<> _analyze(analysis_context & ctx) override
+        {
+            if (_type)
+            {
+                return make_ready_future();
+            }
+
+            return _fun->get_return_type().then([=, &ctx](auto && return_type_expr) {
+                auto param_types = fmap(_fun->parameters(), [](auto && var) {
+                    assert(var->get_type() == builtin_types().type.get() && var->is_constant());
+                    auto type_var = static_cast<type_expression *>(var);
+                    return type_var->get_value();
+                });
+
+                assert(return_type_expr->get_type() == builtin_types().type.get() && return_type_expr->is_constant());
+                auto return_type_type_expr = return_type_expr->template as<type_expression>();
+                auto return_type = return_type_type_expr->get_value();
+
+                _set_type(ctx.get_function_type({ std::move(param_types), return_type }));
+            });
+        }
+
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
             return std::unique_ptr<expression>(new function_expression(_fun, _type));
@@ -70,26 +92,12 @@ inline namespace _v1
         }
 
         function * _fun;
-        function_type * _type = nullptr;
+        function_type * _type;
     };
 
-    inline auto make_function_expression(function * fun)
+    inline auto make_function_expression(function * fun, function_type * type = nullptr)
     {
-        return fun->get_return_type()
-            .then([=](auto && return_type_expr) {
-                auto param_types = fmap(fun->parameters(), [](auto && var) {
-                    assert(var->get_type() == builtin_types().type.get() && var->is_constant());
-                    auto type_var = static_cast<type_expression *>(var);
-                    return type_var->get_value();
-                });
-
-                assert(return_type_expr->get_type() == builtin_types().type.get() && return_type_expr->is_constant());
-                auto return_type_type_expr = return_type_expr->template as<type_expression>();
-                auto return_type = return_type_type_expr->get_value();
-
-                return get_function_type(return_type, std::move(param_types));
-            })
-            .then([=](auto && type) { return std::make_unique<function_expression>(fun, type).release(); });
+        return std::make_unique<function_expression>(fun, type);
     }
 }
 }

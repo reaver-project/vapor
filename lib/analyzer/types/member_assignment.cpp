@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -53,7 +53,7 @@ inline namespace _v1
         overload->add_analysis_hook([this](auto &&, auto && call_expr, std::vector<expression *> args) {
             assert(args.size() == 2);
             _expr->set_rhs(args.back());
-            call_expr->replace_with(make_expression_ref(_expr));
+            call_expr->replace_with(make_expression_ref(_expr, call_expr->get_ast_info()));
 
             return make_ready_future();
         });

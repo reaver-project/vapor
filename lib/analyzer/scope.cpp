@@ -37,6 +37,8 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    std::unordered_set<std::u32string> reserved_identifiers = { U"type", U"bool", U"int", U"sized_int" };
+
     scope::~scope()
     {
         close();
@@ -59,7 +61,7 @@ inline namespace _v1
 
     symbol * scope::init(const std::u32string & name, std::unique_ptr<symbol> symb)
     {
-        if (non_overridable().find(name) != non_overridable().end())
+        if (reserved_identifiers.count(name) && _global != this)
         {
             assert(0);
         }
@@ -107,10 +109,9 @@ inline namespace _v1
     symbol * scope::resolve(const std::u32string & name) const
     {
         {
-            auto it = non_overridable().find(name);
-            if (it != non_overridable().end())
+            if (reserved_identifiers.count(name))
             {
-                return it->second.get();
+                return _global->get(name);
             }
         }
 
@@ -143,53 +144,40 @@ inline namespace _v1
         throw failed_lookup(name);
     }
 
-    const std::unordered_map<std::u32string, std::unique_ptr<symbol>> & non_overridable()
+    void initialize_global_scope(scope * lex_scope, std::vector<std::shared_ptr<void>> & keepalive_list)
     {
-        static auto integer_type_expr = builtin_types().integer->get_expression();
-        static auto boolean_type_expr = builtin_types().boolean->get_expression();
-        static auto type_type_expr = builtin_types().type->get_expression();
+        lex_scope->mark_global();
 
-        static auto sized_int = [] {
-            auto ret = make_function("sized_int");
-            ret->set_return_type(builtin_types().type->get_expression());
-            ret->set_parameters({ integer_type_expr });
+        auto integer_type_expr = builtin_types().integer->get_expression();
+        auto boolean_type_expr = builtin_types().boolean->get_expression();
+        auto type_type_expr = builtin_types().type->get_expression();
 
-            ret->add_analysis_hook([](analysis_context & ctx, call_expression * expr, std::vector<expression *> args) {
-                assert(args.size() == 2 && args[1]->get_type() == builtin_types().integer.get());
-                auto int_var = static_cast<integer_constant *>(args[1]);
-                auto size = int_var->get_value().convert_to<std::size_t>();
+        auto sized_int = make_function("sized_int");
+        sized_int->set_return_type(builtin_types().type->get_expression());
+        sized_int->set_parameters({ integer_type_expr });
 
-                auto & type = ctx.sized_integers[size];
-                if (!type)
-                {
-                    type = make_sized_integer_type(size);
-                }
+        sized_int->add_analysis_hook([](analysis_context & ctx, call_expression * expr, std::vector<expression *> args) {
+            assert(args.size() == 2 && args[1]->get_type() == builtin_types().integer.get());
+            auto int_var = static_cast<integer_constant *>(args[1]);
+            auto size = int_var->get_value().convert_to<std::size_t>();
 
-                expr->replace_with(make_expression_ref(type->get_expression()));
+            auto type = ctx.get_sized_integer_type(size);
+            expr->replace_with(make_expression_ref(type->get_expression(), expr->get_ast_info()));
 
-                return make_ready_future();
-            });
+            return make_ready_future();
+        });
 
-            return ret;
-        }();
+        auto sized_int_expr = std::unique_ptr<expression>{ make_function_expression(sized_int.get()) };
+        keepalive_list.emplace_back(std::move(sized_int));
 
-        static auto sized_int_expr = std::unique_ptr<expression>{ reaver::get(make_function_expression(sized_int.get())) };
+        auto add_symbol = [&](auto name, auto && expr) { lex_scope->init(name, make_symbol(name, expr)); };
 
-        static auto symbols = [&] {
-            std::unordered_map<std::u32string, std::unique_ptr<symbol>> symbols;
+        add_symbol(U"int", integer_type_expr);
+        add_symbol(U"bool", boolean_type_expr);
+        add_symbol(U"type", type_type_expr);
 
-            auto add_symbol = [&](auto name, auto && expr) { symbols.emplace(name, make_symbol(name, expr)); };
-
-            add_symbol(U"int", integer_type_expr);
-            add_symbol(U"bool", boolean_type_expr);
-            add_symbol(U"type", type_type_expr);
-
-            add_symbol(U"sized_int", sized_int_expr.get());
-
-            return symbols;
-        }();
-
-        return symbols;
+        add_symbol(U"sized_int", sized_int_expr.get());
+        keepalive_list.emplace_back(std::move(sized_int_expr));
     }
 }
 }

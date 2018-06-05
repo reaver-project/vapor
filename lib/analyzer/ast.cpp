@@ -37,6 +37,7 @@ inline namespace _v1
         : _original_ast{ std::move(original_ast) }, _global_scope{ std::make_unique<scope>() }, _ctx{ opts, _proper }, _source_path{ opts.source_path() }
     {
         _ctx.global_scope = _global_scope.get();
+        initialize_global_scope(_global_scope.get(), _keepalive_list);
 
         try
         {
@@ -62,7 +63,9 @@ inline namespace _v1
 
     void ast::analyze()
     {
-        get(when_all(fmap(_modules, [this](auto && m) { return m->analyze(_proper); })));
+        auto futures = fmap(_modules, [this](auto && m) { return m->analyze(_proper); });
+        futures.emplace_back(when_all(fmap(_global_scope->symbols_in_order(), [&](auto && symb) { return symb->get_expression()->analyze(_proper); })));
+        get(when_all(futures));
     }
 
     void ast::simplify()

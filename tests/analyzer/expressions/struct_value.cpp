@@ -40,6 +40,8 @@ MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
     precontext pctx{ opts, ctx };
 
     scope s;
+    std::vector<std::shared_ptr<void>> keepalive;
+    initialize_global_scope(&s, keepalive);
     auto current_scope = &s;
 
     auto type_ast = parse(UR"code(

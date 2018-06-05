@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,3 +24,33 @@
 #include "vapor/analyzer/expressions/expression.h"
 #include "vapor/analyzer/statements/statement.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/types/function.h"
+#include "vapor/analyzer/types/sized_integer.h"
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    function_type * analysis_context::get_function_type(function_signature sig)
+    {
+        auto & ret = _function_types[sig];
+        if (!ret)
+        {
+            ret = std::make_unique<function_type>(sig.return_type, std::move(sig.parameters));
+        }
+
+        return ret.get();
+    }
+
+    type * analysis_context::get_sized_integer_type(std::size_t size)
+    {
+        auto & ret = _sized_integers[size];
+        if (!ret)
+        {
+            ret = make_sized_integer_type(size);
+        }
+
+        return ret.get();
+    }
+}
+}

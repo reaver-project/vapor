@@ -101,7 +101,7 @@ inline namespace _v1
                         // maybe this can be relaxed in the future?
                         assert(overloads.size() == 1);
                         assert(overloads[0]->parameters().size() == 1);
-                        assert(overloads[0]->parameters()[0]->get_type() == ctx.sized_integers.at(32).get());
+                        assert(overloads[0]->parameters()[0]->get_type() == ctx.get_sized_integer_type(32));
 
                         overloads[0]->mark_as_entry(ctx, expr);
                     });
