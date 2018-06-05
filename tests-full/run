@@ -127,7 +127,7 @@ def test_file(file_path, test_dir):
         print_if(ps, '%s.%s' % (bcolors.OKGREEN if completed.returncode == 0 else bcolors.FAIL, bcolors.ENDC), end = '', flush = True)
 
         if completed.returncode != 0:
-            failed_tests.append(os.path.relpath(file_path, test_dir))
+            failed_tests.append(file_path)
             print('\n%s%s-- Failed: %s:%s' % (bcolors.FAIL, bcolors.BOLD, os.path.relpath(file_path, test_dir), bcolors.ENDC))
             print('%s * Step `%s` failed: %s%s' % (bcolors.FAIL, step['name'], command, bcolors.ENDC))
             if pt:
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     if len(failed_tests) != 0:
         print('\n%s%s-- Some tests failed:' % (bcolors.FAIL, bcolors.BOLD))
         for failed in failed_tests:
-            print(' * %s' % failed)
+            print(' * %s' % os.path.relpath(failed, test_dir))
         print(bcolors.ENDC)
 
         print('%s%sPassed%s: %d / %d%s' % (bcolors.BOLD, bcolors.OKGREEN, bcolors.ENDC + bcolors.BOLD, passed_count, passed_count + len(failed_tests), bcolors.ENDC))
