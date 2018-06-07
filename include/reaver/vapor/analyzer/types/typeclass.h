@@ -22,45 +22,40 @@
 
 #pragma once
 
-#include "vapor/analyzer/expressions/expression.h"
-#include "vapor/analyzer/semantic/parameter_list.h"
+#include "type.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class template_expression : public expression
+    // this is a little awkward, but a typeclass *is* a type for its instances...
+    class typeclass : public user_defined_type
     {
     public:
-        template_expression(ast_node parse, std::unique_ptr<scope> template_scope, parameter_list params, std::unique_ptr<expression> templated_expr);
+        typeclass() = default;
+
+        virtual std::string explain() const override
+        {
+            return "a typeclass (TODO: add name tracking to this stuff)";
+        }
 
         virtual void print(std::ostream & os, print_context ctx) const override;
+        virtual future<std::vector<function *>> get_candidates(lexer::token_type bracket) const override;
 
     private:
-        virtual future<> _analyze(analysis_context & ctx) override;
-        virtual future<expression *> _simplify_expr(recursive_context ctx) override;
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
-        virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
+        virtual std::unique_ptr<google::protobuf::Message> _user_defined_interface() const override;
 
-        std::unique_ptr<scope> _scope;
-        parameter_list _params;
-        std::unique_ptr<expression> _templated_expression;
+        virtual void _codegen_type(ir_generation_context &) const override
+        {
+            assert(0);
+        }
+
+        virtual std::u32string _codegen_name(ir_generation_context &) const override
+        {
+            assert(0);
+        }
     };
-}
-}
 
-namespace reaver::vapor::parser
-{
-inline namespace _v1
-{
-    struct template_expression;
-}
-}
-
-namespace reaver::vapor::analyzer
-{
-inline namespace _v1
-{
-    std::unique_ptr<template_expression> preanalyze_template_expression(precontext & ctx, const parser::template_expression & tpl, scope * lex_scope);
+    std::unique_ptr<type> make_typeclass_type();
 }
 }

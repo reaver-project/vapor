@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -29,10 +29,12 @@ inline namespace _v1
 {
     future<> template_expression::_analyze(analysis_context & ctx)
     {
-        return when_all(fmap(_params, [&](auto && param) { return param->analyze(ctx); })).then([&, this] {
-            this->_templated_expression->set_template_parameters(fmap(this->_params, [&](auto && param) { return param.get(); }));
-            return _templated_expression->analyze(ctx);
-        });
+        return when_all(fmap(_params, [&](auto && param) { return param->analyze(ctx); }))
+            .then([&, this] {
+                this->_templated_expression->set_template_parameters(fmap(this->_params, [&](auto && param) { return param.get(); }));
+                return _templated_expression->analyze(ctx);
+            })
+            .then([&] { _set_type(_templated_expression->get_type()); });
     }
 }
 }

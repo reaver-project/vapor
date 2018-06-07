@@ -31,6 +31,7 @@ message sized_integer
 
 enum simple_builtin {
     type_ = 0;
+    typeclass = 1;
     integer = 64;
     boolean = 65;
 }

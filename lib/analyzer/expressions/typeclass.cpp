@@ -49,7 +49,10 @@ inline namespace _v1
     }
 
     typeclass_literal::typeclass_literal(ast_node parse, std::unique_ptr<scope> lex_scope, std::vector<std::unique_ptr<statement>> declarations)
-        : _scope{ std::move(lex_scope) }, _declarations{ std::move(declarations) }
+        : expression{ builtin_types().typeclass.get() },
+          _scope{ std::move(lex_scope) },
+          _declarations{ std::move(declarations) },
+          _instance_type{ std::make_unique<typeclass>() }
     {
         _set_ast_info(parse);
 

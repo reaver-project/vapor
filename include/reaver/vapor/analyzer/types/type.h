@@ -234,6 +234,7 @@ inline namespace _v1
     std::unique_ptr<type> make_integer_type();
     std::unique_ptr<type> make_boolean_type();
     std::unique_ptr<type> make_unconstrained_type();
+    std::unique_ptr<type> make_typeclass_type();
 
     inline const auto & builtin_types()
     {
@@ -245,6 +246,7 @@ inline namespace _v1
             member_t integer;
             member_t boolean;
             member_t unconstrained;
+            member_t typeclass;
         };
 
         static auto builtins = [] {
@@ -254,6 +256,7 @@ inline namespace _v1
             builtins.integer = make_integer_type();
             builtins.boolean = make_boolean_type();
             builtins.unconstrained = make_unconstrained_type();
+            builtins.typeclass = make_typeclass_type();
 
             return builtins;
         }();
@@ -262,6 +265,7 @@ inline namespace _v1
         builtins.integer->init_expr();
         builtins.boolean->init_expr();
         builtins.unconstrained->init_expr();
+        builtins.typeclass->init_expr();
 
         return builtins;
     }

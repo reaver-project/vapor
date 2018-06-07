@@ -50,6 +50,7 @@ inline namespace _v1
             .then([&](expression * expr) {
                 auto typeclass = expr->_get_replacement()->as<typeclass_literal>();
                 assert(typeclass);
+                _set_type(typeclass->instance_type());
 
                 _typeclass_scope = typeclass->get_scope();
                 assert(_typeclass_scope);

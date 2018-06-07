@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -56,7 +56,7 @@ inline namespace _v1
                     return unit{};
                 });
 
-                auto ret_expr = _return_type ? _return_type->get() : _body->return_type()->get_expression();
+                auto ret_expr = _return_type ? _return_type->get()->_get_replacement() : _body->return_type()->get_expression();
 
                 auto function = make_function("closure", get_ast_info().value().range);
                 function->set_name(U"operator()");

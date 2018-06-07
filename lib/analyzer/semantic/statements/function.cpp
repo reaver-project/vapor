@@ -57,7 +57,7 @@ inline namespace _v1
                     assert(type_expr->is_constant());
                 }
 
-                _function->set_return_type(_return_type->get());
+                _function->set_return_type(_return_type->get()->_get_replacement());
             });
         }();
 

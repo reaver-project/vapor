@@ -23,6 +23,7 @@
 #pragma once
 
 #include "vapor/analyzer/expressions/expression.h"
+#include "vapor/analyzer/types/typeclass.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -42,11 +43,21 @@ inline namespace _v1
             return _scope.get();
         }
 
+        typeclass * instance_type() const
+        {
+            return _instance_type.get();
+        }
+
     private:
         virtual future<> _analyze(analysis_context & ctx) override;
         virtual future<expression *> _simplify_expr(recursive_context ctx) override;
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
+
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
+        {
+            return _instance_type->get_expression()->_do_generate_interface();
+        }
 
         std::unique_ptr<scope> _scope;
         std::vector<std::unique_ptr<statement>> _declarations;
@@ -54,6 +65,8 @@ inline namespace _v1
 
         std::optional<future<void>> _parameters_set;
         std::optional<manual_promise<void>> _parameters_set_promise;
+
+        std::unique_ptr<typeclass> _instance_type;
     };
 }
 }
