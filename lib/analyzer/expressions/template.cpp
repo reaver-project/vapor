@@ -23,6 +23,7 @@
 #include "vapor/analyzer/expressions/template.h"
 #include "vapor/analyzer/expressions/typeclass.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/parser/expr.h"
 #include "vapor/parser/template.h"
 
 namespace reaver::vapor::analyzer

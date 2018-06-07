@@ -20,10 +20,11 @@
  *
  **/
 
-#include "vapor/parser/typeclass.h"
 #include "vapor/analyzer/expressions/typeclass.h"
 #include "vapor/analyzer/statements/function.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/parser/expr.h"
+#include "vapor/parser/typeclass.h"
 
 namespace reaver::vapor::analyzer
 {
