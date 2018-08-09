@@ -23,7 +23,6 @@
 #include "vapor/analyzer/expressions/typeclass.h"
 #include "vapor/analyzer/statements/function.h"
 #include "vapor/analyzer/symbol.h"
-#include "vapor/parser/expr.h"
 #include "vapor/parser/typeclass.h"
 
 namespace reaver::vapor::analyzer
@@ -32,28 +31,11 @@ inline namespace _v1
 {
     std::unique_ptr<typeclass_literal> preanalyze_typeclass_literal(precontext & ctx, const parser::typeclass_literal & parse, scope * lex_scope)
     {
-        auto scope = lex_scope->clone_for_class();
-        auto scope_ptr = scope.get();
-
-        auto ret = std::make_unique<typeclass_literal>(make_node(parse), std::move(scope), fmap(parse.members, [&](auto && member) {
-            return std::get<0>(fmap(member,
-                make_overload_set([&](const parser::function_declaration & decl)
-                                      -> std::unique_ptr<statement> { return preanalyze_function_declaration(ctx, decl, scope_ptr); },
-                    [&](const parser::function_definition & def) -> std::unique_ptr<statement> {
-                        return preanalyze_function_definition(ctx, def, scope_ptr);
-                    })));
-        }));
-
-        scope_ptr->close();
-
-        return ret;
+        return std::make_unique<typeclass_literal>(make_node(parse), make_typeclass(ctx, parse, lex_scope));
     }
 
-    typeclass_literal::typeclass_literal(ast_node parse, std::unique_ptr<scope> lex_scope, std::vector<std::unique_ptr<statement>> declarations)
-        : expression{ builtin_types().typeclass.get() },
-          _scope{ std::move(lex_scope) },
-          _declarations{ std::move(declarations) },
-          _instance_type{ std::make_unique<typeclass>() }
+    typeclass_literal::typeclass_literal(ast_node parse, std::unique_ptr<typeclass> type)
+        : expression{ builtin_types().typeclass.get() }, _instance_type{ std::move(type) }
     {
         _set_ast_info(parse);
 
@@ -62,15 +44,35 @@ inline namespace _v1
         _parameters_set_promise = std::move(pair.promise);
     }
 
+    typeclass_literal::~typeclass_literal() = default;
+
     void typeclass_literal::set_template_parameters(std::vector<parameter *> params)
     {
-        _params = std::move(params);
+        _instance_type->set_template_parameters(std::move(params));
         _parameters_set_promise->set();
     }
 
     void typeclass_literal::print(std::ostream & os, print_context ctx) const
     {
-        assert(0);
+        os << styles::def << ctx << styles::rule_name << "typeclass-literal";
+        print_address_range(os, this);
+        os << '\n';
+
+        auto tc_ctx = ctx.make_branch(_instance_type->get_member_function_decls().empty());
+        os << styles::def << tc_ctx << styles::subrule_name << "defined typeclass:\n";
+        _instance_type->print(os, tc_ctx.make_branch(true));
+
+        if (_instance_type->get_member_function_decls().size())
+        {
+            auto decl_ctx = ctx.make_branch(true);
+            os << styles::def << decl_ctx << styles::subrule_name << "member function declarations:\n";
+
+            std::size_t idx = 0;
+            for (auto && member : _instance_type->get_member_function_decls())
+            {
+                member->print(os, decl_ctx.make_branch(++idx == _instance_type->get_member_function_decls().size()));
+            }
+        }
     }
 
     statement_ir typeclass_literal::_codegen_ir(ir_generation_context & ctx) const

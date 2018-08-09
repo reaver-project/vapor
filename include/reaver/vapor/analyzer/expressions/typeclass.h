@@ -32,7 +32,8 @@ inline namespace _v1
     class typeclass_literal : public expression
     {
     public:
-        typeclass_literal(ast_node parse, std::unique_ptr<scope> lex_scope, std::vector<std::unique_ptr<statement>> declarations);
+        typeclass_literal(ast_node parse, std::unique_ptr<typeclass> type);
+        ~typeclass_literal();
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
@@ -40,7 +41,7 @@ inline namespace _v1
 
         const scope * get_scope() const
         {
-            return _scope.get();
+            return _instance_type->get_scope();
         }
 
         typeclass * instance_type() const
@@ -58,10 +59,6 @@ inline namespace _v1
         {
             return _instance_type->get_expression()->_do_generate_interface();
         }
-
-        std::unique_ptr<scope> _scope;
-        std::vector<std::unique_ptr<statement>> _declarations;
-        std::vector<parameter *> _params;
 
         std::optional<future<void>> _parameters_set;
         std::optional<manual_promise<void>> _parameters_set_promise;

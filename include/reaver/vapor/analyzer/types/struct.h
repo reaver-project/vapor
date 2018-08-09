@@ -51,7 +51,7 @@ inline namespace _v1
 
         std::vector<declaration *> get_data_member_decls() const
         {
-            return fmap(_data_members_declarations, [](auto && ptr) { return ptr.get(); });
+            return fmap(_data_member_declarations, [](auto && ptr) { return ptr.get(); });
         }
 
         const std::vector<member_expression *> & get_data_members() const
@@ -108,7 +108,7 @@ inline namespace _v1
         bool _is_imported = false;
         bool _is_exported = false;
 
-        std::vector<std::unique_ptr<declaration>> _data_members_declarations;
+        std::vector<std::unique_ptr<declaration>> _data_member_declarations;
         std::vector<member_expression *> _data_members;
 
         std::unique_ptr<function> _aggregate_ctor;

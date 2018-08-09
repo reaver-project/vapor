@@ -91,7 +91,7 @@ inline namespace _v1
     struct_type::~struct_type() = default;
 
     struct_type::struct_type(ast_node parse, std::unique_ptr<scope> member_scope, std::vector<std::unique_ptr<declaration>> member_decls)
-        : user_defined_type{ std::move(member_scope) }, _parse{ parse }, _data_members_declarations{ std::move(member_decls) }
+        : user_defined_type{ std::move(member_scope) }, _parse{ parse }, _data_member_declarations{ std::move(member_decls) }
     {
         auto ctor_pair = make_promise<function *>();
         _aggregate_ctor_future = std::move(ctor_pair.future);
@@ -104,7 +104,7 @@ inline namespace _v1
 
     void struct_type::generate_constructors()
     {
-        _data_members = fmap(_data_members_declarations, [&](auto && member) {
+        _data_members = fmap(_data_member_declarations, [&](auto && member) {
             auto ret = member->declared_member();
             ret->set_parent_type(this);
             return ret;

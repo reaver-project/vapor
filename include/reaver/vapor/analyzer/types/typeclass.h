@@ -28,15 +28,31 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    class function_declaration;
+    class parameter;
+
     // this is a little awkward, but a typeclass *is* a type for its instances...
     class typeclass : public user_defined_type
     {
     public:
-        typeclass() = default;
+        typeclass(ast_node parse, std::unique_ptr<scope> member_scope, std::vector<std::unique_ptr<function_declaration>> member_function_decls);
 
         virtual std::string explain() const override
         {
             return "a typeclass (TODO: add name tracking to this stuff)";
+        }
+
+        virtual void set_template_parameters(std::vector<parameter *> params);
+        const std::vector<parameter *> & get_template_parameters() const;
+
+        std::vector<function_declaration *> get_member_function_decls() const
+        {
+            return fmap(_member_function_declarations, [](auto && ptr) { return ptr.get(); });
+        }
+
+        auto get_ast_info() const
+        {
+            return std::make_optional(_parse);
         }
 
         virtual void print(std::ostream & os, print_context ctx) const override;
@@ -54,8 +70,34 @@ inline namespace _v1
         {
             assert(0);
         }
+
+        ast_node _parse;
+        bool _is_exported = false;
+
+        std::vector<parameter *> _parameters;
+
+        std::vector<std::unique_ptr<function_declaration>> _member_function_declarations;
+        std::vector<function *> _member_functions;
     };
 
     std::unique_ptr<type> make_typeclass_type();
+}
+}
+
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    class typeclass_literal;
+}
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    struct precontext;
+
+    std::unique_ptr<typeclass> make_typeclass(precontext & ctx, const parser::typeclass_literal & parse, scope * lex_scope);
 }
 }

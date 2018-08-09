@@ -55,7 +55,22 @@ inline namespace _v1
 
     void template_expression::print(std::ostream & os, print_context ctx) const
     {
-        assert(0);
+        os << styles::def << ctx << styles::rule_name << "template-expression";
+        print_address_range(os, this);
+        os << '\n';
+
+        auto params_ctx = ctx.make_branch(false);
+        os << styles::def << params_ctx << styles::subrule_name << "template parameters:\n";
+
+        std::size_t idx = 0;
+        for (auto && param : _params)
+        {
+            param->print(os, params_ctx.make_branch(++idx == _params.size()));
+        }
+
+        auto subexpr_ctx = ctx.make_branch(true);
+        os << styles::def << subexpr_ctx << styles::subrule_name << "templated expression:\n";
+        _templated_expression->print(os, subexpr_ctx.make_branch(true));
     }
 
     statement_ir template_expression::_codegen_ir(ir_generation_context & ctx) const
