@@ -31,12 +31,16 @@ inline namespace _v1
     future<> typeclass_literal::_analyze(analysis_context & ctx)
     {
         return _parameters_set->then([&] {
-            return when_all(fmap(_instance_type->get_member_function_decls(), [&](auto && decl) {
-                decl->set_template_parameters(_instance_type->get_template_parameters());
+            return when_all(fmap(_instance_template->get_member_function_decls(), [&](auto && decl) {
+                decl->set_template_parameters(_instance_template->get_template_parameters());
                 return decl->analyze(ctx);
             }));
         });
-        // TODO: create a function that'll allow invoking instances of the typeclass
+    }
+
+    std::unique_ptr<expression> typeclass_literal::_do_instantiate(analysis_context & ctx, std::vector<expression *> arguments) const
+    {
+        return std::make_unique<typeclass_instance_builder>();
     }
 }
 }

@@ -41,29 +41,63 @@ inline namespace _v1
 
         const scope * get_scope() const
         {
-            return _instance_type->get_scope();
+            return _instance_template->get_scope();
         }
 
-        typeclass * instance_type() const
+        typeclass * instance_template() const
         {
-            return _instance_type.get();
+            return _instance_template.get();
         }
 
     private:
         virtual future<> _analyze(analysis_context & ctx) override;
+        virtual std::unique_ptr<expression> _do_instantiate(analysis_context & ctx, std::vector<expression *> arguments) const override;
         virtual future<expression *> _simplify_expr(recursive_context ctx) override;
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
 
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
         {
-            return _instance_type->get_expression()->_do_generate_interface();
+            return _instance_template->get_expression()->_do_generate_interface();
         }
 
         std::optional<future<void>> _parameters_set;
         std::optional<manual_promise<void>> _parameters_set_promise;
 
-        std::unique_ptr<typeclass> _instance_type;
+        std::unique_ptr<typeclass> _instance_template;
+    };
+
+    class typeclass_instance_builder : public expression
+    {
+    public:
+        virtual void print(std::ostream &, print_context) const override
+        {
+            assert(!"printing typeclass instance builders is not supported");
+        }
+
+        typeclass_instance_type * instance_type() const
+        {
+            return _instance_type.get();
+        }
+
+        typeclass * templated_typeclass() const
+        {
+            return _typeclass;
+        }
+
+    private:
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
+        {
+            assert(0);
+        }
+
+        virtual statement_ir _codegen_ir(ir_generation_context &) const override
+        {
+            assert(!"codegen is not supported on typeclass instance builders");
+        }
+
+        typeclass * _typeclass;
+        std::unique_ptr<typeclass_instance_type> _instance_type;
     };
 }
 }

@@ -22,6 +22,7 @@
 
 #include "vapor/analyzer/expressions/template.h"
 #include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/types/function.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -34,7 +35,14 @@ inline namespace _v1
                 this->_templated_expression->set_template_parameters(fmap(this->_params, [&](auto && param) { return param.get(); }));
                 return _templated_expression->analyze(ctx);
             })
-            .then([&] { _set_type(_templated_expression->get_type()); });
+            .then([&] {
+                _set_type(ctx.get_function_type({ fmap(_params, [](auto && param) { return param->get_type(); }), _templated_expression->get_type() }));
+            });
+    }
+
+    std::unique_ptr<expression> template_expression::_instantiate(analysis_context & ctx, std::vector<expression *> arguments) const
+    {
+        return expression::_instantiate(ctx, std::move(arguments));
     }
 }
 }

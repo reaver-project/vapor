@@ -175,12 +175,7 @@ inline namespace _v1
 
     void function_declaration::print(std::ostream & os, print_context ctx) const
     {
-        assert(0);
-    }
-
-    void function_definition::print(std::ostream & os, print_context ctx) const
-    {
-        os << styles::def << ctx << styles::rule_name << "function-definition";
+        os << styles::def << ctx << styles::rule_name << "function-declaration";
         print_address_range(os, this);
         os << ' ' << styles::string_value << utf8(_name) << '\n';
 
@@ -196,9 +191,18 @@ inline namespace _v1
             }
         }
 
-        auto return_type_ctx = ctx.make_branch(false);
+        auto return_type_ctx = ctx.make_branch(true);
         os << styles::def << return_type_ctx << styles::subrule_name << "return type:\n";
         _function->return_type_expression()->print(os, return_type_ctx.make_branch(true));
+    }
+
+    void function_definition::print(std::ostream & os, print_context ctx) const
+    {
+        os << styles::def << ctx << styles::rule_name << "function-definition";
+        print_address_range(os, this);
+        os << ' ' << styles::string_value << utf8(_name) << '\n';
+
+        function_declaration::print(os, ctx.make_branch(false));
 
         auto body_ctx = ctx.make_branch(true);
         os << styles::def << body_ctx << styles::subrule_name << "body:\n";

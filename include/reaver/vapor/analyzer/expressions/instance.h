@@ -51,7 +51,7 @@ inline namespace _v1
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
 
         scope * _original_scope;
-        const scope * _typeclass_scope;
+        const scope * _typeclass_scope = nullptr;
         std::unique_ptr<scope> _scope;
 
         std::vector<std::u32string> _typeclass_name;

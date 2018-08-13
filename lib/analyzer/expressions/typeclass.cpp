@@ -36,7 +36,7 @@ inline namespace _v1
     }
 
     typeclass_literal::typeclass_literal(ast_node parse, std::unique_ptr<typeclass> type)
-        : expression{ builtin_types().typeclass.get() }, _instance_type{ std::move(type) }
+        : expression{ builtin_types().typeclass.get() }, _instance_template{ std::move(type) }
     {
         _set_ast_info(parse);
 
@@ -49,7 +49,7 @@ inline namespace _v1
 
     void typeclass_literal::set_template_parameters(std::vector<parameter *> params)
     {
-        _instance_type->set_template_parameters(std::move(params));
+        _instance_template->set_template_parameters(std::move(params));
         _parameters_set_promise->set();
     }
 
@@ -59,19 +59,19 @@ inline namespace _v1
         print_address_range(os, this);
         os << '\n';
 
-        auto tc_ctx = ctx.make_branch(_instance_type->get_member_function_decls().empty());
+        auto tc_ctx = ctx.make_branch(_instance_template->get_member_function_decls().empty());
         os << styles::def << tc_ctx << styles::subrule_name << "defined typeclass:\n";
-        _instance_type->print(os, tc_ctx.make_branch(true));
+        _instance_template->print(os, tc_ctx.make_branch(true));
 
-        if (_instance_type->get_member_function_decls().size())
+        if (_instance_template->get_member_function_decls().size())
         {
             auto decl_ctx = ctx.make_branch(true);
             os << styles::def << decl_ctx << styles::subrule_name << "member function declarations:\n";
 
             std::size_t idx = 0;
-            for (auto && member : _instance_type->get_member_function_decls())
+            for (auto && member : _instance_template->get_member_function_decls())
             {
-                member->print(os, decl_ctx.make_branch(++idx == _instance_type->get_member_function_decls().size()));
+                member->print(os, decl_ctx.make_branch(++idx == _instance_template->get_member_function_decls().size()));
             }
         }
     }

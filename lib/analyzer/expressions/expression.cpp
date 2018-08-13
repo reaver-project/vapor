@@ -129,5 +129,13 @@ inline namespace _v1
 
 #undef HANDLE_TYPE
     }
+
+    std::unique_ptr<expression> expression::_instantiate(analysis_context & ctx, std::vector<expression *> arguments) const
+    {
+        auto template_expr = dynamic_cast<const template_expression *>(this);
+        assert(template_expr && "only a template expression is allowed to invoke its _instantiate function!");
+
+        return template_expr->templated_expression()->_do_instantiate(ctx, std::move(arguments));
+    }
 }
 }

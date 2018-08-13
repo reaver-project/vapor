@@ -80,6 +80,10 @@ inline namespace _v1
         std::vector<function *> _member_functions;
     };
 
+    class typeclass_instance_type : public user_defined_type
+    {
+    };
+
     std::unique_ptr<type> make_typeclass_type();
 }
 }

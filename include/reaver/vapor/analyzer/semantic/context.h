@@ -31,6 +31,17 @@ inline namespace _v1
 {
     class type;
     class function_type;
+    class template_expression;
+
+    struct argument_list_hash
+    {
+        std::size_t operator()(const std::vector<expression *> & arg_list) const;
+    };
+
+    struct argument_list_compare
+    {
+        bool operator()(const std::vector<expression *> & lhs, const std::vector<expression *> & rhs) const;
+    };
 
     class analysis_context
     {
@@ -41,6 +52,7 @@ inline namespace _v1
 
         function_type * get_function_type(function_signature sig);
         type * get_sized_integer_type(std::size_t size);
+        expression * get_instantiation(template_expression * expr, std::vector<expression *> arguments);
 
         std::shared_ptr<cached_results> results;
         std::shared_ptr<simplification_context> simplification_ctx;
@@ -51,6 +63,9 @@ inline namespace _v1
     private:
         std::unordered_map<std::size_t, std::shared_ptr<type>> _sized_integers;
         std::unordered_map<function_signature, std::shared_ptr<function_type>> _function_types;
+        std::unordered_map<template_expression *,
+            std::unordered_map<std::vector<expression *>, std::shared_ptr<expression>, argument_list_hash, argument_list_compare>>
+            _instances;
     };
 }
 }

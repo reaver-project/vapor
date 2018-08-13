@@ -23,6 +23,7 @@
 #include <reaver/prelude/fold.h>
 
 #include "vapor/analyzer/expressions/instance.h"
+#include "vapor/analyzer/expressions/template.h"
 #include "vapor/analyzer/expressions/typeclass.h"
 #include "vapor/analyzer/symbol.h"
 
@@ -48,11 +49,13 @@ inline namespace _v1
 
         return expr.then([&](expression * expr) { return expr->analyze(ctx).then([expr] { return expr; }); })
             .then([&](expression * expr) {
-                auto typeclass = expr->_get_replacement()->as<typeclass_literal>();
-                assert(typeclass);
-                _set_type(typeclass->instance_type());
+                auto tpl = expr->_get_replacement()->as<template_expression>();
+                assert(tpl);
+                auto builder = dynamic_cast<typeclass_instance_builder *>(ctx.get_instantiation(tpl, fmap(_arguments, [](auto && ptr) { return ptr.get(); })));
+                assert(builder);
+                _set_type(builder->instance_type());
 
-                _typeclass_scope = typeclass->get_scope();
+                _typeclass_scope = builder->templated_typeclass()->get_scope();
                 assert(_typeclass_scope);
 
                 _scope = _original_scope->combine_with(_typeclass_scope);

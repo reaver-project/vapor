@@ -22,6 +22,7 @@
 
 #include "vapor/analyzer/semantic/context.h"
 #include "vapor/analyzer/expressions/expression.h"
+#include "vapor/analyzer/expressions/template.h"
 #include "vapor/analyzer/statements/statement.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/function.h"
@@ -31,6 +32,24 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    std::size_t argument_list_hash::operator()(const std::vector<expression *> & arg_list) const
+    {
+        std::size_t seed = 0;
+
+        boost::hash_combine(seed, arg_list.size());
+        for (auto && arg : arg_list)
+        {
+            boost::hash_combine(seed, arg->hash_value());
+        }
+
+        return seed;
+    }
+
+    bool argument_list_compare::operator()(const std::vector<expression *> & lhs, const std::vector<expression *> & rhs) const
+    {
+        return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin(), [](auto && lhs, auto && rhs) { return lhs->is_equal(rhs); });
+    }
+
     function_type * analysis_context::get_function_type(function_signature sig)
     {
         auto & ret = _function_types[sig];
@@ -51,6 +70,19 @@ inline namespace _v1
         }
 
         return ret.get();
+    }
+
+    expression * analysis_context::get_instantiation(template_expression * expr, std::vector<expression *> arguments)
+    {
+        auto & tpl_instances = _instances[expr];
+        auto & instance = tpl_instances[arguments];
+
+        if (!instance)
+        {
+            instance = expr->_instantiate(*this, std::move(arguments));
+        }
+
+        return instance.get();
     }
 }
 }

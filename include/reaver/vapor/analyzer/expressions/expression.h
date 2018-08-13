@@ -267,6 +267,8 @@ inline namespace _v1
             return make_ready_future();
         }
 
+        std::unique_ptr<expression> _instantiate(analysis_context & ctx, std::vector<expression *> arguments) const;
+
         virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const final
         {
             return _clone_expr_with_replacement(repl);
@@ -284,7 +286,7 @@ inline namespace _v1
             return make_ready_future(this);
         }
 
-        virtual bool _is_equal(const expression * expr) const
+        virtual bool _is_equal([[maybe_unused]] const expression * expr) const
         {
             return false;
         }
@@ -307,6 +309,11 @@ inline namespace _v1
         }
 
     private:
+        virtual std::unique_ptr<expression> _do_instantiate([[maybe_unused]] analysis_context & ctx, [[maybe_unused]] std::vector<expression *> arguments) const
+        {
+            assert(!"tried to instantiate an expression that's not instantiatable");
+        }
+
         type * _type = nullptr;
         expression * _default_value = nullptr;
 

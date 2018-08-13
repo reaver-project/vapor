@@ -75,6 +75,12 @@ inline namespace _v1
 
         if (_template_params)
         {
+            // FIXME: this is actually wrong
+            // the way this here is done would actually implement C++-like templates in typeclass functions
+            // that is not what I want; what I want is to only use things that are known from the constraints on the template parameters
+            // but this is significantly harder to implement and will have to wait for a while
+            // (for the time being the compiler will just be a lot more permissive, and with a future release some code will become invalid,
+            // which is fine, because nowhere does Vapor promise being stable for now)
             return base_future;
         }
 
