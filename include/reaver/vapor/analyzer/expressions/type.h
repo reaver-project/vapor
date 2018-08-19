@@ -29,10 +29,28 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    enum class type_kind
+    {
+        type,
+        typeclass
+    };
+
     class type_expression : public expression
     {
+    private:
+        type * _select(type_kind kind)
+        {
+            switch (kind)
+            {
+                case type_kind::type:
+                    return builtin_types().type.get();
+                case type_kind::typeclass:
+                    return builtin_types().type.get();
+            }
+        }
+
     public:
-        type_expression(type * t) : expression{ builtin_types().type.get() }, _type{ t }
+        type_expression(type * t, type_kind kind = type_kind::type) : expression{ _select(kind) }, _type{ t }
         {
         }
 

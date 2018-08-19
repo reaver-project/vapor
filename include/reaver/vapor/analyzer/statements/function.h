@@ -61,6 +61,11 @@ inline namespace _v1
             return _function.get();
         }
 
+        auto & get_name() const
+        {
+            return _name;
+        }
+
     protected:
         virtual future<> _analyze(analysis_context &) override;
 

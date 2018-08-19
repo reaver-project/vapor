@@ -67,22 +67,19 @@ inline namespace _v1
         std::unique_ptr<typeclass> _instance_template;
     };
 
-    class typeclass_instance_builder : public expression
+    class typeclass_literal_instance : public expression
     {
     public:
+        typeclass_literal_instance(typeclass * tc, std::vector<expression *> arguments);
+
         virtual void print(std::ostream &, print_context) const override
         {
-            assert(!"printing typeclass instance builders is not supported");
+            assert(!"printing typeclass literal instances is not yet supported");
         }
 
         typeclass_instance_type * instance_type() const
         {
             return _instance_type.get();
-        }
-
-        typeclass * templated_typeclass() const
-        {
-            return _typeclass;
         }
 
     private:
@@ -93,10 +90,9 @@ inline namespace _v1
 
         virtual statement_ir _codegen_ir(ir_generation_context &) const override
         {
-            assert(!"codegen is not supported on typeclass instance builders");
+            assert(!"codegen is not yet supported on typeclass literal instances");
         }
 
-        typeclass * _typeclass;
         std::unique_ptr<typeclass_instance_type> _instance_type;
     };
 }

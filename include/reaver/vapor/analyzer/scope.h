@@ -66,7 +66,6 @@ inline namespace _v1
         scope(_key, scope * parent_scope, bool is_local, bool is_shadowing_boundary, const scope * other = nullptr)
             : _parent{ parent_scope },
               _global{ _parent ? _parent->_global : nullptr },
-              _combined_with{ other },
               _is_local_scope{ is_local },
               _is_shadowing_boundary{ is_shadowing_boundary }
         {
@@ -103,11 +102,6 @@ inline namespace _v1
 
         symbol * get(const std::u32string & name) const;
         std::optional<symbol *> try_get(const std::u32string & name) const;
-
-        std::unique_ptr<scope> combine_with(const scope * other)
-        {
-            return std::make_unique<scope>(_key{}, this, false, true, other);
-        }
 
         symbol * init(const std::u32string & name, std::unique_ptr<symbol> symb);
 
@@ -180,7 +174,6 @@ inline namespace _v1
 
         scope * _parent = nullptr;
         scope * _global = nullptr;
-        const scope * _combined_with = nullptr;
         std::unordered_set<std::unique_ptr<scope>> _keepalive;
         std::unordered_map<std::u32string, std::unique_ptr<symbol>> _symbols;
         std::vector<symbol *> _symbols_in_order;

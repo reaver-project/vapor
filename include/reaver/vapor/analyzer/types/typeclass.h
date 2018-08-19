@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include "../semantic/instance_context.h"
 #include "type.h"
 
 namespace reaver::vapor::analyzer
@@ -30,6 +31,7 @@ inline namespace _v1
 {
     class function_declaration;
     class parameter;
+    class overload_set;
 
     // this is a little awkward, but a typeclass *is* a type for its instances...
     class typeclass : public user_defined_type
@@ -80,8 +82,50 @@ inline namespace _v1
         std::vector<function *> _member_functions;
     };
 
-    class typeclass_instance_type : public user_defined_type
+    class typeclass_instance_type : public user_defined_type, public std::enable_shared_from_this<typeclass_instance_type>
     {
+    public:
+        typeclass_instance_type(typeclass * tc, std::vector<expression *> arguments);
+
+        virtual std::string explain() const override
+        {
+            return "a typeclass instance type (TODO: add name tracking to this)";
+        }
+
+        virtual void print(std::ostream & os, print_context ctx) const override;
+
+        auto & overload_set_names() const
+        {
+            return _oset_names;
+        }
+
+    private:
+        struct _function_instance
+        {
+            std::unique_ptr<function> instance;
+            std::shared_ptr<expression> return_type_expression;
+            std::vector<std::unique_ptr<expression>> parameter_expressions;
+            std::shared_ptr<class overload_set> overload_set;
+        };
+
+        std::vector<expression *> _arguments;
+        instance_context _ctx;
+
+        std::unordered_set<std::u32string> _oset_names;
+        std::vector<_function_instance> _function_instances;
+        std::unordered_map<function *, function_declaration *> _function_instance_to_template;
+
+        virtual std::unique_ptr<google::protobuf::Message> _user_defined_interface() const override;
+
+        virtual void _codegen_type(ir_generation_context &) const override
+        {
+            assert(0);
+        }
+
+        virtual std::u32string _codegen_name(ir_generation_context &) const override
+        {
+            assert(0);
+        }
     };
 
     std::unique_ptr<type> make_typeclass_type();

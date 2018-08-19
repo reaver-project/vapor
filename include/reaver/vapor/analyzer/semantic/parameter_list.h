@@ -82,6 +82,11 @@ inline namespace _v1
 
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
+            if (_template_params)
+            {
+                return std::make_unique<parameter>(get_ast_info().value(), _name, repl.claim(_type_expression.get()));
+            }
+
             return make_expression_ref(const_cast<parameter *>(this), get_ast_info());
         }
 

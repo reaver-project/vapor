@@ -23,6 +23,7 @@
 #include <reaver/prelude/fold.h>
 
 #include "vapor/analyzer/expressions/instance.h"
+#include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/expressions/template.h"
 #include "vapor/analyzer/expressions/typeclass.h"
 #include "vapor/analyzer/symbol.h"
@@ -47,23 +48,42 @@ inline namespace _v1
             });
         }
 
+        // TODO: this can be refactored to use the typeclass template's call operator
+        // I don't think that is *really* necessary, but might lead to a very slight cleanup here
         return expr.then([&](expression * expr) { return expr->analyze(ctx).then([expr] { return expr; }); })
+            .then([&](expression * expr) {
+                return when_all(fmap(_arguments, [&](auto && arg) { return arg->analyze(ctx).then([&] { return simplification_loop(ctx, arg); }); }))
+                    .then([expr](auto &&) { return expr; });
+            })
             .then([&](expression * expr) {
                 auto tpl = expr->_get_replacement()->as<template_expression>();
                 assert(tpl);
-                auto builder = dynamic_cast<typeclass_instance_builder *>(ctx.get_instantiation(tpl, fmap(_arguments, [](auto && ptr) { return ptr.get(); })));
-                assert(builder);
-                _set_type(builder->instance_type());
+                auto instance_type_expr =
+                    dynamic_cast<typeclass_literal_instance *>(ctx.get_instantiation(tpl, fmap(_arguments, [](auto && ptr) { return ptr.get(); })));
+                assert(instance_type_expr);
+                _set_type(instance_type_expr->instance_type());
 
-                _typeclass_scope = builder->templated_typeclass()->get_scope();
-                assert(_typeclass_scope);
+                auto instance_scope = _original_scope->clone_for_class();
 
-                _scope = _original_scope->combine_with(_typeclass_scope);
-            })
-            .then([&] { return when_all(fmap(_arguments, [&](auto && arg) { return arg->analyze(ctx); })); })
-            .then([&] {
-                _definitions = _late_preanalysis(_scope.get(), _typeclass_scope, fmap(_arguments, [](auto && arg) { return arg.get(); }));
-                _scope->close();
+                std::vector<std::shared_ptr<overload_set>> osets;
+
+                for (auto && oset_name : instance_type_expr->instance_type()->overload_set_names())
+                {
+                    auto type_name = U"overload_set_types$" + oset_name;
+
+                    auto oset = std::make_shared<overload_set>(instance_scope.get());
+                    instance_scope->init(oset_name, make_symbol(oset_name, oset.get()));
+
+                    auto type = oset->get_type();
+                    type->set_name(type_name);
+                    instance_scope->init(type_name, make_symbol(type_name, type->get_expression()));
+
+                    osets.push_back(std::move(oset));
+                }
+
+                assert(0);
+
+                instance_scope->close();
 
                 return when_all(fmap(_definitions, [&](auto && stmt) { return stmt->analyze(ctx); }));
             });

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -132,24 +132,7 @@ inline namespace _v1
 
                     _cloned_type_expr = repl.claim(type_expr);
 
-                    auto cont = [this, ctx = std::make_shared<simplification_context>(*ctx.results)](auto self)->future<expression *>
-                    {
-                        return _cloned_type_expr->simplify_expr({ *ctx }).then([this, ctx, self](auto && simpl) -> future<expression *> {
-                            replace_uptr(_cloned_type_expr, simpl, *ctx);
-
-                            if (_cloned_type_expr->is_constant() || !ctx->did_something_happen())
-                            {
-                                return make_ready_future<expression *>(_cloned_type_expr.get());
-                            }
-
-                            auto & res = ctx->results;
-                            ctx->~simplification_context();
-                            new (&*ctx) simplification_context(res);
-                            return self(self);
-                        });
-                    };
-
-                    return cont(cont).then([this, var_space, expr_space](expression * type_expr) {
+                    return simplification_loop(ctx, _cloned_type_expr).then([this, var_space, expr_space](expression * type_expr) {
                         assert(type_expr);
                         assert(type_expr->get_type() == builtin_types().type.get());
 

@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/types/typeclass.h"
+#include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/statements/function.h"
 #include "vapor/analyzer/symbol.h"
 #include "vapor/parser/expr.h"
@@ -142,6 +143,60 @@ inline namespace _v1
     std::unique_ptr<type> make_typeclass_type()
     {
         return std::make_unique<typeclass_type>();
+    }
+
+    typeclass_instance_type::typeclass_instance_type(typeclass * tc, std::vector<expression *> arguments)
+        : user_defined_type{ dont_init_expr }, _arguments{ std::move(arguments) }, _ctx{ tc->get_scope(), _arguments }
+    {
+        _self_expression = std::make_unique<type_expression>(this, type_kind::typeclass);
+
+        auto repl = _ctx.get_replacements();
+
+        for (auto && fn_decl : tc->get_member_function_decls())
+        {
+            auto fn = fn_decl->get_function();
+            auto & name = fn_decl->get_name();
+
+            _function_instance fn_instance;
+            fn_instance.instance = make_function(fn->explain(), fn->get_range());
+            fn_instance.return_type_expression = repl.copy_claim(fn->return_type_expression());
+            fn_instance.instance->set_return_type(fn_instance.return_type_expression);
+            fn_instance.parameter_expressions = fmap(fn->parameters(), [&](auto && param) { return repl.copy_claim(param); });
+            fn_instance.instance->set_parameters(fmap(fn_instance.parameter_expressions, [](auto && expr) { return expr.get(); }));
+
+            std::shared_ptr<overload_set> keep_count;
+            auto symbol = get_scope()->try_get(name);
+
+            if (!symbol)
+            {
+                auto type_name = U"overload_set_type$" + fn_decl->get_name();
+
+                keep_count = std::make_shared<overload_set>(get_scope());
+                symbol = get_scope()->init(name, make_symbol(name, keep_count.get()));
+
+                auto type = keep_count->get_type();
+                type->set_name(type_name);
+                get_scope()->init(type_name, make_symbol(type_name, type->get_expression()));
+            }
+
+            fn_instance.overload_set = symbol.value()->get_expression()->as<overload_set>()->shared_from_this();
+            fn_instance.overload_set->get_overload_set_type()->add_function(fn_instance.instance.get());
+
+            _oset_names.insert(name);
+
+            _function_instance_to_template.emplace(fn_instance.instance.get(), fn_decl);
+            _function_instances.push_back(std::move(fn_instance));
+        }
+    }
+
+    void typeclass_instance_type::print(std::ostream & os, print_context ctx) const
+    {
+        assert(0);
+    }
+
+    std::unique_ptr<google::protobuf::Message> typeclass_instance_type::_user_defined_interface() const
+    {
+        assert(0);
     }
 }
 }

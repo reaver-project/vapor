@@ -40,7 +40,7 @@ inline namespace _v1
 
     std::unique_ptr<expression> typeclass_literal::_do_instantiate(analysis_context & ctx, std::vector<expression *> arguments) const
     {
-        return std::make_unique<typeclass_instance_builder>();
+        return std::make_unique<typeclass_literal_instance>(_instance_template.get(), std::move(arguments));
     }
 }
 }

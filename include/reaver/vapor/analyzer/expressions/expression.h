@@ -324,6 +324,8 @@ inline namespace _v1
     {
         return expr.hash_value();
     }
+
+    future<expression *> simplification_loop(analysis_context & ctx, std::unique_ptr<expression> & uptr);
 }
 }
 

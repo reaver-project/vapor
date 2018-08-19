@@ -80,5 +80,10 @@ inline namespace _v1
     {
         assert(0);
     }
+
+    typeclass_literal_instance::typeclass_literal_instance(typeclass * tc, std::vector<expression *> arguments)
+        : _instance_type{ std::make_unique<typeclass_instance_type>(tc, std::move(arguments)) }
+    {
+    }
 }
 }

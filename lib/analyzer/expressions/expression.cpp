@@ -137,5 +137,27 @@ inline namespace _v1
 
         return template_expr->templated_expression()->_do_instantiate(ctx, std::move(arguments));
     }
+
+    future<expression *> simplification_loop(analysis_context & ctx, std::unique_ptr<expression> & uptr)
+    {
+        auto cont = [&uptr, ctx = std::make_shared<simplification_context>(*ctx.results)](auto self)->future<expression *>
+        {
+            return uptr->simplify_expr({ *ctx }).then([&uptr, ctx, self](auto && simpl) -> future<expression *> {
+                replace_uptr(uptr, simpl, *ctx);
+
+                if (uptr->is_constant() || !ctx->did_something_happen())
+                {
+                    return make_ready_future<expression *>(uptr.get());
+                }
+
+                auto & res = ctx->results;
+                ctx->~simplification_context();
+                new (&*ctx) simplification_context(res);
+                return self(self);
+            });
+        };
+
+        return cont(cont);
+    }
 }
 }

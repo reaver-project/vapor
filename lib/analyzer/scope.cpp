@@ -68,6 +68,8 @@ inline namespace _v1
 
         assert(!_is_closed);
 
+        assert(name == symb->get_name());
+
         for (auto scope = this; scope; scope = scope->_parent)
         {
             if (scope->_symbols.find(name) != scope->_symbols.end())
@@ -126,11 +128,6 @@ inline namespace _v1
         while (scope)
         {
             auto symb = scope->try_get(name);
-
-            if (!symb && _combined_with)
-            {
-                symb = _combined_with->try_get(name);
-            }
 
             if (symb && !symb.value()->is_hidden())
             {

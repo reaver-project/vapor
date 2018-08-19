@@ -35,11 +35,13 @@ inline namespace _v1
     {
         auto name_id_expr = fmap(parse.typeclass_name.id_expression_value, [&](auto && token) { return token.value.string; });
 
-        auto late_preanalysis = [&parse, &ctx](scope * lex_scope, const scope * typeclass_scope, const std::vector<expression *> arguments) {
-            return fmap(parse.definitions, [&](auto && definition) {
-                return std::get<0>(fmap(definition, make_overload_set([&](const parser::function_definition & func) -> std::unique_ptr<statement> {
-                    return preanalyze_function_definition(ctx, func, lex_scope, instance_context{ typeclass_scope, arguments });
-                })));
+        auto late_preanalysis = [&parse, &ctx](instance_literal::function_definition_handler & fn_def) {
+            fmap(parse.definitions, [&](auto && definition) {
+                fmap(definition, make_overload_set([&](const parser::function_definition & func) {
+                    fn_def(ctx, func);
+                    return unit{};
+                }));
+                return unit{};
             });
         };
 

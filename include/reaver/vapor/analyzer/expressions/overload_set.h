@@ -66,6 +66,11 @@ inline namespace _v1
             _type->mark_exported();
         }
 
+        overload_set_type * get_overload_set_type() const
+        {
+            return _type.get();
+        }
+
     private:
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;

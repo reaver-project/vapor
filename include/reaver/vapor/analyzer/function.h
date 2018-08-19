@@ -195,6 +195,11 @@ inline namespace _v1
             _scopes_generator = std::move(generator);
         }
 
+        auto & get_range() const
+        {
+            return _range;
+        }
+
     private:
         std::string _explanation;
         std::optional<range_type> _range;
