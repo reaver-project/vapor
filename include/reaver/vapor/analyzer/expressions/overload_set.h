@@ -79,5 +79,8 @@ inline namespace _v1
         std::vector<function_declaration *> _function_decls;
         std::unique_ptr<overload_set_type> _type;
     };
+
+    std::shared_ptr<overload_set> create_overload_set(scope * lex_scope, std::u32string name);
+    std::shared_ptr<overload_set> get_overload_set(scope * lex_scope, std::u32string name);
 }
 }

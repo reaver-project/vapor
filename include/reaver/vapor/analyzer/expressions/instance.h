@@ -37,18 +37,21 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     class expression_list;
+    class function_definition;
 
     class instance_literal : public expression
     {
     public:
         using function_definition_handler = reaver::unique_function<void(precontext & ctx, const parser::function_definition &)>;
-        using late_preanalysis_type = reaver::unique_function<void(function_definition_handler &)>;
+        using late_preanalysis_type = reaver::unique_function<void(function_definition_handler)>;
 
         instance_literal(ast_node parse,
             scope * original_scope,
             std::vector<std::u32string> name_segments,
             std::vector<std::unique_ptr<expression>> arguments,
             late_preanalysis_type late_pre);
+
+        virtual ~instance_literal() override;
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
@@ -59,10 +62,11 @@ inline namespace _v1
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
 
         scope * _original_scope;
+        std::unique_ptr<scope> _instance_scope;
 
         std::vector<std::u32string> _typeclass_name;
         std::vector<std::unique_ptr<expression>> _arguments;
-        std::vector<std::unique_ptr<statement>> _definitions;
+        std::vector<std::unique_ptr<function_definition>> _function_definitions;
 
         late_preanalysis_type _late_preanalysis;
     };

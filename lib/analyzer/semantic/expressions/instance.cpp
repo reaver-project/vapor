@@ -26,6 +26,7 @@
 #include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/expressions/template.h"
 #include "vapor/analyzer/expressions/typeclass.h"
+#include "vapor/analyzer/statements/function.h"
 #include "vapor/analyzer/symbol.h"
 
 namespace reaver::vapor::analyzer
@@ -63,30 +64,30 @@ inline namespace _v1
                 assert(instance_type_expr);
                 _set_type(instance_type_expr->instance_type());
 
-                auto instance_scope = _original_scope->clone_for_class();
+                _instance_scope = get_type()->get_scope()->clone_for_class();
 
                 std::vector<std::shared_ptr<overload_set>> osets;
 
                 for (auto && oset_name : instance_type_expr->instance_type()->overload_set_names())
                 {
-                    auto type_name = U"overload_set_types$" + oset_name;
-
-                    auto oset = std::make_shared<overload_set>(instance_scope.get());
-                    instance_scope->init(oset_name, make_symbol(oset_name, oset.get()));
-
-                    auto type = oset->get_type();
-                    type->set_name(type_name);
-                    instance_scope->init(type_name, make_symbol(type_name, type->get_expression()));
-
+                    auto oset = create_overload_set(_instance_scope.get(), oset_name);
                     osets.push_back(std::move(oset));
                 }
 
-                assert(0);
+                // close here, because if the preanalysis below *adds* new members, then we have a bug... the assertion that checks for closeness of the scope
+                // needs to be somehow weakened here, to allow for more sensible error reporting than `assert`
+                _instance_scope->close();
 
-                instance_scope->close();
+                _late_preanalysis([&](precontext & ctx, const parser::function_definition & parse) {
+                    auto scope = _instance_scope.get();
+                    auto func = preanalyze_function_definition(ctx, parse, scope, true);
+                    assert(scope == _instance_scope.get());
+                    _function_definitions.push_back(std::move(func));
+                });
 
-                return when_all(fmap(_definitions, [&](auto && stmt) { return stmt->analyze(ctx); }));
-            });
+                return when_all(fmap(_function_definitions, [&](auto && fn_def) { return fn_def->analyze(ctx); }));
+            })
+            .then([&] { assert(0); });
     }
 }
 }

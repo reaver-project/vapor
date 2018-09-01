@@ -79,12 +79,12 @@ inline namespace _v1
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
     protected:
+        std::unique_ptr<scope> _scope;
+
         std::u32string _name;
         parameter_list _parameter_list;
         std::optional<std::unique_ptr<expression>> _return_type;
         std::shared_ptr<overload_set> _overload_set;
-
-        std::unique_ptr<scope> _scope;
 
         std::unique_ptr<function> _function;
         std::optional<std::vector<parameter *>> _template_params;
@@ -139,6 +139,6 @@ inline namespace _v1
     std::unique_ptr<function_definition> preanalyze_function_definition(precontext & prectx,
         const parser::function_definition & func,
         scope *& lex_scope,
-        std::optional<instance_context> ctx = std::nullopt);
+        bool is_instance_member = false);
 }
 }

@@ -67,5 +67,31 @@ inline namespace _v1
     {
         return std::make_unique<proto::overload_set>();
     }
+
+    std::shared_ptr<overload_set> create_overload_set(scope * lex_scope, std::u32string name)
+    {
+        auto type_name = U"overload_set_types$" + name;
+
+        auto oset = std::make_shared<overload_set>(lex_scope);
+        lex_scope->init(name, make_symbol(name, oset.get()));
+
+        auto type = oset->get_type();
+        type->set_name(type_name);
+        lex_scope->init(type_name, make_symbol(type_name, type->get_expression()));
+
+        return oset;
+    }
+
+    std::shared_ptr<overload_set> get_overload_set(scope * lex_scope, std::u32string name)
+    {
+        auto symbol = lex_scope->try_get(name);
+
+        if (!symbol)
+        {
+            return create_overload_set(lex_scope, name);
+        }
+
+        return symbol.value()->get_expression()->as<overload_set>()->shared_from_this();
+    }
 }
 }

@@ -43,6 +43,7 @@ inline namespace _v1
     {
         // TODO: drop the +1 once overload_set's thingies stop being members
         std::size_t i = 0 + 1;
+        replacements repl;
 
         return fmap(param_list.parameters, [&](auto && param_parse) {
             assert(param_parse.type || ctx);
@@ -55,7 +56,6 @@ inline namespace _v1
 
                 else if (ctx)
                 {
-                    auto repl = ctx->instance.get_replacements();
                     return repl.claim(ctx->original_overload->parameters()[i]->as<parameter>()->get_type_expression());
                 }
 

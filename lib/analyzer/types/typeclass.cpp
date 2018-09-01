@@ -164,22 +164,7 @@ inline namespace _v1
             fn_instance.parameter_expressions = fmap(fn->parameters(), [&](auto && param) { return repl.copy_claim(param); });
             fn_instance.instance->set_parameters(fmap(fn_instance.parameter_expressions, [](auto && expr) { return expr.get(); }));
 
-            std::shared_ptr<overload_set> keep_count;
-            auto symbol = get_scope()->try_get(name);
-
-            if (!symbol)
-            {
-                auto type_name = U"overload_set_type$" + fn_decl->get_name();
-
-                keep_count = std::make_shared<overload_set>(get_scope());
-                symbol = get_scope()->init(name, make_symbol(name, keep_count.get()));
-
-                auto type = keep_count->get_type();
-                type->set_name(type_name);
-                get_scope()->init(type_name, make_symbol(type_name, type->get_expression()));
-            }
-
-            fn_instance.overload_set = symbol.value()->get_expression()->as<overload_set>()->shared_from_this();
+            fn_instance.overload_set = get_overload_set(get_scope(), name);
             fn_instance.overload_set->get_overload_set_type()->add_function(fn_instance.instance.get());
 
             _oset_names.insert(name);

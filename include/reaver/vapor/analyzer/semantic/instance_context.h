@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017-2018 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -48,6 +48,7 @@ inline namespace _v1
             auto && params = tc_scope->parent()->symbols_in_order();
 
             assert(arguments.size() == params.size());
+            assert(std::equal(arguments.begin(), arguments.end(), params.begin(), [](auto && lhs, auto && rhs) { return lhs->get_type() == rhs->get_type(); }));
 
             for (std::size_t i = 0; i < arguments.size(); ++i)
             {
@@ -60,7 +61,6 @@ inline namespace _v1
 
     struct instance_function_context
     {
-        const instance_context & instance;
         const function * original_overload;
     };
 }

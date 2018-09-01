@@ -55,15 +55,15 @@ inline namespace _v1
     std::unique_ptr<function_definition> preanalyze_function_definition(precontext & prectx,
         const parser::function_definition & parse,
         scope *& lex_scope,
-        std::optional<instance_context> ctx)
+        bool is_instance_member)
     {
         auto function_scope = lex_scope->clone_local();
 
         function * original_overload = nullptr;
         std::optional<instance_function_context> fn_ctx;
-        if (ctx)
+        if (is_instance_member)
         {
-            auto symb = ctx->tc_scope->get(parse.signature.name.value.string);
+            auto symb = lex_scope->parent()->get(parse.signature.name.value.string);
             assert(symb);
             auto oset = symb->get_expression()->as<overload_set>();
             assert(oset);
@@ -95,7 +95,7 @@ inline namespace _v1
             assert(it != overloads.end());
             original_overload = *it;
 
-            fn_ctx.emplace(instance_function_context{ ctx.value(), original_overload });
+            fn_ctx.emplace(instance_function_context{ original_overload });
         }
 
         parameter_list params;
@@ -106,11 +106,11 @@ inline namespace _v1
         function_scope->close();
 
         auto ret_type = fmap(parse.signature.return_type, [&](auto && ret_type) { return preanalyze_expression(prectx, ret_type, function_scope.get()); });
-        if (!ret_type && ctx)
+        if (!ret_type && is_instance_member)
         {
-            auto repl = ctx->get_replacements();
             auto original_ret = original_overload->get_return_type().try_get();
             assert(original_ret);
+            replacements repl;
             ret_type = repl.claim(original_ret.value());
         }
 
@@ -141,26 +141,13 @@ inline namespace _v1
         parameter_list params,
         std::optional<std::unique_ptr<expression>> return_type,
         std::unique_ptr<scope> scope)
-        : _name{ std::move(name) }, _parameter_list{ std::move(params) }, _return_type{ std::move(return_type) }, _scope{ std::move(scope) }
+        : _scope{ std::move(scope) },
+          _name{ std::move(name) },
+          _parameter_list{ std::move(params) },
+          _return_type{ std::move(return_type) },
+          _overload_set{ get_overload_set(_scope->parent(), _name) }
     {
         _set_ast_info(parse);
-
-        auto type_name = U"overload_set_type$" + _name;
-
-        std::shared_ptr<overload_set> keep_count;
-        auto symbol = _scope->parent()->try_get(_name);
-
-        if (!symbol)
-        {
-            keep_count = std::make_shared<overload_set>(_scope.get());
-            symbol = _scope->parent()->init(_name, make_symbol(_name, keep_count.get()));
-
-            auto type = keep_count->get_type();
-            type->set_name(type_name);
-            _scope->parent()->init(type_name, make_symbol(type_name, type->get_expression()));
-        }
-
-        _overload_set = symbol.value()->get_expression()->as<overload_set>()->shared_from_this();
     }
 
     function_definition::function_definition(ast_node parse,

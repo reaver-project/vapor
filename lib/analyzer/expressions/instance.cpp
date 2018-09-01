@@ -35,7 +35,7 @@ inline namespace _v1
     {
         auto name_id_expr = fmap(parse.typeclass_name.id_expression_value, [&](auto && token) { return token.value.string; });
 
-        auto late_preanalysis = [&parse, &ctx](instance_literal::function_definition_handler & fn_def) {
+        auto late_preanalysis = [&parse, &ctx](instance_literal::function_definition_handler fn_def) {
             fmap(parse.definitions, [&](auto && definition) {
                 fmap(definition, make_overload_set([&](const parser::function_definition & func) {
                     fn_def(ctx, func);
@@ -64,6 +64,8 @@ inline namespace _v1
     {
         _set_ast_info(parse);
     }
+
+    instance_literal::~instance_literal() = default;
 
     void instance_literal::print(std::ostream & os, print_context ctx) const
     {
