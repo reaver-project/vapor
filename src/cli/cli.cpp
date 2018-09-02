@@ -180,6 +180,10 @@ options_result get_options(int argc, char ** argv)
         auto child = bp::child(argv, bp::std_out > stdout, bp::std_err > stderr, bp::std_in < stdin);
 
         child.wait();
+        if (child.exit_code() != 0)
+        {
+            assert(!"TODO: nice error message when a dependency fails to compile");
+        }
     });
 
     return { std::move(ret), false };
