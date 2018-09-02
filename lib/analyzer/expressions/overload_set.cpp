@@ -70,7 +70,7 @@ inline namespace _v1
 
     std::shared_ptr<overload_set> create_overload_set(scope * lex_scope, std::u32string name)
     {
-        auto type_name = U"overload_set_types$" + name;
+        auto type_name = U"overload_set_type$" + name;
 
         auto oset = std::make_shared<overload_set>(lex_scope);
         lex_scope->init(name, make_symbol(name, oset.get()));
