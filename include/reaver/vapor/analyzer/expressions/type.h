@@ -54,6 +54,10 @@ inline namespace _v1
         {
         }
 
+        type_expression(type * t, type * base_type) : expression{ base_type }, _type{ t }
+        {
+        }
+
         type * get_value() const
         {
             return _type;

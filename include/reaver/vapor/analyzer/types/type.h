@@ -84,7 +84,7 @@ inline namespace _v1
         {
         } dont_init_expr{};
 
-        type(dont_init_expr_t) : _member_scope{ std::make_unique<scope>() }
+        type(dont_init_expr_t, std::unique_ptr<scope> lex_scope = std::make_unique<scope>()) : _member_scope{ std::move(lex_scope) }
         {
         }
 

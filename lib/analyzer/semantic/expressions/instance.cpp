@@ -64,30 +64,12 @@ inline namespace _v1
                 assert(instance_type_expr);
                 _set_type(instance_type_expr->instance_type());
 
-                _instance_scope = get_type()->get_scope()->clone_for_class();
+                _instance = make_typeclass_instance(instance_type_expr->instance_type());
+                _late_preanalysis(_instance->get_function_definition_handler());
 
-                std::vector<std::shared_ptr<overload_set>> osets;
-
-                for (auto && oset_name : instance_type_expr->instance_type()->overload_set_names())
-                {
-                    auto oset = create_overload_set(_instance_scope.get(), oset_name);
-                    osets.push_back(std::move(oset));
-                }
-
-                // close here, because if the preanalysis below *adds* new members, then we have a bug... the assertion that checks for closeness of the scope
-                // needs to be somehow weakened here, to allow for more sensible error reporting than `assert`
-                _instance_scope->close();
-
-                _late_preanalysis([&](precontext & ctx, const parser::function_definition & parse) {
-                    auto scope = _instance_scope.get();
-                    auto func = preanalyze_function_definition(ctx, parse, scope, true);
-                    assert(scope == _instance_scope.get());
-                    _function_definitions.push_back(std::move(func));
-                });
-
-                return when_all(fmap(_function_definitions, [&](auto && fn_def) { return fn_def->analyze(ctx); }));
+                return when_all(fmap(_instance->get_member_function_defs(), [&](auto && fn_def) { return fn_def->analyze(ctx); }));
             })
-            .then([&] { assert(0); });
+            .then([&] { _instance->import_default_definitions(); });
     }
 }
 }

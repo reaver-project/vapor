@@ -23,14 +23,9 @@
 #pragma once
 
 #include "vapor/analyzer/expressions/expression.h"
-
-namespace reaver::vapor::parser
-{
-inline namespace _v1
-{
-    struct function_definition;
-}
-}
+#include "vapor/analyzer/expressions/type.h"
+#include "vapor/analyzer/semantic/instance_context.h"
+#include "vapor/analyzer/types/typeclass.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -42,7 +37,6 @@ inline namespace _v1
     class instance_literal : public expression
     {
     public:
-        using function_definition_handler = reaver::unique_function<void(precontext & ctx, const parser::function_definition &)>;
         using late_preanalysis_type = reaver::unique_function<void(function_definition_handler)>;
 
         instance_literal(ast_node parse,
@@ -62,14 +56,30 @@ inline namespace _v1
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
 
         scope * _original_scope;
-        std::unique_ptr<scope> _instance_scope;
 
         std::vector<std::u32string> _typeclass_name;
         std::vector<std::unique_ptr<expression>> _arguments;
-        std::vector<std::unique_ptr<function_definition>> _function_definitions;
 
         late_preanalysis_type _late_preanalysis;
+
+        std::shared_ptr<typeclass_instance> _instance;
     };
+
+    class typeclass_instance_expression : public type_expression
+    {
+    public:
+        typeclass_instance_expression(typeclass_instance * instance) : type_expression(instance), _instance(instance)
+        {
+        }
+
+    public:
+        typeclass_instance * _instance;
+    };
+
+    inline std::unique_ptr<typeclass_instance_expression> make_typeclass_instance_expression(typeclass_instance * instance)
+    {
+        return std::make_unique<typeclass_instance_expression>(instance);
+    }
 }
 }
 

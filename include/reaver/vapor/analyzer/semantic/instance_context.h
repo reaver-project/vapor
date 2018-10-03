@@ -65,3 +65,19 @@ inline namespace _v1
     };
 }
 }
+
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    class function_definition;
+}
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    using function_definition_handler = reaver::unique_function<void(precontext & ctx, const parser::function_definition &)>;
+}
+}

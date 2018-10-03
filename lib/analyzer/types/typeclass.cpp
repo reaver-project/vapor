@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/types/typeclass.h"
+#include "vapor/analyzer/expressions/instance.h"
 #include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/statements/function.h"
 #include "vapor/analyzer/symbol.h"
@@ -180,6 +181,54 @@ inline namespace _v1
     }
 
     std::unique_ptr<google::protobuf::Message> typeclass_instance_type::_user_defined_interface() const
+    {
+        assert(0);
+    }
+
+    std::shared_ptr<typeclass_instance> make_typeclass_instance(typeclass_instance_type * type)
+    {
+        auto scope = type->get_scope()->clone_for_class();
+
+        std::vector<std::shared_ptr<overload_set>> osets;
+        for (auto && oset_name : type->overload_set_names())
+        {
+            osets.push_back(create_overload_set(scope.get(), oset_name));
+        }
+        // close here, because if the preanalysis below *adds* new members, then we have a bug... the assertion that checks for closeness of the scope
+        // needs to be somehow weakened here, to allow for more sensible error reporting than `assert`
+        scope->close();
+
+        return std::make_shared<typeclass_instance>(type, std::move(scope), std::move(osets));
+    }
+
+    typeclass_instance::typeclass_instance(typeclass_instance_type * type, std::unique_ptr<scope> lex_scope, std::vector<std::shared_ptr<overload_set>> osets)
+        : user_defined_type{ dont_init_expr, std::move(lex_scope) }, _instance_type{ type }, _osets{ std::move(osets) }
+    {
+        _self_expression = make_typeclass_instance_expression(this);
+        _init_pack_type();
+    }
+
+    function_definition_handler typeclass_instance::get_function_definition_handler()
+    {
+        return [&](precontext & ctx, const parser::function_definition & parse) {
+            auto scope = get_scope();
+            auto func = preanalyze_function_definition(ctx, parse, scope, true);
+            assert(scope == get_scope());
+            _member_function_definitions.push_back(std::move(func));
+        };
+    }
+
+    void typeclass_instance::import_default_definitions()
+    {
+        assert(0);
+    }
+
+    void typeclass_instance::print(std::ostream & os, print_context ctx) const
+    {
+        assert(0);
+    }
+
+    std::unique_ptr<google::protobuf::Message> typeclass_instance::_user_defined_interface() const
     {
         assert(0);
     }

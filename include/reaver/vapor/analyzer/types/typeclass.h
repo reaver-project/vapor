@@ -128,6 +128,55 @@ inline namespace _v1
         }
     };
 
+    class function_definition;
+
+    class typeclass_instance : public user_defined_type, public std::enable_shared_from_this<typeclass_instance>
+    {
+    public:
+        typeclass_instance(typeclass_instance_type * type, std::unique_ptr<scope> lex_scope, std::vector<std::shared_ptr<overload_set>> osets);
+
+        virtual std::string explain() const override
+        {
+            return "a typeclass instance (TODO: add tracking)";
+        }
+
+        virtual void print(std::ostream & os, print_context ctx) const override;
+
+        function_definition_handler get_function_definition_handler();
+
+        std::vector<function_definition *> get_member_function_defs() const
+        {
+            return fmap(_member_function_definitions, [](auto && ptr) { return ptr.get(); });
+        }
+
+        typeclass_instance_type * get_instance_type() const
+        {
+            return _instance_type;
+        }
+
+        void import_default_definitions();
+
+    private:
+        typeclass_instance_type * _instance_type;
+
+        std::vector<std::shared_ptr<overload_set>> _osets;
+        std::vector<std::unique_ptr<function_definition>> _member_function_definitions;
+
+        virtual std::unique_ptr<google::protobuf::Message> _user_defined_interface() const override;
+
+        virtual void _codegen_type(ir_generation_context &) const override
+        {
+            assert(0);
+        }
+
+        virtual std::u32string _codegen_name(ir_generation_context &) const override
+        {
+            assert(0);
+        }
+    };
+
+    std::shared_ptr<typeclass_instance> make_typeclass_instance(typeclass_instance_type * type);
+
     std::unique_ptr<type> make_typeclass_type();
 }
 }
