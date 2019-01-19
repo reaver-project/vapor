@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2018 Michał "Griwes" Dominiak
+ * Copyright © 2014-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -50,7 +50,6 @@ inline namespace _v1
         token_types[+token_type::implicit] = "implicit";
         token_types[+token_type::instance] = "instance";
         token_types[+token_type::default_] = "default";
-        token_types[+token_type::with] = "with";
 
         token_types[+token_type::if_] = "if";
         token_types[+token_type::else_] = "else";
@@ -135,7 +134,6 @@ inline namespace _v1
         { U"implicit", token_type::implicit },
         { U"instance", token_type::instance },
         { U"default", token_type::default_ },
-        { U"with", token_type::with },
 
         { U"if", token_type::if_ },
         { U"else", token_type::else_ },

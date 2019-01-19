@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2018 Michał "Griwes" Dominiak
+ * Copyright © 2014-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -115,11 +115,6 @@ inline namespace _v1
         {
             assert(!_default_value);
             _default_value = expr;
-        }
-
-        virtual void set_template_parameters(std::vector<parameter *>) override
-        {
-            assert(!"this expression doesn't support being a template");
         }
 
         virtual bool is_constant() const
@@ -267,8 +262,6 @@ inline namespace _v1
             return make_ready_future();
         }
 
-        std::unique_ptr<expression> _instantiate(analysis_context & ctx, std::vector<expression *> arguments) const;
-
         virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const final
         {
             return _clone_expr_with_replacement(repl);
@@ -309,11 +302,6 @@ inline namespace _v1
         }
 
     private:
-        virtual std::unique_ptr<expression> _do_instantiate([[maybe_unused]] analysis_context & ctx, [[maybe_unused]] std::vector<expression *> arguments) const
-        {
-            assert(!"tried to instantiate an expression that's not instantiatable");
-        }
-
         type * _type = nullptr;
         expression * _default_value = nullptr;
 

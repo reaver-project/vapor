@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,9 +22,8 @@
 
 #include "vapor/analyzer/semantic/context.h"
 #include "vapor/analyzer/expressions/expression.h"
-#include "vapor/analyzer/expressions/template.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/statements/statement.h"
-#include "vapor/analyzer/symbol.h"
 #include "vapor/analyzer/types/function.h"
 #include "vapor/analyzer/types/sized_integer.h"
 
@@ -70,19 +69,6 @@ inline namespace _v1
         }
 
         return ret.get();
-    }
-
-    expression * analysis_context::get_instantiation(template_expression * expr, std::vector<expression *> arguments)
-    {
-        auto & tpl_instances = _instances[expr];
-        auto & instance = tpl_instances[arguments];
-
-        if (!instance)
-        {
-            instance = expr->_instantiate(*this, std::move(arguments));
-        }
-
-        return instance.get();
     }
 }
 }

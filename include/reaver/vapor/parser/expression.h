@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2017 Michał "Griwes" Dominiak
+ * Copyright © 2014-2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -42,7 +42,7 @@ inline namespace _v1
     struct unary_expression;
     struct binary_expression;
     struct struct_literal;
-    struct template_expression;
+    struct typeclass_literal;
     struct instance_literal;
 
     void print(const unary_expression & expr, std::ostream & os, std::size_t indent);
@@ -62,7 +62,7 @@ inline namespace _v1
             recursive_wrapper<unary_expression>,
             recursive_wrapper<binary_expression>,
             recursive_wrapper<struct_literal>,
-            recursive_wrapper<template_expression>,
+            recursive_wrapper<typeclass_literal>,
             recursive_wrapper<instance_literal>>
             expression_value = postfix_expression();
     };

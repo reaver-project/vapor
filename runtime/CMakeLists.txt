@@ -17,10 +17,11 @@ foreach(abs_source ${sources})
     list(APPEND objects ${object})
 endforeach()
 
-add_library(vprrt STATIC
+add_library(vpr-rt STATIC
     ${objects}
 )
-set_target_properties(vprrt
+set_target_properties(vpr-rt
     PROPERTIES
     LINKER_LANGUAGE C
+    OUTPUT_NAME vprrt
 )

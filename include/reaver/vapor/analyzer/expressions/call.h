@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,7 +23,7 @@
 #pragma once
 
 #include "../../range.h"
-#include "../function.h"
+#include "../semantic/function.h"
 #include "expression.h"
 
 namespace reaver::vapor::analyzer

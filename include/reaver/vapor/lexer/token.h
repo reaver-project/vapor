@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2018 Michał "Griwes" Dominiak
+ * Copyright © 2014-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -59,7 +59,6 @@ inline namespace _v1
         implicit,
         instance,
         default_,
-        with,
 
         if_,
         else_,

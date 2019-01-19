@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2018 Michał "Griwes" Dominiak
+ * Copyright © 2018-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -28,7 +28,7 @@
 #include "vapor/analyzer/expressions/expression_ref.h"
 #include "vapor/analyzer/expressions/import.h"
 #include "vapor/analyzer/precontext.h"
-#include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/types/module.h"
 #include "vapor/analyzer/types/unresolved.h"
 #include "vapor/codegen/ir/scope.h"

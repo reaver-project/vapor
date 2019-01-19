@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -31,10 +31,10 @@
 #include "vapor/analyzer/expressions/member_access.h"
 #include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/expressions/struct.h"
-#include "vapor/analyzer/expressions/template.h"
+#include "vapor/analyzer/expressions/typeclass.h"
 #include "vapor/analyzer/expressions/unary.h"
 #include "vapor/analyzer/helpers.h"
-#include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/parser/expr.h"
 
 #include "entity.pb.h"
@@ -91,9 +91,9 @@ inline namespace _v1
                     return memexpr;
                 },
 
-                [&](const parser::template_expression & texpr) -> std::unique_ptr<expression> {
-                    auto tplexpr = preanalyze_template_expression(ctx, texpr, lex_scope);
-                    return tplexpr;
+                [&](const parser::typeclass_literal & tc) -> std::unique_ptr<expression> {
+                    auto tclit = preanalyze_typeclass_literal(ctx, tc, lex_scope);
+                    return tclit;
                 },
 
                 [&](const parser::instance_literal & inst) -> std::unique_ptr<expression> {
@@ -128,14 +128,6 @@ inline namespace _v1
         dynamic_switch(HANDLE_TYPE(type, type_value), HANDLE_TYPE(overload_set, overload_set));
 
 #undef HANDLE_TYPE
-    }
-
-    std::unique_ptr<expression> expression::_instantiate(analysis_context & ctx, std::vector<expression *> arguments) const
-    {
-        auto template_expr = dynamic_cast<const template_expression *>(this);
-        assert(template_expr && "only a template expression is allowed to invoke its _instantiate function!");
-
-        return template_expr->templated_expression()->_do_instantiate(ctx, std::move(arguments));
     }
 
     future<expression *> simplification_loop(analysis_context & ctx, std::unique_ptr<expression> & uptr)

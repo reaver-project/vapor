@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,8 +21,8 @@
  **/
 
 #include "vapor/analyzer/expressions/typeclass.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/statements/function.h"
-#include "vapor/analyzer/symbol.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -30,17 +30,12 @@ inline namespace _v1
 {
     future<> typeclass_literal::_analyze(analysis_context & ctx)
     {
-        return _parameters_set->then([&] {
-            return when_all(fmap(_instance_template->get_member_function_decls(), [&](auto && decl) {
-                decl->set_template_parameters(_instance_template->get_template_parameters());
-                return decl->analyze(ctx);
-            }));
-        });
-    }
-
-    std::unique_ptr<expression> typeclass_literal::_do_instantiate(analysis_context & ctx, std::vector<expression *> arguments) const
-    {
-        return std::make_unique<typeclass_literal_instance>(_instance_template.get(), std::move(arguments));
+        assert(0);
+        /*
+         return when_all(fmap(_instance_template->get_member_function_decls(), [&](auto && decl) {
+             decl->set_template_parameters(_instance_template->get_template_parameters());
+             return decl->analyze(ctx);
+         }));*/
     }
 }
 }

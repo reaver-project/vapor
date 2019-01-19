@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -33,7 +33,7 @@
 #include "../../lexer/token.h"
 #include "../../print_helpers.h"
 #include "../ir_context.h"
-#include "../scope.h"
+#include "../semantic/scope.h"
 
 namespace reaver::vapor::codegen
 {

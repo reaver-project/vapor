@@ -4,8 +4,7 @@
 
 module test
 {
-    with (arithmetic : type)
-    typeclass algorithm
+    typeclass algorithm(arithmetic : type)
     {
         function calculate(arg : arithmetic) -> arithmetic;
     };

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -29,12 +29,12 @@
 #include <reaver/optional.h>
 #include <reaver/prelude/fold.h>
 
-#include "../codegen/ir/function.h"
-#include "../print_helpers.h"
-#include "../range.h"
-#include "ir_context.h"
-#include "semantic/context.h"
-#include "simplification/context.h"
+#include "../../codegen/ir/function.h"
+#include "../../print_helpers.h"
+#include "../../range.h"
+#include "../ir_context.h"
+#include "../simplification/context.h"
+#include "context.h"
 
 namespace reaver::vapor::analyzer
 {

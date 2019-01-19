@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -37,15 +37,17 @@ inline namespace _v1
     class typeclass : public user_defined_type
     {
     public:
-        typeclass(ast_node parse, std::unique_ptr<scope> member_scope, std::vector<std::unique_ptr<function_declaration>> member_function_decls);
+        typeclass(ast_node parse,
+            std::unique_ptr<scope> member_scope,
+            std::vector<std::unique_ptr<parameter>> parameters,
+            std::vector<std::unique_ptr<function_declaration>> member_function_decls);
 
         virtual std::string explain() const override
         {
             return "a typeclass (TODO: add name tracking to this stuff)";
         }
 
-        virtual void set_template_parameters(std::vector<parameter *> params);
-        const std::vector<parameter *> & get_template_parameters() const;
+        std::vector<parameter *> get_parameters() const;
 
         std::vector<function_declaration *> get_member_function_decls() const
         {
@@ -76,7 +78,7 @@ inline namespace _v1
         ast_node _parse;
         bool _is_exported = false;
 
-        std::vector<parameter *> _parameters;
+        std::vector<std::unique_ptr<parameter>> _parameters;
 
         std::vector<std::unique_ptr<function_declaration>> _member_function_declarations;
         std::vector<function *> _member_functions;

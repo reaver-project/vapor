@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,8 +22,8 @@
 
 #include "vapor/analyzer/simplification/replacements.h"
 #include "vapor/analyzer/expressions/expression.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/statements/statement.h"
-#include "vapor/analyzer/symbol.h"
 
 #define GENERATE(X)                                                                                                                                            \
     void replacements::add_replacement(const X * original, X * repl)                                                                                           \

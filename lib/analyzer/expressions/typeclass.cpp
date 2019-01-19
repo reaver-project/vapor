@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,8 +21,8 @@
  **/
 
 #include "vapor/analyzer/expressions/typeclass.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/statements/function.h"
-#include "vapor/analyzer/symbol.h"
 #include "vapor/parser/expr.h"
 #include "vapor/parser/typeclass.h"
 
@@ -39,19 +39,9 @@ inline namespace _v1
         : expression{ builtin_types().typeclass.get() }, _instance_template{ std::move(type) }
     {
         _set_ast_info(parse);
-
-        auto pair = make_promise<void>();
-        _parameters_set = std::move(pair.future);
-        _parameters_set_promise = std::move(pair.promise);
     }
 
     typeclass_literal::~typeclass_literal() = default;
-
-    void typeclass_literal::set_template_parameters(std::vector<parameter *> params)
-    {
-        _instance_template->set_template_parameters(std::move(params));
-        _parameters_set_promise->set();
-    }
 
     void typeclass_literal::print(std::ostream & os, print_context ctx) const
     {

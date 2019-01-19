@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -25,12 +25,12 @@
 #include <memory>
 
 #include "../expressions/expression.h"
-#include "../function.h"
+#include "../semantic/function.h"
 #include "../semantic/instance_context.h"
 #include "../semantic/parameter_list.h"
+#include "../semantic/symbol.h"
 #include "../statements/block.h"
 #include "../statements/statement.h"
-#include "../symbol.h"
 
 namespace reaver::vapor::analyzer
 {

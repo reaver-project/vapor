@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,10 +24,9 @@
 
 #include "vapor/analyzer/expressions/instance.h"
 #include "vapor/analyzer/expressions/overload_set.h"
-#include "vapor/analyzer/expressions/template.h"
 #include "vapor/analyzer/expressions/typeclass.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/statements/function.h"
-#include "vapor/analyzer/symbol.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -57,7 +56,9 @@ inline namespace _v1
                     .then([expr](auto &&) { return expr; });
             })
             .then([&](expression * expr) {
-                auto tpl = expr->_get_replacement()->as<template_expression>();
+                assert(0);
+
+                /*auto tpl = expr->_get_replacement()->as<template_expression>();
                 assert(tpl);
                 auto instance_type_expr =
                     dynamic_cast<typeclass_literal_instance *>(ctx.get_instantiation(tpl, fmap(_arguments, [](auto && ptr) { return ptr.get(); })));
@@ -67,7 +68,7 @@ inline namespace _v1
                 _instance = make_typeclass_instance(instance_type_expr->instance_type());
                 _late_preanalysis(_instance->get_function_definition_handler());
 
-                return when_all(fmap(_instance->get_member_function_defs(), [&](auto && fn_def) { return fn_def->analyze(ctx); }));
+                return when_all(fmap(_instance->get_member_function_defs(), [&](auto && fn_def) { return fn_def->analyze(ctx); }));*/
             })
             .then([&] { _instance->import_default_definitions(); });
     }

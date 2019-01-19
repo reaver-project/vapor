@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2017 Michał "Griwes" Dominiak
+ * Copyright © 2015-2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -77,8 +77,8 @@ inline namespace _v1
                 ret.expression_value = parse_member_expression(ctx);
                 break;
 
-            case lexer::token_type::with:
-                ret.expression_value = parse_template_expression(ctx);
+            case lexer::token_type::typeclass:
+                ret.expression_value = parse_typeclass_literal(ctx);
                 break;
 
             case lexer::token_type::instance:

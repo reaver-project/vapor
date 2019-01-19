@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -37,8 +37,6 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
-        virtual void set_template_parameters(std::vector<parameter *> params) override;
-
         const scope * get_scope() const
         {
             return _instance_template->get_scope();
@@ -51,7 +49,6 @@ inline namespace _v1
 
     private:
         virtual future<> _analyze(analysis_context & ctx) override;
-        virtual std::unique_ptr<expression> _do_instantiate(analysis_context & ctx, std::vector<expression *> arguments) const override;
         virtual future<expression *> _simplify_expr(recursive_context ctx) override;
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
@@ -60,9 +57,6 @@ inline namespace _v1
         {
             return _instance_template->get_expression()->_do_generate_interface();
         }
-
-        std::optional<future<void>> _parameters_set;
-        std::optional<manual_promise<void>> _parameters_set_promise;
 
         std::unique_ptr<typeclass> _instance_template;
     };

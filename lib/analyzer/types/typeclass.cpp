@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,8 +23,8 @@
 #include "vapor/analyzer/types/typeclass.h"
 #include "vapor/analyzer/expressions/instance.h"
 #include "vapor/analyzer/expressions/overload_set.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/statements/function.h"
-#include "vapor/analyzer/symbol.h"
 #include "vapor/parser/expr.h"
 #include "vapor/parser/typeclass.h"
 
@@ -39,6 +39,8 @@ inline namespace _v1
     {
         auto scope = lex_scope->clone_for_class();
         auto scope_ptr = scope.get();
+
+        auto params = preanalyze_parameter_list(ctx, parse.parameters, scope_ptr);
 
         std::vector<std::unique_ptr<function_declaration>> fn_decls;
 
@@ -59,11 +61,17 @@ inline namespace _v1
 
         scope_ptr->close();
 
-        return std::make_unique<typeclass>(make_node(parse), std::move(scope), std::move(fn_decls));
+        return std::make_unique<typeclass>(make_node(parse), std::move(scope), std::move(params), std::move(fn_decls));
     }
 
-    typeclass::typeclass(ast_node parse, std::unique_ptr<scope> member_scope, std::vector<std::unique_ptr<function_declaration>> member_function_decls)
-        : user_defined_type{ std::move(member_scope) }, _parse{ parse }, _member_function_declarations{ std::move(member_function_decls) }
+    typeclass::typeclass(ast_node parse,
+        std::unique_ptr<scope> member_scope,
+        std::vector<std::unique_ptr<parameter>> parameters,
+        std::vector<std::unique_ptr<function_declaration>> member_function_decls)
+        : user_defined_type{ std::move(member_scope) },
+          _parse{ parse },
+          _parameters{ std::move(parameters) },
+          _member_function_declarations{ std::move(member_function_decls) }
     {
     }
 
@@ -74,14 +82,9 @@ inline namespace _v1
         os << '\n';
     }
 
-    void typeclass::set_template_parameters(std::vector<parameter *> params)
+    std::vector<parameter *> typeclass::get_parameters() const
     {
-        _parameters = std::move(params);
-    }
-
-    const std::vector<parameter *> & typeclass::get_template_parameters() const
-    {
-        return _parameters;
+        return fmap(_parameters, [](auto && param) { return param.get(); });
     }
 
     future<std::vector<function *>> typeclass::get_candidates(lexer::token_type) const
@@ -94,10 +97,6 @@ inline namespace _v1
         assert(0);
     }
 
-    // this is the type called `typeclass`
-    // I need to think about exposing this, but obviously the keyword `typeclass` is not the way to go here
-    // `typeof()` will get us there, but I'm not sure if that's how I want to do this either
-    // FIGURE ME OUT: do I actually need to expose this one in a named way? is there a use case?
     class typeclass_type : public type
     {
     public:

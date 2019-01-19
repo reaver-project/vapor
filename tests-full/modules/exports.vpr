@@ -10,8 +10,7 @@ module sample
     export let int32 = sized_int(32);
     export struct abc {};
 
-    export with (T : type)
-    typeclass def {};
+    export typeclass def(t : type) {};
 }
 
 // vim: filetype=cpp

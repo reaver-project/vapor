@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -25,7 +25,7 @@
 #include <memory>
 
 #include "../../lexer/token.h"
-#include "../function.h"
+#include "../semantic/function.h"
 #include "type.h"
 
 #include "expressions/type.pb.h"

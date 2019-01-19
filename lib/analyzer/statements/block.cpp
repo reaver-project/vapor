@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -25,9 +25,9 @@
 #include <reaver/prelude/fold.h>
 
 #include "vapor/analyzer/expressions/expression_list.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/return.h"
-#include "vapor/analyzer/symbol.h"
 #include "vapor/parser.h"
 #include "vapor/utf.h"
 
