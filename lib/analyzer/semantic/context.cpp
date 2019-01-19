@@ -44,9 +44,13 @@ inline namespace _v1
         return seed;
     }
 
-    bool argument_list_compare::operator()(const std::vector<expression *> & lhs, const std::vector<expression *> & rhs) const
+    bool argument_list_compare::operator()(const std::vector<expression *> & lhs,
+        const std::vector<expression *> & rhs) const
     {
-        return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin(), [](auto && lhs, auto && rhs) { return lhs->is_equal(rhs); });
+        return lhs.size() == rhs.size()
+            && std::equal(lhs.begin(), lhs.end(), rhs.begin(), [](auto && lhs, auto && rhs) {
+                   return lhs->is_equal(rhs);
+               });
     }
 
     function_type * analysis_context::get_function_type(function_signature sig)

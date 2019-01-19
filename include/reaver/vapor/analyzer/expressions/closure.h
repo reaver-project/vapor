@@ -82,6 +82,8 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     struct precontex;
-    std::unique_ptr<closure> preanalyze_closure(precontext & ctx, const parser::lambda_expression & parse, scope * lex_scope);
+    std::unique_ptr<closure> preanalyze_closure(precontext & ctx,
+        const parser::lambda_expression & parse,
+        scope * lex_scope);
 }
 }

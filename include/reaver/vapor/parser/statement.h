@@ -49,8 +49,13 @@ inline namespace _v1
     struct statement
     {
         range_type range;
-        std::variant<declaration, default_instance_definition, return_expression, expression_list, function_definition, if_statement> statement_value =
-            expression_list();
+        std::variant<declaration,
+            default_instance_definition,
+            return_expression,
+            expression_list,
+            function_definition,
+            if_statement>
+            statement_value = expression_list();
     };
 
     bool operator==(const statement & lhs, const statement & rhs);

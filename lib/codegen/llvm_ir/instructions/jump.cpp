@@ -28,18 +28,20 @@ namespace reaver::vapor::codegen
 inline namespace _v1
 {
     template<>
-    std::u32string llvm_ir_generator::generate<ir::jump_instruction>(const ir::instruction & inst, codegen_context & ctx)
+    std::u32string llvm_ir_generator::generate<ir::jump_instruction>(const ir::instruction & inst,
+        codegen_context & ctx)
     {
         return U"br label " + value_of(inst.operands[0], ctx) + U"\n";
     }
 
     template<>
-    std::u32string llvm_ir_generator::generate<ir::conditional_jump_instruction>(const ir::instruction & inst, codegen_context & ctx)
+    std::u32string llvm_ir_generator::generate<ir::conditional_jump_instruction>(const ir::instruction & inst,
+        codegen_context & ctx)
     {
         assert(inst.operands.size() == 3);
 
-        return U"br i1 " + value_of(inst.operands[0], ctx) + U", label " + value_of(inst.operands[1], ctx) + U", label " + value_of(inst.operands[2], ctx)
-            + U"\n";
+        return U"br i1 " + value_of(inst.operands[0], ctx) + U", label " + value_of(inst.operands[1], ctx)
+            + U", label " + value_of(inst.operands[2], ctx) + U"\n";
     }
 }
 }

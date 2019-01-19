@@ -90,13 +90,15 @@ inline namespace _v1
             return {};
         }
 
-        virtual std::u32string generate_declaration(std::shared_ptr<ir::variable_type> type, codegen_context &) const
+        virtual std::u32string generate_declaration(std::shared_ptr<ir::variable_type> type,
+            codegen_context &) const
         {
             return {};
         }
 
         virtual std::u32string generate_definitions(std::vector<ir::entity> &, codegen_context &) = 0;
-        virtual std::u32string generate_definition(std::shared_ptr<ir::variable_type> type, codegen_context &) = 0;
+        virtual std::u32string generate_definition(std::shared_ptr<ir::variable_type> type,
+            codegen_context &) = 0;
     };
 }
 }

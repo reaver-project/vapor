@@ -96,7 +96,8 @@ inline namespace _v1
         codegen::ir::value codegen_return(ir_generation_context &) const;
 
     private:
-        block(const block & other) : _original_scope{ other._original_scope }, _is_top_level{ other._is_top_level }
+        block(const block & other)
+            : _original_scope{ other._original_scope }, _is_top_level{ other._is_top_level }
         {
         }
 
@@ -118,6 +119,9 @@ inline namespace _v1
         mutable std::optional<std::unique_ptr<block>> _clone;
     };
 
-    std::unique_ptr<block> preanalyze_block(precontext & ctx, const parser::block & parse, scope * lex_scope, bool is_top_level);
+    std::unique_ptr<block> preanalyze_block(precontext & ctx,
+        const parser::block & parse,
+        scope * lex_scope,
+        bool is_top_level);
 }
 }

@@ -34,13 +34,20 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<binary_expression> preanalyze_binary_expression(precontext & ctx, const parser::binary_expression & parse, scope * lex_scope)
+    std::unique_ptr<binary_expression> preanalyze_binary_expression(precontext & ctx,
+        const parser::binary_expression & parse,
+        scope * lex_scope)
     {
-        return std::make_unique<binary_expression>(
-            make_node(parse), parse.op, preanalyze_expression(ctx, parse.lhs, lex_scope), preanalyze_expression(ctx, parse.rhs, lex_scope));
+        return std::make_unique<binary_expression>(make_node(parse),
+            parse.op,
+            preanalyze_expression(ctx, parse.lhs, lex_scope),
+            preanalyze_expression(ctx, parse.rhs, lex_scope));
     }
 
-    binary_expression::binary_expression(ast_node parse, lexer::token op, std::unique_ptr<expression> lhs, std::unique_ptr<expression> rhs)
+    binary_expression::binary_expression(ast_node parse,
+        lexer::token op,
+        std::unique_ptr<expression> lhs,
+        std::unique_ptr<expression> rhs)
         : _op{ op }, _lhs{ std::move(lhs) }, _rhs{ std::move(rhs) }
     {
         _set_ast_info(parse);
@@ -61,7 +68,8 @@ inline namespace _v1
         _lhs->print(os, lhs_ctx.make_branch(true));
 
         auto operator_ctx = ctx.make_branch(false);
-        os << styles::def << operator_ctx << styles::subrule_name << "operator: " << styles::string_value << lexer::token_types[+_op.type] << '\n';
+        os << styles::def << operator_ctx << styles::subrule_name << "operator: " << styles::string_value
+           << lexer::token_types[+_op.type] << '\n';
 
         auto rhs_ctx = ctx.make_branch(false);
         os << styles::def << rhs_ctx << styles::subrule_name << "rhs:\n";
@@ -81,7 +89,10 @@ inline namespace _v1
         _rhs->set_context(expr_ctx);
 
         return when_all(_lhs->analyze(ctx), _rhs->analyze(ctx))
-            .then([&](auto) { return resolve_overload(ctx, this->get_ast_info().value().range, _lhs.get(), _rhs.get(), _op.type); })
+            .then([&](auto) {
+                return resolve_overload(
+                    ctx, this->get_ast_info().value().range, _lhs.get(), _rhs.get(), _op.type);
+            })
             .then([&](std::unique_ptr<expression> call_expr) {
                 if (auto call_expr_downcasted = call_expr->as<call_expression>())
                 {

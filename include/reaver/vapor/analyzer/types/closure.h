@@ -72,7 +72,8 @@ inline namespace _v1
         {
             if (!_codegen_type_name)
             {
-                _codegen_type_name = U"closure_" + utf32(std::to_string(ctx.closure_index++)), get_scope()->codegen_ir();
+                _codegen_type_name = U"closure_" + utf32(std::to_string(ctx.closure_index++)),
+                get_scope()->codegen_ir();
             }
 
             return *_codegen_type_name;

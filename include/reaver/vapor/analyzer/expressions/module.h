@@ -51,7 +51,10 @@ inline namespace _v1
     class module : public expression
     {
     public:
-        module(ast_node parse, std::vector<std::u32string> name, module_type * typr, std::vector<std::unique_ptr<statement>> stmts);
+        module(ast_node parse,
+            std::vector<std::u32string> name,
+            module_type * typr,
+            std::vector<std::unique_ptr<statement>> stmts);
 
         std::u32string name() const
         {
@@ -111,6 +114,8 @@ inline namespace _v1
 {
     struct precontext;
 
-    std::unique_ptr<module> preanalyze_module(precontext & ctx, const parser::module & parse, scope * lex_scope);
+    std::unique_ptr<module> preanalyze_module(precontext & ctx,
+        const parser::module & parse,
+        scope * lex_scope);
 }
 }

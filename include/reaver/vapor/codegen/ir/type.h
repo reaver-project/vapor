@@ -50,8 +50,14 @@ inline namespace _v1
 
         struct variable_type
         {
-            variable_type(std::u32string name = {}, std::vector<scope> scopes = {}, std::size_t size = {}, std::vector<member> members = {})
-                : name{ std::move(name) }, scopes{ std::move(scopes) }, size{ size }, members{ std::move(members) }
+            variable_type(std::u32string name = {},
+                std::vector<scope> scopes = {},
+                std::size_t size = {},
+                std::vector<member> members = {})
+                : name{ std::move(name) },
+                  scopes{ std::move(scopes) },
+                  size{ size },
+                  members{ std::move(members) }
             {
             }
 
@@ -85,7 +91,8 @@ inline namespace _v1
                     auto & type = types[size];
                     if (!type)
                     {
-                        auto sized_type = std::make_shared<sized_integer_type>(U"sized_integer_" + utf32(std::to_string(size)));
+                        auto sized_type = std::make_shared<sized_integer_type>(
+                            U"sized_integer_" + utf32(std::to_string(size)));
                         sized_type->integer_size = size;
                         type = sized_type;
                     }

@@ -48,7 +48,10 @@ inline namespace _v1
             auto && params = tc_scope->parent()->symbols_in_order();
 
             assert(arguments.size() == params.size());
-            assert(std::equal(arguments.begin(), arguments.end(), params.begin(), [](auto && lhs, auto && rhs) { return lhs->get_type() == rhs->get_type(); }));
+            assert(
+                std::equal(arguments.begin(), arguments.end(), params.begin(), [](auto && lhs, auto && rhs) {
+                    return lhs->get_type() == rhs->get_type();
+                }));
 
             for (std::size_t i = 0; i < arguments.size(); ++i)
             {
@@ -78,6 +81,7 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    using function_definition_handler = reaver::unique_function<void(precontext & ctx, const parser::function_definition &)>;
+    using function_definition_handler =
+        reaver::unique_function<void(precontext & ctx, const parser::function_definition &)>;
 }
 }

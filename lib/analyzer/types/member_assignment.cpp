@@ -58,7 +58,8 @@ inline namespace _v1
             return make_ready_future();
         });
         overload->set_eval([this](auto &&...) -> future<expression *> {
-            assert(0); // need to pass this in a way that conveys the information that this isn't the owner of it
+            assert(
+                0); // need to pass this in a way that conveys the information that this isn't the owner of it
             // (or a way to make it the owner of it, which I guess should be doable since this is eval)
             // return make_ready_future(make_variable_ref_expression(_var).release());
         });

@@ -45,14 +45,18 @@ inline namespace _v1
     class call_expression;
 
     using function_codegen = reaver::unique_function<codegen::ir::function(ir_generation_context &) const>;
-    using function_hook = reaver::unique_function<reaver::future<>(analysis_context &, call_expression *, std::vector<expression *>)>;
-    using function_eval = reaver::unique_function<future<expression *>(recursive_context, std::vector<expression *>)>;
-    using scopes_generator = reaver::unique_function<std::vector<codegen::ir::scope>(ir_generation_context &) const>;
+    using function_hook = reaver::unique_function<
+        reaver::future<>(analysis_context &, call_expression *, std::vector<expression *>)>;
+    using function_eval =
+        reaver::unique_function<future<expression *>(recursive_context, std::vector<expression *>)>;
+    using scopes_generator =
+        reaver::unique_function<std::vector<codegen::ir::scope>(ir_generation_context &) const>;
 
     class function
     {
     public:
-        function(std::string explanation, std::optional<range_type> range = std::nullopt) : _explanation{ std::move(explanation) }, _range{ std::move(range) }
+        function(std::string explanation, std::optional<range_type> range = std::nullopt)
+            : _explanation{ std::move(explanation) }, _range{ std::move(range) }
         {
             auto pair = make_promise<expression *>();
             _return_type_promise = std::move(pair.promise);
@@ -163,7 +167,9 @@ inline namespace _v1
             _analysis_hooks.push_back(std::move(hook));
         }
 
-        future<> run_analysis_hooks(analysis_context & ctx, call_expression * expr, std::vector<expression *> args);
+        future<> run_analysis_hooks(analysis_context & ctx,
+            call_expression * expr,
+            std::vector<expression *> args);
 
         void set_eval(function_eval eval)
         {
@@ -227,7 +233,8 @@ inline namespace _v1
         expression * _entry_expr = nullptr;
     };
 
-    inline std::unique_ptr<function> make_function(std::string expl, std::optional<range_type> range = std::nullopt)
+    inline std::unique_ptr<function> make_function(std::string expl,
+        std::optional<range_type> range = std::nullopt)
     {
         return std::make_unique<function>(std::move(expl), std::move(range));
     }

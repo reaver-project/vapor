@@ -99,15 +99,17 @@ options_result get_options(int argc, char ** argv)
     // clang-format on
 
     boost::program_options::variables_map variables;
-    boost::program_options::store(
-        boost::program_options::command_line_parser(argc, argv)
-            .options(options)
-            .positional(positional)
-            .style(boost::program_options::command_line_style::allow_short | boost::program_options::command_line_style::allow_long
-                | boost::program_options::command_line_style::allow_sticky | boost::program_options::command_line_style::allow_dash_for_short
-                | boost::program_options::command_line_style::long_allow_next | boost::program_options::command_line_style::short_allow_next
-                | boost::program_options::command_line_style::allow_long_disguise)
-            .run(),
+    boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
+                                      .options(options)
+                                      .positional(positional)
+                                      .style(boost::program_options::command_line_style::allow_short
+                                          | boost::program_options::command_line_style::allow_long
+                                          | boost::program_options::command_line_style::allow_sticky
+                                          | boost::program_options::command_line_style::allow_dash_for_short
+                                          | boost::program_options::command_line_style::long_allow_next
+                                          | boost::program_options::command_line_style::short_allow_next
+                                          | boost::program_options::command_line_style::allow_long_disguise)
+                                      .run(),
         variables);
     boost::program_options::notify(variables);
 
@@ -134,7 +136,8 @@ options_result get_options(int argc, char ** argv)
         throw exception{ logger::error } << "no source files provided!";
     }
 
-    auto compilation_mode = (variables.count("i") << 0) | (variables.count("s") << 1) | (variables.count("c") << 2);
+    auto compilation_mode =
+        (variables.count("i") << 0) | (variables.count("s") << 1) | (variables.count("c") << 2);
     switch (compilation_mode)
     {
         case config::compilation_modes::llvm_ir:
@@ -148,7 +151,8 @@ options_result get_options(int argc, char ** argv)
             break;
 
         default:
-            throw exception{ logger::error } << "multiple compilation modes selected; choose at most one of -i, -s and -o.";
+            throw exception{ logger::error }
+                << "multiple compilation modes selected; choose at most one of -i, -s and -o.";
     }
 
     ret->set_compilation_handler([& ctx = *ret, vprc = argv[0]](const boost::filesystem::path & path) {
@@ -158,12 +162,12 @@ options_result get_options(int argc, char ** argv)
         argv.push_back("-c");
         argv.push_back(path.string());
 
-#define HANDLE_DIR(name, flag)                                                                                                                                 \
-    auto name##_variable_from_macro = ctx.name##_dir();                                                                                                        \
-    if (name##_variable_from_macro)                                                                                                                            \
-    {                                                                                                                                                          \
-        argv.push_back(flag);                                                                                                                                  \
-        argv.push_back(name##_variable_from_macro.value().string());                                                                                           \
+#define HANDLE_DIR(name, flag)                                                                               \
+    auto name##_variable_from_macro = ctx.name##_dir();                                                      \
+    if (name##_variable_from_macro)                                                                          \
+    {                                                                                                        \
+        argv.push_back(flag);                                                                                \
+        argv.push_back(name##_variable_from_macro.value().string());                                         \
     }
 
         HANDLE_DIR(module, "--mdir");

@@ -41,7 +41,8 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    bool user_defined_reference_compare::operator()(const proto::user_defined_reference * lhs, const proto::user_defined_reference * rhs) const
+    bool user_defined_reference_compare::operator()(const proto::user_defined_reference * lhs,
+        const proto::user_defined_reference * rhs) const
     {
         return google::protobuf::util::MessageDifferencer::Equals(*lhs, *rhs);
     }
@@ -76,34 +77,39 @@ inline namespace _v1
         {
             auto go_one_level = [&ctx](scope * lex_scope, const std::string & name) {
                 auto symb = lex_scope->try_get(utf32(name));
-                assert(symb && "currently, using unexported types in exported signatures is not allowed; this will change in the future");
+                assert(symb
+                    && "currently, using unexported types in exported signatures is not allowed; this will "
+                       "change in the future");
                 auto expr = symb.value()->get_expression();
                 return expr->analyze(ctx).then([expr] { return expr->get_type()->get_scope(); });
             };
 
             auto kinds = { &_reference->module(), &_reference->scope() };
-            _analysis_future =
-                std::accumulate(kinds.begin(),
-                    kinds.end(),
-                    make_ready_future(_lex_scope),
-                    [&, go_one_level](auto future, auto && kind) {
-                        return std::accumulate(kind->begin(), kind->end(), future, [go_one_level](auto future, const auto & name) {
+            _analysis_future = std::accumulate(kinds.begin(),
+                kinds.end(),
+                make_ready_future(_lex_scope),
+                [&, go_one_level](auto future, auto && kind) {
+                    return std::accumulate(
+                        kind->begin(), kind->end(), future, [go_one_level](auto future, const auto & name) {
                             logger::dlog() << name;
                             logger::default_logger().sync();
-                            return future.then([&name, go_one_level](auto scope) { return go_one_level(scope, name); });
+                            return future.then(
+                                [&name, go_one_level](auto scope) { return go_one_level(scope, name); });
                         });
-                    })
-                    .then([&ctx, this](scope * lex_scope) {
-                        auto symb = lex_scope->try_get(utf32(_reference->name()));
-                        assert(symb && "currently, using unexported types in exported signatures is not allowed; this will change in the future");
+                })
+                                   .then([&ctx, this](scope * lex_scope) {
+                                       auto symb = lex_scope->try_get(utf32(_reference->name()));
+                                       assert(symb
+                                           && "currently, using unexported types in exported signatures is "
+                                              "not allowed; this will change in the future");
 
-                        auto expr = symb.value()->get_expression();
-                        return expr->analyze(ctx).then([expr, this] {
-                            auto type_expr = expr->as<type_expression>();
-                            assert(type_expr);
-                            _resolved = type_expr->get_value();
-                        });
-                    });
+                                       auto expr = symb.value()->get_expression();
+                                       return expr->analyze(ctx).then([expr, this] {
+                                           auto type_expr = expr->as<type_expression>();
+                                           assert(type_expr);
+                                           _resolved = type_expr->get_value();
+                                       });
+                                   });
         }
 
         return _analysis_future.value();
@@ -123,7 +129,8 @@ inline namespace _v1
 
             case proto::type::DetailsCase::kStruct:
             {
-                auto ret = std::make_unique<struct_literal>(ast_node{}, import_struct_type(ctx, type.struct_()));
+                auto ret =
+                    std::make_unique<struct_literal>(ast_node{}, import_struct_type(ctx, type.struct_()));
                 ret->set_name(utf32(ctx.current_symbol));
                 return ret;
             }
@@ -173,13 +180,15 @@ inline namespace _v1
         }
     }
 
-    std::unique_ptr<expression> get_imported_type_ref_expr(precontext & ctx, const proto::type_reference & reference)
+    std::unique_ptr<expression> get_imported_type_ref_expr(precontext & ctx,
+        const proto::type_reference & reference)
     {
         switch (reference.details_case())
         {
             case proto::type_reference::DetailsCase::kBuiltin:
             case proto::type_reference::DetailsCase::kSizedInt:
-                return make_expression_ref(std::get<0>(get_imported_type_ref(ctx, reference))->get_expression(), std::nullopt);
+                return make_expression_ref(
+                    std::get<0>(get_imported_type_ref(ctx, reference))->get_expression(), std::nullopt);
 
             case proto::type_reference::DetailsCase::kUserDefined:
                 return std::get<1>(get_imported_type_ref(ctx, reference))->get_expression();

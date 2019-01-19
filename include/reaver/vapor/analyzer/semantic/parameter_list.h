@@ -74,17 +74,19 @@ inline namespace _v1
 
         virtual future<expression *> _simplify_expr(recursive_context ctx) override
         {
-            return _type_expression->simplify_expr(ctx).then([&ctx = ctx.proper, this](auto && simpl)->expression * {
-                replace_uptr(_type_expression, simpl, ctx);
-                return this;
-            });
+            return _type_expression->simplify_expr(ctx).then(
+                [&ctx = ctx.proper, this](auto && simpl) -> expression * {
+                    replace_uptr(_type_expression, simpl, ctx);
+                    return this;
+                });
         }
 
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
             if (_template_params)
             {
-                return std::make_unique<parameter>(get_ast_info().value(), _name, repl.claim(_type_expression.get()));
+                return std::make_unique<parameter>(
+                    get_ast_info().value(), _name, repl.claim(_type_expression.get()));
             }
 
             return make_expression_ref(const_cast<parameter *>(this), get_ast_info());
@@ -94,8 +96,11 @@ inline namespace _v1
         {
             auto var = codegen::ir::make_variable(get_type()->codegen_type(ctx));
             var->parameter = true;
-            return { codegen::ir::instruction{
-                std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::materialization_instruction>() }, {}, { std::move(var) } } };
+            return { codegen::ir::instruction{ std::nullopt,
+                std::nullopt,
+                { boost::typeindex::type_id<codegen::ir::materialization_instruction>() },
+                {},
+                { std::move(var) } } };
         }
 
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override

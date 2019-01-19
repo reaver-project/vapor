@@ -132,7 +132,8 @@ inline namespace _v1
 
     inline std::unique_ptr<entity> make_entity(imported_type imported)
     {
-        return std::get<0>(fmap(imported, [](auto && imported) { return std::make_unique<entity>(std::move(imported)); }));
+        return std::get<0>(
+            fmap(imported, [](auto && imported) { return std::make_unique<entity>(std::move(imported)); }));
     }
 
     inline std::unique_ptr<entity> make_entity(std::unique_ptr<type> owned)
@@ -140,6 +141,8 @@ inline namespace _v1
         return std::make_unique<entity>(std::move(owned));
     }
 
-    std::unique_ptr<entity> get_entity(precontext &, const proto::entity &, const std::map<std::string, const proto::entity *> & associated = {});
+    std::unique_ptr<entity> get_entity(precontext &,
+        const proto::entity &,
+        const std::map<std::string, const proto::entity *> & associated = {});
 }
 }

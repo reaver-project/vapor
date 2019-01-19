@@ -48,7 +48,9 @@ inline namespace _v1
         {
             if (mode != statement_mode::module)
             {
-                throw expectation_failure{ "a non-exported statement", U"exported declaration", ctx.begin->range };
+                throw expectation_failure{
+                    "a non-exported statement", U"exported declaration", ctx.begin->range
+                };
             }
 
             export_ = true;
@@ -78,7 +80,8 @@ inline namespace _v1
                             return unit{};
                         },
                         [&](function_declaration & func) {
-                            assert("function declaration not allowed in the context; TODO: make this a sensible error");
+                            assert("function declaration not allowed in the context; TODO: make this a "
+                                   "sensible error");
                             return unit{};
                         }));
 
@@ -99,13 +102,17 @@ inline namespace _v1
             }
 
             case lexer::token_type::let:
-                ret.statement_value = parse_declaration(ctx, mode == statement_mode::module ? declaration_mode::module_scope : declaration_mode::variable);
+                ret.statement_value = parse_declaration(ctx,
+                    mode == statement_mode::module ? declaration_mode::module_scope
+                                                   : declaration_mode::variable);
                 break;
 
             case lexer::token_type::return_:
                 if (export_)
                 {
-                    throw expectation_failure{ "exported-declaration", U"return-statement", ctx.begin->range };
+                    throw expectation_failure{
+                        "exported-declaration", U"return-statement", ctx.begin->range
+                    };
                 }
 
                 ret.statement_value = parse_return_expression(ctx);
@@ -122,7 +129,9 @@ inline namespace _v1
             case lexer::token_type::default_:
                 if (export_)
                 {
-                    throw expectation_failure{ "exported-declaration", U"default-instance", ctx.begin->range };
+                    throw expectation_failure{
+                        "exported-declaration", U"default-instance", ctx.begin->range
+                    };
                 }
 
                 ret.statement_value = parse_default_instance(ctx);

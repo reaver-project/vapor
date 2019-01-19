@@ -129,6 +129,8 @@ inline namespace _v1
 {
     struct precontext;
 
-    std::unique_ptr<postfix_expression> preanalyze_postfix_expression(precontext & ctx, const parser::postfix_expression & parse, scope * lex_scope);
+    std::unique_ptr<postfix_expression> preanalyze_postfix_expression(precontext & ctx,
+        const parser::postfix_expression & parse,
+        scope * lex_scope);
 }
 }

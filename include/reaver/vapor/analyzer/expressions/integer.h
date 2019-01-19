@@ -36,7 +36,8 @@ inline namespace _v1
     class integer_constant : public expression
     {
     public:
-        integer_constant(boost::multiprecision::cpp_int value, ast_node parse = {}) : expression{ builtin_types().integer.get() }, _value{ std::move(value) }
+        integer_constant(boost::multiprecision::cpp_int value, ast_node parse = {})
+            : expression{ builtin_types().integer.get() }, _value{ std::move(value) }
         {
             _set_ast_info(parse);
         }
@@ -94,7 +95,8 @@ inline namespace _v1
 
     inline std::unique_ptr<integer_constant> make_integer_constant(const parser::integer_literal & parse)
     {
-        return std::make_unique<integer_constant>(boost::multiprecision::cpp_int{ utf8(parse.value.string) }, make_node(parse));
+        return std::make_unique<integer_constant>(
+            boost::multiprecision::cpp_int{ utf8(parse.value.string) }, make_node(parse));
     }
 }
 }

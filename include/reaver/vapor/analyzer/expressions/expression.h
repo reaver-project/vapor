@@ -93,7 +93,8 @@ inline namespace _v1
     public:
         future<expression *> simplify_expr(recursive_context ctx)
         {
-            return ctx.proper.get_future_or_init(this, [&]() { return make_ready_future().then([this, ctx]() { return _simplify_expr(ctx); }); });
+            return ctx.proper.get_future_or_init(this,
+                [&]() { return make_ready_future().then([this, ctx]() { return _simplify_expr(ctx); }); });
         }
 
         void set_context(expression_context ctx)
@@ -140,7 +141,8 @@ inline namespace _v1
             auto rhs_replacement = rhs->_get_replacement();
             if (this != this_replacement || rhs != rhs_replacement)
             {
-                return this_replacement->_is_equal(rhs_replacement) || rhs_replacement->_is_equal(this_replacement);
+                return this_replacement->_is_equal(rhs_replacement)
+                    || rhs_replacement->_is_equal(this_replacement);
             }
 
             return false;
@@ -329,6 +331,8 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     struct precontext;
-    std::unique_ptr<expression> preanalyze_expression(precontext & ctx, const parser::expression & expr, scope * lex_scope);
+    std::unique_ptr<expression> preanalyze_expression(precontext & ctx,
+        const parser::expression & expr,
+        scope * lex_scope);
 }
 }

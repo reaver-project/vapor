@@ -68,7 +68,8 @@ inline namespace _v1
     class typeclass_instance_expression : public type_expression
     {
     public:
-        typeclass_instance_expression(typeclass_instance * instance) : type_expression(instance), _instance(instance)
+        typeclass_instance_expression(typeclass_instance * instance)
+            : type_expression(instance), _instance(instance)
         {
         }
 
@@ -76,7 +77,8 @@ inline namespace _v1
         typeclass_instance * _instance;
     };
 
-    inline std::unique_ptr<typeclass_instance_expression> make_typeclass_instance_expression(typeclass_instance * instance)
+    inline std::unique_ptr<typeclass_instance_expression> make_typeclass_instance_expression(
+        typeclass_instance * instance)
     {
         return std::make_unique<typeclass_instance_expression>(instance);
     }
@@ -95,6 +97,8 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<instance_literal> preanalyze_instance_literal(precontext & ctx, const parser::instance_literal & tpl, scope * lex_scope);
+    std::unique_ptr<instance_literal> preanalyze_instance_literal(precontext & ctx,
+        const parser::instance_literal & tpl,
+        scope * lex_scope);
 }
 }

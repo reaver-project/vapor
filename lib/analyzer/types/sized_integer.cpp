@@ -61,7 +61,10 @@ inline namespace _v1
     }
 
     template<typename Instruction, typename Eval>
-    auto sized_integer::_generate_function(std::u32string name, std::string desc, Eval eval, type * return_type)
+    auto sized_integer::_generate_function(std::u32string name,
+        std::string desc,
+        Eval eval,
+        type * return_type)
     {
         auto lhs = make_runtime_value(this);
         auto rhs = make_runtime_value(this);
@@ -75,7 +78,8 @@ inline namespace _v1
         fun->set_parameters({ lhs_arg, rhs_arg });
         fun->set_eval(eval);
         fun->mark_builtin();
-        fun->set_codegen([name = std::move(name), return_type, lhs = std::move(lhs), rhs = std::move(rhs)](ir_generation_context & ctx) {
+        fun->set_codegen([name = std::move(name), return_type, lhs = std::move(lhs), rhs = std::move(rhs)](
+                             ir_generation_context & ctx) {
             auto lhs_ir = get_ir_variable(lhs->codegen_ir(ctx));
             auto rhs_ir = get_ir_variable(rhs->codegen_ir(ctx));
 
@@ -85,45 +89,82 @@ inline namespace _v1
                 {},
                 { lhs_ir, rhs_ir },
                 retval,
-                { codegen::ir::instruction{ std::nullopt, std::nullopt, { boost::typeindex::type_id<Instruction>() }, { lhs_ir, rhs_ir }, retval },
-                    codegen::ir::instruction{ std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, {}, retval } } };
+                { codegen::ir::instruction{ std::nullopt,
+                      std::nullopt,
+                      { boost::typeindex::type_id<Instruction>() },
+                      { lhs_ir, rhs_ir },
+                      retval },
+                    codegen::ir::instruction{ std::nullopt,
+                        std::nullopt,
+                        { boost::typeindex::type_id<codegen::ir::return_instruction>() },
+                        {},
+                        retval } } };
         });
         return fun;
     }
 
 #define EXPAND(...) __VA_ARGS__
 
-#define ADD_OPERATION(NAME, BUILTIN_NAME, OPERATOR, RESULT_TYPE, CONSTANT_TYPE, ADDITIONAL_ARG)                                                                \
-    {                                                                                                                                                          \
-        auto eval = [=](auto &&, const std::vector<expression *> & args) {                                                                                     \
-            assert(args.size() == 2);                                                                                                                          \
-            assert(args[0]->get_type() == this);                                                                                                               \
-            assert(args[1]->get_type() == this);                                                                                                               \
-                                                                                                                                                               \
-            if (!args[0]->is_constant() || !args[1]->is_constant())                                                                                            \
-            {                                                                                                                                                  \
-                return make_ready_future<expression *>(nullptr);                                                                                               \
-            }                                                                                                                                                  \
-                                                                                                                                                               \
-            auto lhs = args[0]->as<sized_integer_constant>();                                                                                                  \
-            auto rhs = args[1]->as<sized_integer_constant>();                                                                                                  \
-            return make_ready_future<expression *>(                                                                                                            \
-                std::make_unique<CONSTANT_TYPE##_constant>(EXPAND ADDITIONAL_ARG lhs->get_value() OPERATOR rhs->get_value()).release());                       \
-        };                                                                                                                                                     \
-        _##NAME = _generate_function<codegen::ir::integer_##NAME##_instruction>(                                                                               \
-            BUILTIN_NAME, "<builtin sized_integer(" + std::to_string(_size) + ") " #NAME ">", eval, RESULT_TYPE);                                              \
+#define ADD_OPERATION(NAME, BUILTIN_NAME, OPERATOR, RESULT_TYPE, CONSTANT_TYPE, ADDITIONAL_ARG)              \
+    {                                                                                                        \
+        auto eval = [=](auto &&, const std::vector<expression *> & args) {                                   \
+            assert(args.size() == 2);                                                                        \
+            assert(args[0]->get_type() == this);                                                             \
+            assert(args[1]->get_type() == this);                                                             \
+                                                                                                             \
+            if (!args[0]->is_constant() || !args[1]->is_constant())                                          \
+            {                                                                                                \
+                return make_ready_future<expression *>(nullptr);                                             \
+            }                                                                                                \
+                                                                                                             \
+            auto lhs = args[0]->as<sized_integer_constant>();                                                \
+            auto rhs = args[1]->as<sized_integer_constant>();                                                \
+            return make_ready_future<expression *>(std::make_unique<CONSTANT_TYPE##_constant>(               \
+                EXPAND ADDITIONAL_ARG lhs->get_value() OPERATOR rhs->get_value())                            \
+                                                       .release());                                          \
+        };                                                                                                   \
+        _##NAME = _generate_function<codegen::ir::integer_##NAME##_instruction>(BUILTIN_NAME,                \
+            "<builtin sized_integer(" + std::to_string(_size) + ") " #NAME ">",                              \
+            eval,                                                                                            \
+            RESULT_TYPE);                                                                                    \
     }
 
     sized_integer::sized_integer(std::size_t size) : _size{ size }
     {
         auto u32size = utf32(std::to_string(size));
 
-        ADD_OPERATION(addition, U"__builtin_sized_integer_" + u32size + U"_operator_plus", +, this, sized_integer, (this, ));
-        ADD_OPERATION(subtraction, U"__builtin_sized_integer_" + u32size + U"_operator_minus", -, this, sized_integer, (this, ));
-        ADD_OPERATION(multiplication, U"__builtin_sized_integer_" + u32size + U"_operator_star", *, this, sized_integer, (this, ));
-        ADD_OPERATION(equal_comparison, U"__builtin_sized_integer_" + u32size + U"_operator_equals", ==, builtin_types().boolean.get(), boolean, ());
-        ADD_OPERATION(less_comparison, U"__builtin_sized_integer_" + u32size + U"_operator_less", <, builtin_types().boolean.get(), boolean, ());
-        ADD_OPERATION(less_equal_comparison, U"__builtin_sized_" + u32size + U"_integer_operator_less_equal", <, builtin_types().boolean.get(), boolean, ());
+        ADD_OPERATION(addition,
+            U"__builtin_sized_integer_" + u32size + U"_operator_plus",
+            +,
+            this,
+            sized_integer,
+            (this, ));
+        ADD_OPERATION(subtraction,
+            U"__builtin_sized_integer_" + u32size + U"_operator_minus",
+            -,
+            this,
+            sized_integer,
+            (this, ));
+        ADD_OPERATION(
+            multiplication, U"__builtin_sized_integer_" + u32size + U"_operator_star", *, this, sized_integer, (this, ));
+        ADD_OPERATION(equal_comparison,
+            U"__builtin_sized_integer_" + u32size + U"_operator_equals",
+            ==,
+            builtin_types().boolean.get(),
+            boolean,
+            ());
+        ADD_OPERATION(less_comparison,
+            U"__builtin_sized_integer_" + u32size + U"_operator_less",
+            <,
+            builtin_types().boolean.get(),
+            boolean,
+            ());
+        ADD_OPERATION(less_equal_comparison,
+            U"__builtin_sized_" + u32size + U"_integer_operator_less_equal",
+            <,
+            builtin_types().boolean.get(),
+            boolean,
+            ());
 
         _max_value = (boost::multiprecision::cpp_int(1) << _size) - 1;
         _min_value = -_max_value - 1;

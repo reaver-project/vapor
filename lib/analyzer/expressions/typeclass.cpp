@@ -30,7 +30,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<typeclass_literal> preanalyze_typeclass_literal(precontext & ctx, const parser::typeclass_literal & parse, scope * lex_scope)
+    std::unique_ptr<typeclass_literal> preanalyze_typeclass_literal(precontext & ctx,
+        const parser::typeclass_literal & parse,
+        scope * lex_scope)
     {
         return std::make_unique<typeclass_literal>(make_node(parse), make_typeclass(ctx, parse, lex_scope));
     }
@@ -61,7 +63,8 @@ inline namespace _v1
             std::size_t idx = 0;
             for (auto && member : _instance_template->get_member_function_decls())
             {
-                member->print(os, decl_ctx.make_branch(++idx == _instance_template->get_member_function_decls().size()));
+                member->print(os,
+                    decl_ctx.make_branch(++idx == _instance_template->get_member_function_decls().size()));
             }
         }
     }
@@ -91,7 +94,8 @@ inline namespace _v1
         assert(0);
     }
 
-    typeclass_literal_instance::typeclass_literal_instance(typeclass * tc, std::vector<expression *> arguments)
+    typeclass_literal_instance::typeclass_literal_instance(typeclass * tc,
+        std::vector<expression *> arguments)
         : _instance_type{ std::make_unique<typeclass_instance_type>(tc, std::move(arguments)) }
     {
     }

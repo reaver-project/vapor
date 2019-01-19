@@ -39,12 +39,15 @@ inline namespace _v1
     class expectation_failure : public exception
     {
     public:
-        expectation_failure(lexer::token_type expected, const std::u32string & actual, range_type & r) : exception{ logger::fatal }
+        expectation_failure(lexer::token_type expected, const std::u32string & actual, range_type & r)
+            : exception{ logger::fatal }
         {
-            *this << r << ": expected `" << lexer::token_types[+expected] << "`, got `" << utf8(actual) << "`";
+            *this << r << ": expected `" << lexer::token_types[+expected] << "`, got `" << utf8(actual)
+                  << "`";
         }
 
-        expectation_failure(const std::string & str, const std::u32string & actual, range_type & r) : exception{ logger::fatal }
+        expectation_failure(const std::string & str, const std::u32string & actual, range_type & r)
+            : exception{ logger::fatal }
         {
             *this << r << ": expected " << str << ", got `" << utf8(actual) << "`";
         }

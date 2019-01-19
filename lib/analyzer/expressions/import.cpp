@@ -42,7 +42,10 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     template<typename Iter>
-    std::optional<boost::filesystem::path> find_module(const boost::filesystem::path & module_path, Iter begin, Iter & end, bool source_only = false)
+    std::optional<boost::filesystem::path> find_module(const boost::filesystem::path & module_path,
+        Iter begin,
+        Iter & end,
+        bool source_only = false)
     {
         auto actual_path = std::accumulate(begin, end, module_path, std::divides<>());
 
@@ -66,7 +69,8 @@ inline namespace _v1
             assert(!"found a module directory, but no master module file inside...");
         }
 
-        // if there is a non-directory compiled module that matches and we are interested in more than sources...
+        // if there is a non-directory compiled module that matches and we are interested in more than
+        // sources...
         if (!source_only && boost::filesystem::is_regular_file(actual_path.replace_extension(".vprm")))
         {
             return std::make_optional(actual_path);
@@ -87,7 +91,9 @@ inline namespace _v1
         return std::nullopt;
     }
 
-    std::optional<boost::filesystem::path> find_module(precontext & ctx, const std::vector<std::string> & module_name, bool source_only = false)
+    std::optional<boost::filesystem::path> find_module(precontext & ctx,
+        const std::vector<std::string> & module_name,
+        bool source_only = false)
     {
         for (auto module_path : ctx.options.module_paths())
         {
@@ -104,7 +110,9 @@ inline namespace _v1
 
     entity * import_module(precontext & ctx, const std::vector<std::string> & module_name);
 
-    void import_from_ast(precontext & ctx, const boost::filesystem::path & path, const std::vector<std::string> & module_name)
+    void import_from_ast(precontext & ctx,
+        const boost::filesystem::path & path,
+        const std::vector<std::string> & module_name)
     {
         std::ifstream interface_file{ path.string() };
         if (!interface_file)
@@ -117,16 +125,19 @@ inline namespace _v1
 
         if (!ast->ParseFromIstream(&interface_file))
         {
-            throw exception{ logger::fatal } << "couldn't parse the serialized ast from the module interface file " << path;
+            throw exception{ logger::fatal }
+                << "couldn't parse the serialized ast from the module interface file " << path;
         }
         if (!ast->has_compilation_info() || ast->modules_size() == 0)
         {
-            throw exception{ logger::fatal } << "no valid serialized ast in the module interface file " << path;
+            throw exception{ logger::fatal } << "no valid serialized ast in the module interface file "
+                                             << path;
         }
 
         if (auto source_path = find_module(ctx, module_name, true))
         {
-            if (static_cast<std::int64_t>(boost::filesystem::last_write_time(source_path.value())) > ast->compilation_info().time())
+            if (static_cast<std::int64_t>(boost::filesystem::last_write_time(source_path.value()))
+                > ast->compilation_info().time())
             {
                 boost::iostreams::mapped_file_source source{ source_path->string() };
                 auto sha256sum = sha256(source.data(), source.size());
@@ -153,9 +164,11 @@ inline namespace _v1
             ctx.current_scope.push(name);
 
             if (static_cast<std::size_t>(module.name_size()) < module_name.size()
-                || std::mismatch(module_name.begin(), module_name.end(), module.name().begin()).first != module_name.end())
+                || std::mismatch(module_name.begin(), module_name.end(), module.name().begin()).first
+                    != module_name.end())
             {
-                throw exception{ logger::error } << "invalid module name `" << name << "` in module file " << ctx.current_file.top();
+                throw exception{ logger::error } << "invalid module name `" << name << "` in module file "
+                                                 << ctx.current_file.top();
             }
 
             std::string cumulative_name;
@@ -207,7 +220,9 @@ inline namespace _v1
             {
                 symbols.emplace_back(&entity.first, &entity.second);
             }
-            std::sort(symbols.begin(), symbols.end(), [](auto && lhs, auto && rhs) { return *lhs.first < *rhs.first; });
+            std::sort(symbols.begin(), symbols.end(), [](auto && lhs, auto && rhs) {
+                return *lhs.first < *rhs.first;
+            });
 
             for (auto && imported_entity : symbols)
             {
@@ -279,15 +294,20 @@ inline namespace _v1
             assert(!"some weird unknown extension found by find_module!");
         }
 
-        throw exception{ logger::error } << "couldn't find module `" << boost::algorithm::join(module_name, ".") << "`";
+        throw exception{ logger::error } << "couldn't find module `"
+                                         << boost::algorithm::join(module_name, ".") << "`";
     }
 
-    std::unique_ptr<import_expression> preanalyze_import(precontext & ctx, const parser::import_expression & parse, scope * lex_scope, import_mode mode)
+    std::unique_ptr<import_expression> preanalyze_import(precontext & ctx,
+        const parser::import_expression & parse,
+        scope * lex_scope,
+        import_mode mode)
     {
         auto expr = std::get<0>(fmap(parse.module_name,
             make_overload_set(
                 [&](const parser::id_expression & expr) {
-                    auto module = fmap(expr.id_expression_value, [](auto && id) { return utf8(id.value.string); });
+                    auto module =
+                        fmap(expr.id_expression_value, [](auto && id) { return utf8(id.value.string); });
                     auto ent = import_module(ctx, module);
                     assert(ent);
 

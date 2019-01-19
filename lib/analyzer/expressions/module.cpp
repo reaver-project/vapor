@@ -36,7 +36,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<module> preanalyze_module(precontext & ctx, const parser::module & parse, scope * lex_scope)
+    std::unique_ptr<module> preanalyze_module(precontext & ctx,
+        const parser::module & parse,
+        scope * lex_scope)
     {
         std::string cumulative_name;
         module_type * type = nullptr;
@@ -83,40 +85,52 @@ inline namespace _v1
         return std::make_unique<module>(make_node(parse), std::move(name), type, std::move(statements));
     }
 
-    module::module(ast_node parse, std::vector<std::u32string> name, module_type * type, std::vector<std::unique_ptr<statement>> stmts)
-        : expression{ type }, _parse{ parse }, _type{ type }, _name{ std::move(name) }, _statements{ std::move(stmts) }
+    module::module(ast_node parse,
+        std::vector<std::u32string> name,
+        module_type * type,
+        std::vector<std::unique_ptr<statement>> stmts)
+        : expression{ type },
+          _parse{ parse },
+          _type{ type },
+          _name{ std::move(name) },
+          _statements{ std::move(stmts) }
     {
     }
 
     future<> module::_analyze(analysis_context & ctx)
     {
-        return when_all(fmap(_statements, [&](auto && stmt) { return stmt->analyze(ctx); })).then([this, &ctx] {
-            if (name() == U"main")
-            {
-                // set entry(int32) as the entry point
-                if (auto entry = _type->get_scope()->try_get(U"entry"))
+        return when_all(fmap(_statements, [&](auto && stmt) { return stmt->analyze(ctx); }))
+            .then([this, &ctx] {
+                if (name() == U"main")
                 {
-                    auto type = entry.value()->get_type();
-                    return type->get_candidates(lexer::token_type::round_bracket_open).then([&ctx, expr = entry.value()->get_expression()](auto && overloads) {
-                        // maybe this can be relaxed in the future?
-                        assert(overloads.size() == 1);
-                        assert(overloads[0]->parameters().size() == 1);
-                        assert(overloads[0]->parameters()[0]->get_type() == ctx.get_sized_integer_type(32));
+                    // set entry(int32) as the entry point
+                    if (auto entry = _type->get_scope()->try_get(U"entry"))
+                    {
+                        auto type = entry.value()->get_type();
+                        return type->get_candidates(lexer::token_type::round_bracket_open)
+                            .then([&ctx, expr = entry.value()->get_expression()](auto && overloads) {
+                                // maybe this can be relaxed in the future?
+                                assert(overloads.size() == 1);
+                                assert(overloads[0]->parameters().size() == 1);
+                                assert(overloads[0]->parameters()[0]->get_type()
+                                    == ctx.get_sized_integer_type(32));
 
-                        overloads[0]->mark_as_entry(ctx, expr);
-                    });
+                                overloads[0]->mark_as_entry(ctx, expr);
+                            });
+                    }
                 }
-            }
 
-            return make_ready_future();
-        });
+                return make_ready_future();
+            });
     }
 
     future<expression *> module::_simplify_expr(recursive_context ctx)
     {
         return when_all(fmap(_statements,
                             [&](auto && stmt) {
-                                return stmt->simplify(ctx).then([&ctx = ctx.proper, &stmt](auto && simplified) { replace_uptr(stmt, simplified, ctx); });
+                                return stmt->simplify(ctx).then(
+                                    [&ctx = ctx.proper, &stmt](
+                                        auto && simplified) { replace_uptr(stmt, simplified, ctx); });
                             }))
             .then([this]() -> expression * { return this; });
     }

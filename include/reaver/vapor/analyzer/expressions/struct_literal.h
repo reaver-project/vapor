@@ -88,6 +88,8 @@ inline namespace _v1
 {
     struct precontext;
 
-    std::unique_ptr<struct_literal> preanalyze_struct_literal(precontext & ctx, const parser::struct_literal & parse, scope * lex_scope);
+    std::unique_ptr<struct_literal> preanalyze_struct_literal(precontext & ctx,
+        const parser::struct_literal & parse,
+        scope * lex_scope);
 }
 }

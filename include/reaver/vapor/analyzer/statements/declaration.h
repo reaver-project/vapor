@@ -107,7 +107,11 @@ inline namespace _v1
 {
     struct precontext;
 
-    std::unique_ptr<declaration> preanalyze_declaration(precontext & ctx, const parser::declaration & parse, scope *& lex_scope);
-    std::unique_ptr<declaration> preanalyze_member_declaration(precontext & ctx, const parser::declaration & parse, scope * lex_scope);
+    std::unique_ptr<declaration> preanalyze_declaration(precontext & ctx,
+        const parser::declaration & parse,
+        scope *& lex_scope);
+    std::unique_ptr<declaration> preanalyze_member_declaration(precontext & ctx,
+        const parser::declaration & parse,
+        scope * lex_scope);
 }
 }

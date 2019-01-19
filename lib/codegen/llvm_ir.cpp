@@ -35,21 +35,24 @@ inline namespace _v1
 )code";
     }
 
-    std::u32string llvm_ir_generator::generate_definitions(std::vector<ir::entity> & module, codegen_context & ctx)
+    std::u32string llvm_ir_generator::generate_definitions(std::vector<ir::entity> & module,
+        codegen_context & ctx)
     {
         std::u32string ret;
 
         for (auto && entity : module)
         {
             ret += std::get<0>(fmap(entity,
-                make_overload_set([&](std::shared_ptr<ir::variable> & var) { return this->generate_definition(*var, ctx); },
+                make_overload_set(
+                    [&](std::shared_ptr<ir::variable> & var) { return this->generate_definition(*var, ctx); },
                     [&](ir::function & fn) { return this->generate_definition(fn, ctx); })));
         }
 
         return ret;
     }
 
-    std::u32string llvm_ir_generator::type_name(std::shared_ptr<ir::variable_type> type, codegen_context & ctx)
+    std::u32string llvm_ir_generator::type_name(std::shared_ptr<ir::variable_type> type,
+        codegen_context & ctx)
     {
         if (type == ir::builtin_types().integer)
         {

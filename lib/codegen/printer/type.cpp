@@ -27,9 +27,11 @@ namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    std::u32string ir_printer::generate_definition(std::shared_ptr<ir::variable_type> type, codegen::codegen_context & ctx)
+    std::u32string ir_printer::generate_definition(std::shared_ptr<ir::variable_type> type,
+        codegen::codegen_context & ctx)
     {
-        if (type == ir::builtin_types().integer || type == ir::builtin_types().boolean || dynamic_cast<ir::sized_integer_type *>(type.get()))
+        if (type == ir::builtin_types().integer || type == ir::builtin_types().boolean
+            || dynamic_cast<ir::sized_integer_type *>(type.get()))
         {
             return U"";
         }
@@ -64,7 +66,8 @@ inline namespace _v1
             return unit{};
         });
 
-        return U"define type @ " + _pointer_to_string(type.get()) + U" `" + _scope_string(type->scopes) + U"." + type->name + U"`:\n{\n" + members + U"}\n";
+        return U"define type @ " + _pointer_to_string(type.get()) + U" `" + _scope_string(type->scopes) + U"."
+            + type->name + U"`:\n{\n" + members + U"}\n";
     }
 }
 }

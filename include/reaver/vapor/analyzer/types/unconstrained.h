@@ -42,8 +42,8 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            os << styles::def << ctx << styles::type << "<unconstrained>" << styles::def << " @ " << styles::address << this << styles::def
-               << ": builtin type\n";
+            os << styles::def << ctx << styles::type << "<unconstrained>" << styles::def << " @ "
+               << styles::address << this << styles::def << ": builtin type\n";
         }
 
         virtual bool matches(type * other) const override

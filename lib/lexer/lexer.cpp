@@ -186,8 +186,9 @@ inline namespace _v1
         { '^', { { '=', token_type::bitwise_xor_assignment } } }
     };
 
-    const std::unordered_map<char32_t, std::unordered_map<char32_t, std::unordered_map<char32_t, token_type>>> symbols3 = {
-        { '-', { { '>', { { '>', token_type::map } } } } },
-    };
+    const std::unordered_map<char32_t, std::unordered_map<char32_t, std::unordered_map<char32_t, token_type>>>
+        symbols3 = {
+            { '-', { { '>', { { '>', token_type::map } } } } },
+        };
 }
 }

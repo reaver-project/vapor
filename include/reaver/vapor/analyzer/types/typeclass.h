@@ -84,7 +84,8 @@ inline namespace _v1
         std::vector<function *> _member_functions;
     };
 
-    class typeclass_instance_type : public user_defined_type, public std::enable_shared_from_this<typeclass_instance_type>
+    class typeclass_instance_type : public user_defined_type,
+                                    public std::enable_shared_from_this<typeclass_instance_type>
     {
     public:
         typeclass_instance_type(typeclass * tc, std::vector<expression *> arguments);
@@ -132,10 +133,13 @@ inline namespace _v1
 
     class function_definition;
 
-    class typeclass_instance : public user_defined_type, public std::enable_shared_from_this<typeclass_instance>
+    class typeclass_instance : public user_defined_type,
+                               public std::enable_shared_from_this<typeclass_instance>
     {
     public:
-        typeclass_instance(typeclass_instance_type * type, std::unique_ptr<scope> lex_scope, std::vector<std::shared_ptr<overload_set>> osets);
+        typeclass_instance(typeclass_instance_type * type,
+            std::unique_ptr<scope> lex_scope,
+            std::vector<std::shared_ptr<overload_set>> osets);
 
         virtual std::string explain() const override
         {
@@ -197,6 +201,8 @@ inline namespace _v1
 {
     struct precontext;
 
-    std::unique_ptr<typeclass> make_typeclass(precontext & ctx, const parser::typeclass_literal & parse, scope * lex_scope);
+    std::unique_ptr<typeclass> make_typeclass(precontext & ctx,
+        const parser::typeclass_literal & parse,
+        scope * lex_scope);
 }
 }

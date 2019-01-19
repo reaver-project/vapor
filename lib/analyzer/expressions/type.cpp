@@ -51,8 +51,11 @@ inline namespace _v1
         auto ret = codegen::ir::make_variable(codegen::ir::builtin_types().type);
         ret->refers_to = _type->codegen_type(ctx);
 
-        return { codegen::ir::instruction{
-            std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, std::move(ret) } };
+        return { codegen::ir::instruction{ std::nullopt,
+            std::nullopt,
+            { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
+            {},
+            std::move(ret) } };
     }
 
     std::unique_ptr<google::protobuf::Message> type_expression::_generate_interface() const

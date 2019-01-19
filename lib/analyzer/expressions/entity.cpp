@@ -35,15 +35,18 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    entity::entity(type * t, std::unique_ptr<expression> wrapped) : expression{ t }, _wrapped{ std::move(wrapped) }
+    entity::entity(type * t, std::unique_ptr<expression> wrapped)
+        : expression{ t }, _wrapped{ std::move(wrapped) }
     {
     }
 
-    entity::entity(std::unique_ptr<type> t, std::unique_ptr<expression> wrapped) : expression{ t.get() }, _owned{ std::move(t) }, _wrapped{ std::move(wrapped) }
+    entity::entity(std::unique_ptr<type> t, std::unique_ptr<expression> wrapped)
+        : expression{ t.get() }, _owned{ std::move(t) }, _wrapped{ std::move(wrapped) }
     {
     }
 
-    entity::entity(std::shared_ptr<unresolved_type> res, std::unique_ptr<expression> wrapped) : _unresolved{ std::move(res) }, _wrapped{ std::move(wrapped) }
+    entity::entity(std::shared_ptr<unresolved_type> res, std::unique_ptr<expression> wrapped)
+        : _unresolved{ std::move(res) }, _wrapped{ std::move(wrapped) }
     {
         if (auto t = _unresolved.value()->get_resolved())
         {
@@ -137,7 +140,9 @@ inline namespace _v1
         return mod;
     }
 
-    std::unique_ptr<entity> get_entity(precontext & ctx, const proto::entity & ent, const std::map<std::string, const proto::entity *> & associated)
+    std::unique_ptr<entity> get_entity(precontext & ctx,
+        const proto::entity & ent,
+        const std::map<std::string, const proto::entity *> & associated)
     {
         auto type = get_imported_type_ref(ctx, ent.type());
 
@@ -152,7 +157,8 @@ inline namespace _v1
             case proto::entity::kOverloadSet:
             {
                 assert(ent.associated_entities_size() == 1);
-                auto type = import_overload_set_type(ctx, associated.at(ent.associated_entities(0))->type_value().overload_set());
+                auto type = import_overload_set_type(
+                    ctx, associated.at(ent.associated_entities(0))->type_value().overload_set());
                 type->set_name(utf32(ent.associated_entities(0)));
                 auto type_expr = type->get_expression();
                 auto ret = std::make_unique<entity>(std::move(type));
@@ -161,11 +167,13 @@ inline namespace _v1
             }
 
             default:
-                throw exception{ logger::fatal } << "unknown expression kind of symbol `" << ctx.current_scope.top() << "." << ctx.current_symbol
+                throw exception{ logger::fatal } << "unknown expression kind of symbol `"
+                                                 << ctx.current_scope.top() << "." << ctx.current_symbol
                                                  << "` in imported file " << ctx.current_file.top();
         }
 
-        return std::get<0>(fmap(type, [&](auto && type) { return std::make_unique<entity>(std::move(type), std::move(expr)); }));
+        return std::get<0>(fmap(
+            type, [&](auto && type) { return std::make_unique<entity>(std::move(type), std::move(expr)); }));
     }
 }
 }

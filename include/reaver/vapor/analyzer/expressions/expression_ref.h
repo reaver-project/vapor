@@ -127,8 +127,11 @@ inline namespace _v1
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
         {
             auto referenced_ir = _referenced->codegen_ir(ctx);
-            return { codegen::ir::instruction{
-                std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, { referenced_ir.back().result } } };
+            return { codegen::ir::instruction{ std::nullopt,
+                std::nullopt,
+                { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
+                {},
+                { referenced_ir.back().result } } };
         }
 
         virtual bool _is_equal(const expression * rhs) const override
@@ -144,7 +147,8 @@ inline namespace _v1
         expression * _referenced = nullptr;
     };
 
-    inline std::unique_ptr<expression> make_expression_ref(expression * expr, std::optional<ast_node> ast_info)
+    inline std::unique_ptr<expression> make_expression_ref(expression * expr,
+        std::optional<ast_node> ast_info)
     {
         auto ret = std::make_unique<expression_ref>(expr);
         if (ast_info)

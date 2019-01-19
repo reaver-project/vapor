@@ -63,7 +63,11 @@ inline namespace _v1
         }
 
     public:
-        scope(_key, scope * parent_scope, bool is_local, bool is_shadowing_boundary, const scope * other = nullptr)
+        scope(_key,
+            scope * parent_scope,
+            bool is_local,
+            bool is_shadowing_boundary,
+            const scope * other = nullptr)
             : _parent{ parent_scope },
               _global{ _parent ? _parent->_global : nullptr },
               _is_local_scope{ is_local },

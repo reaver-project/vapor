@@ -75,7 +75,8 @@ inline namespace _v1
         return binary_ops;
     }
 
-    const std::unordered_map<reaver::vapor::lexer::_v1::token_type, std::size_t> & binary_operator_precedences()
+    const std::unordered_map<reaver::vapor::lexer::_v1::token_type, std::size_t> &
+    binary_operator_precedences()
     {
         static std::unordered_map<lexer::token_type, std::size_t> precedences = []() {
             std::unordered_map<lexer::token_type, std::size_t> precedences;
@@ -150,7 +151,8 @@ inline namespace _v1
         os << '\n';
 
         print(expr.lhs, os, ctx.make_branch(false));
-        os << styles::def << ctx.make_branch(false) << styles::subrule_name << "operator: " << styles::def << utf8(expr.op.string) << '\n';
+        os << styles::def << ctx.make_branch(false) << styles::subrule_name << "operator: " << styles::def
+           << utf8(expr.op.string) << '\n';
         print(expr.rhs, os, ctx.make_branch(true));
     }
 }

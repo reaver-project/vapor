@@ -32,7 +32,8 @@ inline namespace _v1
     class member_assignment_expression : public expression
     {
     public:
-        member_assignment_expression(std::u32string member_name) : _type{ make_member_assignment_type(std::move(member_name), this) }
+        member_assignment_expression(std::u32string member_name)
+            : _type{ make_member_assignment_type(std::move(member_name), this) }
         {
             _set_type(_type.get());
         }

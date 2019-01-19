@@ -34,7 +34,8 @@ inline namespace _v1
 
     bool operator==(const instance_literal & lhs, const instance_literal & rhs)
     {
-        return lhs.range == rhs.range && lhs.typeclass_name == rhs.typeclass_name && lhs.arguments == rhs.arguments && lhs.definitions == rhs.definitions;
+        return lhs.range == rhs.range && lhs.typeclass_name == rhs.typeclass_name
+            && lhs.arguments == rhs.arguments && lhs.definitions == rhs.definitions;
     }
 
     bool operator==(const default_instance_definition & lhs, const default_instance_definition & rhs)

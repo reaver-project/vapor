@@ -28,12 +28,16 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<return_statement> preanalyze_return(precontext & ctx, const parser::return_expression & parse, scope * lex_scope)
+    std::unique_ptr<return_statement> preanalyze_return(precontext & ctx,
+        const parser::return_expression & parse,
+        scope * lex_scope)
     {
-        return std::make_unique<return_statement>(make_node(parse), preanalyze_expression(ctx, parse.return_value, lex_scope));
+        return std::make_unique<return_statement>(
+            make_node(parse), preanalyze_expression(ctx, parse.return_value, lex_scope));
     }
 
-    return_statement::return_statement(ast_node parse, std::unique_ptr<expression> value) : _value_expr{ std::move(value) }
+    return_statement::return_statement(ast_node parse, std::unique_ptr<expression> value)
+        : _value_expr{ std::move(value) }
     {
         _set_ast_info(parse);
     }
@@ -52,8 +56,11 @@ inline namespace _v1
     statement_ir return_statement::_codegen_ir(ir_generation_context & ctx) const
     {
         auto ret = _value_expr->codegen_ir(ctx);
-        ret.push_back(
-            { std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, { ret.back().result }, ret.back().result });
+        ret.push_back({ std::nullopt,
+            std::nullopt,
+            { boost::typeindex::type_id<codegen::ir::return_instruction>() },
+            { ret.back().result },
+            ret.back().result });
 
         return ret;
     }

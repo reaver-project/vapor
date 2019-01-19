@@ -38,7 +38,8 @@ inline namespace _v1
             _set_ast_info(parse);
         }
 
-        member_access_expression(std::u32string name, type * referenced_type) : expression{ referenced_type }, _name{ std::move(name) }
+        member_access_expression(std::u32string name, type * referenced_type)
+            : expression{ referenced_type }, _name{ std::move(name) }
         {
             assert(referenced_type);
         }
@@ -79,7 +80,8 @@ inline namespace _v1
 
             if (!_base)
             {
-                return std::unique_ptr<member_access_expression>{ new member_access_expression{ _name, get_type() } };
+                return std::unique_ptr<member_access_expression>{ new member_access_expression{
+                    _name, get_type() } };
             }
 
             auto replaced_base = repl.get_replacement(_base);
@@ -90,7 +92,8 @@ inline namespace _v1
 
             assert(!_assignment_expr);
 
-            std::unique_ptr<member_access_expression> ret{ new member_access_expression{ get_ast_info().value(), nullptr } };
+            std::unique_ptr<member_access_expression> ret{ new member_access_expression{
+                get_ast_info().value(), nullptr } };
             ret->_base = replaced_base;
             ret->_set_type(get_type());
             ret->_name = _name;
@@ -138,9 +141,12 @@ inline namespace _v1
 {
     struct precontext;
 
-    std::unique_ptr<member_access_expression> preanalyze_member_access_expression(precontext & ctx, const parser::member_expression & parse, scope *);
+    std::unique_ptr<member_access_expression> preanalyze_member_access_expression(precontext & ctx,
+        const parser::member_expression & parse,
+        scope *);
 
-    inline std::unique_ptr<member_access_expression> make_member_access_expression(std::u32string name, type * ref_type)
+    inline std::unique_ptr<member_access_expression> make_member_access_expression(std::u32string name,
+        type * ref_type)
     {
         return std::make_unique<member_access_expression>(std::move(name), ref_type);
     }

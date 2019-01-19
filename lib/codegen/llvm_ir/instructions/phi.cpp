@@ -29,7 +29,8 @@ namespace reaver::vapor::codegen
 inline namespace _v1
 {
     template<>
-    std::u32string llvm_ir_generator::generate<ir::phi_instruction>(const ir::instruction & inst, codegen_context & ctx)
+    std::u32string llvm_ir_generator::generate<ir::phi_instruction>(const ir::instruction & inst,
+        codegen_context & ctx)
     {
         std::u32string ret;
 
@@ -37,7 +38,8 @@ inline namespace _v1
 
         for (std::size_t i = 0; 2 * i < inst.operands.size(); ++i)
         {
-            ret += U" [ " + value_of(inst.operands[i * 2 + 1], ctx) + U", " + value_of(inst.operands[i * 2], ctx) + U" ],";
+            ret += U" [ " + value_of(inst.operands[i * 2 + 1], ctx) + U", "
+                + value_of(inst.operands[i * 2], ctx) + U" ],";
         }
         assert(ret.back() == U',');
         ret.back() = U'\n';

@@ -46,7 +46,8 @@ inline namespace _v1
         std::unique_ptr<class function> function;
     };
 
-    std::unique_ptr<overload_set_type> import_overload_set_type(precontext & ctx, const proto::overload_set_type & type)
+    std::unique_ptr<overload_set_type> import_overload_set_type(precontext & ctx,
+        const proto::overload_set_type & type)
     {
         auto ret = std::make_unique<overload_set_type>(ctx.module_scope);
 
@@ -65,28 +66,36 @@ inline namespace _v1
 
             imported->function = make_function("overloadable function");
             imported->function->set_return_type(imported->return_type.get());
-            imported->function->set_parameters(fmap(imported->parameters, [](auto && param) { return param.get(); }));
-            imported->function->set_codegen([imported = imported.get()](ir_generation_context & ctx)->codegen::ir::function {
-                auto params = fmap(imported->parameters,
-                    [&](auto && param) { return std::get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); });
-                // this is slightly messy, but cleaning it up before I have typeclasses would be wasteful
-                // since I can fix it in an even better way when I have those
-                params.erase(params.begin());
+            imported->function->set_parameters(
+                fmap(imported->parameters, [](auto && param) { return param.get(); }));
+            imported->function->set_codegen(
+                [imported = imported.get()](ir_generation_context & ctx) -> codegen::ir::function {
+                    auto params = fmap(imported->parameters, [&](auto && param) {
+                        return std::get<std::shared_ptr<codegen::ir::variable>>(
+                            param->codegen_ir(ctx).back().result);
+                    });
+                    // this is slightly messy, but cleaning it up before I have typeclasses would be wasteful
+                    // since I can fix it in an even better way when I have those
+                    params.erase(params.begin());
 
-                auto ret = codegen::ir::function{
-                    U"call", {}, std::move(params), codegen::ir::make_variable(imported->return_type->as<type_expression>()->get_value()->codegen_type(ctx)), {}
-                };
-                ret.is_member = true;
-                ret.is_defined = false;
+                    auto ret = codegen::ir::function{ U"call",
+                        {},
+                        std::move(params),
+                        codegen::ir::make_variable(
+                            imported->return_type->as<type_expression>()->get_value()->codegen_type(ctx)),
+                        {} };
+                    ret.is_member = true;
+                    ret.is_defined = false;
 
-                return ret;
-            });
+                    return ret;
+                });
 
             assert(overload.is_member());
 
             imported->function->set_name(U"call");
             imported->function->make_member();
-            imported->function->set_scopes_generator([type = ret.get()](auto && ctx) { return type->codegen_scopes(ctx); });
+            imported->function->set_scopes_generator(
+                [type = ret.get()](auto && ctx) { return type->codegen_scopes(ctx); });
 
             ret->add_function(std::move(imported));
         }
@@ -96,7 +105,10 @@ inline namespace _v1
 
     void overload_set_type::add_function(function * fn)
     {
-        if (std::find_if(_functions.begin(), _functions.end(), [&](auto && f) { return f->parameters() == fn->parameters(); }) != _functions.end())
+        if (std::find_if(_functions.begin(),
+                _functions.end(),
+                [&](auto && f) { return f->parameters() == fn->parameters(); })
+            != _functions.end())
         {
             assert(0);
         }
@@ -129,7 +141,9 @@ inline namespace _v1
             ctx.add_generated_function(fn);
             return codegen::ir::member{ fn->codegen_ir(ctx) };
         });
-        auto type = codegen::ir::variable_type{ _codegen_name(ctx), get_scope()->codegen_ir(), 0, std::move(members) };
+        auto type = codegen::ir::variable_type{
+            _codegen_name(ctx), get_scope()->codegen_ir(), 0, std::move(members)
+        };
 
         auto scopes = get_scope()->codegen_ir();
         scopes.emplace_back(type.name, codegen::ir::scope_type::type);
@@ -173,8 +187,13 @@ inline namespace _v1
         for (auto && func : _functions)
         {
             auto fn = t->add_functions();
-            fn->set_allocated_return_type(
-                func->get_return_type().try_get().value()->as<type_expression>()->get_value()->generate_interface_reference().release());
+            fn->set_allocated_return_type(func->get_return_type()
+                                              .try_get()
+                                              .value()
+                                              ->as<type_expression>()
+                                              ->get_value()
+                                              ->generate_interface_reference()
+                                              .release());
 
             for (auto && param : func->parameters())
             {

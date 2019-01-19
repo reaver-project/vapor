@@ -29,12 +29,15 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<struct_literal> preanalyze_struct_literal(precontext & ctx, const parser::struct_literal & parse, scope * lex_scope)
+    std::unique_ptr<struct_literal> preanalyze_struct_literal(precontext & ctx,
+        const parser::struct_literal & parse,
+        scope * lex_scope)
     {
         return std::make_unique<struct_literal>(make_node(parse), make_struct_type(ctx, parse, lex_scope));
     }
 
-    struct_literal::struct_literal(ast_node parse, std::unique_ptr<struct_type> type) : expression{ builtin_types().type.get() }, _type{ std::move(type) }
+    struct_literal::struct_literal(ast_node parse, std::unique_ptr<struct_type> type)
+        : expression{ builtin_types().type.get() }, _type{ std::move(type) }
     {
         _set_ast_info(parse);
     }
@@ -57,7 +60,8 @@ inline namespace _v1
             std::size_t idx = 0;
             for (auto && member : _type->get_data_member_decls())
             {
-                member->print(os, data_members_ctx.make_branch(++idx == _type->get_data_member_decls().size()));
+                member->print(
+                    os, data_members_ctx.make_branch(++idx == _type->get_data_member_decls().size()));
             }
         }
     }
@@ -74,9 +78,9 @@ inline namespace _v1
 
     future<> struct_literal::_analyze(analysis_context & ctx)
     {
-        return when_all(fmap(_type->get_data_member_decls(), [&](auto && member) { return member->analyze(ctx); })).then([this] {
-            _type->generate_constructors();
-        });
+        return when_all(
+            fmap(_type->get_data_member_decls(), [&](auto && member) { return member->analyze(ctx); }))
+            .then([this] { _type->generate_constructors(); });
     }
 
     std::unique_ptr<expression> struct_literal::_clone_expr_with_replacement(replacements & repl) const

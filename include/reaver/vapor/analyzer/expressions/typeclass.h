@@ -104,6 +104,8 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<typeclass_literal> preanalyze_typeclass_literal(precontext & ctx, const parser::typeclass_literal & tpl, scope * lex_scope);
+    std::unique_ptr<typeclass_literal> preanalyze_typeclass_literal(precontext & ctx,
+        const parser::typeclass_literal & tpl,
+        scope * lex_scope);
 }
 }

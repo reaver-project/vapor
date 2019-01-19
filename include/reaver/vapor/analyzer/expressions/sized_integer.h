@@ -36,7 +36,8 @@ inline namespace _v1
     class sized_integer_constant : public expression
     {
     public:
-        sized_integer_constant(sized_integer * type, boost::multiprecision::cpp_int value) : expression{ type }, _value{ std::move(value) }, _type{ type }
+        sized_integer_constant(sized_integer * type, boost::multiprecision::cpp_int value)
+            : expression{ type }, _value{ std::move(value) }, _type{ type }
         {
             assert(_value <= _type->max_value());
             assert(_value >= _type->min_value());
@@ -54,7 +55,8 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            os << styles::def << ctx << styles::rule_name << "sized-integer-constant(" << _type->size() << ")";
+            os << styles::def << ctx << styles::rule_name << "sized-integer-constant(" << _type->size()
+               << ")";
             print_address_range(os, this);
             os << ' ' << styles::string_value << _value << '\n';
         }

@@ -33,7 +33,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<function_declaration> preanalyze_function_declaration(precontext & ctx, const parser::function_declaration & parse, scope *& lex_scope)
+    std::unique_ptr<function_declaration> preanalyze_function_declaration(precontext & ctx,
+        const parser::function_declaration & parse,
+        scope *& lex_scope)
     {
         auto function_scope = lex_scope->clone_local();
 
@@ -48,7 +50,8 @@ inline namespace _v1
         return std::make_unique<function_declaration>(make_node(parse),
             parse.name.value.string,
             std::move(params),
-            fmap(parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ctx, ret_type, function_scope_ptr); }),
+            fmap(parse.return_type,
+                [&](auto && ret_type) { return preanalyze_expression(ctx, ret_type, function_scope_ptr); }),
             std::move(function_scope));
     }
 
@@ -101,11 +104,13 @@ inline namespace _v1
         parameter_list params;
         if (parse.signature.parameters)
         {
-            params = preanalyze_parameter_list(prectx, parse.signature.parameters.value(), function_scope.get(), fn_ctx);
+            params = preanalyze_parameter_list(
+                prectx, parse.signature.parameters.value(), function_scope.get(), fn_ctx);
         }
         function_scope->close();
 
-        auto ret_type = fmap(parse.signature.return_type, [&](auto && ret_type) { return preanalyze_expression(prectx, ret_type, function_scope.get()); });
+        auto ret_type = fmap(parse.signature.return_type,
+            [&](auto && ret_type) { return preanalyze_expression(prectx, ret_type, function_scope.get()); });
         if (!ret_type && is_instance_member)
         {
             auto original_ret = original_overload->get_return_type().try_get();
@@ -156,7 +161,12 @@ inline namespace _v1
         std::optional<std::unique_ptr<expression>> return_type,
         std::unique_ptr<block> body,
         std::unique_ptr<scope> scope)
-        : function_declaration{ parse, std::move(name), std::move(params), std::move(return_type), std::move(scope) }, _body{ std::move(body) }
+        : function_declaration{ parse,
+              std::move(name),
+              std::move(params),
+              std::move(return_type),
+              std::move(scope) },
+          _body{ std::move(body) }
     {
     }
 
@@ -211,7 +221,8 @@ inline namespace _v1
         _function = make_function("overloadable function", get_ast_info().value().range);
         _function->set_name(U"call");
         _function->make_member();
-        _function->set_scopes_generator([this](auto && ctx) { return this->_overload_set->get_type()->codegen_scopes(ctx); });
+        _function->set_scopes_generator(
+            [this](auto && ctx) { return this->_overload_set->get_type()->codegen_scopes(ctx); });
 
         _overload_set->add_function(this);
 
@@ -233,12 +244,17 @@ inline namespace _v1
             });
         }();
 
-        return initial_future.then([&] { return when_all(fmap(_parameter_list, [&](auto && param) { return param->analyze(ctx); })); }).then([&] {
-            auto params = fmap(_parameter_list, [](auto && param) -> expression * { return param.get(); });
-            params.insert(params.begin(), _overload_set.get());
+        return initial_future
+            .then([&] {
+                return when_all(fmap(_parameter_list, [&](auto && param) { return param->analyze(ctx); }));
+            })
+            .then([&] {
+                auto params =
+                    fmap(_parameter_list, [](auto && param) -> expression * { return param.get(); });
+                params.insert(params.begin(), _overload_set.get());
 
-            _function->set_parameters(std::move(params));
-        });
+                _function->set_parameters(std::move(params));
+            });
     }
 
     future<> function_definition::_analyze(analysis_context & ctx)
@@ -249,10 +265,11 @@ inline namespace _v1
         {
             // FIXME: this is actually wrong
             // the way this here is done would actually implement C++-like templates in typeclass functions
-            // that is not what I want; what I want is to only use things that are known from the constraints on the template parameters
-            // but this is significantly harder to implement and will have to wait for a while
-            // (for the time being the compiler will just be a lot more permissive, and with a future release some code will become invalid,
-            // which is fine, because nowhere does Vapor promise being stable for now)
+            // that is not what I want; what I want is to only use things that are known from the constraints
+            // on the template parameters but this is significantly harder to implement and will have to wait
+            // for a while (for the time being the compiler will just be a lot more permissive, and with a
+            // future release some code will become invalid, which is fine, because nowhere does Vapor promise
+            // being stable for now)
             return base_future;
         }
 
@@ -263,7 +280,10 @@ inline namespace _v1
                     auto ret = codegen::ir::function{ U"call",
                         {},
                         fmap(_parameter_list,
-                            [&](auto && param) { return std::get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
+                            [&](auto && param) {
+                                return std::get<std::shared_ptr<codegen::ir::variable>>(
+                                    param->codegen_ir(ctx).back().result);
+                            }),
                         _body->codegen_return(ctx),
                         _body->codegen_ir(ctx) };
                     ret.is_member = true;

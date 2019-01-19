@@ -46,7 +46,9 @@ inline namespace _v1
     class analysis_context
     {
     public:
-        analysis_context() : results{ std::make_shared<cached_results>() }, simplification_ctx{ std::make_shared<simplification_context>(*results) }
+        analysis_context()
+            : results{ std::make_shared<cached_results>() },
+              simplification_ctx{ std::make_shared<simplification_context>(*results) }
         {
         }
 
@@ -64,7 +66,10 @@ inline namespace _v1
         std::unordered_map<std::size_t, std::shared_ptr<type>> _sized_integers;
         std::unordered_map<function_signature, std::shared_ptr<function_type>> _function_types;
         std::unordered_map<template_expression *,
-            std::unordered_map<std::vector<expression *>, std::shared_ptr<expression>, argument_list_hash, argument_list_compare>>
+            std::unordered_map<std::vector<expression *>,
+                std::shared_ptr<expression>,
+                argument_list_hash,
+                argument_list_compare>>
             _instances;
     };
 }

@@ -52,7 +52,9 @@ inline namespace _v1
         return overload_match::equal;
     }
 
-    bool is_valid(function * overload, const std::vector<expression *> & arguments, expression * base = nullptr)
+    bool is_valid(function * overload,
+        const std::vector<expression *> & arguments,
+        expression * base = nullptr)
     {
         auto param_begin = overload->parameters().begin();
         auto param_end = overload->parameters().end();
@@ -63,14 +65,17 @@ inline namespace _v1
         {
             if (!base)
             {
-                logger::dlog() << overload->explain() << " not considered; is a member function, but the base expression is null";
+                logger::dlog() << overload->explain()
+                               << " not considered; is a member function, but the base expression is null";
                 return false;
             }
 
             // TODO: conversions? possibly "interface inheritance" that operator. by Bjarne attempts (badly)?
             if ((*param_begin)->get_type() != base->get_type())
             {
-                logger::dlog() << overload->explain() << " not considered; is a member function, but the base expression is of the wrong type";
+                logger::dlog()
+                    << overload->explain()
+                    << " not considered; is a member function, but the base expression is of the wrong type";
                 logger::dlog() << "expected expression type: " << (*param_begin)->get_type()->explain();
                 logger::dlog() << "actual expression type: " << base->get_type()->explain();
                 return false;
@@ -83,25 +88,28 @@ inline namespace _v1
         std::vector<expression *> provided_params;
 
         auto it = arg_begin;
-        if ((it = std::find_if(it, arg_end, [](auto && arg) { return arg->is_member_assignment(); })) != arg_end)
+        if ((it = std::find_if(it, arg_end, [](auto && arg) { return arg->is_member_assignment(); }))
+            != arg_end)
         {
             auto arg_begin = it;
             auto possible_arg_end = it;
 
-            if ((it = std::find_if(it, arg_end, [](auto && arg) { return !arg->is_member_assignment(); })) != arg_end)
+            if ((it = std::find_if(it, arg_end, [](auto && arg) { return !arg->is_member_assignment(); }))
+                != arg_end)
             {
                 assert(!"a non-mem-assignment argument after a mem-assignment argument");
             }
 
-            // this is kind of a hack to allow passing member assignments that are *before the first matching one*
-            // to pack arguments
+            // this is kind of a hack to allow passing member assignments that are *before the first matching
+            // one* to pack arguments
             //
             // this will need a rework
             //
             // basically this is necessary to get the generic constructor to work
             // and I'm wondering wether this magic shouldn't just be limited to that single thing
             //
-            // but I guess it'll be generally allowed to allow making forwarding wrappers that accept member assignments
+            // but I guess it'll be generally allowed to allow making forwarding wrappers that accept member
+            // assignments
             bool succeeded_before = false;
 
             while (arg_begin != arguments.end())
@@ -133,8 +141,9 @@ inline namespace _v1
 
                 if (succeeded_before)
                 {
-                    logger::dlog() << overload->explain() << " not considered; mismatch in member assignment arguments; ." << utf8(arg->member_name())
-                                   << " did not match any members";
+                    logger::dlog() << overload->explain()
+                                   << " not considered; mismatch in member assignment arguments; ."
+                                   << utf8(arg->member_name()) << " did not match any members";
                     return false;
                 }
 
@@ -155,11 +164,12 @@ inline namespace _v1
         // with (Ts... : type)
         // function foo(ts : Ts.uref..., last : int);
         // I know this can be done, but is more complex and we don't need it right now
-        // and we can probably live with it not working until there's actually syntax for the above in the language
-        // (i.e. when I'll be adding packs to the language for more than just the generic ctor)
+        // and we can probably live with it not working until there's actually syntax for the above in the
+        // language (i.e. when I'll be adding packs to the language for more than just the generic ctor)
         while (arg_begin != arg_end && param_begin != param_end)
         {
-            if (std::find(provided_params.begin(), provided_params.end(), *param_begin) != provided_params.end())
+            if (std::find(provided_params.begin(), provided_params.end(), *param_begin)
+                != provided_params.end())
             {
                 // should this be a hard error? probably not
                 assert(0);
@@ -174,7 +184,8 @@ inline namespace _v1
             {
                 if (!param_type->matches(matching_space))
                 {
-                    logger::dlog() << overload->explain() << " not considered; argument #" << arg_begin - arguments.begin() << " does not match the parameter #"
+                    logger::dlog() << overload->explain() << " not considered; argument #"
+                                   << arg_begin - arguments.begin() << " does not match the parameter #"
                                    << param_begin - overload->parameters().begin();
                     logger::dlog() << "argument type: " << (*arg_begin)->get_type()->explain();
                     logger::dlog() << "parameter type: " << (*param_begin)->get_type()->explain();
@@ -203,18 +214,22 @@ inline namespace _v1
         assert(arg_begin == arg_end);
 
         auto ret = std::all_of(param_begin, param_end, [&](auto && param) {
-            return std::find(provided_params.begin(), provided_params.end(), param) != provided_params.end() || param->get_default_value();
+            return std::find(provided_params.begin(), provided_params.end(), param) != provided_params.end()
+                || param->get_default_value();
         });
 
         if (!ret)
         {
-            logger::dlog() << overload->explain() << " not considered; some not provided parameters do not have a default value";
+            logger::dlog() << overload->explain()
+                           << " not considered; some not provided parameters do not have a default value";
         }
 
         return ret;
     }
 
-    auto prepare_actual_arguments(function * overload, std::vector<expression *> arguments, expression * base = nullptr)
+    auto prepare_actual_arguments(function * overload,
+        std::vector<expression *> arguments,
+        expression * base = nullptr)
     {
         std::vector<expression *> ret;
 
@@ -345,8 +360,9 @@ inline namespace _v1
 
         assert(!possible_overloads.empty());
 
-        possible_overloads.erase(
-            std::remove_if(possible_overloads.begin(), possible_overloads.end(), [&](auto && overload) { return !is_valid(overload, arguments, base); }),
+        possible_overloads.erase(std::remove_if(possible_overloads.begin(),
+                                     possible_overloads.end(),
+                                     [&](auto && overload) { return !is_valid(overload, arguments, base); }),
             possible_overloads.end());
 
         std::sort(possible_overloads.begin(), possible_overloads.end(), [](auto && lhs, auto && rhs) {
@@ -358,7 +374,8 @@ inline namespace _v1
         std::vector<function *> best_matches;
         for (auto && overload : possible_overloads)
         {
-            if (!best_matches.empty() && compare_overloads(overload, best_matches.back()) == overload_match::equal)
+            if (!best_matches.empty()
+                && compare_overloads(overload, best_matches.back()) == overload_match::equal)
             {
                 break;
             }
@@ -420,7 +437,8 @@ inline namespace _v1
             .then([&ctx](auto overloads) {
                 return when_all(fmap(overloads,
                                     [&ctx](auto && overload) {
-                                        return when_all(fmap(overload->parameters(), [&ctx](auto && overload) { return overload->analyze(ctx); }));
+                                        return when_all(fmap(overload->parameters(),
+                                            [&ctx](auto && overload) { return overload->analyze(ctx); }));
                                     }))
                     .then([overloads] { return overloads; });
             })

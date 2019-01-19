@@ -136,7 +136,8 @@ MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
         simpl_ctx.~simplification_context();
         new (&simpl_ctx) simplification_context(res);
 
-        replace_uptr(designated_repl_expr, reaver::get(designated_repl_expr->simplify_expr({ simpl_ctx })), simpl_ctx);
+        replace_uptr(
+            designated_repl_expr, reaver::get(designated_repl_expr->simplify_expr({ simpl_ctx })), simpl_ctx);
     } while (simpl_ctx.did_something_happen());
 
     MAYFLY_CHECK(designated_repl_expr->get_type() == struct_type);

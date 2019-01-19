@@ -88,7 +88,8 @@ inline namespace _v1
         }
 
     public:
-        std::unique_ptr<statement> clone_with_replacement(const std::vector<expression *> & to_replace, const std::vector<expression *> & replacements) const
+        std::unique_ptr<statement> clone_with_replacement(const std::vector<expression *> & to_replace,
+            const std::vector<expression *> & replacements) const
         {
             assert(to_replace.size() == replacements.size());
             class replacements repl;
@@ -102,7 +103,8 @@ inline namespace _v1
 
         future<statement *> simplify(recursive_context ctx)
         {
-            return ctx.proper.get_future_or_init(this, [&]() { return make_ready_future().then([this, ctx]() { return _simplify(ctx); }); });
+            return ctx.proper.get_future_or_init(
+                this, [&]() { return make_ready_future().then([this, ctx]() { return _simplify(ctx); }); });
         }
 
         virtual std::vector<const return_statement *> get_returns() const
@@ -232,7 +234,9 @@ inline namespace _v1
 {
     struct precontext;
 
-    std::unique_ptr<statement> preanalyze_statement(precontext & ctx, const parser::statement & parse, scope *& lex_scope);
+    std::unique_ptr<statement> preanalyze_statement(precontext & ctx,
+        const parser::statement & parse,
+        scope *& lex_scope);
 
     inline std::unique_ptr<statement> make_null_statement()
     {

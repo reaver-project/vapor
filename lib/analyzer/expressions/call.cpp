@@ -70,7 +70,8 @@ inline namespace _v1
         return _function->run_analysis_hooks(ctx, this, _args).then([&]() {
             if (_replacement_expr)
             {
-                return _replacement_expr->analyze(ctx).then([&] { this->_set_type(_replacement_expr->get_type()); });
+                return _replacement_expr->analyze(ctx).then(
+                    [&] { this->_set_type(_replacement_expr->get_type()); });
             }
 
             return _function->get_return_type().then([&](expression * type_expr) {
@@ -124,7 +125,8 @@ inline namespace _v1
                         {
                             matching_space.push_back((*arg_begin)->get_type());
                             matching_expressions.push_back(*arg_begin);
-                        } while ((last_matched = param_type->matches(matching_space)) && ++arg_begin != arg_end);
+                        } while (
+                            (last_matched = param_type->matches(matching_space)) && ++arg_begin != arg_end);
 
                         if (matching_space.size() == 1 && !last_matched)
                         {
@@ -154,7 +156,9 @@ inline namespace _v1
                             continue;
                         }
 
-                        auto pack = make_pack_expression(fmap(matching_expressions, [&](auto && var) { return repl.claim(var); }), (*param_begin)->get_type());
+                        auto pack = make_pack_expression(
+                            fmap(matching_expressions, [&](auto && var) { return repl.claim(var); }),
+                            (*param_begin)->get_type());
                         repl.add_replacement(*param_begin, pack.get());
                         var_space.push_back(std::move(pack));
 
@@ -166,16 +170,17 @@ inline namespace _v1
 
                     _cloned_type_expr = repl.claim(type_expr);
 
-                    return simplification_loop(ctx, _cloned_type_expr).then([this, var_space, expr_space](expression * type_expr) {
-                        assert(type_expr);
-                        assert(type_expr->get_type() == builtin_types().type.get());
+                    return simplification_loop(ctx, _cloned_type_expr)
+                        .then([this, var_space, expr_space](expression * type_expr) {
+                            assert(type_expr);
+                            assert(type_expr->get_type() == builtin_types().type.get());
 
-                        auto expr = type_expr->as<type_expression>();
-                        assert(expr);
-                        assert(expr->get_value() != builtin_types().type.get());
+                            auto expr = type_expr->as<type_expression>();
+                            assert(expr);
+                            assert(expr->get_value() != builtin_types().type.get());
 
-                        this->_set_type(expr->get_value());
-                    });
+                            this->_set_type(expr->get_value());
+                        });
                 }
 
                 auto expr = type_expr->as<type_expression>();
@@ -195,7 +200,8 @@ inline namespace _v1
             return repl.claim(_replacement_expr.get());
         }
 
-        auto ret = std::make_unique<owning_call_expression>(_function, fmap(_args, [&](auto arg) { return repl.copy_claim(arg); }));
+        auto ret = std::make_unique<owning_call_expression>(
+            _function, fmap(_args, [&](auto arg) { return repl.copy_claim(arg); }));
 
         ret->set_ast_info(get_ast_info().value());
 
@@ -220,20 +226,21 @@ inline namespace _v1
             return make_ready_future(_replacement_expr.release());
         }
 
-        return when_all(fmap(_args, [&](auto && arg) { return arg->simplify_expr(ctx); })).then([&, ctx](auto && repl) {
-            assert(_args.size() == repl.size());
-            for (std::size_t i = 0; i < _args.size(); ++i)
-            {
-                if (repl[i] && repl[i] != _args[i])
+        return when_all(fmap(_args, [&](auto && arg) { return arg->simplify_expr(ctx); }))
+            .then([&, ctx](auto && repl) {
+                assert(_args.size() == repl.size());
+                for (std::size_t i = 0; i < _args.size(); ++i)
                 {
-                    _args[i] = repl[i];
-                    ctx.proper.something_happened();
+                    if (repl[i] && repl[i] != _args[i])
+                    {
+                        _args[i] = repl[i];
+                        ctx.proper.something_happened();
+                    }
                 }
-            }
 
-            logger::dlog(logger::trace) << "Simplifying call_expr " << this;
-            return _function->simplify(ctx, _args);
-        });
+                logger::dlog(logger::trace) << "Simplifying call_expr " << this;
+                return _function->simplify(ctx, _args);
+            });
     }
 
     future<expression *> owning_call_expression::_simplify_expr(recursive_context ctx)
@@ -246,10 +253,11 @@ inline namespace _v1
             });
         }
 
-        return when_all(fmap(_var_exprs, [&](auto && arg) { return arg->simplify_expr(ctx); })).then([&, ctx](auto && repl) {
-            replace_uptrs(_var_exprs, repl, ctx.proper);
-            return this->call_expression::_simplify_expr(ctx);
-        });
+        return when_all(fmap(_var_exprs, [&](auto && arg) { return arg->simplify_expr(ctx); }))
+            .then([&, ctx](auto && repl) {
+                replace_uptrs(_var_exprs, repl, ctx.proper);
+                return this->call_expression::_simplify_expr(ctx);
+            });
     }
 
     statement_ir call_expression::_codegen_ir(ir_generation_context & ctx) const
@@ -266,7 +274,8 @@ inline namespace _v1
 
         auto arguments_instructions = fmap(_args, [&](auto && arg) { return arg->codegen_ir(ctx); });
 
-        auto arguments_values = fmap(arguments_instructions, [](auto && insts) { return insts.back().result; });
+        auto arguments_values =
+            fmap(arguments_instructions, [](auto && insts) { return insts.back().result; });
         arguments_values.insert(arguments_values.begin(), _function->call_operand_ir(ctx));
 
         if (_function->is_member())

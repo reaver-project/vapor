@@ -34,7 +34,8 @@ inline namespace _v1
     class function_expression : public expression
     {
     public:
-        function_expression(function * fun, function_type * type) : expression{ type }, _fun{ fun }, _type{ type }
+        function_expression(function * fun, function_type * type)
+            : expression{ type }, _fun{ fun }, _type{ type }
         {
         }
 
@@ -68,7 +69,8 @@ inline namespace _v1
                     return type_var->get_value();
                 });
 
-                assert(return_type_expr->get_type() == builtin_types().type.get() && return_type_expr->is_constant());
+                assert(return_type_expr->get_type() == builtin_types().type.get()
+                    && return_type_expr->is_constant());
                 auto return_type_type_expr = return_type_expr->template as<type_expression>();
                 auto return_type = return_type_type_expr->get_value();
 

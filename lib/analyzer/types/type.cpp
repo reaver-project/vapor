@@ -92,7 +92,8 @@ inline namespace _v1
 
                 _generic_ctor = make_function("generic constructor");
                 _generic_ctor->set_return_type(_generic_ctor_first_arg.get());
-                _generic_ctor->set_parameters({ _generic_ctor_first_arg.get(), _generic_ctor_pack_arg.get() });
+                _generic_ctor->set_parameters(
+                    { _generic_ctor_first_arg.get(), _generic_ctor_pack_arg.get() });
 
                 _generic_ctor->make_member();
 
@@ -104,14 +105,19 @@ inline namespace _v1
                     auto type_expr = args.front()->template as<type_expression>();
                     auto actual_type = type_expr->get_value();
                     args.erase(args.begin());
-                    auto actual_ctor = actual_type->get_constructor(fmap(args, [](auto && arg) -> const expression * { return arg; }));
+                    auto actual_ctor = actual_type->get_constructor(
+                        fmap(args, [](auto && arg) -> const expression * { return arg; }));
 
-                    return actual_ctor.then([&ctx, args, call_expr](auto && ctor) { return select_overload(ctx, call_expr->get_range(), args, { ctor }); })
+                    return actual_ctor
+                        .then([&ctx, args, call_expr](auto && ctor) {
+                            return select_overload(ctx, call_expr->get_range(), args, { ctor });
+                        })
                         .then([call_expr](auto && expr) { call_expr->replace_with(std::move(expr)); });
                 });
 
-                _generic_ctor->set_eval(
-                    [](auto &&, auto &&) -> future<expression *> { assert(!"a generic constructor call survived analysis; this is a compiler bug"); });
+                _generic_ctor->set_eval([](auto &&, auto &&) -> future<expression *> {
+                    assert(!"a generic constructor call survived analysis; this is a compiler bug");
+                });
             }();
 
             return make_ready_future(std::vector<function *>{ _generic_ctor.get() });
@@ -119,7 +125,8 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            os << styles::def << ctx << styles::type << "type" << styles::def << " @ " << styles::address << this << styles::def << ": builtin type\n";
+            os << styles::def << ctx << styles::type << "type" << styles::def << " @ " << styles::address
+               << this << styles::def << ": builtin type\n";
         }
 
         virtual std::unique_ptr<proto::type> generate_interface() const override
@@ -169,14 +176,15 @@ inline namespace _v1
                  && pairs.second(static_cast<typename decltype(pairs.first)::type *>(message.release())))
                     || ... || [&]() -> bool {
                 auto m = message.get();
-                throw exception{ logger::crash } << "unhandled serialized type type: `" << typeid(*m).name() << "`";
+                throw exception{ logger::crash } << "unhandled serialized type type: `" << typeid(*m).name()
+                                                 << "`";
             }());
         };
 
-#define HANDLE_TYPE(type, field_name)                                                                                                                          \
-    std::make_pair(id<proto::type>(), [&](auto ptr) {                                                                                                          \
-        ret->set_allocated_##field_name(ptr);                                                                                                                  \
-        return true;                                                                                                                                           \
+#define HANDLE_TYPE(type, field_name)                                                                        \
+    std::make_pair(id<proto::type>(), [&](auto ptr) {                                                        \
+        ret->set_allocated_##field_name(ptr);                                                                \
+        return true;                                                                                         \
     })
 
         dynamic_switch(HANDLE_TYPE(overload_set_type, overload_set), HANDLE_TYPE(struct_type, struct_));

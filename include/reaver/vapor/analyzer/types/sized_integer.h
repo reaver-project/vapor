@@ -41,8 +41,8 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            os << styles::def << ctx << styles::type << "sized_integer(" << std::to_string(_size) << ")" << styles::def << " @ " << styles::address << this
-               << styles::def << ": builtin type\n";
+            os << styles::def << ctx << styles::type << "sized_integer(" << std::to_string(_size) << ")"
+               << styles::def << " @ " << styles::address << this << styles::def << ": builtin type\n";
         }
 
         virtual future<std::vector<function *>> get_candidates(lexer::token_type token) const override

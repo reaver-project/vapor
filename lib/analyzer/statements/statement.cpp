@@ -35,7 +35,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<statement> preanalyze_statement(precontext & ctx, const parser::statement & parse, scope *& lex_scope)
+    std::unique_ptr<statement> preanalyze_statement(precontext & ctx,
+        const parser::statement & parse,
+        scope *& lex_scope)
     {
         return std::get<0>(fmap(parse.statement_value,
             make_overload_set(

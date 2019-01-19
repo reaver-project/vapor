@@ -27,13 +27,14 @@ namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-#define ADD_INSTRUCTION(NAME, INSTRUCTION)                                                                                                                     \
-    template<>                                                                                                                                                 \
-    std::u32string llvm_ir_generator::generate<ir::integer_##NAME##_instruction>(const ir::instruction & inst, codegen_context & ctx)                          \
-    {                                                                                                                                                          \
-        assert(inst.operands.size() == 2);                                                                                                                     \
-        return variable_of(inst.result, ctx) + U" = " + INSTRUCTION + U" " + type_of(inst.operands[0], ctx) + U" " + value_of(inst.operands[0], ctx) + U", "   \
-            + value_of(inst.operands[1], ctx) + U"\n";                                                                                                         \
+#define ADD_INSTRUCTION(NAME, INSTRUCTION)                                                                   \
+    template<>                                                                                               \
+    std::u32string llvm_ir_generator::generate<ir::integer_##NAME##_instruction>(                            \
+        const ir::instruction & inst, codegen_context & ctx)                                                 \
+    {                                                                                                        \
+        assert(inst.operands.size() == 2);                                                                   \
+        return variable_of(inst.result, ctx) + U" = " + INSTRUCTION + U" " + type_of(inst.operands[0], ctx)  \
+            + U" " + value_of(inst.operands[0], ctx) + U", " + value_of(inst.operands[1], ctx) + U"\n";      \
     }
 
     ADD_INSTRUCTION(addition, U"add");

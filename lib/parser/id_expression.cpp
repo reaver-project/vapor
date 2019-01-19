@@ -43,7 +43,8 @@ inline namespace _v1
             ret.id_expression_value.push_back(parse_literal<lexer::token_type::identifier>(ctx));
         }
 
-        ret.range = { ret.id_expression_value.front().range.start(), ret.id_expression_value.back().range.end() };
+        ret.range = { ret.id_expression_value.front().range.start(),
+            ret.id_expression_value.back().range.end() };
 
         return ret;
     }

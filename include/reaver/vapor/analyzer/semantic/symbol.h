@@ -38,7 +38,8 @@ inline namespace _v1
         using _shlock = std::shared_lock<std::shared_mutex>;
 
     public:
-        symbol(std::u32string name, expression * expression) : _name{ std::move(name) }, _expression{ expression }
+        symbol(std::u32string name, expression * expression)
+            : _name{ std::move(name) }, _expression{ expression }
         {
         }
 

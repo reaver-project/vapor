@@ -52,7 +52,8 @@ inline namespace _v1
     }
 
     template<typename T, typename U>
-    auto replace_uptr(std::unique_ptr<T> & uptr, U * ptr, simplification_context & ctx) -> decltype(uptr.reset(ptr), void())
+    auto replace_uptr(std::unique_ptr<T> & uptr, U * ptr, simplification_context & ctx)
+        -> decltype(uptr.reset(ptr), void())
     {
         if (ptr && uptr.get() != ptr)
         {
@@ -65,7 +66,9 @@ inline namespace _v1
     }
 
     template<typename T, typename U>
-    void replace_uptrs(std::vector<std::unique_ptr<T>> & uptrs, const std::vector<U *> & ptrs, simplification_context & ctx)
+    void replace_uptrs(std::vector<std::unique_ptr<T>> & uptrs,
+        const std::vector<U *> & ptrs,
+        simplification_context & ctx)
     {
         assert(uptrs.size() == ptrs.size());
 

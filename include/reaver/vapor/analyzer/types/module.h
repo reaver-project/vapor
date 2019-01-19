@@ -36,7 +36,8 @@ inline namespace _v1
     class module_type : public type
     {
     public:
-        module_type(std::unique_ptr<scope> lex_scope, std::string name) : type{ std::move(lex_scope) }, _name{ std::move(name) }
+        module_type(std::unique_ptr<scope> lex_scope, std::string name)
+            : type{ std::move(lex_scope) }, _name{ std::move(name) }
         {
         }
 

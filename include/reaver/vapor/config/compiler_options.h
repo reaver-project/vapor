@@ -87,17 +87,17 @@ inline namespace _v1
             _compilation_handler.value()(file);
         }
 
-#define DEFINE_DIR(name, privname)                                                                                                                             \
-public:                                                                                                                                                        \
-    std::optional<boost::filesystem::path> name##_dir() const;                                                                                                 \
-    void set_##name##_dir(boost::filesystem::path dir);                                                                                                        \
-    boost::filesystem::path name##_path() const;                                                                                                               \
-    void set_##name##_path(boost::filesystem::path path);                                                                                                      \
-                                                                                                                                                               \
-private:                                                                                                                                                       \
-    std::optional<boost::filesystem::path> privname##_path;                                                                                                    \
-    std::optional<boost::filesystem::path> privname##_dir;                                                                                                     \
-                                                                                                                                                               \
+#define DEFINE_DIR(name, privname)                                                                           \
+public:                                                                                                      \
+    std::optional<boost::filesystem::path> name##_dir() const;                                               \
+    void set_##name##_dir(boost::filesystem::path dir);                                                      \
+    boost::filesystem::path name##_path() const;                                                             \
+    void set_##name##_path(boost::filesystem::path path);                                                    \
+                                                                                                             \
+private:                                                                                                     \
+    std::optional<boost::filesystem::path> privname##_path;                                                  \
+    std::optional<boost::filesystem::path> privname##_dir;                                                   \
+                                                                                                             \
 public:
 
         DEFINE_DIR(module, _module)

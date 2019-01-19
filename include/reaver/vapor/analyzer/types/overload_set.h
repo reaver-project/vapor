@@ -102,6 +102,7 @@ inline namespace _v1
 {
     class precontext;
 
-    std::unique_ptr<overload_set_type> import_overload_set_type(precontext &, const proto::overload_set_type &);
+    std::unique_ptr<overload_set_type> import_overload_set_type(precontext &,
+        const proto::overload_set_type &);
 }
 }

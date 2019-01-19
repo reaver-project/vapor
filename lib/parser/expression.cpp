@@ -100,11 +100,15 @@ inline namespace _v1
         if (peek(ctx))
         {
             type = peek(ctx)->type;
-            if (is_binary_operator(type) && !(mode == expression_special_modes::assignment && type == lexer::token_type::assign))
+            if (is_binary_operator(type)
+                && !(mode == expression_special_modes::assignment && type == lexer::token_type::assign))
             {
                 auto p1 = precedence({ type, operator_type::binary });
-                auto p2 = ctx.operator_stack.size() ? std::make_optional(precedence(ctx.operator_stack.back())) : std::nullopt;
-                while (ctx.operator_stack.empty() || p1 < *p2 || (p1 == *p2 && associativity(type) == assoc::right))
+                auto p2 = ctx.operator_stack.size()
+                    ? std::make_optional(precedence(ctx.operator_stack.back()))
+                    : std::nullopt;
+                while (ctx.operator_stack.empty() || p1 < *p2
+                    || (p1 == *p2 && associativity(type) == assoc::right))
                 {
                     fmap(ret.expression_value, [&](const auto & value) -> unit {
                         ret.range = value.range;

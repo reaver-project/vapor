@@ -33,7 +33,9 @@ inline namespace _v1
     inline std::string sha256(const char * src, std::size_t size)
     {
         std::string out(crypto_hash_sha256_BYTES, '\0');
-        crypto_hash_sha256(reinterpret_cast<unsigned char *>(out.data()), reinterpret_cast<const unsigned char *>(src), size);
+        crypto_hash_sha256(reinterpret_cast<unsigned char *>(out.data()),
+            reinterpret_cast<const unsigned char *>(src),
+            size);
         return out;
     }
 }

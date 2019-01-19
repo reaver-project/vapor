@@ -28,13 +28,16 @@ namespace reaver::vapor::codegen
 inline namespace _v1
 {
     template<>
-    std::u32string llvm_ir_generator::generate<ir::destruction_instruction>(const ir::instruction & inst, codegen_context & ctx)
+    std::u32string llvm_ir_generator::generate<ir::destruction_instruction>(const ir::instruction & inst,
+        codegen_context & ctx)
     {
         return {};
     }
 
     template<>
-    std::u32string llvm_ir_generator::generate<ir::temporary_destruction_instruction>(const ir::instruction & inst, codegen_context & ctx)
+    std::u32string llvm_ir_generator::generate<ir::temporary_destruction_instruction>(
+        const ir::instruction & inst,
+        codegen_context & ctx)
     {
         return {};
     }

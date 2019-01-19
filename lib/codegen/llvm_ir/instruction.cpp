@@ -39,9 +39,11 @@ inline namespace _v1
                 return &llvm_ir_generator::generate<T>;
             };
 
-            static const std::unordered_map<boost::typeindex::type_index, dispatched_type, boost::hash<boost::typeindex::type_index>> dispatch_table = {
-                { boost::typeindex::type_id<InstructionTypes>(), generator(reaver::id<InstructionTypes>()) }...
-            };
+            static const std::unordered_map<boost::typeindex::type_index,
+                dispatched_type,
+                boost::hash<boost::typeindex::type_index>>
+                dispatch_table = { { boost::typeindex::type_id<InstructionTypes>(),
+                    generator(reaver::id<InstructionTypes>()) }... };
 
             return dispatch_table.at(inst.instruction.id())(inst, ctx);
         }
@@ -92,13 +94,15 @@ inline namespace _v1
     }
 
     template<>
-    std::u32string llvm_ir_generator::generate<ir::pass_value_instruction>(const ir::instruction &, codegen_context &)
+    std::u32string llvm_ir_generator::generate<ir::pass_value_instruction>(const ir::instruction &,
+        codegen_context &)
     {
         return {};
     }
 
     template<>
-    std::u32string llvm_ir_generator::generate<ir::noop_instruction>(const ir::instruction &, codegen_context &)
+    std::u32string llvm_ir_generator::generate<ir::noop_instruction>(const ir::instruction &,
+        codegen_context &)
     {
         return {};
     }

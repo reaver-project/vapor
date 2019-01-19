@@ -59,7 +59,8 @@ inline namespace _v1
         return lhs.range == rhs.range && lhs.parameters == rhs.parameters;
     }
 
-    parameter_list parse_parameter_list(context & ctx, parameter_type_mode mode = parameter_type_mode::required);
+    parameter_list parse_parameter_list(context & ctx,
+        parameter_type_mode mode = parameter_type_mode::required);
 
     void print(const parameter_list &, std::ostream &, print_context ctx);
 }

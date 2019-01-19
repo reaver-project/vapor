@@ -30,7 +30,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<closure> preanalyze_closure(precontext & ctx, const parser::lambda_expression & parse, scope * lex_scope)
+    std::unique_ptr<closure> preanalyze_closure(precontext & ctx,
+        const parser::lambda_expression & parse,
+        scope * lex_scope)
     {
         assert(!parse.captures);
 
@@ -48,7 +50,8 @@ inline namespace _v1
             std::move(local_scope),
             std::move(params),
             preanalyze_block(ctx, parse.body, scope, true),
-            fmap(parse.return_type, [&](auto && ret_type) { return preanalyze_expression(ctx, ret_type, scope); }));
+            fmap(parse.return_type,
+                [&](auto && ret_type) { return preanalyze_expression(ctx, ret_type, scope); }));
     }
 
     closure::closure(ast_node parse,
@@ -56,7 +59,10 @@ inline namespace _v1
         parameter_list params,
         std::unique_ptr<block> body,
         std::optional<std::unique_ptr<expression>> return_type)
-        : _parameter_list{ std::move(params) }, _return_type{ std::move(return_type) }, _scope{ std::move(sc) }, _body{ std::move(body) }
+        : _parameter_list{ std::move(params) },
+          _return_type{ std::move(return_type) },
+          _scope{ std::move(sc) },
+          _body{ std::move(body) }
     {
         _set_ast_info(parse);
     }
@@ -108,7 +114,10 @@ inline namespace _v1
             return make_ready_future();
         }();
 
-        return initial_future.then([&] { return when_all(fmap(_parameter_list, [&](auto && param) { return param->analyze(ctx); })); })
+        return initial_future
+            .then([&] {
+                return when_all(fmap(_parameter_list, [&](auto && param) { return param->analyze(ctx); }));
+            })
             .then([&] { return _body->analyze(ctx); })
             .then([&] {
                 fmap(_return_type, [&](auto && ret_type) {
@@ -118,19 +127,24 @@ inline namespace _v1
                     return unit{};
                 });
 
-                auto ret_expr = _return_type ? _return_type->get()->_get_replacement() : _body->return_type()->get_expression();
+                auto ret_expr = _return_type ? _return_type->get()->_get_replacement()
+                                             : _body->return_type()->get_expression();
 
                 auto function = make_function("closure", get_ast_info().value().range);
                 function->set_name(U"operator()");
                 function->set_body(_body.get());
                 function->set_return_type(ret_expr);
-                function->set_parameters(fmap(_parameter_list, [](auto && param) -> expression * { return param.get(); }));
+                function->set_parameters(
+                    fmap(_parameter_list, [](auto && param) -> expression * { return param.get(); }));
                 function->set_codegen([this](ir_generation_context & ctx) {
                     auto ret = codegen::ir::function{
                         U"operator()",
                         {},
                         fmap(_parameter_list,
-                            [&](auto && param) { return std::get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
+                            [&](auto && param) {
+                                return std::get<std::shared_ptr<codegen::ir::variable>>(
+                                    param->codegen_ir(ctx).back().result);
+                            }),
                         _body->codegen_return(ctx),
                         _body->codegen_ir(ctx),
                     };
@@ -163,8 +177,11 @@ inline namespace _v1
     {
         auto var = codegen::ir::make_variable(get_type()->codegen_type(ctx));
         var->scopes = _type->get_scope()->codegen_ir();
-        return { codegen::ir::instruction{
-            std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::materialization_instruction>() }, {}, { std::move(var) } } };
+        return { codegen::ir::instruction{ std::nullopt,
+            std::nullopt,
+            { boost::typeindex::type_id<codegen::ir::materialization_instruction>() },
+            {},
+            { std::move(var) } } };
     }
 
     declaration_ir closure::declaration_codegen_ir(ir_generation_context & ctx) const

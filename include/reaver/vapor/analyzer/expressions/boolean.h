@@ -34,7 +34,8 @@ inline namespace _v1
     class boolean_constant : public expression
     {
     public:
-        boolean_constant(bool value, ast_node parse = {}) : expression{ builtin_types().boolean.get() }, _value{ std::move(value) }
+        boolean_constant(bool value, ast_node parse = {})
+            : expression{ builtin_types().boolean.get() }, _value{ std::move(value) }
         {
             _set_ast_info(parse);
         }

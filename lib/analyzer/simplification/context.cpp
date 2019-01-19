@@ -28,7 +28,8 @@
 #include "vapor/analyzer/semantic/function.h"
 #include "vapor/analyzer/semantic/symbol.h"
 
-std::size_t std::hash<reaver::vapor::analyzer::call_frame>::operator()(const reaver::vapor::analyzer::call_frame & frame) const
+std::size_t std::hash<reaver::vapor::analyzer::call_frame>::operator()(
+    const reaver::vapor::analyzer::call_frame & frame) const
 {
     std::size_t seed = 0;
 
@@ -64,7 +65,8 @@ inline namespace _v1
         if (it == _cached_call_results.end())
         {
             replacements repl;
-            auto owning = fmap(frame.arguments, [&](auto && arg) { return repl.claim(arg->_get_replacement()); });
+            auto owning =
+                fmap(frame.arguments, [&](auto && arg) { return repl.claim(arg->_get_replacement()); });
             auto raw = fmap(owning, [](auto && arg) { return arg.get(); });
             std::move(owning.begin(), owning.end(), std::back_inserter(_key_store));
             _cached_call_results.emplace(call_frame{ frame.function, std::move(raw) }, std::move(expr));
@@ -92,7 +94,8 @@ inline namespace _v1
             return;
         }
 
-        _statement_futures.emplace(ptr, fut.then([](auto && expr) { return static_cast<statement *>(expr); }));
+        _statement_futures.emplace(
+            ptr, fut.then([](auto && expr) { return static_cast<statement *>(expr); }));
     }
 
     void simplification_context::keep_alive(statement * ptr)

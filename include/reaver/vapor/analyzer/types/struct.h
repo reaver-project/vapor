@@ -36,7 +36,9 @@ inline namespace _v1
     class struct_type : public user_defined_type, public std::enable_shared_from_this<struct_type>
     {
     public:
-        struct_type(ast_node parse, std::unique_ptr<scope> member_scope, std::vector<std::unique_ptr<declaration>> member_decls);
+        struct_type(ast_node parse,
+            std::unique_ptr<scope> member_scope,
+            std::vector<std::unique_ptr<declaration>> member_decls);
 
         ~struct_type();
 
@@ -71,7 +73,8 @@ inline namespace _v1
                 return make_ready_future(std::vector<function *>{});
             }
 
-            return _aggregate_copy_ctor_future->then([](auto && ctor) { return std::vector<function *>{ ctor }; });
+            return _aggregate_copy_ctor_future->then(
+                [](auto && ctor) { return std::vector<function *>{ ctor }; });
         }
 
         auto get_ast_info() const
@@ -81,7 +84,9 @@ inline namespace _v1
 
         virtual type * get_member_type(const std::u32string & name) const override
         {
-            auto it = std::find_if(_data_members.begin(), _data_members.end(), [&](auto && member) { return member->get_name() == name; });
+            auto it = std::find_if(_data_members.begin(), _data_members.end(), [&](auto && member) {
+                return member->get_name() == name;
+            });
             if (it == _data_members.end())
             {
                 return nullptr;
@@ -148,7 +153,9 @@ inline namespace _v1
 {
     struct precontext;
 
-    std::unique_ptr<struct_type> make_struct_type(precontext & ctx, const parser::struct_literal & parse, scope * lex_scope);
+    std::unique_ptr<struct_type> make_struct_type(precontext & ctx,
+        const parser::struct_literal & parse,
+        scope * lex_scope);
     std::unique_ptr<struct_type> import_struct_type(precontext & ctx, const proto::struct_type &);
 }
 }

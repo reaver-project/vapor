@@ -32,7 +32,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<expression> preanalyze_expression_list(precontext & ctx, const parser::expression_list & expr, scope * lex_scope)
+    std::unique_ptr<expression> preanalyze_expression_list(precontext & ctx,
+        const parser::expression_list & expr,
+        scope * lex_scope)
     {
         if (expr.expressions.size() == 1)
         {
@@ -40,7 +42,8 @@ inline namespace _v1
         }
 
         auto ret = std::make_unique<expression_list>(make_node(expr));
-        ret->value = fmap(expr.expressions, [&](auto && expr) { return preanalyze_expression(ctx, expr, lex_scope); });
+        ret->value =
+            fmap(expr.expressions, [&](auto && expr) { return preanalyze_expression(ctx, expr, lex_scope); });
         ret->_set_ast_info(make_node(expr));
         return ret;
     }
@@ -72,11 +75,12 @@ inline namespace _v1
 
     future<expression *> expression_list::_simplify_expr(recursive_context ctx)
     {
-        return when_all(fmap(value, [&](auto && expr) { return expr->simplify_expr(ctx); })).then([&](auto && simplified) -> expression * {
-            replace_uptrs(value, simplified, ctx.proper);
-            assert(0);
-            return this;
-        });
+        return when_all(fmap(value, [&](auto && expr) { return expr->simplify_expr(ctx); }))
+            .then([&](auto && simplified) -> expression * {
+                replace_uptrs(value, simplified, ctx.proper);
+                assert(0);
+                return this;
+            });
     }
 
     std::unique_ptr<expression> expression_list::_clone_expr_with_replacement(replacements & repl) const

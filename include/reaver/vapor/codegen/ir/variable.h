@@ -43,7 +43,8 @@ inline namespace _v1
         {
             virtual ~variable() = default;
 
-            variable(std::shared_ptr<variable_type> type, std::optional<std::u32string> name) : type{ std::move(type) }, name{ std::move(name) }
+            variable(std::shared_ptr<variable_type> type, std::optional<std::u32string> name)
+                : type{ std::move(type) }, name{ std::move(name) }
             {
             }
 
@@ -78,12 +79,15 @@ inline namespace _v1
             std::vector<scope> scopes;
         };
 
-        inline std::shared_ptr<variable> make_variable(std::shared_ptr<variable_type> type, std::optional<std::u32string> name = std::nullopt)
+        inline std::shared_ptr<variable> make_variable(std::shared_ptr<variable_type> type,
+            std::optional<std::u32string> name = std::nullopt)
         {
             return std::make_shared<variable>(variable{ std::move(type), std::move(name) });
         }
 
-        struct value : public std::variant<std::shared_ptr<variable>, integer_value, boolean_value, struct_value, label>
+        struct value
+            : public std::
+                  variant<std::shared_ptr<variable>, integer_value, boolean_value, struct_value, label>
         {
             using variant::variant;
         };

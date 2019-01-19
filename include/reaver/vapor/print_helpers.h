@@ -43,7 +43,9 @@ inline namespace _v1
     namespace styles
     {
         static const style::style def = {};
-        static const style::style rule_name = { style::colors::bgreen, style::colors::def, style::styles::bold };
+        static const style::style rule_name = { style::colors::bgreen,
+            style::colors::def,
+            style::styles::bold };
         static const style::style subrule_name = { style::colors::bgreen, style::colors::def };
         static const style::style range = { style::colors::brown };
         static const style::style string_value = { style::colors::green };

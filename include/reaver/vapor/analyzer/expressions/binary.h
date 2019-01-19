@@ -33,7 +33,10 @@ inline namespace _v1
     class binary_expression : public expression
     {
     public:
-        binary_expression(ast_node parse, lexer::token op, std::unique_ptr<expression> lhs, std::unique_ptr<expression> rhs);
+        binary_expression(ast_node parse,
+            lexer::token op,
+            std::unique_ptr<expression> lhs,
+            std::unique_ptr<expression> rhs);
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
@@ -94,6 +97,8 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     struct precontext;
-    std::unique_ptr<binary_expression> preanalyze_binary_expression(precontext & ctx, const parser::binary_expression & parse, scope * lex_scope);
+    std::unique_ptr<binary_expression> preanalyze_binary_expression(precontext & ctx,
+        const parser::binary_expression & parse,
+        scope * lex_scope);
 }
 }

@@ -101,23 +101,26 @@ inline namespace _v1
     class owning_conversion_expression : public conversion_expression
     {
     public:
-        owning_conversion_expression(std::unique_ptr<expression> expr, type * target) : conversion_expression{ expr.get(), target }, _owned{ std::move(expr) }
+        owning_conversion_expression(std::unique_ptr<expression> expr, type * target)
+            : conversion_expression{ expr.get(), target }, _owned{ std::move(expr) }
         {
         }
 
     private:
         virtual future<expression *> _simplify_expr(recursive_context ctx) override
         {
-            return _owned->simplify_expr(ctx).then([&, this, ctx](auto && simplified) -> future<expression *> {
-                replace_uptr(_owned, simplified, ctx.proper);
-                return this->conversion_expression::_simplify_expr(ctx).then([&](auto && simpl) -> expression * {
-                    if (simpl && simpl != this)
-                    {
-                        return simpl;
-                    }
-                    return this;
+            return _owned->simplify_expr(ctx).then(
+                [&, this, ctx](auto && simplified) -> future<expression *> {
+                    replace_uptr(_owned, simplified, ctx.proper);
+                    return this->conversion_expression::_simplify_expr(ctx).then(
+                        [&](auto && simpl) -> expression * {
+                            if (simpl && simpl != this)
+                            {
+                                return simpl;
+                            }
+                            return this;
+                        });
                 });
-            });
         }
 
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
@@ -133,7 +136,8 @@ inline namespace _v1
         return std::make_unique<conversion_expression>(expr, conv);
     }
 
-    inline std::unique_ptr<expression> make_conversion_expression(std::unique_ptr<expression> expr, type * conv)
+    inline std::unique_ptr<expression> make_conversion_expression(std::unique_ptr<expression> expr,
+        type * conv)
     {
         return std::make_unique<owning_conversion_expression>(std::move(expr), conv);
     }

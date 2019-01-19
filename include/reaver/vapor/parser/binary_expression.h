@@ -82,7 +82,8 @@ inline namespace _v1
             lexer::token_type::logical_and_assignment,
             lexer::token_type::logical_or_assignment };
 
-        return std::find(right_assoc.begin(), right_assoc.end(), type) != right_assoc.end() ? assoc::right : assoc::left;
+        return std::find(right_assoc.begin(), right_assoc.end(), type) != right_assoc.end() ? assoc::right
+                                                                                            : assoc::left;
     };
 
     binary_expression parse_binary_expression(context & ctx, expression lhs);

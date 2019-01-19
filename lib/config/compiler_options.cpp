@@ -36,49 +36,49 @@ inline namespace _v1
         _source_path = std::move(path);
     }
 
-#define DEFINE_DIR(name, privname, ext, ...)                                                                                                                   \
-    std::optional<boost::filesystem::path> compiler_options::name##_dir() const                                                                                \
-    {                                                                                                                                                          \
-        if (privname##_dir)                                                                                                                                    \
-        {                                                                                                                                                      \
-            return privname##_dir.value();                                                                                                                     \
-        }                                                                                                                                                      \
-                                                                                                                                                               \
-        if (_output_dir)                                                                                                                                       \
-        {                                                                                                                                                      \
-            return _output_dir.value();                                                                                                                        \
-        }                                                                                                                                                      \
-                                                                                                                                                               \
-        return {};                                                                                                                                             \
-    }                                                                                                                                                          \
-                                                                                                                                                               \
-    void compiler_options::set_##name##_dir(boost::filesystem::path dir)                                                                                       \
-    {                                                                                                                                                          \
-        __VA_ARGS__;                                                                                                                                           \
-        privname##_dir = std::move(dir);                                                                                                                       \
-    }                                                                                                                                                          \
-                                                                                                                                                               \
-    boost::filesystem::path compiler_options::name##_path() const                                                                                              \
-    {                                                                                                                                                          \
-        if (privname##_path && privname##_path != "")                                                                                                          \
-        {                                                                                                                                                      \
-            return privname##_path.value();                                                                                                                    \
-        }                                                                                                                                                      \
-                                                                                                                                                               \
-        if (auto dir = name##_dir())                                                                                                                           \
-        {                                                                                                                                                      \
-            assert(_module_name_path);                                                                                                                         \
-            auto ret = dir.value() / _module_name_path.value();                                                                                                \
-            return ret.string() + ext;                                                                                                                         \
-        }                                                                                                                                                      \
-                                                                                                                                                               \
-        return _source_path.value().string() + ext;                                                                                                            \
-    }                                                                                                                                                          \
-                                                                                                                                                               \
-    void compiler_options::set_##name##_path(boost::filesystem::path path)                                                                                     \
-    {                                                                                                                                                          \
-        assert(!privname##_path);                                                                                                                              \
-        privname##_path = std::move(path);                                                                                                                     \
+#define DEFINE_DIR(name, privname, ext, ...)                                                                 \
+    std::optional<boost::filesystem::path> compiler_options::name##_dir() const                              \
+    {                                                                                                        \
+        if (privname##_dir)                                                                                  \
+        {                                                                                                    \
+            return privname##_dir.value();                                                                   \
+        }                                                                                                    \
+                                                                                                             \
+        if (_output_dir)                                                                                     \
+        {                                                                                                    \
+            return _output_dir.value();                                                                      \
+        }                                                                                                    \
+                                                                                                             \
+        return {};                                                                                           \
+    }                                                                                                        \
+                                                                                                             \
+    void compiler_options::set_##name##_dir(boost::filesystem::path dir)                                     \
+    {                                                                                                        \
+        __VA_ARGS__;                                                                                         \
+        privname##_dir = std::move(dir);                                                                     \
+    }                                                                                                        \
+                                                                                                             \
+    boost::filesystem::path compiler_options::name##_path() const                                            \
+    {                                                                                                        \
+        if (privname##_path && privname##_path != "")                                                        \
+        {                                                                                                    \
+            return privname##_path.value();                                                                  \
+        }                                                                                                    \
+                                                                                                             \
+        if (auto dir = name##_dir())                                                                         \
+        {                                                                                                    \
+            assert(_module_name_path);                                                                       \
+            auto ret = dir.value() / _module_name_path.value();                                              \
+            return ret.string() + ext;                                                                       \
+        }                                                                                                    \
+                                                                                                             \
+        return _source_path.value().string() + ext;                                                          \
+    }                                                                                                        \
+                                                                                                             \
+    void compiler_options::set_##name##_path(boost::filesystem::path path)                                   \
+    {                                                                                                        \
+        assert(!privname##_path);                                                                            \
+        privname##_path = std::move(path);                                                                   \
     }
 
     DEFINE_DIR(module, _module, "m", add_first_module_path(dir))

@@ -63,7 +63,8 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            os << styles::def << ctx << styles::type << "boolean" << styles::def << " @ " << styles::address << this << styles::def << ": builtin type\n";
+            os << styles::def << ctx << styles::type << "boolean" << styles::def << " @ " << styles::address
+               << this << styles::def << ": builtin type\n";
         }
 
         virtual std::unique_ptr<proto::type> generate_interface() const override
@@ -89,7 +90,10 @@ inline namespace _v1
         }
 
         template<typename Instruction, typename Eval>
-        static auto _generate_function(const char32_t * name, const char * desc, Eval eval, type * return_type);
+        static auto _generate_function(const char32_t * name,
+            const char * desc,
+            Eval eval,
+            type * return_type);
         static function * _equal_comparison();
     };
 

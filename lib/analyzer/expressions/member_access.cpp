@@ -30,7 +30,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<member_access_expression> preanalyze_member_access_expression(precontext &, const parser::member_expression & parse, scope *)
+    std::unique_ptr<member_access_expression> preanalyze_member_access_expression(precontext &,
+        const parser::member_expression & parse,
+        scope *)
     {
         return std::make_unique<member_access_expression>(make_node(parse), parse.member_name.value.string);
     }
@@ -58,7 +60,8 @@ inline namespace _v1
         auto & expr_ctx = get_context();
         assert(!expr_ctx.empty());
 
-        auto last_postfix = std::find_if(expr_ctx.rbegin(), expr_ctx.rend(), [](auto && ctx_expr) { return ctx_expr.index() == 0; });
+        auto last_postfix = std::find_if(
+            expr_ctx.rbegin(), expr_ctx.rend(), [](auto && ctx_expr) { return ctx_expr.index() == 0; });
         assert(last_postfix != expr_ctx.rend());
 
         // this is actually conceptually "last_postfix + 1" (if last_postfix was a normal iterator)
@@ -81,7 +84,9 @@ inline namespace _v1
             }
         }
 
-        return std::get<postfix_expression *>(*last_postfix)->get_base_expression(ctx).then([&](auto && base) { this->set_base_expression(base); });
+        return std::get<postfix_expression *>(*last_postfix)
+            ->get_base_expression(ctx)
+            .then([&](auto && base) { this->set_base_expression(base); });
     }
 
     void member_access_expression::set_base_expression(expression * base)
@@ -102,7 +107,8 @@ inline namespace _v1
         auto base_variable_value = _base->codegen_ir(ctx).back().result;
         auto base_variable = std::get<std::shared_ptr<codegen::ir::variable>>(base_variable_value);
 
-        auto retvar = codegen::ir::make_variable(_base->get_type()->get_member_type(_name)->codegen_type(ctx));
+        auto retvar =
+            codegen::ir::make_variable(_base->get_type()->get_member_type(_name)->codegen_type(ctx));
 
         return { codegen::ir::instruction{ std::nullopt,
             std::nullopt,

@@ -103,6 +103,8 @@ inline namespace _v1
 {
     struct precontext;
 
-    std::unique_ptr<return_statement> preanalyze_return(precontext & cts, const parser::return_expression & parse, scope * lex_scope);
+    std::unique_ptr<return_statement> preanalyze_return(precontext & cts,
+        const parser::return_expression & parse,
+        scope * lex_scope);
 }
 }

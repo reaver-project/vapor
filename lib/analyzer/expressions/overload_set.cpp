@@ -48,8 +48,11 @@ inline namespace _v1
     {
         auto var = codegen::ir::make_variable(_type->codegen_type(ctx));
         var->scopes = _type->get_scope()->codegen_ir();
-        return { codegen::ir::instruction{
-            std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, codegen::ir::value{ std::move(var) } } };
+        return { codegen::ir::instruction{ std::nullopt,
+            std::nullopt,
+            { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
+            {},
+            codegen::ir::value{ std::move(var) } } };
     }
 
     declaration_ir overload_set::declaration_codegen_ir(ir_generation_context & ctx) const

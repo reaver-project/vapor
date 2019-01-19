@@ -48,7 +48,8 @@ inline namespace _v1
         auto ret = std::make_unique<declaration>(make_node(parse),
             parse.identifier.value.string,
             fmap(parse.rhs, [&](auto && expr) { return preanalyze_expression(ctx, expr, old_scope); }),
-            fmap(parse.type_expression, [&](auto && expr) { return preanalyze_expression(ctx, expr, old_scope); }),
+            fmap(parse.type_expression,
+                [&](auto && expr) { return preanalyze_expression(ctx, expr, old_scope); }),
             new_scope,
             type);
 
@@ -60,20 +61,27 @@ inline namespace _v1
         if (parse.export_)
         {
             ret->mark_exported();
-            ret->declared_symbol()->get_expression_future().then([](auto && expr) { expr->mark_exported(); }).detach();
+            ret->declared_symbol()
+                ->get_expression_future()
+                .then([](auto && expr) { expr->mark_exported(); })
+                .detach();
         }
 
         return ret;
     }
 
-    std::unique_ptr<declaration> preanalyze_declaration(precontext & ctx, const parser::declaration & parse, scope *& lex_scope)
+    std::unique_ptr<declaration> preanalyze_declaration(precontext & ctx,
+        const parser::declaration & parse,
+        scope *& lex_scope)
     {
         auto old_scope = lex_scope;
         lex_scope = old_scope->clone_for_decl();
         return _preanalyze_declaration(ctx, parse, old_scope, lex_scope, declaration_type::variable);
     }
 
-    std::unique_ptr<declaration> preanalyze_member_declaration(precontext & ctx, const parser::declaration & parse, scope * lex_scope)
+    std::unique_ptr<declaration> preanalyze_member_declaration(precontext & ctx,
+        const parser::declaration & parse,
+        scope * lex_scope)
     {
         return _preanalyze_declaration(ctx, parse, lex_scope, lex_scope, declaration_type::member);
     }
@@ -84,7 +92,10 @@ inline namespace _v1
         std::optional<std::unique_ptr<expression>> type_specifier,
         scope * scope,
         declaration_type decl_type)
-        : _name{ std::move(name) }, _type_specifier{ std::move(type_specifier) }, _init_expr{ std::move(init_expr) }, _type{ decl_type }
+        : _name{ std::move(name) },
+          _type_specifier{ std::move(type_specifier) },
+          _init_expr{ std::move(init_expr) },
+          _type{ decl_type }
     {
         _set_ast_info(parse);
 

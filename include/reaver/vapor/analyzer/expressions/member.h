@@ -33,7 +33,8 @@ inline namespace _v1
     class member_expression : public expression
     {
     public:
-        member_expression(type * parent_type, std::u32string name, type * own_type) : expression{ own_type }, _parent{ parent_type }, _name{ std::move(name) }
+        member_expression(type * parent_type, std::u32string name, type * own_type)
+            : expression{ own_type }, _parent{ parent_type }, _name{ std::move(name) }
         {
         }
 

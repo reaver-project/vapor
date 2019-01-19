@@ -40,7 +40,8 @@ inline namespace _v1
         position & operator=(const position &) = default;
         position & operator=(position &&) = default;
 
-        position(std::size_t offset, std::optional<std::string_view> file_path = std::nullopt) : offset{ offset }, file_path{ file_path }
+        position(std::size_t offset, std::optional<std::string_view> file_path = std::nullopt)
+            : offset{ offset }, file_path{ file_path }
         {
         }
 

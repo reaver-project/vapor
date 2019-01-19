@@ -31,7 +31,8 @@ namespace reaver::vapor::codegen
 inline namespace _v1
 {
     template<>
-    std::u32string llvm_ir_generator::generate<ir::aggregate_init_instruction>(const ir::instruction & inst, codegen_context & ctx)
+    std::u32string llvm_ir_generator::generate<ir::aggregate_init_instruction>(const ir::instruction & inst,
+        codegen_context & ctx)
     {
         std::u32string ret;
 
@@ -52,8 +53,9 @@ inline namespace _v1
                 return variable + U"." + utf32(std::to_string(step_count)) + U"\"";
             }();
 
-            ret += next_variable + U" = insertvalue " + type_of(inst.result, ctx) + U" " + base_variable + U", " + type_of(argument, ctx) + U" "
-                + value_of(argument, ctx) + U", " + utf32(std::to_string(step_count)) + U"\n";
+            ret += next_variable + U" = insertvalue " + type_of(inst.result, ctx) + U" " + base_variable
+                + U", " + type_of(argument, ctx) + U" " + value_of(argument, ctx) + U", "
+                + utf32(std::to_string(step_count)) + U"\n";
 
             base_variable = std::move(next_variable);
             ++step_count;
@@ -76,7 +78,8 @@ inline namespace _v1
     }
 
     template<>
-    std::u32string llvm_ir_generator::generate<ir::member_access_instruction>(const ir::instruction & inst, codegen_context & ctx)
+    std::u32string llvm_ir_generator::generate<ir::member_access_instruction>(const ir::instruction & inst,
+        codegen_context & ctx)
     {
         assert(inst.operands.size() == 2);
 
@@ -98,8 +101,8 @@ inline namespace _v1
 
         assert(member_ir != members.end());
 
-        return variable_of(inst.result, ctx) + U" = extractvalue " + type_of(inst.operands[0], ctx) + U" " + value_of(inst.operands[0], ctx) + U", "
-            + utf32(std::to_string(index - 1)) + U"\n";
+        return variable_of(inst.result, ctx) + U" = extractvalue " + type_of(inst.operands[0], ctx) + U" "
+            + value_of(inst.operands[0], ctx) + U", " + utf32(std::to_string(index - 1)) + U"\n";
     }
 }
 }

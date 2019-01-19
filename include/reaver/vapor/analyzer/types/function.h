@@ -38,13 +38,14 @@ inline namespace _v1
 
         virtual std::string explain() const override
         {
-            return "(" + boost::join(fmap(_parameters, [&](auto && param) { return param->explain(); }), ", ") + ") -> " + _return->explain();
+            return "(" + boost::join(fmap(_parameters, [&](auto && param) { return param->explain(); }), ", ")
+                + ") -> " + _return->explain();
         }
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            os << styles::def << ctx << styles::type << explain() << styles::def << " @ " << styles::address << this << styles::def
-               << ": builtin function type\n";
+            os << styles::def << ctx << styles::type << explain() << styles::def << " @ " << styles::address
+               << this << styles::def << ": builtin function type\n";
         }
 
         virtual future<std::vector<function *>> get_candidates(lexer::token_type op) const override;

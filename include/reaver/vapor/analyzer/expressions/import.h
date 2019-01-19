@@ -41,7 +41,8 @@ inline namespace _v1
     class import_expression : public expression
     {
     public:
-        import_expression(ast_node node, entity * module) : expression{ module->get_type() }, _module{ module }
+        import_expression(ast_node node, entity * module)
+            : expression{ module->get_type() }, _module{ module }
         {
             _set_ast_info(node);
         }

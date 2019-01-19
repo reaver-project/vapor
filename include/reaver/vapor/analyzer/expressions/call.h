@@ -33,7 +33,8 @@ inline namespace _v1
     class call_expression : public expression
     {
     public:
-        call_expression(function * fun, std::vector<expression *> args) : _function{ fun }, _args{ std::move(args) }
+        call_expression(function * fun, std::vector<expression *> args)
+            : _function{ fun }, _args{ std::move(args) }
         {
         }
 
@@ -98,7 +99,8 @@ inline namespace _v1
     {
     public:
         owning_call_expression(function * fun, std::vector<std::unique_ptr<expression>> args)
-            : call_expression{ fun, fmap(args, [](auto && arg) { return arg.get(); }) }, _var_exprs{ std::move(args) }
+            : call_expression{ fun, fmap(args, [](auto && arg) { return arg.get(); }) },
+              _var_exprs{ std::move(args) }
         {
         }
 

@@ -153,16 +153,17 @@ inline namespace _v1
         sized_int->set_return_type(builtin_types().type->get_expression());
         sized_int->set_parameters({ integer_type_expr });
 
-        sized_int->add_analysis_hook([](analysis_context & ctx, call_expression * expr, std::vector<expression *> args) {
-            assert(args.size() == 2 && args[1]->get_type() == builtin_types().integer.get());
-            auto int_var = static_cast<integer_constant *>(args[1]);
-            auto size = int_var->get_value().convert_to<std::size_t>();
+        sized_int->add_analysis_hook(
+            [](analysis_context & ctx, call_expression * expr, std::vector<expression *> args) {
+                assert(args.size() == 2 && args[1]->get_type() == builtin_types().integer.get());
+                auto int_var = static_cast<integer_constant *>(args[1]);
+                auto size = int_var->get_value().convert_to<std::size_t>();
 
-            auto type = ctx.get_sized_integer_type(size);
-            expr->replace_with(make_expression_ref(type->get_expression(), expr->get_ast_info()));
+                auto type = ctx.get_sized_integer_type(size);
+                expr->replace_with(make_expression_ref(type->get_expression(), expr->get_ast_info()));
 
-            return make_ready_future();
-        });
+                return make_ready_future();
+            });
 
         auto sized_int_expr = std::unique_ptr<expression>{ make_function_expression(sized_int.get()) };
         keepalive_list.emplace_back(std::move(sized_int));

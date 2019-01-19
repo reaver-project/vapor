@@ -53,7 +53,8 @@ inline namespace _v1
 
         virtual bool matches(const std::vector<type *> & others) const override
         {
-            return std::all_of(others.begin(), others.end(), [&](auto && other) { return _pattern->matches(other); });
+            return std::all_of(
+                others.begin(), others.end(), [&](auto && other) { return _pattern->matches(other); });
         }
 
         virtual type * get_pack_type() const override

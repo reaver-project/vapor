@@ -44,7 +44,8 @@ inline namespace _v1
 
     struct user_defined_reference_compare
     {
-        bool operator()(const proto::user_defined_reference * lhs, const proto::user_defined_reference * rhs) const;
+        bool operator()(const proto::user_defined_reference * lhs,
+            const proto::user_defined_reference * rhs) const;
     };
 
     struct user_defined_reference_hash
@@ -58,7 +59,10 @@ inline namespace _v1
         analysis_context & proper;
         std::unordered_map<std::string, std::unique_ptr<entity>> modules = {};
         std::set<std::unique_ptr<entity>> imported_entities = {};
-        std::unordered_map<const proto::user_defined_reference *, std::shared_ptr<unresolved_type>, user_defined_reference_hash, user_defined_reference_compare>
+        std::unordered_map<const proto::user_defined_reference *,
+            std::shared_ptr<unresolved_type>,
+            user_defined_reference_hash,
+            user_defined_reference_compare>
             user_defined_types = {};
 
         scope * global_scope = nullptr;

@@ -32,7 +32,9 @@ MAYFLY_BEGIN_SUITE("return_expression");
 
 MAYFLY_ADD_TESTCASE("return_expression",
     test(UR"(return 1;)",
-        return_expression{ { 0, 8 }, expression{ { 7, 8 }, integer_literal{ { 7, 8 }, { lexer::token_type::integer, UR"(1)", { 7, 8 } }, {} } } },
+        return_expression{ { 0, 8 },
+            expression{ { 7, 8 },
+                integer_literal{ { 7, 8 }, { lexer::token_type::integer, UR"(1)", { 7, 8 } }, {} } } },
         &parse_return_expression));
 
 MAYFLY_END_SUITE;

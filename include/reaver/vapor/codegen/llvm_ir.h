@@ -36,7 +36,8 @@ inline namespace _v1
     public:
         virtual std::u32string generate_global_definitions(codegen_context &) const override;
         virtual std::u32string generate_definitions(std::vector<ir::entity> &, codegen_context &) override;
-        virtual std::u32string generate_definition(std::shared_ptr<ir::variable_type>, codegen_context &) override;
+        virtual std::u32string generate_definition(std::shared_ptr<ir::variable_type>,
+            codegen_context &) override;
 
         std::u32string generate_definition(ir::variable &, codegen_context &);
         std::u32string generate_definition(ir::function &, codegen_context &);
@@ -98,7 +99,9 @@ inline namespace _v1
                         os << val.value;
                         return utf32(os.str());
                     },
-                    [&](const codegen::ir::boolean_value & val) -> std::u32string { return val.value ? U"true" : U"false"; },
+                    [&](const codegen::ir::boolean_value & val) -> std::u32string {
+                        return val.value ? U"true" : U"false";
+                    },
                     [&](const std::shared_ptr<ir::variable> & var) { return variable_name(*var, ctx); },
                     [&](const codegen::ir::label & label) {
                         assert(label.scopes.empty());

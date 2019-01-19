@@ -36,7 +36,8 @@ inline namespace _v1
         if (get_type() == builtin_types().type.get())
         {
             auto ret = std::make_unique<proto::type>();
-            ret->set_allocated_reference(_referenced->as<type_expression>()->get_value()->generate_interface_reference().release());
+            ret->set_allocated_reference(
+                _referenced->as<type_expression>()->get_value()->generate_interface_reference().release());
             return ret;
         }
 

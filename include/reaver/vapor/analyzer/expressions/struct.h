@@ -32,7 +32,8 @@ inline namespace _v1
     class struct_expression : public expression
     {
     public:
-        struct_expression(std::shared_ptr<struct_type> type, std::vector<std::unique_ptr<expression>> fields) : expression{ type.get() }, _type{ type }
+        struct_expression(std::shared_ptr<struct_type> type, std::vector<std::unique_ptr<expression>> fields)
+            : expression{ type.get() }, _type{ type }
         {
             auto members = _type->get_data_members();
 
@@ -49,12 +50,15 @@ inline namespace _v1
 
         virtual bool is_constant() const override
         {
-            return std::all_of(_fields_in_order.begin(), _fields_in_order.end(), [](auto && field) { return field->is_constant(); });
+            return std::all_of(_fields_in_order.begin(), _fields_in_order.end(), [](auto && field) {
+                return field->is_constant();
+            });
         }
 
         virtual expression * get_member(const std::u32string & name) const override
         {
-            auto it = std::find_if(_fields.begin(), _fields.end(), [&](auto && elem) { return elem.first->get_name() == name; });
+            auto it = std::find_if(
+                _fields.begin(), _fields.end(), [&](auto && elem) { return elem.first->get_name() == name; });
             if (it == _fields.end())
             {
                 return nullptr;
@@ -88,16 +92,21 @@ inline namespace _v1
     private:
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
-            return std::make_unique<struct_expression>(_type, fmap(_fields_in_order, [&](auto && field) { return repl.copy_claim(field); }));
+            return std::make_unique<struct_expression>(
+                _type, fmap(_fields_in_order, [&](auto && field) { return repl.copy_claim(field); }));
         }
 
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
         {
             auto ir = fmap(_fields_in_order, [&](auto && field) { return field->codegen_ir(ctx); });
-            auto result = codegen::ir::struct_value{ _type->codegen_type(ctx), fmap(ir, [&](auto && field_ir) { return field_ir.back().result; }) };
+            auto result = codegen::ir::struct_value{ _type->codegen_type(ctx),
+                fmap(ir, [&](auto && field_ir) { return field_ir.back().result; }) };
 
-            return { codegen::ir::instruction{
-                std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, std::move(result) } };
+            return { codegen::ir::instruction{ std::nullopt,
+                std::nullopt,
+                { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
+                {},
+                std::move(result) } };
         }
 
         virtual bool _is_equal(const expression * rhs) const override
@@ -116,7 +125,8 @@ inline namespace _v1
         std::vector<expression *> _fields_in_order;
     };
 
-    inline auto make_struct_expression(std::shared_ptr<struct_type> type, std::vector<std::unique_ptr<expression>> fields)
+    inline auto make_struct_expression(std::shared_ptr<struct_type> type,
+        std::vector<std::unique_ptr<expression>> fields)
     {
         return std::make_unique<struct_expression>(type, std::move(fields));
     }

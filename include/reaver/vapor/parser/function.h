@@ -54,7 +54,8 @@ inline namespace _v1
     bool operator==(const function_declaration & lhs, const function_declaration & rhs);
     bool operator==(const function_definition & lhs, const function_definition & rhs);
 
-    function_declaration parse_function_declaration(context & ctx, parameter_type_mode mode = parameter_type_mode::required);
+    function_declaration parse_function_declaration(context & ctx,
+        parameter_type_mode mode = parameter_type_mode::required);
     function_definition parse_function_definition(context & ctx, parameter_type_mode mode);
     function_definition parse_function_definition(context & ctx,
         std::optional<function_declaration> decl = std::nullopt,

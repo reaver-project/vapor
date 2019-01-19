@@ -80,11 +80,15 @@ inline namespace _v1
             return std::all_of(value.begin(), value.end(), [](auto && expr) { return expr->is_constant(); });
         }
 
-        friend std::unique_ptr<expression> preanalyze_expression_list(precontext &, const parser::expression_list &, scope *);
+        friend std::unique_ptr<expression> preanalyze_expression_list(precontext &,
+            const parser::expression_list &,
+            scope *);
 
         std::vector<std::unique_ptr<expression>> value;
     };
 
-    std::unique_ptr<expression> preanalyze_expression_list(precontext & ctx, const parser::expression_list & expr, scope * lex_scope);
+    std::unique_ptr<expression> preanalyze_expression_list(precontext & ctx,
+        const parser::expression_list & expr,
+        scope * lex_scope);
 }
 }

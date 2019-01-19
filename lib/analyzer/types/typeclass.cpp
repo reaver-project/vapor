@@ -35,7 +35,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<typeclass> make_typeclass(precontext & ctx, const parser::typeclass_literal & parse, scope * lex_scope)
+    std::unique_ptr<typeclass> make_typeclass(precontext & ctx,
+        const parser::typeclass_literal & parse,
+        scope * lex_scope)
     {
         auto scope = lex_scope->clone_for_class();
         auto scope_ptr = scope.get();
@@ -61,7 +63,8 @@ inline namespace _v1
 
         scope_ptr->close();
 
-        return std::make_unique<typeclass>(make_node(parse), std::move(scope), std::move(params), std::move(fn_decls));
+        return std::make_unique<typeclass>(
+            make_node(parse), std::move(scope), std::move(params), std::move(fn_decls));
     }
 
     typeclass::typeclass(ast_node parse,
@@ -111,7 +114,8 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            os << styles::def << ctx << styles::type << "typeclass" << styles::def << " @ " << styles::address << this << styles::def << ": builtin type\n";
+            os << styles::def << ctx << styles::type << "typeclass" << styles::def << " @ " << styles::address
+               << this << styles::def << ": builtin type\n";
         }
 
         virtual std::unique_ptr<proto::type> generate_interface() const override
@@ -146,7 +150,9 @@ inline namespace _v1
     }
 
     typeclass_instance_type::typeclass_instance_type(typeclass * tc, std::vector<expression *> arguments)
-        : user_defined_type{ dont_init_expr }, _arguments{ std::move(arguments) }, _ctx{ tc->get_scope(), _arguments }
+        : user_defined_type{ dont_init_expr },
+          _arguments{ std::move(arguments) },
+          _ctx{ tc->get_scope(), _arguments }
     {
         _self_expression = std::make_unique<type_expression>(this, type_kind::typeclass);
 
@@ -161,8 +167,10 @@ inline namespace _v1
             fn_instance.instance = make_function(fn->explain(), fn->get_range());
             fn_instance.return_type_expression = repl.copy_claim(fn->return_type_expression());
             fn_instance.instance->set_return_type(fn_instance.return_type_expression);
-            fn_instance.parameter_expressions = fmap(fn->parameters(), [&](auto && param) { return repl.copy_claim(param); });
-            fn_instance.instance->set_parameters(fmap(fn_instance.parameter_expressions, [](auto && expr) { return expr.get(); }));
+            fn_instance.parameter_expressions =
+                fmap(fn->parameters(), [&](auto && param) { return repl.copy_claim(param); });
+            fn_instance.instance->set_parameters(
+                fmap(fn_instance.parameter_expressions, [](auto && expr) { return expr.get(); }));
 
             fn_instance.overload_set = get_overload_set(get_scope(), name);
             fn_instance.overload_set->get_overload_set_type()->add_function(fn_instance.instance.get());
@@ -193,15 +201,20 @@ inline namespace _v1
         {
             osets.push_back(create_overload_set(scope.get(), oset_name));
         }
-        // close here, because if the preanalysis below *adds* new members, then we have a bug... the assertion that checks for closeness of the scope
-        // needs to be somehow weakened here, to allow for more sensible error reporting than `assert`
+        // close here, because if the preanalysis below *adds* new members, then we have a bug... the
+        // assertion that checks for closeness of the scope needs to be somehow weakened here, to allow for
+        // more sensible error reporting than `assert`
         scope->close();
 
         return std::make_shared<typeclass_instance>(type, std::move(scope), std::move(osets));
     }
 
-    typeclass_instance::typeclass_instance(typeclass_instance_type * type, std::unique_ptr<scope> lex_scope, std::vector<std::shared_ptr<overload_set>> osets)
-        : user_defined_type{ dont_init_expr, std::move(lex_scope) }, _instance_type{ type }, _osets{ std::move(osets) }
+    typeclass_instance::typeclass_instance(typeclass_instance_type * type,
+        std::unique_ptr<scope> lex_scope,
+        std::vector<std::shared_ptr<overload_set>> osets)
+        : user_defined_type{ dont_init_expr, std::move(lex_scope) },
+          _instance_type{ type },
+          _osets{ std::move(osets) }
     {
         _self_expression = make_typeclass_instance_expression(this);
         _init_pack_type();

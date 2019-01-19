@@ -32,7 +32,9 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     function_type::function_type(type * ret, std::vector<type *> params)
-        : _return{ ret }, _parameters{ std::move(params) }, _params{ fmap(_parameters, [&](auto && param_type) { return make_runtime_value(param_type); }) }
+        : _return{ ret },
+          _parameters{ std::move(params) },
+          _params{ fmap(_parameters, [&](auto && param_type) { return make_runtime_value(param_type); }) }
     {
         _params.insert(_params.begin(), make_runtime_value(this));
 
@@ -42,20 +44,21 @@ inline namespace _v1
 
         _call_operator->make_member();
 
-        _call_operator->add_analysis_hook([this](analysis_context & ctx, call_expression * expr, std::vector<expression *> args) {
-            assert(args.size() >= 1);
-            assert(args.front()->get_type() == this);
-            auto fun_expr = args.front()->as<function_expression>();
-            assert(fun_expr->is_constant());
-            auto function = fun_expr->get_value();
-            assert(function);
+        _call_operator->add_analysis_hook(
+            [this](analysis_context & ctx, call_expression * expr, std::vector<expression *> args) {
+                assert(args.size() >= 1);
+                assert(args.front()->get_type() == this);
+                auto fun_expr = args.front()->as<function_expression>();
+                assert(fun_expr->is_constant());
+                auto function = fun_expr->get_value();
+                assert(function);
 
-            auto replacement = make_call_expression(function, std::move(args));
-            auto repl_ptr = replacement.get();
-            expr->replace_with(std::move(replacement));
+                auto replacement = make_call_expression(function, std::move(args));
+                auto repl_ptr = replacement.get();
+                expr->replace_with(std::move(replacement));
 
-            return repl_ptr->analyze(ctx);
-        });
+                return repl_ptr->analyze(ctx);
+            });
     }
 
     future<std::vector<function *>> function_type::get_candidates(lexer::token_type op) const

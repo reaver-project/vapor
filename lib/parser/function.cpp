@@ -30,7 +30,8 @@ inline namespace _v1
 {
     bool operator==(const function_declaration & lhs, const function_declaration & rhs)
     {
-        return lhs.range == rhs.range && lhs.name == rhs.name && lhs.parameters == rhs.parameters && lhs.return_type == rhs.return_type;
+        return lhs.range == rhs.range && lhs.name == rhs.name && lhs.parameters == rhs.parameters
+            && lhs.return_type == rhs.return_type;
     }
 
     bool operator==(const function_definition & lhs, const function_definition & rhs)
@@ -74,7 +75,9 @@ inline namespace _v1
         return parse_function_definition(ctx, std::nullopt, mode);
     }
 
-    function_definition parse_function_definition(context & ctx, std::optional<function_declaration> decl, parameter_type_mode mode)
+    function_definition parse_function_definition(context & ctx,
+        std::optional<function_declaration> decl,
+        parameter_type_mode mode)
     {
         function_definition ret;
 

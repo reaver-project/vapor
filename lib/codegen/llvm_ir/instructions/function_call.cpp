@@ -29,25 +29,27 @@ namespace reaver::vapor::codegen
 inline namespace _v1
 {
     template<>
-    std::u32string llvm_ir_generator::generate<ir::function_call_instruction>(const ir::instruction & inst, codegen_context & ctx)
+    std::u32string llvm_ir_generator::generate<ir::function_call_instruction>(const ir::instruction & inst,
+        codegen_context & ctx)
     {
         std::size_t actual_argument_offset = inst.operands.front().index() == 0 ? 2 : 1;
 
         std::u32string arguments;
-        std::for_each(inst.operands.begin() + actual_argument_offset, inst.operands.end(), [&](auto && operand) {
-            fmap(operand,
-                make_overload_set(
-                    [&](std::shared_ptr<ir::variable> var) {
-                        ctx.put_into_global_before += ctx.define_if_necessary(var->type);
-                        return unit{};
-                    },
-                    [&](auto &&) { return unit{}; }));
+        std::for_each(
+            inst.operands.begin() + actual_argument_offset, inst.operands.end(), [&](auto && operand) {
+                fmap(operand,
+                    make_overload_set(
+                        [&](std::shared_ptr<ir::variable> var) {
+                            ctx.put_into_global_before += ctx.define_if_necessary(var->type);
+                            return unit{};
+                        },
+                        [&](auto &&) { return unit{}; }));
 
-            arguments += type_of(operand, ctx);
-            arguments += U" ";
-            arguments += value_of(operand, ctx);
-            arguments += U", ";
-        });
+                arguments += type_of(operand, ctx);
+                arguments += U" ";
+                arguments += value_of(operand, ctx);
+                arguments += U", ";
+            });
         if (inst.operands.size() > actual_argument_offset)
         {
             arguments.pop_back();
@@ -63,7 +65,8 @@ inline namespace _v1
         }
         call_operand_str += call_operand.name;
 
-        return variable_of(inst.result, ctx) + U" = call " + type_of(inst.result, ctx) + U" @\"" + call_operand_str + U"\"(" + arguments + U")\n";
+        return variable_of(inst.result, ctx) + U" = call " + type_of(inst.result, ctx) + U" @\""
+            + call_operand_str + U"\"(" + arguments + U")\n";
     }
 }
 }

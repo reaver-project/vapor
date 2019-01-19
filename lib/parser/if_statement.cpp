@@ -29,7 +29,8 @@ inline namespace _v1
 {
     bool operator==(const if_statement & lhs, const if_statement & rhs)
     {
-        return lhs.range == rhs.range && lhs.condition == rhs.condition && *lhs.then_block == rhs.then_block && lhs.else_block == rhs.else_block;
+        return lhs.range == rhs.range && lhs.condition == rhs.condition && *lhs.then_block == rhs.then_block
+            && lhs.else_block == rhs.else_block;
     }
 
     if_statement parse_if_statement(context & ctx)

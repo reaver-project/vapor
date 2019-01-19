@@ -36,13 +36,19 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<postfix_expression> preanalyze_postfix_expression(precontext & ctx, const parser::postfix_expression & parse, scope * lex_scope)
+    std::unique_ptr<postfix_expression> preanalyze_postfix_expression(precontext & ctx,
+        const parser::postfix_expression & parse,
+        scope * lex_scope)
     {
         return std::make_unique<postfix_expression>(make_node(parse),
             std::get<0>(fmap(parse.base_expression,
-                make_overload_set([&](const parser::expression_list & expr_list)
-                                      -> std::unique_ptr<expression> { return preanalyze_expression_list(ctx, expr_list, lex_scope); },
-                    [&](const parser::identifier & ident) -> std::unique_ptr<expression> { return preanalyze_identifier(ctx, ident, lex_scope); }))),
+                make_overload_set(
+                    [&](const parser::expression_list & expr_list) -> std::unique_ptr<expression> {
+                        return preanalyze_expression_list(ctx, expr_list, lex_scope);
+                    },
+                    [&](const parser::identifier & ident) -> std::unique_ptr<expression> {
+                        return preanalyze_identifier(ctx, ident, lex_scope);
+                    }))),
             parse.modifier_type,
             fmap(parse.arguments, [&](auto && expr) { return preanalyze_expression(ctx, expr, lex_scope); }),
             fmap(parse.accessed_member, [&](auto && member) { return member.value.string; }));
@@ -53,7 +59,10 @@ inline namespace _v1
         std::optional<lexer::token_type> mod,
         std::vector<std::unique_ptr<expression>> arguments,
         std::optional<std::u32string> accessed_member)
-        : _base_expr{ std::move(base) }, _modifier{ mod }, _arguments{ std::move(arguments) }, _accessed_member{ std::move(accessed_member) }
+        : _base_expr{ std::move(base) },
+          _modifier{ mod },
+          _arguments{ std::move(arguments) },
+          _accessed_member{ std::move(accessed_member) }
     {
         _set_ast_info(parse);
     }
@@ -77,13 +86,14 @@ inline namespace _v1
             if (_modifier == lexer::token_type::dot)
             {
                 auto referenced_ctx = ctx.make_branch(true);
-                os << styles::def << referenced_ctx << styles::subrule_name << "referenced member: " << styles::string_value << utf8(*_accessed_member) << '\n';
+                os << styles::def << referenced_ctx << styles::subrule_name
+                   << "referenced member: " << styles::string_value << utf8(*_accessed_member) << '\n';
                 return;
             }
 
             auto modifier_ctx = ctx.make_branch(false);
-            os << styles::def << modifier_ctx << styles::subrule_name << "modifier type: " << styles::string_value << lexer::token_types[+_modifier.value()]
-               << '\n';
+            os << styles::def << modifier_ctx << styles::subrule_name
+               << "modifier type: " << styles::string_value << lexer::token_types[+_modifier.value()] << '\n';
 
             if (_arguments.size())
             {
@@ -135,7 +145,11 @@ inline namespace _v1
                         .then([&] { this->_set_type(_referenced_expression.value()->get_type()); });
                 }
 
-                return resolve_overload(ctx, get_ast_info()->range, _base_expr.get(), *_modifier, fmap(_arguments, [](auto && arg) { return arg.get(); }))
+                return resolve_overload(ctx,
+                    get_ast_info()->range,
+                    _base_expr.get(),
+                    *_modifier,
+                    fmap(_arguments, [](auto && arg) { return arg.get(); }))
                     .then([&](std::unique_ptr<expression> call_expr) {
                         if (auto call_expr_downcasted = call_expr->as<call_expression>())
                         {
@@ -162,7 +176,8 @@ inline namespace _v1
         }
 
         assert(_arguments.empty());
-        auto ret = std::unique_ptr<postfix_expression>(new postfix_expression(get_ast_info().value(), std::move(base), _modifier, {}, _accessed_member));
+        auto ret = std::unique_ptr<postfix_expression>(
+            new postfix_expression(get_ast_info().value(), std::move(base), _modifier, {}, _accessed_member));
 
         auto type = ret->_base_expr->get_type();
 
@@ -225,7 +240,8 @@ inline namespace _v1
                     }
 
                     assert(_referenced_expression.value()->is_member());
-                    auto member = _base_expr->get_member(_referenced_expression.value()->as<member_expression>()->get_name());
+                    auto member = _base_expr->get_member(
+                        _referenced_expression.value()->as<member_expression>()->get_name());
                     assert(member);
 
                     if (!member->is_constant())
@@ -259,7 +275,8 @@ inline namespace _v1
                 std::nullopt,
                 { boost::typeindex::type_id<codegen::ir::member_access_instruction>() },
                 { base_variable, codegen::ir::label{ _accessed_member.value(), {} } },
-                { codegen::ir::make_variable(_referenced_expression.value()->get_type()->codegen_type(ctx)) } };
+                { codegen::ir::make_variable(
+                    _referenced_expression.value()->get_type()->codegen_type(ctx)) } };
 
             base_expr_instructions.push_back(std::move(access_instruction));
 

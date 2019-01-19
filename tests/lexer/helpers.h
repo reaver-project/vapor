@@ -36,10 +36,11 @@ namespace vapor
         {
             auto test(std::u32string program, std::vector<token> expected)
             {
-                return [program = std::move(program), expected = std::move(expected)]()
-                {
+                return [program = std::move(program), expected = std::move(expected)]() {
                     std::vector<token> generated;
-                    std::copy(iterator{ program.begin(), program.end(), std::nullopt }, iterator{}, std::back_inserter(generated));
+                    std::copy(iterator{ program.begin(), program.end(), std::nullopt },
+                        iterator{},
+                        std::back_inserter(generated));
 
                     MAYFLY_REQUIRE(expected == generated);
                 };

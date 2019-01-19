@@ -74,7 +74,9 @@ inline namespace _v1
 {
     struct precontext;
 
-    inline std::unique_ptr<unary_expression> preanalyze_unary_expression(precontext & ctx, const parser::unary_expression &, scope *)
+    inline std::unique_ptr<unary_expression> preanalyze_unary_expression(precontext & ctx,
+        const parser::unary_expression &,
+        scope *)
     {
         assert(0);
     }

@@ -31,7 +31,8 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    parameter::parameter(ast_node parse, std::u32string name, std::unique_ptr<expression> type) : _name{ std::move(name) }, _type_expression{ std::move(type) }
+    parameter::parameter(ast_node parse, std::u32string name, std::unique_ptr<expression> type)
+        : _name{ std::move(name) }, _type_expression{ std::move(type) }
     {
         _set_ast_info(parse);
     }
@@ -56,13 +57,15 @@ inline namespace _v1
 
                 else if (ctx)
                 {
-                    return repl.claim(ctx->original_overload->parameters()[i]->as<parameter>()->get_type_expression());
+                    return repl.claim(
+                        ctx->original_overload->parameters()[i]->as<parameter>()->get_type_expression());
                 }
 
                 assert(!"a type not provided outside of an instance context");
             }();
 
-            auto param = std::make_unique<parameter>(make_node(param_parse), param_parse.name.value.string, std::move(type));
+            auto param = std::make_unique<parameter>(
+                make_node(param_parse), param_parse.name.value.string, std::move(type));
 
             auto symb = make_symbol(param_parse.name.value.string, param.get());
             lex_scope->init(param_parse.name.value.string, std::move(symb));

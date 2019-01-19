@@ -162,7 +162,9 @@ inline namespace _v1
     extern const std::unordered_map<std::u32string, token_type> keywords;
     extern const std::unordered_map<char32_t, token_type> symbols1;
     extern const std::unordered_map<char32_t, std::unordered_map<char32_t, token_type>> symbols2;
-    extern const std::unordered_map<char32_t, std::unordered_map<char32_t, std::unordered_map<char32_t, token_type>>> symbols3;
+    extern const std::unordered_map<char32_t,
+        std::unordered_map<char32_t, std::unordered_map<char32_t, token_type>>>
+        symbols3;
 
     class iterator;
 
@@ -176,7 +178,8 @@ inline namespace _v1
         token & operator=(const token &) = default;
         token & operator=(token &&) = default;
 
-        token(token_type t, std::u32string s, range_type r) : type{ t }, string{ std::move(s) }, range{ std::move(r) }
+        token(token_type t, std::u32string s, range_type r)
+            : type{ t }, string{ std::move(s) }, range{ std::move(r) }
         {
         }
 
@@ -192,7 +195,8 @@ inline namespace _v1
 
     inline std::ostream & operator<<(std::ostream & os, const token & tok)
     {
-        return os << "token type: `" << token_types[+tok.type] << "` token value: `" << utf8(tok.string) << "` token range: " << tok.range;
+        return os << "token type: `" << token_types[+tok.type] << "` token value: `" << utf8(tok.string)
+                  << "` token range: " << tok.range;
     };
 }
 }

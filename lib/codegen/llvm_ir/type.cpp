@@ -27,9 +27,11 @@ namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    std::u32string llvm_ir_generator::generate_definition(std::shared_ptr<ir::variable_type> type, codegen_context & ctx)
+    std::u32string llvm_ir_generator::generate_definition(std::shared_ptr<ir::variable_type> type,
+        codegen_context & ctx)
     {
-        if (type == ir::builtin_types().integer || type == ir::builtin_types().boolean || dynamic_cast<ir::sized_integer_type *>(type.get()))
+        if (type == ir::builtin_types().integer || type == ir::builtin_types().boolean
+            || dynamic_cast<ir::sized_integer_type *>(type.get()))
         {
             return {};
         }

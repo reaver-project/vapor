@@ -43,7 +43,10 @@ inline namespace _v1
     }
 
     template<typename Instruction, typename Eval>
-    auto boolean_type::_generate_function(const char32_t * name, const char * desc, Eval eval, type * return_type)
+    auto boolean_type::_generate_function(const char32_t * name,
+        const char * desc,
+        Eval eval,
+        type * return_type)
     {
         auto lhs = make_runtime_value(builtin_types().boolean.get());
         auto rhs = make_runtime_value(builtin_types().boolean.get());
@@ -57,42 +60,53 @@ inline namespace _v1
         fun->set_parameters({ lhs_arg, rhs_arg });
         fun->set_eval(eval);
         fun->mark_builtin();
-        fun->set_codegen([name, return_type, lhs = std::move(lhs), rhs = std::move(rhs)](ir_generation_context & ctx) {
-            auto lhs_ir = get_ir_variable(lhs->codegen_ir(ctx));
-            auto rhs_ir = get_ir_variable(rhs->codegen_ir(ctx));
+        fun->set_codegen(
+            [name, return_type, lhs = std::move(lhs), rhs = std::move(rhs)](ir_generation_context & ctx) {
+                auto lhs_ir = get_ir_variable(lhs->codegen_ir(ctx));
+                auto rhs_ir = get_ir_variable(rhs->codegen_ir(ctx));
 
-            auto retval = codegen::ir::make_variable(return_type->codegen_type(ctx));
+                auto retval = codegen::ir::make_variable(return_type->codegen_type(ctx));
 
-            return codegen::ir::function{ name,
-                {},
-                { lhs_ir, rhs_ir },
-                retval,
-                { codegen::ir::instruction{ std::nullopt, std::nullopt, { boost::typeindex::type_id<Instruction>() }, { lhs_ir, rhs_ir }, retval },
-                    codegen::ir::instruction{ std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, {}, retval } } };
-        });
+                return codegen::ir::function{ name,
+                    {},
+                    { lhs_ir, rhs_ir },
+                    retval,
+                    { codegen::ir::instruction{ std::nullopt,
+                          std::nullopt,
+                          { boost::typeindex::type_id<Instruction>() },
+                          { lhs_ir, rhs_ir },
+                          retval },
+                        codegen::ir::instruction{ std::nullopt,
+                            std::nullopt,
+                            { boost::typeindex::type_id<codegen::ir::return_instruction>() },
+                            {},
+                            retval } } };
+            });
         return fun;
     }
 
-#define ADD_OPERATION(NAME, BUILTIN_NAME, OPERATOR, RESULT_TYPE)                                                                                               \
-    function * boolean_type::_##NAME()                                                                                                                         \
-    {                                                                                                                                                          \
-        static auto eval = [](auto &&, const std::vector<expression *> & args) {                                                                               \
-            assert(args.size() == 2);                                                                                                                          \
-            assert(args[0]->get_type() == builtin_types().boolean.get());                                                                                      \
-            assert(args[1]->get_type() == builtin_types().boolean.get());                                                                                      \
-                                                                                                                                                               \
-            if (!args[0]->is_constant() || !args[1]->is_constant())                                                                                            \
-            {                                                                                                                                                  \
-                return make_ready_future<expression *>(nullptr);                                                                                               \
-            }                                                                                                                                                  \
-                                                                                                                                                               \
-            auto lhs = args[0]->as<boolean_constant>();                                                                                                        \
-            auto rhs = args[1]->as<boolean_constant>();                                                                                                        \
-            return make_ready_future<expression *>(std::make_unique<RESULT_TYPE##_constant>(lhs->get_value() OPERATOR rhs->get_value()).release());            \
-        };                                                                                                                                                     \
-        static auto NAME = _generate_function<codegen::ir::boolean_##NAME##_instruction>(                                                                      \
-            BUILTIN_NAME, "<builtin boolean " #NAME ">", eval, builtin_types().RESULT_TYPE.get());                                                             \
-        return NAME.get();                                                                                                                                     \
+#define ADD_OPERATION(NAME, BUILTIN_NAME, OPERATOR, RESULT_TYPE)                                             \
+    function * boolean_type::_##NAME()                                                                       \
+    {                                                                                                        \
+        static auto eval = [](auto &&, const std::vector<expression *> & args) {                             \
+            assert(args.size() == 2);                                                                        \
+            assert(args[0]->get_type() == builtin_types().boolean.get());                                    \
+            assert(args[1]->get_type() == builtin_types().boolean.get());                                    \
+                                                                                                             \
+            if (!args[0]->is_constant() || !args[1]->is_constant())                                          \
+            {                                                                                                \
+                return make_ready_future<expression *>(nullptr);                                             \
+            }                                                                                                \
+                                                                                                             \
+            auto lhs = args[0]->as<boolean_constant>();                                                      \
+            auto rhs = args[1]->as<boolean_constant>();                                                      \
+            return make_ready_future<expression *>(                                                          \
+                std::make_unique<RESULT_TYPE##_constant>(lhs->get_value() OPERATOR rhs->get_value())         \
+                    .release());                                                                             \
+        };                                                                                                   \
+        static auto NAME = _generate_function<codegen::ir::boolean_##NAME##_instruction>(                    \
+            BUILTIN_NAME, "<builtin boolean " #NAME ">", eval, builtin_types().RESULT_TYPE.get());           \
+        return NAME.get();                                                                                   \
     }
 
     ADD_OPERATION(equal_comparison, U"__builtin_boolean_operator_equals", ==, boolean);

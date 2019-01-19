@@ -60,7 +60,11 @@ MAYFLY_ADD_TESTCASE("empty struct", [] {
     MAYFLY_CHECK(struct_type->get_data_member_decls().size() == 0);
     MAYFLY_CHECK(struct_type->get_data_members().size() == 0);
     MAYFLY_CHECK(reaver::get(struct_type->get_constructor({}))->parameters().size() == 0);
-    MAYFLY_CHECK(reaver::get(struct_type->get_candidates(lexer::token_type::curly_bracket_open)).front()->parameters().size() == 1);
+    MAYFLY_CHECK(reaver::get(struct_type->get_candidates(lexer::token_type::curly_bracket_open))
+                     .front()
+                     ->parameters()
+                     .size()
+        == 1);
 });
 
 MAYFLY_ADD_TESTCASE("struct with members", [] {
@@ -97,7 +101,11 @@ MAYFLY_ADD_TESTCASE("struct with members", [] {
     MAYFLY_CHECK(struct_type->get_data_member_decls().size() == 3);
     MAYFLY_CHECK(struct_type->get_data_members().size() == 3);
     MAYFLY_CHECK(reaver::get(struct_type->get_constructor({}))->parameters().size() == 3);
-    MAYFLY_CHECK(reaver::get(struct_type->get_candidates(lexer::token_type::curly_bracket_open)).front()->parameters().size() == 4);
+    MAYFLY_CHECK(reaver::get(struct_type->get_candidates(lexer::token_type::curly_bracket_open))
+                     .front()
+                     ->parameters()
+                     .size()
+        == 4);
 });
 
 MAYFLY_END_SUITE;
