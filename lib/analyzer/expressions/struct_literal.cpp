@@ -20,7 +20,7 @@
  *
  **/
 
-#include "vapor/analyzer/expressions/struct.h"
+#include "vapor/analyzer/expressions/struct_literal.h"
 #include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/statements/declaration.h"
 #include "vapor/parser/expr.h"

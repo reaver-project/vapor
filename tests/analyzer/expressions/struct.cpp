@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,17 +24,17 @@
 #include <reaver/mayfly.h>
 
 #include "../helpers.h"
+#include "vapor/analyzer/expressions/integer.h"
 #include "vapor/analyzer/expressions/struct.h"
-#include "vapor/analyzer/expressions/type.h"
 
 using namespace reaver::vapor;
 using namespace reaver::vapor::analyzer;
 
 MAYFLY_BEGIN_SUITE("analyzer");
 MAYFLY_BEGIN_SUITE("expressions");
-MAYFLY_BEGIN_SUITE("struct");
+MAYFLY_BEGIN_SUITE("struct value");
 
-MAYFLY_ADD_TESTCASE("empty struct", [] {
+MAYFLY_ADD_TESTCASE("constant construction and replacement", [] {
     config::compiler_options opts{ std::make_unique<config::language_options>() };
     analysis_context ctx;
     precontext pctx{ opts, ctx };
@@ -44,60 +44,106 @@ MAYFLY_ADD_TESTCASE("empty struct", [] {
     initialize_global_scope(&s, keepalive);
     auto current_scope = &s;
 
-    auto ast = parse(U"struct {}", parser::parse_struct_literal);
-
-    auto struct_lit = preanalyze_struct_literal(pctx, ast, current_scope);
-
-    reaver::get(struct_lit->analyze(ctx));
-
-    auto type_var = struct_lit->as<type_expression>();
-    MAYFLY_REQUIRE(type_var);
-
-    auto type = type_var->get_value();
-    auto struct_type = dynamic_cast<class struct_type *>(type);
-    MAYFLY_REQUIRE(struct_type);
-
-    MAYFLY_CHECK(struct_type->get_data_member_decls().size() == 0);
-    MAYFLY_CHECK(struct_type->get_data_members().size() == 0);
-    MAYFLY_CHECK(reaver::get(struct_type->get_constructor({}))->parameters().size() == 0);
-    MAYFLY_CHECK(reaver::get(struct_type->get_candidates(lexer::token_type::curly_bracket_open)).front()->parameters().size() == 1);
-});
-
-MAYFLY_ADD_TESTCASE("struct with members", [] {
-    config::compiler_options opts{ std::make_unique<config::language_options>() };
-    analysis_context ctx;
-    precontext pctx{ opts, ctx };
-
-    scope s;
-    std::vector<std::shared_ptr<void>> keepalive;
-    initialize_global_scope(&s, keepalive);
-    auto current_scope = &s;
-
-    auto ast = parse(UR"code(
-            struct
+    auto type_ast = parse(UR"code(
+            struct foo
             {
-                let i = 1;
+                let i : int;
                 let j : int;
-                let k : int = 2;
-            }
+            };
         )code",
-        parser::parse_struct_literal);
+        parser::parse_struct_declaration);
+    auto struct_decl = preanalyze_declaration(pctx, type_ast, current_scope);
 
-    auto struct_lit = preanalyze_struct_literal(pctx, ast, current_scope);
+    auto expression_ast = parse(UR"code(
+            let bar = foo{ 1, 2 };
+        )code",
+        [](auto && ctx) { return parser::parse_declaration(ctx); });
+    std::unique_ptr<statement> declaration = preanalyze_declaration(pctx, expression_ast, current_scope);
+    current_scope->close();
 
-    reaver::get(struct_lit->analyze(ctx));
+    reaver::get(struct_decl->analyze(ctx));
+    reaver::get(declaration->analyze(ctx));
 
-    auto type_var = struct_lit->as<type_expression>();
-    MAYFLY_REQUIRE(type_var);
+    cached_results res;
+    simplification_context simpl_ctx{ res };
+    do
+    {
+        simpl_ctx.~simplification_context();
+        new (&simpl_ctx) simplification_context(res);
 
-    auto type = type_var->get_value();
+        replace_uptr(declaration, reaver::get(declaration->simplify({ simpl_ctx })), simpl_ctx);
+        reaver::get(current_scope->get(U"bar")->simplify({ simpl_ctx }));
+    } while (simpl_ctx.did_something_happen());
+
+    auto type_expr = struct_decl->declared_symbol()->get_expression()->as<type_expression>();
+    MAYFLY_CHECK(type_expr);
+
+    auto type = type_expr->get_value();
     auto struct_type = dynamic_cast<class struct_type *>(type);
     MAYFLY_REQUIRE(struct_type);
 
-    MAYFLY_CHECK(struct_type->get_data_member_decls().size() == 3);
-    MAYFLY_CHECK(struct_type->get_data_members().size() == 3);
-    MAYFLY_CHECK(reaver::get(struct_type->get_constructor({}))->parameters().size() == 3);
-    MAYFLY_CHECK(reaver::get(struct_type->get_candidates(lexer::token_type::curly_bracket_open)).front()->parameters().size() == 4);
+    auto data_members = struct_type->get_data_members();
+    MAYFLY_CHECK(data_members.size() == 2);
+
+    integer_constant const_one{ 1 };
+    integer_constant const_two{ 2 };
+
+    auto struct_expr = current_scope->get(U"bar")->get_expression();
+    MAYFLY_CHECK(struct_expr->get_type() == struct_type);
+    MAYFLY_REQUIRE(struct_expr->is_constant());
+
+    MAYFLY_CHECK(struct_expr->get_member(data_members[0]->get_name())->is_equal(&const_one));
+    MAYFLY_CHECK(struct_expr->get_member(data_members[1]->get_name())->is_equal(&const_two));
+
+    // replacement
+
+    auto replacement_ast = parse(UR"code(
+            bar{ 3 }
+        )code",
+        [](auto && ctx) { return parser::parse_expression(ctx); });
+
+    auto replaced_expr = preanalyze_expression(pctx, replacement_ast, current_scope);
+
+    reaver::get(replaced_expr->analyze(ctx));
+    do
+    {
+        simpl_ctx.~simplification_context();
+        new (&simpl_ctx) simplification_context(res);
+
+        replace_uptr(replaced_expr, reaver::get(replaced_expr->simplify_expr({ simpl_ctx })), simpl_ctx);
+    } while (simpl_ctx.did_something_happen());
+
+    integer_constant const_three{ 3 };
+
+    MAYFLY_CHECK(replaced_expr->get_type() == struct_type);
+    MAYFLY_REQUIRE(replaced_expr->is_constant());
+
+    MAYFLY_CHECK(replaced_expr->get_member(data_members[0]->get_name())->is_equal(&const_three));
+    MAYFLY_CHECK(replaced_expr->get_member(data_members[1]->get_name())->is_equal(&const_two));
+
+    // designated replacement
+
+    auto designated_repl_ast = parse(UR"code(
+                bar{ .j = 3 }
+            )code",
+        [](auto && ctx) { return parser::parse_expression(ctx); });
+
+    auto designated_repl_expr = preanalyze_expression(pctx, designated_repl_ast, current_scope);
+
+    reaver::get(designated_repl_expr->analyze(ctx));
+    do
+    {
+        simpl_ctx.~simplification_context();
+        new (&simpl_ctx) simplification_context(res);
+
+        replace_uptr(designated_repl_expr, reaver::get(designated_repl_expr->simplify_expr({ simpl_ctx })), simpl_ctx);
+    } while (simpl_ctx.did_something_happen());
+
+    MAYFLY_CHECK(designated_repl_expr->get_type() == struct_type);
+    MAYFLY_REQUIRE(designated_repl_expr->is_constant());
+
+    MAYFLY_CHECK(designated_repl_expr->get_member(data_members[0]->get_name())->is_equal(&const_one));
+    MAYFLY_CHECK(designated_repl_expr->get_member(data_members[1]->get_name())->is_equal(&const_three));
 });
 
 MAYFLY_END_SUITE;

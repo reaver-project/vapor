@@ -24,7 +24,7 @@
 #include "vapor/analyzer/expressions/member_access.h"
 #include "vapor/analyzer/expressions/runtime_value.h"
 #include "vapor/analyzer/expressions/struct.h"
-#include "vapor/analyzer/expressions/struct_value.h"
+#include "vapor/analyzer/expressions/struct_literal.h"
 #include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/statements/declaration.h"

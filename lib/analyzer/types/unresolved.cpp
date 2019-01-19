@@ -25,7 +25,7 @@
 #include <boost/functional/hash.hpp>
 
 #include "vapor/analyzer/expressions/expression_ref.h"
-#include "vapor/analyzer/expressions/struct.h"
+#include "vapor/analyzer/expressions/struct_literal.h"
 #include "vapor/analyzer/expressions/unresolved_type.h"
 #include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/semantic/symbol.h"

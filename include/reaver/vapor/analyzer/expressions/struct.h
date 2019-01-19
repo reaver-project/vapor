@@ -20,6 +20,8 @@
  *
  **/
 
+#pragma once
+
 #include "../types/struct.h"
 #include "expression.h"
 
@@ -27,67 +29,96 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class struct_literal : public expression
+    class struct_expression : public expression
     {
     public:
-        struct_literal(ast_node parse, std::unique_ptr<struct_type> type);
-
-        virtual void print(std::ostream &, print_context) const override;
-
-        virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override
+        struct_expression(std::shared_ptr<struct_type> type, std::vector<std::unique_ptr<expression>> fields) : expression{ type.get() }, _type{ type }
         {
-            return _type->get_expression()->declaration_codegen_ir(ctx);
+            auto members = _type->get_data_members();
+
+            assert(fields.size() == members.size());
+
+            _fields_in_order.reserve(fields.size());
+
+            for (std::size_t i = 0; i < fields.size(); ++i)
+            {
+                _fields_in_order.push_back(fields[i].get());
+                _fields[members[i]] = std::move(fields[i]);
+            }
         }
 
-        virtual void set_name(std::u32string name) override;
+        virtual bool is_constant() const override
+        {
+            return std::all_of(_fields_in_order.begin(), _fields_in_order.end(), [](auto && field) { return field->is_constant(); });
+        }
 
-        virtual void mark_exported() override;
+        virtual expression * get_member(const std::u32string & name) const override
+        {
+            auto it = std::find_if(_fields.begin(), _fields.end(), [&](auto && elem) { return elem.first->get_name() == name; });
+            if (it == _fields.end())
+            {
+                return nullptr;
+            }
+
+            return it->second.get();
+        }
+
+        virtual void print(std::ostream & os, print_context ctx) const override
+        {
+            os << styles::def << ctx << styles::rule_name << "struct-expression";
+            os << styles::def << " @ " << styles::address << this << styles::def << ":\n";
+
+            auto type_ctx = ctx.make_branch(_fields_in_order.empty());
+            os << styles::def << type_ctx << styles::subrule_name << "type:\n";
+            _type->print(os, type_ctx.make_branch(true));
+
+            if (!_fields_in_order.empty())
+            {
+                auto members_ctx = ctx.make_branch(true);
+                os << styles::def << members_ctx << styles::subrule_name << "member values:\n";
+
+                std::size_t idx = 0;
+                for (auto && member : _fields_in_order)
+                {
+                    member->print(os, members_ctx.make_branch(++idx == _fields_in_order.size()));
+                }
+            }
+        }
 
     private:
-        virtual expression * _get_replacement() override
+        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
         {
-            return _type->get_expression();
+            return std::make_unique<struct_expression>(_type, fmap(_fields_in_order, [&](auto && field) { return repl.copy_claim(field); }));
         }
 
-        virtual const expression * _get_replacement() const override
+        virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
         {
-            return _type->get_expression();
-        }
+            auto ir = fmap(_fields_in_order, [&](auto && field) { return field->codegen_ir(ctx); });
+            auto result = codegen::ir::struct_value{ _type->codegen_type(ctx), fmap(ir, [&](auto && field_ir) { return field_ir.back().result; }) };
 
-        virtual future<> _analyze(analysis_context &) override;
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
-        virtual future<expression *> _simplify_expr(recursive_context) override;
-        virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+            return { codegen::ir::instruction{
+                std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, std::move(result) } };
+        }
 
         virtual bool _is_equal(const expression * rhs) const override
         {
-            assert(0);
+            auto rhs_struct = rhs->as<struct_expression>();
+            return rhs_struct && _type == rhs_struct->_type && _fields == rhs_struct->_fields;
         }
 
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
         {
-            return _type->get_expression()->_do_generate_interface();
+            assert(0);
         }
 
         std::shared_ptr<struct_type> _type;
+        std::unordered_map<const member_expression *, std::unique_ptr<expression>> _fields;
+        std::vector<expression *> _fields_in_order;
     };
-}
-}
 
-namespace reaver::vapor::parser
-{
-inline namespace _v1
-{
-    struct struct_literal;
-}
-}
-
-namespace reaver::vapor::analyzer
-{
-inline namespace _v1
-{
-    struct precontext;
-
-    std::unique_ptr<struct_literal> preanalyze_struct_literal(precontext & ctx, const parser::struct_literal & parse, scope * lex_scope);
+    inline auto make_struct_expression(std::shared_ptr<struct_type> type, std::vector<std::unique_ptr<expression>> fields)
+    {
+        return std::make_unique<struct_expression>(type, std::move(fields));
+    }
 }
 }

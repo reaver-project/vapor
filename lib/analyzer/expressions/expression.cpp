@@ -30,7 +30,7 @@
 #include "vapor/analyzer/expressions/integer.h"
 #include "vapor/analyzer/expressions/member_access.h"
 #include "vapor/analyzer/expressions/postfix.h"
-#include "vapor/analyzer/expressions/struct.h"
+#include "vapor/analyzer/expressions/struct_literal.h"
 #include "vapor/analyzer/expressions/typeclass.h"
 #include "vapor/analyzer/expressions/unary.h"
 #include "vapor/analyzer/helpers.h"
