@@ -120,6 +120,117 @@ inline namespace _v1
         }
     }
 
+    future<> block::_analyze(analysis_context & ctx)
+    {
+        auto fut = when_all(fmap(_statements, [&](auto && stmt) { return stmt->analyze(ctx); }));
+
+        fmap(_value_expr, [&](auto && expr) {
+            fut = fut.then([&ctx, expr = expr.get()] { return expr->analyze(ctx); });
+            return unit{};
+        });
+
+        return fut;
+    }
+
+    void block::_ensure_cache() const
+    {
+        if (_is_clone_cache)
+        {
+            return;
+        }
+
+        std::lock_guard<std::mutex> lock{ _clone_cache_lock };
+        if (_clone)
+        {
+            return;
+        }
+
+        auto clone = std::unique_ptr<block>(new block(*this));
+        auto repl = replacements{};
+
+        clone->_statements = fmap(_statements, [&](auto && stmt) { return repl.claim(stmt.get()); });
+        clone->_value_expr = fmap(_value_expr, [&](auto && expr) { return repl.claim(expr.get()); });
+        clone->_is_clone_cache = true;
+
+        _clone = std::move(clone);
+    }
+
+    std::unique_ptr<statement> block::_clone_with_replacement(replacements & repl) const
+    {
+        _ensure_cache();
+
+        if (!_is_clone_cache)
+        {
+            return repl.claim(_clone.value().get());
+        }
+
+        auto ret = std::unique_ptr<block>(new block(*this));
+
+        ret->_statements = fmap(_statements, [&](auto && stmt) { return repl.claim(stmt.get()); });
+        ret->_value_expr = fmap(_value_expr, [&](auto && expr) { return repl.claim(expr.get()); });
+
+        return ret;
+    }
+
+    future<statement *> block::_simplify(recursive_context ctx)
+    {
+        _ensure_cache();
+
+        if (!_value_expr && _statements.size() == 1)
+        {
+            return _statements.front()->simplify(ctx).then([&, ctx](auto && simpl) -> statement * {
+                replace_uptr(_statements.front(), simpl, ctx.proper);
+
+                if (_is_top_level)
+                {
+                    return this;
+                }
+                return _statements.front().release();
+            });
+        }
+
+        auto fut = foldl(_statements, make_ready_future(true), [&](auto future, auto && statement) {
+            return future.then([&, ctx](bool do_continue) {
+                if (!do_continue)
+                {
+                    return make_ready_future(false);
+                }
+
+                return statement->simplify(ctx).then([&, ctx](auto && simplified) {
+                    replace_uptr(statement, simplified, ctx.proper);
+                    return !statement->always_returns();
+                });
+            });
+        });
+
+        fmap(_value_expr, [&](auto && expr) {
+            fut = fut.then([&, expr = expr.get(), ctx](bool do_continue) {
+                if (!do_continue)
+                {
+                    return make_ready_future(false);
+                }
+
+                return expr->simplify_expr(ctx).then([&, ctx](auto && simplified) {
+                    replace_uptr(*_value_expr, simplified, ctx.proper);
+                    return true;
+                });
+            });
+            return unit{};
+        });
+
+        return fut.then([&](bool reached_end) -> statement * {
+            if (!reached_end)
+            {
+                auto always_returning = std::find_if(_statements.begin(), _statements.end(), [](auto && stmt) { return stmt->always_returns(); });
+
+                assert(always_returning != _statements.end());
+                _statements.erase(always_returning + 1, _statements.end());
+            }
+
+            return this;
+        });
+    }
+
     std::vector<codegen::_v1::ir::instruction> block::_codegen_ir(ir_generation_context & ctx) const
     {
         auto statements = mbind(_statements, [&](auto && stmt) { return stmt->codegen_ir(ctx); });

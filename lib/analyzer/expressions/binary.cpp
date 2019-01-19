@@ -23,8 +23,10 @@
 #include <boost/type_index.hpp>
 
 #include "vapor/analyzer/expressions/binary.h"
+#include "vapor/analyzer/expressions/call.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/semantic/function.h"
+#include "vapor/analyzer/semantic/overloads.h"
 #include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/parser.h"
 
@@ -68,6 +70,47 @@ inline namespace _v1
         auto call_expr_ctx = ctx.make_branch(true);
         os << styles::def << call_expr_ctx << styles::subrule_name << "resolved expression:\n";
         _call_expression->print(os, call_expr_ctx.make_branch(true));
+    }
+
+    future<> binary_expression::_analyze(analysis_context & ctx)
+    {
+        auto expr_ctx = get_context();
+        expr_ctx.push_back(this);
+
+        _lhs->set_context(expr_ctx);
+        _rhs->set_context(expr_ctx);
+
+        return when_all(_lhs->analyze(ctx), _rhs->analyze(ctx))
+            .then([&](auto) { return resolve_overload(ctx, this->get_ast_info().value().range, _lhs.get(), _rhs.get(), _op.type); })
+            .then([&](std::unique_ptr<expression> call_expr) {
+                if (auto call_expr_downcasted = call_expr->as<call_expression>())
+                {
+                    call_expr_downcasted->set_ast_info(get_ast_info().value());
+                }
+                _call_expression = std::move(call_expr);
+                return _call_expression->analyze(ctx);
+            })
+            .then([&] { this->_set_type(_call_expression->get_type()); });
+    }
+
+    std::unique_ptr<expression> binary_expression::_clone_expr_with_replacement(replacements & repl) const
+    {
+        return repl.claim(_call_expression.get());
+    }
+
+    future<expression *> binary_expression::_simplify_expr(recursive_context ctx)
+    {
+        replacements repl;
+        auto clone = _clone_expr_with_replacement(repl).release();
+
+        return clone->simplify_expr(ctx).then([ctx, clone](auto && simplified) {
+            if (simplified)
+            {
+                ctx.proper.keep_alive(clone);
+                return simplified;
+            }
+            return clone;
+        });
     }
 
     statement_ir binary_expression::_codegen_ir(ir_generation_context & ctx) const

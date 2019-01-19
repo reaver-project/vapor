@@ -72,6 +72,57 @@ inline namespace _v1
         assert(0);
     }
 
+    future<> instance_literal::_analyze(analysis_context & ctx)
+    {
+        auto name = _typeclass_name;
+        auto top_level = std::move(name.front());
+        name.erase(name.begin());
+
+        future<expression *> expr = _original_scope->resolve(top_level)->get_expression_future();
+
+        if (!name.empty())
+        {
+            expr = foldl(name, std::move(expr), [&ctx](future<expression *> expr, auto && name) {
+                return expr.then([&](auto && expr) { return expr->analyze(ctx).then([expr] { return expr->get_type()->get_scope(); }); })
+                    .then([name = std::move(name)](const scope * lex_scope) { return lex_scope->get(name)->get_expression_future(); });
+            });
+        }
+
+        // TODO: this can be refactored to use the typeclass template's call operator
+        // I don't think that is *really* necessary, but might lead to a very slight cleanup here
+        return expr.then([&](expression * expr) { return expr->analyze(ctx).then([expr] { return expr; }); })
+            .then([&](expression * expr) {
+                return when_all(fmap(_arguments, [&](auto && arg) { return arg->analyze(ctx).then([&] { return simplification_loop(ctx, arg); }); }))
+                    .then([expr](auto &&) { return expr; });
+            })
+            .then([&](expression * expr) {
+                assert(0);
+
+                /*auto tpl = expr->_get_replacement()->as<template_expression>();
+                assert(tpl);
+                auto instance_type_expr =
+                    dynamic_cast<typeclass_literal_instance *>(ctx.get_instantiation(tpl, fmap(_arguments, [](auto && ptr) { return ptr.get(); })));
+                assert(instance_type_expr);
+                _set_type(instance_type_expr->instance_type());
+
+                _instance = make_typeclass_instance(instance_type_expr->instance_type());
+                _late_preanalysis(_instance->get_function_definition_handler());
+
+                return when_all(fmap(_instance->get_member_function_defs(), [&](auto && fn_def) { return fn_def->analyze(ctx); }));*/
+            })
+            .then([&] { _instance->import_default_definitions(); });
+    }
+
+    std::unique_ptr<expression> instance_literal::_clone_expr_with_replacement(replacements & repl) const
+    {
+        assert(0);
+    }
+
+    future<expression *> instance_literal::_simplify_expr(recursive_context ctx)
+    {
+        assert(0);
+    }
+
     statement_ir instance_literal::_codegen_ir(ir_generation_context & ctx) const
     {
         assert(0);

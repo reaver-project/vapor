@@ -92,6 +92,73 @@ inline namespace _v1
         _body->print(os, body_ctx.make_branch(true));
     }
 
+    future<> closure::_analyze(analysis_context & ctx)
+    {
+        auto initial_future = [&] {
+            if (_return_type)
+            {
+                return (*_return_type)->analyze(ctx).then([&] {
+                    auto & type_expr = *_return_type;
+
+                    assert(type_expr->get_type() == builtin_types().type.get());
+                    assert(type_expr->is_constant());
+                });
+            }
+
+            return make_ready_future();
+        }();
+
+        return initial_future.then([&] { return when_all(fmap(_parameter_list, [&](auto && param) { return param->analyze(ctx); })); })
+            .then([&] { return _body->analyze(ctx); })
+            .then([&] {
+                fmap(_return_type, [&](auto && ret_type) {
+                    auto type_expr = ret_type->template as<type_expression>();
+                    assert(type_expr->get_value() == _body->return_type());
+
+                    return unit{};
+                });
+
+                auto ret_expr = _return_type ? _return_type->get()->_get_replacement() : _body->return_type()->get_expression();
+
+                auto function = make_function("closure", get_ast_info().value().range);
+                function->set_name(U"operator()");
+                function->set_body(_body.get());
+                function->set_return_type(ret_expr);
+                function->set_parameters(fmap(_parameter_list, [](auto && param) -> expression * { return param.get(); }));
+                function->set_codegen([this](ir_generation_context & ctx) {
+                    auto ret = codegen::ir::function{
+                        U"operator()",
+                        {},
+                        fmap(_parameter_list,
+                            [&](auto && param) { return std::get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); }),
+                        _body->codegen_return(ctx),
+                        _body->codegen_ir(ctx),
+                    };
+                    ret.is_member = true;
+                    return ret;
+                });
+
+                auto fn_ptr = function.get();
+                _type = std::make_unique<closure_type>(_scope.get(), this, std::move(function));
+                this->_set_type(_type.get());
+
+                fn_ptr->set_scopes_generator([this](auto && ctx) { return _type->codegen_scopes(ctx); });
+            });
+    }
+
+    std::unique_ptr<expression> closure::_clone_expr_with_replacement(replacements & repl) const
+    {
+        assert(!"this shouldn't be called, or, when called, should return an empty expression...");
+    }
+
+    future<expression *> closure::_simplify_expr(recursive_context ctx)
+    {
+        return _body->simplify(ctx).then([&](auto && simplified) -> expression * {
+            replace_uptr(_body, dynamic_cast<block *>(simplified), ctx.proper);
+            return this;
+        });
+    }
+
     statement_ir closure::_codegen_ir(ir_generation_context & ctx) const
     {
         auto var = codegen::ir::make_variable(get_type()->codegen_type(ctx));

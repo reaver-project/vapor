@@ -72,6 +72,23 @@ inline namespace _v1
         _type->mark_exported();
     }
 
+    future<> struct_literal::_analyze(analysis_context & ctx)
+    {
+        return when_all(fmap(_type->get_data_member_decls(), [&](auto && member) { return member->analyze(ctx); })).then([this] {
+            _type->generate_constructors();
+        });
+    }
+
+    std::unique_ptr<expression> struct_literal::_clone_expr_with_replacement(replacements & repl) const
+    {
+        assert(0);
+    }
+
+    future<expression *> struct_literal::_simplify_expr(recursive_context ctx)
+    {
+        return make_ready_future<expression *>(this);
+    }
+
     statement_ir struct_literal::_codegen_ir(ir_generation_context & ctx) const
     {
         return {};

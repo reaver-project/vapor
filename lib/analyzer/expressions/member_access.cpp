@@ -21,6 +21,8 @@
  **/
 
 #include "vapor/analyzer/expressions/member_access.h"
+#include "vapor/analyzer/expressions/binary.h"
+#include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/parser/member_expression.h"
 
@@ -49,6 +51,48 @@ inline namespace _v1
         auto type_ctx = ctx.make_branch(true);
         os << styles::def << type_ctx << styles::subrule_name << "referenced member type:\n";
         get_type()->print(os, type_ctx.make_branch(true));
+    }
+
+    future<> member_access_expression::_analyze(analysis_context & ctx)
+    {
+        auto & expr_ctx = get_context();
+        assert(!expr_ctx.empty());
+
+        auto last_postfix = std::find_if(expr_ctx.rbegin(), expr_ctx.rend(), [](auto && ctx_expr) { return ctx_expr.index() == 0; });
+        assert(last_postfix != expr_ctx.rend());
+
+        // this is actually conceptually "last_postfix + 1" (if last_postfix was a normal iterator)
+        // reverse iterators are weird
+        auto next = last_postfix.base();
+
+        if (next != expr_ctx.end())
+        {
+            auto top_level = std::get<binary_expression *>(*next);
+
+            // if this is on the LHS of a binary expression at the top level
+            // of a postfix expression (in the future: also tuple-expression)
+            // then this is an id part of a member assignment expression
+            // and hence we need to do a Special Thing
+            if (top_level->get_lhs() == this && top_level->get_operator() == lexer::token_type::assign)
+            {
+                _assignment_expr = make_member_assignment_expression(_name);
+                _set_type(_assignment_expr->get_type());
+                return make_ready_future();
+            }
+        }
+
+        return std::get<postfix_expression *>(*last_postfix)->get_base_expression(ctx).then([&](auto && base) { this->set_base_expression(base); });
+    }
+
+    void member_access_expression::set_base_expression(expression * base)
+    {
+        _base = base;
+
+        auto referenced_type = base->get_type()->get_member_type(_name);
+        assert(referenced_type && "no member found for whatever reason");
+
+        _referenced = base->get_member(_name);
+        this->_set_type(referenced_type);
     }
 
     statement_ir member_access_expression::_codegen_ir(ir_generation_context & ctx) const

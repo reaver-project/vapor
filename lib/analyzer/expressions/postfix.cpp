@@ -22,11 +22,14 @@
 
 #include <reaver/prelude/fold.h>
 
+#include "vapor/analyzer/expressions/call.h"
 #include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/expressions/identifier.h"
+#include "vapor/analyzer/expressions/member.h"
 #include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/semantic/function.h"
+#include "vapor/analyzer/semantic/overloads.h"
 #include "vapor/parser.h"
 
 namespace reaver::vapor::analyzer
@@ -98,6 +101,144 @@ inline namespace _v1
             os << styles::def << call_expr_ctx << styles::subrule_name << "resolved expression:\n";
             _call_expression->print(os, call_expr_ctx.make_branch(true));
         }
+    }
+
+    future<> postfix_expression::_analyze(analysis_context & ctx)
+    {
+        return _base_expr->analyze(ctx)
+            .then([&] {
+                auto expr_ctx = get_context();
+                expr_ctx.push_back(this);
+
+                return when_all(fmap(_arguments, [&](auto && expr) {
+                    expr->set_context(expr_ctx);
+                    return expr->analyze(ctx);
+                }));
+            })
+            .then([&] {
+                if (!_modifier)
+                {
+                    this->_set_type(_base_expr->get_type());
+                    return make_ready_future();
+                }
+
+                if (_modifier == lexer::token_type::dot)
+                {
+                    return _base_expr->get_type()
+                        ->get_scope()
+                        ->get(*_accessed_member)
+                        ->get_expression_future()
+                        .then([&](auto && var) {
+                            _referenced_expression = var;
+                            return _referenced_expression.value()->analyze(ctx);
+                        })
+                        .then([&] { this->_set_type(_referenced_expression.value()->get_type()); });
+                }
+
+                return resolve_overload(ctx, get_ast_info()->range, _base_expr.get(), *_modifier, fmap(_arguments, [](auto && arg) { return arg.get(); }))
+                    .then([&](std::unique_ptr<expression> call_expr) {
+                        if (auto call_expr_downcasted = call_expr->as<call_expression>())
+                        {
+                            call_expr_downcasted->set_ast_info(get_ast_info().value());
+                        }
+                        _call_expression = std::move(call_expr);
+                        return _call_expression->analyze(ctx);
+                    })
+                    .then([&] { this->_set_type(_call_expression->get_type()); });
+            });
+    }
+
+    std::unique_ptr<expression> postfix_expression::_clone_expr_with_replacement(replacements & repl) const
+    {
+        if (_call_expression)
+        {
+            return repl.claim(_call_expression.get());
+        }
+
+        auto base = repl.claim(_base_expr.get());
+        if (!_modifier)
+        {
+            return base;
+        }
+
+        assert(_arguments.empty());
+        auto ret = std::unique_ptr<postfix_expression>(new postfix_expression(get_ast_info().value(), std::move(base), _modifier, {}, _accessed_member));
+
+        auto type = ret->_base_expr->get_type();
+
+        ret->_referenced_expression = fmap(_referenced_expression, [&](auto && expr) {
+            if (auto replaced = repl.try_get_replacement(expr))
+            {
+                type = replaced->get_type();
+                return replaced;
+            }
+            type = expr->get_type();
+            return expr;
+        });
+
+        ret->_set_type(type);
+
+        return ret;
+    }
+
+    future<expression *> postfix_expression::_simplify_expr(recursive_context ctx)
+    {
+        if (_call_expression)
+        {
+            replacements repl;
+            auto clone = repl.claim(_call_expression.get()).release();
+
+            return clone->simplify_expr(ctx).then([ctx, clone](auto && simplified) {
+                if (simplified && simplified != clone)
+                {
+                    ctx.proper.keep_alive(clone);
+                    return simplified;
+                }
+                return clone;
+            });
+        }
+
+        return when_all(fmap(_arguments, [&, ctx](auto && expr) { return expr->simplify_expr(ctx); }))
+            .then([&, ctx](auto && simplified) {
+                replace_uptrs(_arguments, simplified, ctx.proper);
+                return _base_expr->simplify_expr(ctx);
+            })
+            .then([&, ctx](auto && simplified) {
+                replace_uptr(_base_expr, simplified, ctx.proper);
+
+                if (!_modifier)
+                {
+                    return make_ready_future(_base_expr.release());
+                }
+
+                if (_accessed_member)
+                {
+                    if (!_referenced_expression.value()->is_member())
+                    {
+                        return _referenced_expression.value()->simplify_expr(ctx).then(
+                            [](auto && simpl) { return make_expression_ref(simpl, std::nullopt).release(); });
+                    }
+
+                    if (!_base_expr->is_constant())
+                    {
+                        return make_ready_future<expression *>(this);
+                    }
+
+                    assert(_referenced_expression.value()->is_member());
+                    auto member = _base_expr->get_member(_referenced_expression.value()->as<member_expression>()->get_name());
+                    assert(member);
+
+                    if (!member->is_constant())
+                    {
+                        return make_ready_future<expression *>(nullptr);
+                    }
+
+                    auto repl = replacements{};
+                    return make_ready_future<expression *>(repl.claim(member).release());
+                }
+
+                assert(0);
+            });
     }
 
     statement_ir postfix_expression::_codegen_ir(ir_generation_context & ctx) const

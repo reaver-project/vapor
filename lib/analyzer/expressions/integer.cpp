@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/expressions/integer.h"
+#include "vapor/analyzer/expressions/sized_integer.h"
 #include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/codegen/ir/type.h"
 #include "vapor/codegen/ir/variable.h"
@@ -29,6 +30,19 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    std::unique_ptr<expression> integer_constant::convert_to(type * target) const
+    {
+        if (auto sized_target = dynamic_cast<sized_integer *>(target))
+        {
+            if (_value <= sized_target->max_value() && _value >= sized_target->min_value())
+            {
+                return std::make_unique<sized_integer_constant>(sized_target, _value);
+            }
+        }
+
+        return nullptr;
+    }
+
     statement_ir integer_constant::_codegen_ir(ir_generation_context &) const
     {
         return { codegen::ir::instruction{ std::nullopt,

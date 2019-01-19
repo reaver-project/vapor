@@ -66,6 +66,26 @@ inline namespace _v1
         }
     }
 
+    future<> typeclass_literal::_analyze(analysis_context & ctx)
+    {
+        assert(0);
+        /*
+         return when_all(fmap(_instance_template->get_member_function_decls(), [&](auto && decl) {
+             decl->set_template_parameters(_instance_template->get_template_parameters());
+             return decl->analyze(ctx);
+         }));*/
+    }
+
+    std::unique_ptr<expression> typeclass_literal::_clone_expr_with_replacement(replacements & repl) const
+    {
+        assert(0);
+    }
+
+    future<expression *> typeclass_literal::_simplify_expr(recursive_context ctx)
+    {
+        assert(0);
+    }
+
     statement_ir typeclass_literal::_codegen_ir(ir_generation_context & ctx) const
     {
         assert(0);
