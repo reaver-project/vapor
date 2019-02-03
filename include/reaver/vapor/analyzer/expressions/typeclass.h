@@ -39,7 +39,8 @@ inline namespace _v1
 
         const scope * get_scope() const
         {
-            return _instance_template->get_scope();
+            assert(0);
+            // return _instance_template->get_scope();
         }
 
         typeclass * instance_template() const
@@ -55,39 +56,11 @@ inline namespace _v1
 
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
         {
-            return _instance_template->get_expression()->_do_generate_interface();
+            assert(0);
+            // return _instance_template->get_expression()->_do_generate_interface();
         }
 
         std::unique_ptr<typeclass> _instance_template;
-    };
-
-    class typeclass_literal_instance : public expression
-    {
-    public:
-        typeclass_literal_instance(typeclass * tc, std::vector<expression *> arguments);
-
-        virtual void print(std::ostream &, print_context) const override
-        {
-            assert(!"printing typeclass literal instances is not yet supported");
-        }
-
-        typeclass_instance_type * instance_type() const
-        {
-            return _instance_type.get();
-        }
-
-    private:
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
-        {
-            assert(0);
-        }
-
-        virtual statement_ir _codegen_ir(ir_generation_context &) const override
-        {
-            assert(!"codegen is not yet supported on typeclass literal instances");
-        }
-
-        std::unique_ptr<typeclass_instance_type> _instance_type;
     };
 }
 }

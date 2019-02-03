@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -33,19 +33,20 @@ inline namespace _v1
 {
     class expression_list;
     class function_definition;
+    class typeclass_instance;
 
-    class instance_literal : public expression
+    class typeclass_instance_expression : public expression
     {
     public:
         using late_preanalysis_type = reaver::unique_function<void(function_definition_handler)>;
 
-        instance_literal(ast_node parse,
+        typeclass_instance_expression(ast_node parse,
             scope * original_scope,
             std::vector<std::u32string> name_segments,
             std::vector<std::unique_ptr<expression>> arguments,
             late_preanalysis_type late_pre);
 
-        virtual ~instance_literal() override;
+        virtual ~typeclass_instance_expression() override;
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
@@ -64,24 +65,6 @@ inline namespace _v1
 
         std::shared_ptr<typeclass_instance> _instance;
     };
-
-    class typeclass_instance_expression : public type_expression
-    {
-    public:
-        typeclass_instance_expression(typeclass_instance * instance)
-            : type_expression(instance), _instance(instance)
-        {
-        }
-
-    public:
-        typeclass_instance * _instance;
-    };
-
-    inline std::unique_ptr<typeclass_instance_expression> make_typeclass_instance_expression(
-        typeclass_instance * instance)
-    {
-        return std::make_unique<typeclass_instance_expression>(instance);
-    }
 }
 }
 
@@ -97,7 +80,7 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<instance_literal> preanalyze_instance_literal(precontext & ctx,
+    std::unique_ptr<typeclass_instance_expression> preanalyze_instance_literal(precontext & ctx,
         const parser::instance_literal & tpl,
         scope * lex_scope);
 }

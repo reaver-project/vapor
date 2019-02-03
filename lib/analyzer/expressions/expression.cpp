@@ -26,12 +26,12 @@
 #include "vapor/analyzer/expressions/closure.h"
 #include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/expressions/import.h"
-#include "vapor/analyzer/expressions/instance.h"
 #include "vapor/analyzer/expressions/integer.h"
 #include "vapor/analyzer/expressions/member_access.h"
 #include "vapor/analyzer/expressions/postfix.h"
 #include "vapor/analyzer/expressions/struct_literal.h"
 #include "vapor/analyzer/expressions/typeclass.h"
+#include "vapor/analyzer/expressions/typeclass_instance.h"
 #include "vapor/analyzer/expressions/unary.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/semantic/symbol.h"
@@ -139,8 +139,9 @@ inline namespace _v1
 
     future<expression *> simplification_loop(analysis_context & ctx, std::unique_ptr<expression> & uptr)
     {
-        auto cont = [&uptr, ctx = std::make_shared<simplification_context>(*ctx.results)](
-                        auto self) -> future<expression *> {
+        auto cont = [&uptr, ctx = std::make_shared<simplification_context>(*ctx.results)](auto self)
+                        ->future<expression *>
+        {
             return uptr->simplify_expr({ *ctx }).then(
                 [&uptr, ctx, self](auto && simpl) -> future<expression *> {
                     replace_uptr(uptr, simpl, *ctx);

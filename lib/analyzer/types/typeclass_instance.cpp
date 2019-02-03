@@ -1,0 +1,95 @@
+/**
+ * Vapor Compiler Licence
+ *
+ * Copyright © 2019 Michał "Griwes" Dominiak
+ *
+ * This software is provided 'as-is', without any express or implied
+ * warranty. In no event will the authors be held liable for any damages
+ * arising from the use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ * 1. The origin of this software must not be misrepresented; you must not
+ *    claim that you wrote the original software. If you use this software
+ *    in a product, an acknowledgment in the product documentation is required.
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ *    misrepresented as being the original software.
+ * 3. This notice may not be removed or altered from any source distribution.
+ *
+ **/
+
+#include "vapor/analyzer/types/typeclass_instance.h"
+#include "vapor/analyzer/semantic/typeclass.h"
+#include "vapor/analyzer/semantic/typeclass_instance.h"
+#include "vapor/analyzer/statements/function.h"
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    typeclass_instance_type::typeclass_instance_type(typeclass * tc, std::vector<expression *> arguments)
+        : user_defined_type{ dont_init_expr },
+          _arguments{ std::move(arguments) },
+          _ctx{ tc->get_scope(), _arguments }
+    {
+        // _self_expression = std::make_unique<type_expression>(this, type_kind::typeclass);
+
+        auto repl = _ctx.get_replacements();
+
+        for (auto && fn_decl : tc->get_member_function_decls())
+        {
+            auto fn = fn_decl->get_function();
+            auto & name = fn_decl->get_name();
+
+            _function_instance fn_instance;
+            fn_instance.instance = make_function(fn->explain(), fn->get_range());
+            fn_instance.return_type_expression = repl.copy_claim(fn->return_type_expression());
+            fn_instance.instance->set_return_type(fn_instance.return_type_expression);
+            fn_instance.parameter_expressions =
+                fmap(fn->parameters(), [&](auto && param) { return repl.copy_claim(param); });
+            fn_instance.instance->set_parameters(
+                fmap(fn_instance.parameter_expressions, [](auto && expr) { return expr.get(); }));
+
+            fn_instance.overload_set = get_overload_set(get_scope(), name);
+            fn_instance.overload_set->get_overload_set_type()->add_function(fn_instance.instance.get());
+
+            _oset_names.insert(name);
+
+            _function_instance_to_template.emplace(fn_instance.instance.get(), fn_decl);
+            _function_instances.push_back(std::move(fn_instance));
+        }
+    }
+
+    void typeclass_instance_type::print(std::ostream & os, print_context ctx) const
+    {
+        assert(0);
+    }
+
+    std::unique_ptr<google::protobuf::Message> typeclass_instance_type::_user_defined_interface() const
+    {
+        assert(0);
+    }
+
+    std::shared_ptr<typeclass_instance> make_typeclass_instance(typeclass_instance_type * type)
+    {
+        assert(0);
+        /*
+        auto scope = type->get_scope()->clone_for_class();
+
+        std::vector<std::shared_ptr<overload_set>> osets;
+        for (auto && oset_name : type->overload_set_names())
+        {
+            osets.push_back(create_overload_set(scope.get(), oset_name));
+        }
+        // close here, because if the preanalysis below *adds* new members, then we have a bug... the
+        // assertion that checks for closeness of the scope needs to be somehow weakened here, to allow for
+        // more sensible error reporting than `assert`
+        scope->close();
+
+        return std::make_shared<typeclass_instance>(type, std::move(scope), std::move(osets));
+        */
+    }
+}
+}

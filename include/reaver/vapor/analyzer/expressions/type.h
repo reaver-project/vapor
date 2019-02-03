@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -31,8 +31,7 @@ inline namespace _v1
 {
     enum class type_kind
     {
-        type,
-        typeclass
+        type
     };
 
     class type_expression : public expression
@@ -43,8 +42,6 @@ inline namespace _v1
             switch (kind)
             {
                 case type_kind::type:
-                    return builtin_types().type.get();
-                case type_kind::typeclass:
                     return builtin_types().type.get();
             }
         }

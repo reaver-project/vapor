@@ -22,6 +22,7 @@
 
 #include "vapor/analyzer/expressions/typeclass.h"
 #include "vapor/analyzer/semantic/symbol.h"
+#include "vapor/analyzer/semantic/typeclass.h"
 #include "vapor/analyzer/statements/function.h"
 #include "vapor/parser/expr.h"
 #include "vapor/parser/typeclass.h"
@@ -92,12 +93,6 @@ inline namespace _v1
     statement_ir typeclass_literal::_codegen_ir(ir_generation_context & ctx) const
     {
         assert(0);
-    }
-
-    typeclass_literal_instance::typeclass_literal_instance(typeclass * tc,
-        std::vector<expression *> arguments)
-        : _instance_type{ std::make_unique<typeclass_instance_type>(tc, std::move(arguments)) }
-    {
     }
 }
 }

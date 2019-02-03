@@ -19,3 +19,15 @@
  * 3. This notice may not be removed or altered from any source distribution.
  *
  **/
+
+#pragma once
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    class typeclass_instance
+    {
+    };
+}
+}

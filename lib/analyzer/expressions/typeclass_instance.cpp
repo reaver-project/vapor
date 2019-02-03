@@ -20,7 +20,8 @@
  *
  **/
 
-#include "vapor/analyzer/expressions/instance.h"
+#include "vapor/analyzer/expressions/typeclass_instance.h"
+
 #include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/statements/function.h"
@@ -31,7 +32,7 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<instance_literal> preanalyze_instance_literal(precontext & ctx,
+    std::unique_ptr<typeclass_instance_expression> preanalyze_instance_literal(precontext & ctx,
         const parser::instance_literal & parse,
         scope * lex_scope)
     {
@@ -48,7 +49,7 @@ inline namespace _v1
             });
         };
 
-        return std::make_unique<instance_literal>(make_node(parse),
+        return std::make_unique<typeclass_instance_expression>(make_node(parse),
             lex_scope,
             std::move(name_id_expr),
             fmap(parse.arguments.expressions,
@@ -56,7 +57,7 @@ inline namespace _v1
             std::move(late_preanalysis));
     }
 
-    instance_literal::instance_literal(ast_node parse,
+    typeclass_instance_expression::typeclass_instance_expression(ast_node parse,
         scope * original_scope,
         std::vector<std::u32string> name_segments,
         std::vector<std::unique_ptr<expression>> arguments,
@@ -69,14 +70,14 @@ inline namespace _v1
         _set_ast_info(parse);
     }
 
-    instance_literal::~instance_literal() = default;
+    typeclass_instance_expression::~typeclass_instance_expression() = default;
 
-    void instance_literal::print(std::ostream & os, print_context ctx) const
+    void typeclass_instance_expression::print(std::ostream & os, print_context ctx) const
     {
         assert(0);
     }
 
-    future<> instance_literal::_analyze(analysis_context & ctx)
+    future<> typeclass_instance_expression::_analyze(analysis_context & ctx)
     {
         auto name = _typeclass_name;
         auto top_level = std::move(name.front());
@@ -91,9 +92,8 @@ inline namespace _v1
                     .then([&](auto && expr) {
                         return expr->analyze(ctx).then([expr] { return expr->get_type()->get_scope(); });
                     })
-                    .then([name = std::move(name)](const scope * lex_scope) {
-                        return lex_scope->get(name)->get_expression_future();
-                    });
+                    .then([name = std::move(name)](
+                        const scope * lex_scope) { return lex_scope->get(name)->get_expression_future(); });
             });
         }
 
@@ -124,20 +124,24 @@ inline namespace _v1
                 return when_all(fmap(_instance->get_member_function_defs(), [&](auto && fn_def) { return
                 fn_def->analyze(ctx); }));*/
             })
-            .then([&] { _instance->import_default_definitions(); });
+            .then([&] {
+                assert(0);
+                //_instance->import_default_definitions();
+            });
     }
 
-    std::unique_ptr<expression> instance_literal::_clone_expr_with_replacement(replacements & repl) const
+    std::unique_ptr<expression> typeclass_instance_expression::_clone_expr_with_replacement(
+        replacements & repl) const
     {
         assert(0);
     }
 
-    future<expression *> instance_literal::_simplify_expr(recursive_context ctx)
+    future<expression *> typeclass_instance_expression::_simplify_expr(recursive_context ctx)
     {
         assert(0);
     }
 
-    statement_ir instance_literal::_codegen_ir(ir_generation_context & ctx) const
+    statement_ir typeclass_instance_expression::_codegen_ir(ir_generation_context & ctx) const
     {
         assert(0);
     }
