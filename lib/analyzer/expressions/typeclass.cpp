@@ -31,66 +31,69 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<typeclass_literal> preanalyze_typeclass_literal(precontext & ctx,
+    std::unique_ptr<typeclass_expression> preanalyze_typeclass_literal(precontext & ctx,
         const parser::typeclass_literal & parse,
         scope * lex_scope)
     {
-        return std::make_unique<typeclass_literal>(make_node(parse), make_typeclass(ctx, parse, lex_scope));
+        return std::make_unique<typeclass_expression>(
+            make_node(parse), make_typeclass(ctx, parse, lex_scope));
     }
 
-    typeclass_literal::typeclass_literal(ast_node parse, std::unique_ptr<typeclass> type)
-        : expression{ builtin_types().typeclass.get() }, _instance_template{ std::move(type) }
+    typeclass_expression::typeclass_expression(ast_node parse, std::unique_ptr<typeclass> tc)
+        : _typeclass{ std::move(tc) }
     {
         _set_ast_info(parse);
     }
 
-    typeclass_literal::~typeclass_literal() = default;
+    typeclass_expression::~typeclass_expression() = default;
 
-    void typeclass_literal::print(std::ostream & os, print_context ctx) const
+    void typeclass_expression::print(std::ostream & os, print_context ctx) const
     {
         os << styles::def << ctx << styles::rule_name << "typeclass-literal";
         print_address_range(os, this);
         os << '\n';
 
-        auto tc_ctx = ctx.make_branch(_instance_template->get_member_function_decls().empty());
+        auto tc_ctx = ctx.make_branch(_typeclass->get_member_function_decls().empty());
         os << styles::def << tc_ctx << styles::subrule_name << "defined typeclass:\n";
-        _instance_template->print(os, tc_ctx.make_branch(true));
+        _typeclass->print(os, tc_ctx.make_branch(true));
 
-        if (_instance_template->get_member_function_decls().size())
+        if (_typeclass->get_member_function_decls().size())
         {
             auto decl_ctx = ctx.make_branch(true);
             os << styles::def << decl_ctx << styles::subrule_name << "member function declarations:\n";
 
             std::size_t idx = 0;
-            for (auto && member : _instance_template->get_member_function_decls())
+            for (auto && member : _typeclass->get_member_function_decls())
             {
-                member->print(os,
-                    decl_ctx.make_branch(++idx == _instance_template->get_member_function_decls().size()));
+                member->print(
+                    os, decl_ctx.make_branch(++idx == _typeclass->get_member_function_decls().size()));
             }
         }
     }
 
-    future<> typeclass_literal::_analyze(analysis_context & ctx)
+    future<> typeclass_expression::_analyze(analysis_context & ctx)
     {
-        assert(0);
-        /*
-         return when_all(fmap(_instance_template->get_member_function_decls(), [&](auto && decl) {
-             decl->set_template_parameters(_instance_template->get_template_parameters());
-             return decl->analyze(ctx);
-         }));*/
+        return when_all(
+            fmap(_typeclass->get_parameters(), [&](auto && param) { return param->analyze(ctx); }))
+            .then([&] {
+                return when_all(fmap(_typeclass->get_member_function_decls(), [&](auto && decl) {
+                    decl->set_template_parameters(_typeclass->get_parameters());
+                    return decl->analyze(ctx);
+                }));
+            });
     }
 
-    std::unique_ptr<expression> typeclass_literal::_clone_expr_with_replacement(replacements & repl) const
-    {
-        assert(0);
-    }
-
-    future<expression *> typeclass_literal::_simplify_expr(recursive_context ctx)
+    std::unique_ptr<expression> typeclass_expression::_clone_expr_with_replacement(replacements & repl) const
     {
         assert(0);
     }
 
-    statement_ir typeclass_literal::_codegen_ir(ir_generation_context & ctx) const
+    future<expression *> typeclass_expression::_simplify_expr(recursive_context ctx)
+    {
+        assert(0);
+    }
+
+    statement_ir typeclass_expression::_codegen_ir(ir_generation_context & ctx) const
     {
         assert(0);
     }

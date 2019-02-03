@@ -23,17 +23,18 @@
 #pragma once
 
 #include "vapor/analyzer/expressions/expression.h"
+#include "vapor/analyzer/semantic/typeclass.h"
 #include "vapor/analyzer/types/typeclass.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class typeclass_literal : public expression
+    class typeclass_expression : public expression
     {
     public:
-        typeclass_literal(ast_node parse, std::unique_ptr<typeclass> type);
-        ~typeclass_literal();
+        typeclass_expression(ast_node parse, std::unique_ptr<typeclass> type);
+        ~typeclass_expression();
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
@@ -43,9 +44,9 @@ inline namespace _v1
             // return _instance_template->get_scope();
         }
 
-        typeclass * instance_template() const
+        typeclass * get_typeclass() const
         {
-            return _instance_template.get();
+            return _typeclass.get();
         }
 
     private:
@@ -60,7 +61,7 @@ inline namespace _v1
             // return _instance_template->get_expression()->_do_generate_interface();
         }
 
-        std::unique_ptr<typeclass> _instance_template;
+        std::unique_ptr<typeclass> _typeclass;
     };
 }
 }
@@ -77,7 +78,7 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<typeclass_literal> preanalyze_typeclass_literal(precontext & ctx,
+    std::unique_ptr<typeclass_expression> preanalyze_typeclass_literal(precontext & ctx,
         const parser::typeclass_literal & tpl,
         scope * lex_scope);
 }

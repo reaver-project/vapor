@@ -24,6 +24,7 @@
 
 #include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/semantic/symbol.h"
+#include "vapor/analyzer/semantic/typeclass_instance.h"
 #include "vapor/analyzer/statements/function.h"
 #include "vapor/parser/expr.h"
 #include "vapor/parser/typeclass.h"
@@ -36,9 +37,6 @@ inline namespace _v1
         const parser::instance_literal & parse,
         scope * lex_scope)
     {
-        auto name_id_expr =
-            fmap(parse.typeclass_name.id_expression_value, [&](auto && token) { return token.value.string; });
-
         auto late_preanalysis = [&parse, &ctx](function_definition_handler fn_def) {
             fmap(parse.definitions, [&](auto && definition) {
                 fmap(definition, make_overload_set([&](const parser::function_definition & func) {
@@ -49,23 +47,14 @@ inline namespace _v1
             });
         };
 
-        return std::make_unique<typeclass_instance_expression>(make_node(parse),
-            lex_scope,
-            std::move(name_id_expr),
-            fmap(parse.arguments.expressions,
-                [&](auto && expr) { return preanalyze_expression(ctx, expr, lex_scope); }),
-            std::move(late_preanalysis));
+        return std::make_unique<typeclass_instance_expression>(
+            make_node(parse), std::move(late_preanalysis), make_typeclass_instance(ctx, parse, lex_scope));
     }
 
     typeclass_instance_expression::typeclass_instance_expression(ast_node parse,
-        scope * original_scope,
-        std::vector<std::u32string> name_segments,
-        std::vector<std::unique_ptr<expression>> arguments,
-        late_preanalysis_type late_pre)
-        : _original_scope{ original_scope },
-          _typeclass_name{ std::move(name_segments) },
-          _arguments{ std::move(arguments) },
-          _late_preanalysis{ std::move(late_pre) }
+        late_preanalysis_type late_pre,
+        std::unique_ptr<typeclass_instance> instance)
+        : _late_preanalysis{ std::move(late_pre) }, _instance{ std::move(instance) }
     {
         _set_ast_info(parse);
     }
@@ -79,11 +68,12 @@ inline namespace _v1
 
     future<> typeclass_instance_expression::_analyze(analysis_context & ctx)
     {
-        auto name = _typeclass_name;
+        auto name = _instance->typeclass_name();
         auto top_level = std::move(name.front());
         name.erase(name.begin());
 
-        future<expression *> expr = _original_scope->resolve(top_level)->get_expression_future();
+        future<expression *> expr =
+            _instance->get_scope()->parent()->resolve(top_level)->get_expression_future();
 
         if (!name.empty())
         {
@@ -97,16 +87,12 @@ inline namespace _v1
             });
         }
 
-        // TODO: this can be refactored to use the typeclass template's call operator
-        // I don't think that is *really* necessary, but might lead to a very slight cleanup here
         return expr.then([&](expression * expr) { return expr->analyze(ctx).then([expr] { return expr; }); })
             .then([&](expression * expr) {
-                return when_all(fmap(_arguments,
-                                    [&](auto && arg) {
-                                        return arg->analyze(ctx).then(
-                                            [&] { return simplification_loop(ctx, arg); });
-                                    }))
-                    .then([expr](auto &&) { return expr; });
+                return when_all(
+                    fmap(_instance->get_arguments(), [&](auto && arg) { return arg->analyze(ctx); }))
+                    .then([&] { return _instance->simplify_arguments(ctx); })
+                    .then([expr] { return expr; });
             })
             .then([&](expression * expr) {
                 assert(0);

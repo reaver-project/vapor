@@ -246,7 +246,6 @@ inline namespace _v1
             member_t integer;
             member_t boolean;
             member_t unconstrained;
-            member_t typeclass;
         };
 
         static auto builtins = [] {

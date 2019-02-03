@@ -22,12 +22,62 @@
 
 #pragma once
 
+#include "../expressions/expression.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
     class typeclass_instance
     {
+    public:
+        typeclass_instance(ast_node parse,
+            std::unique_ptr<scope> member_scope,
+            std::vector<std::u32string> typeclass_name,
+            std::vector<std::unique_ptr<expression>> arguments);
+
+        std::vector<expression *> get_arguments() const;
+        future<> simplify_arguments(analysis_context &);
+
+        scope * get_scope()
+        {
+            return _scope.get();
+        }
+
+        const scope * get_scope() const
+        {
+            return _scope.get();
+        }
+
+        const std::vector<std::u32string> & typeclass_name() const
+        {
+            return _typeclass_name;
+        }
+
+    private:
+        ast_node _node;
+
+        std::unique_ptr<scope> _scope;
+        std::vector<std::u32string> _typeclass_name;
+        std::vector<std::unique_ptr<expression>> _arguments;
     };
+}
+}
+
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    struct instance_literal;
+}
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    std::unique_ptr<typeclass_instance> make_typeclass_instance(precontext & ctx,
+        const parser::instance_literal & parse,
+        scope * lex_scope);
 }
 }

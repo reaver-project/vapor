@@ -41,10 +41,8 @@ inline namespace _v1
         using late_preanalysis_type = reaver::unique_function<void(function_definition_handler)>;
 
         typeclass_instance_expression(ast_node parse,
-            scope * original_scope,
-            std::vector<std::u32string> name_segments,
-            std::vector<std::unique_ptr<expression>> arguments,
-            late_preanalysis_type late_pre);
+            late_preanalysis_type late_pre,
+            std::unique_ptr<typeclass_instance> instance);
 
         virtual ~typeclass_instance_expression() override;
 
@@ -56,13 +54,7 @@ inline namespace _v1
         virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
 
-        scope * _original_scope;
-
-        std::vector<std::u32string> _typeclass_name;
-        std::vector<std::unique_ptr<expression>> _arguments;
-
         late_preanalysis_type _late_preanalysis;
-
         std::shared_ptr<typeclass_instance> _instance;
     };
 }

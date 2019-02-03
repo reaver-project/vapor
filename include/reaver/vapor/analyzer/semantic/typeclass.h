@@ -83,3 +83,24 @@ inline namespace _v1
     };
 }
 }
+
+namespace reaver::vapor::parser
+{
+inline namespace _v1
+{
+    class typeclass_literal;
+}
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    struct precontext;
+    class typeclass;
+
+    std::unique_ptr<typeclass> make_typeclass(precontext & ctx,
+        const parser::typeclass_literal & parse,
+        scope * lex_scope);
+}
+}
