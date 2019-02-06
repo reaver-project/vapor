@@ -27,6 +27,7 @@
 #include "vapor/analyzer/semantic/function.h"
 #include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/function.h"
+#include "vapor/analyzer/types/typeclass_instance.h"
 #include "vapor/parser/expr.h"
 
 namespace reaver::vapor::analyzer
@@ -58,15 +59,15 @@ inline namespace _v1
     std::unique_ptr<function_definition> preanalyze_function_definition(precontext & prectx,
         const parser::function_definition & parse,
         scope *& lex_scope,
-        bool is_instance_member)
+        typeclass_instance_type * instance_type)
     {
         auto function_scope = lex_scope->clone_local();
 
         function * original_overload = nullptr;
         std::optional<instance_function_context> fn_ctx;
-        if (is_instance_member)
+        if (instance_type)
         {
-            auto symb = lex_scope->parent()->get(parse.signature.name.value.string);
+            auto symb = instance_type->get_scope()->get(parse.signature.name.value.string);
             assert(symb);
             auto oset = symb->get_expression()->as<overload_set>();
             assert(oset);
@@ -111,7 +112,7 @@ inline namespace _v1
 
         auto ret_type = fmap(parse.signature.return_type,
             [&](auto && ret_type) { return preanalyze_expression(prectx, ret_type, function_scope.get()); });
-        if (!ret_type && is_instance_member)
+        if (!ret_type && instance_type)
         {
             auto original_ret = original_overload->get_return_type().try_get();
             assert(original_ret);

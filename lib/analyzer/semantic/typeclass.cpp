@@ -25,6 +25,7 @@
 #include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/semantic/parameter_list.h"
 #include "vapor/analyzer/statements/function.h"
+#include "vapor/analyzer/types/typeclass_instance.h"
 #include "vapor/parser/expr.h"
 #include "vapor/parser/typeclass.h"
 
@@ -75,6 +76,8 @@ inline namespace _v1
     {
     }
 
+    typeclass::~typeclass() = default;
+
     void typeclass::print(std::ostream & os, print_context ctx) const
     {
         os << styles::def << ctx << styles::type << "typeclass";
@@ -85,6 +88,22 @@ inline namespace _v1
     std::vector<parameter *> typeclass::get_parameters() const
     {
         return fmap(_parameters, [](auto && param) { return param.get(); });
+    }
+
+    std::vector<expression *> typeclass::get_parameter_expressions() const
+    {
+        return fmap(_parameters, [](auto && param) -> expression * { return param.get(); });
+    }
+
+    typeclass_instance_type * typeclass::type_for(const std::vector<expression *> & arguments)
+    {
+        auto & type = _instance_types[arguments];
+        if (!type)
+        {
+            type = std::make_unique<typeclass_instance_type>(this, arguments);
+        }
+
+        return type.get();
     }
 }
 }

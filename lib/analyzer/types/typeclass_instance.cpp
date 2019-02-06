@@ -30,9 +30,7 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     typeclass_instance_type::typeclass_instance_type(typeclass * tc, std::vector<expression *> arguments)
-        : user_defined_type{ dont_init_expr },
-          _arguments{ std::move(arguments) },
-          _ctx{ tc->get_scope(), _arguments }
+        : user_defined_type{ dont_init_expr }, _arguments{ std::move(arguments) }, _ctx{ tc, _arguments }
     {
         // _self_expression = std::make_unique<type_expression>(this, type_kind::typeclass);
 
@@ -70,26 +68,6 @@ inline namespace _v1
     std::unique_ptr<google::protobuf::Message> typeclass_instance_type::_user_defined_interface() const
     {
         assert(0);
-    }
-
-    std::shared_ptr<typeclass_instance> make_typeclass_instance(typeclass_instance_type * type)
-    {
-        assert(0);
-        /*
-        auto scope = type->get_scope()->clone_for_class();
-
-        std::vector<std::shared_ptr<overload_set>> osets;
-        for (auto && oset_name : type->overload_set_names())
-        {
-            osets.push_back(create_overload_set(scope.get(), oset_name));
-        }
-        // close here, because if the preanalysis below *adds* new members, then we have a bug... the
-        // assertion that checks for closeness of the scope needs to be somehow weakened here, to allow for
-        // more sensible error reporting than `assert`
-        scope->close();
-
-        return std::make_shared<typeclass_instance>(type, std::move(scope), std::move(osets));
-        */
     }
 }
 }

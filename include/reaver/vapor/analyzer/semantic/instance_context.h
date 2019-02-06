@@ -25,27 +25,27 @@
 #include <string>
 
 #include "../expressions/expression.h"
-#include "../semantic/scope.h"
-#include "../semantic/symbol.h"
 #include "../simplification/replacements.h"
+#include "scope.h"
+#include "symbol.h"
+#include "typeclass.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class scope;
     class function;
 
     struct instance_context
     {
-        const scope * tc_scope;
+        const typeclass * tc;
         const std::vector<expression *> & arguments;
 
         auto get_replacements() const
         {
             replacements repl;
 
-            auto && params = tc_scope->parent()->symbols_in_order();
+            auto && params = tc->get_parameter_expressions();
 
             assert(arguments.size() == params.size());
             assert(
@@ -55,7 +55,7 @@ inline namespace _v1
 
             for (std::size_t i = 0; i < arguments.size(); ++i)
             {
-                repl.add_replacement(params[i]->get_expression(), arguments[i]);
+                repl.add_replacement(params[i], arguments[i]);
             }
 
             return repl;

@@ -25,8 +25,8 @@
 #include "../expressions/expression.h"
 #include "../expressions/expression_ref.h"
 #include "../expressions/type.h"
-#include "../semantic/symbol.h"
 #include "instance_context.h"
+#include "symbol.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -75,7 +75,7 @@ inline namespace _v1
         virtual future<expression *> _simplify_expr(recursive_context ctx) override
         {
             return _type_expression->simplify_expr(ctx).then(
-                [&ctx = ctx.proper, this](auto && simpl) -> expression * {
+                [&ctx = ctx.proper, this](auto && simpl)->expression * {
                     replace_uptr(_type_expression, simpl, ctx);
                     return this;
                 });

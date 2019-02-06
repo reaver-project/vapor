@@ -23,6 +23,7 @@
 #include "vapor/parser/parameter_list.h"
 #include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/semantic/function.h"
+#include "vapor/analyzer/semantic/instance_context.h"
 #include "vapor/analyzer/semantic/parameter_list.h"
 #include "vapor/parser/expr.h"
 #include "vapor/parser/parameter_list.h"

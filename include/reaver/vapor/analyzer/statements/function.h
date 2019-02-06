@@ -141,6 +141,6 @@ inline namespace _v1
     std::unique_ptr<function_definition> preanalyze_function_definition(precontext & prectx,
         const parser::function_definition & func,
         scope *& lex_scope,
-        bool is_instance_member = false);
+        typeclass_instance_type * instance_type = nullptr);
 }
 }

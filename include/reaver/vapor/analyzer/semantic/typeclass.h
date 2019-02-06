@@ -25,6 +25,7 @@
 #include <memory>
 
 #include "../../print_helpers.h"
+#include "context.h"
 #include "scope.h"
 
 namespace reaver::vapor::analyzer
@@ -33,6 +34,7 @@ inline namespace _v1
 {
     class parameter;
     class function_declaration;
+    class typeclass_instance_type;
 
     class typeclass
     {
@@ -42,12 +44,15 @@ inline namespace _v1
             std::vector<std::unique_ptr<parameter>> parameters,
             std::vector<std::unique_ptr<function_declaration>> member_function_decls);
 
+        ~typeclass();
+
         std::string explain() const
         {
             return "a typeclass (TODO: add name tracking to this stuff)";
         }
 
         std::vector<parameter *> get_parameters() const;
+        std::vector<expression *> get_parameter_expressions() const;
 
         std::vector<function_declaration *> get_member_function_decls() const
         {
@@ -69,6 +74,8 @@ inline namespace _v1
             return _scope.get();
         }
 
+        typeclass_instance_type * type_for(const std::vector<expression *> & args);
+
         void print(std::ostream & os, print_context ctx) const;
 
     private:
@@ -80,6 +87,12 @@ inline namespace _v1
 
         std::vector<std::unique_ptr<function_declaration>> _member_function_declarations;
         std::vector<function *> _member_functions;
+
+        std::unordered_map<std::vector<expression *>,
+            std::unique_ptr<typeclass_instance_type>,
+            argument_list_hash,
+            argument_list_compare>
+            _instance_types;
     };
 }
 }

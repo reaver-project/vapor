@@ -23,9 +23,11 @@
 #include "vapor/analyzer/expressions/typeclass_instance.h"
 
 #include "vapor/analyzer/expressions/expression_list.h"
+#include "vapor/analyzer/expressions/typeclass.h"
 #include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/semantic/typeclass_instance.h"
 #include "vapor/analyzer/statements/function.h"
+#include "vapor/analyzer/types/typeclass_instance.h"
 #include "vapor/parser/expr.h"
 #include "vapor/parser/typeclass.h"
 
@@ -95,20 +97,16 @@ inline namespace _v1
                     .then([expr] { return expr; });
             })
             .then([&](expression * expr) {
-                assert(0);
+                auto tc = expr->_get_replacement()->as<typeclass_expression>();
+                assert(tc);
 
-                /*auto tpl = expr->_get_replacement()->as<template_expression>();
-                assert(tpl);
-                auto instance_type_expr =
-                    dynamic_cast<typeclass_literal_instance *>(ctx.get_instantiation(tpl, fmap(_arguments,
-                [](auto && ptr) { return ptr.get(); }))); assert(instance_type_expr);
-                _set_type(instance_type_expr->instance_type());
-
-                _instance = make_typeclass_instance(instance_type_expr->instance_type());
+                auto instance_type = tc->get_typeclass()->type_for(_instance->get_arguments());
+                _set_type(instance_type);
+                _instance->set_type(instance_type);
                 _late_preanalysis(_instance->get_function_definition_handler());
 
-                return when_all(fmap(_instance->get_member_function_defs(), [&](auto && fn_def) { return
-                fn_def->analyze(ctx); }));*/
+                return when_all(fmap(_instance->get_member_function_defs(),
+                    [&](auto && fn_def) { return fn_def->analyze(ctx); }));
             })
             .then([&] {
                 assert(0);

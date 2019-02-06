@@ -22,6 +22,8 @@
 
 #include "vapor/analyzer/semantic/typeclass_instance.h"
 #include "vapor/analyzer/semantic/symbol.h"
+#include "vapor/analyzer/statements/function.h"
+#include "vapor/analyzer/types/typeclass_instance.h"
 #include "vapor/parser/typeclass.h"
 
 namespace reaver::vapor::analyzer
@@ -62,6 +64,36 @@ inline namespace _v1
     {
         return when_all(fmap(_arguments, [&](auto && arg) { return simplification_loop(ctx, arg); }))
             .then([](auto &&) {});
+    }
+
+    std::vector<function_definition *> typeclass_instance::get_member_function_defs() const
+    {
+        return fmap(_member_function_definitions, [](auto && def) { return def.get(); });
+    }
+
+    void typeclass_instance::set_type(typeclass_instance_type * type)
+    {
+        for (auto && oset_name : type->overload_set_names())
+        {
+            _member_overload_sets.push_back(create_overload_set(_scope.get(), oset_name));
+        }
+
+        // close here, because if the delayed preanalysis later *adds* new members, then we have a bug... the
+        // assertion that checks for closeness of the scope needs to be somehow weakened here, to allow for
+        // more sensible error reporting than `assert`
+        _scope->close();
+
+        _type = type;
+    }
+
+    function_definition_handler typeclass_instance::get_function_definition_handler()
+    {
+        return [&](precontext & ctx, const parser::function_definition & parse) {
+            auto scope = get_scope();
+            auto func = preanalyze_function_definition(ctx, parse, scope, _type);
+            assert(scope == get_scope());
+            _member_function_definitions.push_back(std::move(func));
+        };
     }
 }
 }

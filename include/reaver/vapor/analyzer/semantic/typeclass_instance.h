@@ -23,11 +23,15 @@
 #pragma once
 
 #include "../expressions/expression.h"
+#include "instance_context.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    class function_definition;
+    class overload_set;
+
     class typeclass_instance
     {
     public:
@@ -38,6 +42,11 @@ inline namespace _v1
 
         std::vector<expression *> get_arguments() const;
         future<> simplify_arguments(analysis_context &);
+
+        std::vector<function_definition *> get_member_function_defs() const;
+
+        void set_type(typeclass_instance_type * type);
+        function_definition_handler get_function_definition_handler();
 
         scope * get_scope()
         {
@@ -59,7 +68,12 @@ inline namespace _v1
 
         std::unique_ptr<scope> _scope;
         std::vector<std::u32string> _typeclass_name;
+        typeclass_instance_type * _type = nullptr;
+
         std::vector<std::unique_ptr<expression>> _arguments;
+        std::vector<std::unique_ptr<function_definition>> _member_function_definitions;
+
+        std::vector<std::shared_ptr<overload_set>> _member_overload_sets;
     };
 }
 }
