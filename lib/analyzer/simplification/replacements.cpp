@@ -103,7 +103,7 @@
             {                                                                                                \
                 return claim(ptr);                                                                           \
             }                                                                                                \
-            return claim(repl);                                                                              \
+            return copy_claim(repl);                                                                         \
         }                                                                                                    \
                                                                                                              \
         return claim(ptr);                                                                                   \

@@ -221,7 +221,6 @@ inline namespace _v1
     {
         _function = make_function("overloadable function", get_ast_info().value().range);
         _function->set_name(U"call");
-        _function->make_member();
         _function->set_scopes_generator(
             [this](auto && ctx) { return this->_overload_set->get_type()->codegen_scopes(ctx); });
 
@@ -252,7 +251,6 @@ inline namespace _v1
             .then([&] {
                 auto params =
                     fmap(_parameter_list, [](auto && param) -> expression * { return param.get(); });
-                params.insert(params.begin(), _overload_set.get());
 
                 _function->set_parameters(std::move(params));
             });

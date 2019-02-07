@@ -47,6 +47,7 @@ inline namespace _v1
 
         void set_type(typeclass_instance_type * type);
         function_definition_handler get_function_definition_handler();
+        void import_default_definitions();
 
         scope * get_scope()
         {

@@ -31,6 +31,7 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     class typeclass;
+    class block;
 
     class typeclass_instance_type : public user_defined_type,
                                     public std::enable_shared_from_this<typeclass_instance_type>
@@ -50,10 +51,16 @@ inline namespace _v1
             return _oset_names;
         }
 
+        auto get_declaration_of(function * fn) const
+        {
+            return _function_instance_to_template.at(fn);
+        }
+
     private:
         struct _function_instance
         {
             std::unique_ptr<function> instance;
+            std::unique_ptr<block> function_body;
             std::shared_ptr<expression> return_type_expression;
             std::vector<std::unique_ptr<expression>> parameter_expressions;
             std::shared_ptr<class overload_set> overload_set;
@@ -62,7 +69,7 @@ inline namespace _v1
         std::vector<expression *> _arguments;
         instance_context _ctx;
 
-        std::unordered_set<std::u32string> _oset_names;
+        std::set<std::u32string> _oset_names;
         std::vector<_function_instance> _function_instances;
         std::unordered_map<function *, function_declaration *> _function_instance_to_template;
 

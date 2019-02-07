@@ -442,7 +442,7 @@ inline namespace _v1
                                     }))
                     .then([overloads] { return overloads; });
             })
-            .then([&ctx, &range, arguments, base_expr](auto overloads) mutable {
+            .then([&ctx, range, arguments, base_expr](auto overloads) mutable {
                 assert(overloads.size());
                 return select_overload(ctx, range, std::move(arguments), overloads, base_expr);
             });

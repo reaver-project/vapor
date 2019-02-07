@@ -23,6 +23,7 @@
 #include "vapor/analyzer/types/typeclass_instance.h"
 #include "vapor/analyzer/semantic/typeclass.h"
 #include "vapor/analyzer/semantic/typeclass_instance.h"
+#include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/function.h"
 
 namespace reaver::vapor::analyzer
@@ -49,6 +50,18 @@ inline namespace _v1
                 fmap(fn->parameters(), [&](auto && param) { return repl.copy_claim(param); });
             fn_instance.instance->set_parameters(
                 fmap(fn_instance.parameter_expressions, [](auto && expr) { return expr.get(); }));
+
+            if (fn->get_body())
+            {
+                auto body_stmt = repl.copy_claim(fn->get_body());
+
+                auto body_block = dynamic_cast<block *>(body_stmt.get());
+                assert(body_block);
+                fn_instance.function_body.reset(body_block);
+                body_stmt.release();
+
+                fn_instance.instance->set_body(fn_instance.function_body.get());
+            }
 
             fn_instance.overload_set = get_overload_set(get_scope(), name);
             fn_instance.overload_set->get_overload_set_type()->add_function(fn_instance.instance.get());

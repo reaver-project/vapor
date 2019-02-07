@@ -7,6 +7,11 @@ module test
     typeclass algorithm(arithmetic : type)
     {
         function calculate(arg : arithmetic) -> arithmetic;
+
+        function one() -> arithmetic
+        {
+            return calculate(1);
+        }
     };
 
     let int32 = sized_int(32);
@@ -30,6 +35,8 @@ module test
     {
         let constant_foldable = factorial.calculate(5);
         let non_constant_foldable = factorial.calculate(arg);
+
+        let one = factorial.one();
 
         return constant_foldable - non_constant_foldable;
     };

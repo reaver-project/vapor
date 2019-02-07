@@ -95,5 +95,41 @@ inline namespace _v1
             _member_function_definitions.push_back(std::move(func));
         };
     }
+
+    void typeclass_instance::import_default_definitions()
+    {
+        for (auto && oset_name : _type->overload_set_names())
+        {
+            auto && own_oset = get_overload_set(_scope.get(), oset_name);
+            auto && default_oset = get_overload_set(_type->get_scope(), oset_name);
+
+            auto && own_overloads = own_oset->get_overloads();
+
+            for (auto && default_overload : default_oset->get_overloads())
+            {
+                if (std::find_if(own_overloads.begin(),
+                        own_overloads.end(),
+                        [&](function * fn) {
+                            auto && f1p = fn->parameters();
+                            auto && f2p = default_overload->parameters();
+                            return std::equal(f1p.begin(),
+                                f1p.end(),
+                                f2p.begin(),
+                                f2p.end(),
+                                [](expression * lhs, expression * rhs) {
+                                    return lhs->get_type() == rhs->get_type();
+                                });
+                        })
+                    != own_overloads.end())
+                {
+                    continue;
+                }
+
+                auto default_declaration = _type->get_declaration_of(default_overload);
+                assert(default_declaration->get_function()->get_body());
+                own_oset->add_function(default_declaration);
+            }
+        }
+    }
 }
 }

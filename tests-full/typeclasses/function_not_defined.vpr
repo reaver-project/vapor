@@ -1,0 +1,15 @@
+// compile: ! {vprc} -i {input}
+
+module function_not_defined
+{
+    typeclass test(T : type)
+    {
+        function fn(t : T) -> T;
+    };
+
+    let i = instance test(sized_int(32))
+    {
+    };
+}
+
+// vim: filetype=cpp

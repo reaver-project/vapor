@@ -69,14 +69,11 @@ inline namespace _v1
             imported->function->set_parameters(
                 fmap(imported->parameters, [](auto && param) { return param.get(); }));
             imported->function->set_codegen(
-                [imported = imported.get()](ir_generation_context & ctx) -> codegen::ir::function {
+                [imported = imported.get()](ir_generation_context & ctx)->codegen::ir::function {
                     auto params = fmap(imported->parameters, [&](auto && param) {
                         return std::get<std::shared_ptr<codegen::ir::variable>>(
                             param->codegen_ir(ctx).back().result);
                     });
-                    // this is slightly messy, but cleaning it up before I have typeclasses would be wasteful
-                    // since I can fix it in an even better way when I have those
-                    params.erase(params.begin());
 
                     auto ret = codegen::ir::function{ U"call",
                         {},
@@ -90,12 +87,14 @@ inline namespace _v1
                     return ret;
                 });
 
-            assert(overload.is_member());
+            if (overload.is_member())
+            {
+                imported->function->make_member();
+            }
 
             imported->function->set_name(U"call");
-            imported->function->make_member();
-            imported->function->set_scopes_generator(
-                [type = ret.get()](auto && ctx) { return type->codegen_scopes(ctx); });
+            imported->function->set_scopes_generator([type = ret.get()](
+                auto && ctx) { return type->codegen_scopes(ctx); });
 
             ret->add_function(std::move(imported));
         }

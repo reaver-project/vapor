@@ -108,10 +108,7 @@ inline namespace _v1
                 return when_all(fmap(_instance->get_member_function_defs(),
                     [&](auto && fn_def) { return fn_def->analyze(ctx); }));
             })
-            .then([&] {
-                assert(0);
-                //_instance->import_default_definitions();
-            });
+            .then([&] { _instance->import_default_definitions(); });
     }
 
     std::unique_ptr<expression> typeclass_instance_expression::_clone_expr_with_replacement(
