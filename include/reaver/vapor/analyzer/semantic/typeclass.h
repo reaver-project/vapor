@@ -74,7 +74,8 @@ inline namespace _v1
             return _scope.get();
         }
 
-        typeclass_instance_type * type_for(const std::vector<expression *> & args);
+        future<typeclass_instance_type *> type_for(analysis_context & ctx,
+            const std::vector<expression *> & args);
 
         void print(std::ostream & os, print_context ctx) const;
 
@@ -88,8 +89,14 @@ inline namespace _v1
         std::vector<std::unique_ptr<function_declaration>> _member_function_declarations;
         std::vector<function *> _member_functions;
 
+        struct instance_information
+        {
+            std::unique_ptr<typeclass_instance_type> instance;
+            std::optional<future<typeclass_instance_type *>> analysis_future;
+        };
+
         std::unordered_map<std::vector<expression *>,
-            std::unique_ptr<typeclass_instance_type>,
+            instance_information,
             argument_list_hash,
             argument_list_compare>
             _instance_types;

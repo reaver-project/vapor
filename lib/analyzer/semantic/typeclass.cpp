@@ -95,15 +95,18 @@ inline namespace _v1
         return fmap(_parameters, [](auto && param) -> expression * { return param.get(); });
     }
 
-    typeclass_instance_type * typeclass::type_for(const std::vector<expression *> & arguments)
+    future<typeclass_instance_type *> typeclass::type_for(analysis_context & ctx,
+        const std::vector<expression *> & arguments)
     {
-        auto & type = _instance_types[arguments];
-        if (!type)
+        auto & type_info = _instance_types[arguments];
+        if (!type_info.instance)
         {
-            type = std::make_unique<typeclass_instance_type>(this, arguments);
+            type_info.instance = std::make_unique<typeclass_instance_type>(this, arguments);
+            type_info.analysis_future =
+                type_info.instance->_analyze(ctx).then([i = type_info.instance.get()] { return i; });
         }
 
-        return type.get();
+        return type_info.analysis_future.value();
     }
 }
 }

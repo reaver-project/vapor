@@ -8,9 +8,9 @@ module test
     {
         function calculate(arg : arithmetic) -> arithmetic;
 
-        function one() -> arithmetic
+        function identity(arg : arithmetic) -> arithmetic
         {
-            return calculate(1);
+            return arg;
         }
     };
 
@@ -36,7 +36,7 @@ module test
         let constant_foldable = factorial.calculate(5);
         let non_constant_foldable = factorial.calculate(arg);
 
-        let one = factorial.one();
+        let one = factorial.identity(1);
 
         return constant_foldable - non_constant_foldable;
     };

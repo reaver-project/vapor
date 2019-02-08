@@ -51,6 +51,7 @@ inline namespace _v1
             fn_instance.instance->set_parameters(
                 fmap(fn_instance.parameter_expressions, [](auto && expr) { return expr.get(); }));
 
+            logger::dlog() << utf8(name) << ": " << fn << ": " << fn->get_body();
             if (fn->get_body())
             {
                 auto body_stmt = repl.copy_claim(fn->get_body());
@@ -76,6 +77,22 @@ inline namespace _v1
     void typeclass_instance_type::print(std::ostream & os, print_context ctx) const
     {
         assert(0);
+    }
+
+    future<> typeclass_instance_type::_analyze(analysis_context & ctx)
+    {
+        return when_all(fmap(_function_instances, [&](auto && instance) {
+            return when_all(
+                fmap(instance.parameter_expressions, [&](auto && expr) { return expr->analyze(ctx); }))
+                .then([&] { return instance.return_type_expression->analyze(ctx); })
+                .then([&] {
+                    if (instance.function_body)
+                    {
+                        return instance.function_body->analyze(ctx);
+                    }
+                    return make_ready_future();
+                });
+        }));
     }
 
     std::unique_ptr<google::protobuf::Message> typeclass_instance_type::_user_defined_interface() const

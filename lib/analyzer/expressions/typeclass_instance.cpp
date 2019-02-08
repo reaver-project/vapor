@@ -100,7 +100,9 @@ inline namespace _v1
                 auto tc = expr->_get_replacement()->as<typeclass_expression>();
                 assert(tc);
 
-                auto instance_type = tc->get_typeclass()->type_for(_instance->get_arguments());
+                return tc->get_typeclass()->type_for(ctx, _instance->get_arguments());
+            })
+            .then([&](auto instance_type) {
                 _set_type(instance_type);
                 _instance->set_type(instance_type);
                 _late_preanalysis(_instance->get_function_definition_handler());

@@ -43,8 +43,7 @@ inline namespace _v1
         scope * lex_scope,
         std::optional<instance_function_context> ctx)
     {
-        // TODO: drop the +1 once overload_set's thingies stop being members
-        std::size_t i = 0 + 1;
+        std::size_t i = 0;
         replacements repl;
 
         return fmap(param_list.parameters, [&](auto && param_parse) {

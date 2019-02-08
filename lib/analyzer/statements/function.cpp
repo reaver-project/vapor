@@ -78,8 +78,7 @@ inline namespace _v1
                 auto fn_params_size = fn->parameters().size();
                 bool has_parameters = parse.signature.parameters.has_value();
                 auto parse_params_size = has_parameters ? parse.signature.parameters->parameters.size() : 0;
-                // TODO: drop the +1 once overload_set's thingies stop being members
-                return fn_params_size == parse_params_size + 1;
+                return fn_params_size == parse_params_size;
             };
             auto count = std::count_if(overloads.begin(), overloads.end(), pred);
             if (count != 1)
@@ -259,18 +258,6 @@ inline namespace _v1
     future<> function_definition::_analyze(analysis_context & ctx)
     {
         auto base_future = function_declaration::_analyze(ctx);
-
-        if (_template_params)
-        {
-            // FIXME: this is actually wrong
-            // the way this here is done would actually implement C++-like templates in typeclass functions
-            // that is not what I want; what I want is to only use things that are known from the constraints
-            // on the template parameters but this is significantly harder to implement and will have to wait
-            // for a while (for the time being the compiler will just be a lot more permissive, and with a
-            // future release some code will become invalid, which is fine, because nowhere does Vapor promise
-            // being stable for now)
-            return base_future;
-        }
 
         return base_future
             .then([&] {

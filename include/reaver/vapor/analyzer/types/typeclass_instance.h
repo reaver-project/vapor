@@ -37,6 +37,8 @@ inline namespace _v1
                                     public std::enable_shared_from_this<typeclass_instance_type>
     {
     public:
+        friend class typeclass;
+
         typeclass_instance_type(typeclass * tc, std::vector<expression *> arguments);
 
         virtual std::string explain() const override
@@ -72,6 +74,8 @@ inline namespace _v1
         std::set<std::u32string> _oset_names;
         std::vector<_function_instance> _function_instances;
         std::unordered_map<function *, function_declaration *> _function_instance_to_template;
+
+        future<> _analyze(analysis_context & ctx);
 
         virtual std::unique_ptr<google::protobuf::Message> _user_defined_interface() const override;
 
