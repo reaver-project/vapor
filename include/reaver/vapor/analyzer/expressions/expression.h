@@ -85,9 +85,9 @@ inline namespace _v1
         friend class replacements;
 
     private:
-        std::unique_ptr<expression> clone_expr_with_replacement(replacements & repl) const
+        std::unique_ptr<expression> clone_expr(replacements & repl) const
         {
-            return _clone_expr_with_replacement(repl);
+            return _clone_expr(repl);
         }
 
     public:
@@ -264,12 +264,12 @@ inline namespace _v1
             return make_ready_future();
         }
 
-        virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const final
+        virtual std::unique_ptr<statement> _clone(replacements & repl) const final
         {
-            return _clone_expr_with_replacement(repl);
+            return _clone_expr(repl);
         }
 
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const = 0;
+        virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const = 0;
 
         virtual future<statement *> _simplify(recursive_context ctx) override final
         {

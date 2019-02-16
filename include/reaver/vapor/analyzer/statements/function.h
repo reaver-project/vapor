@@ -70,7 +70,7 @@ inline namespace _v1
         virtual future<> _analyze(analysis_context &) override;
 
     private:
-        virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override
+        virtual std::unique_ptr<statement> _clone(replacements &) const override
         {
             return make_null_statement();
         }
@@ -105,7 +105,7 @@ inline namespace _v1
     private:
         virtual future<> _analyze(analysis_context &) override;
 
-        virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override
+        virtual std::unique_ptr<statement> _clone(replacements &) const override
         {
             return make_null_statement();
         }

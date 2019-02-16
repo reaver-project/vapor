@@ -68,7 +68,7 @@ inline namespace _v1
 
         void set_clone_result(std::unique_ptr<expression> expr)
         {
-            _clone_expr = std::move(expr);
+            _cloned_expr = std::move(expr);
         }
 
         void set_simplified_expression(std::unique_ptr<expression> expr)
@@ -92,14 +92,14 @@ inline namespace _v1
             return reaver::make_ready_future();
         }
 
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override
         {
-            if (!_clone_expr)
+            if (!_cloned_expr)
             {
                 throw unexpected_call{ __PRETTY_FUNCTION__ };
             }
 
-            return std::move(const_cast<test_expression *>(this)->_clone_expr);
+            return std::move(const_cast<test_expression *>(this)->_cloned_expr);
         }
 
         virtual reaver::future<expression *> _simplify_expr(recursive_context) override
@@ -128,7 +128,7 @@ inline namespace _v1
         }
 
         type * _analysis_type = nullptr;
-        std::unique_ptr<expression> _clone_expr;
+        std::unique_ptr<expression> _cloned_expr;
         std::unique_ptr<expression> _simplified_expr;
     };
 

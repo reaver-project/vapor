@@ -72,7 +72,7 @@ inline namespace _v1
         }
 
     private:
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
+        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override;
 

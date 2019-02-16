@@ -80,7 +80,7 @@ inline namespace _v1
         }
 
     private:
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override
         {
             return make_conversion_expression(repl.copy_claim(_base), get_type());
         }
@@ -123,7 +123,7 @@ inline namespace _v1
                 });
         }
 
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override
         {
             return make_conversion_expression(repl.claim(_owned.get()), get_type());
         }

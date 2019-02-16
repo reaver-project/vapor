@@ -80,7 +80,7 @@ inline namespace _v1
     private:
         virtual future<> _analyze(analysis_context &) override;
 
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override
         {
             assert(0);
         }

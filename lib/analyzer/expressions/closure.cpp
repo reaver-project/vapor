@@ -160,7 +160,7 @@ inline namespace _v1
             });
     }
 
-    std::unique_ptr<expression> closure::_clone_expr_with_replacement(replacements & repl) const
+    std::unique_ptr<expression> closure::_clone_expr(replacements & repl) const
     {
         assert(!"this shouldn't be called, or, when called, should return an empty expression...");
     }

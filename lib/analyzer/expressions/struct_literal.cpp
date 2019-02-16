@@ -83,7 +83,7 @@ inline namespace _v1
             .then([this] { _type->generate_constructors(); });
     }
 
-    std::unique_ptr<expression> struct_literal::_clone_expr_with_replacement(replacements & repl) const
+    std::unique_ptr<expression> struct_literal::_clone_expr(replacements & repl) const
     {
         assert(0);
     }

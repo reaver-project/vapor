@@ -38,7 +38,7 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<expression> overload_set::_clone_expr_with_replacement(replacements & repl) const
+    std::unique_ptr<expression> overload_set::_clone_expr(replacements & repl) const
     {
         // icky
         return make_expression_ref(const_cast<overload_set *>(this), get_ast_info());

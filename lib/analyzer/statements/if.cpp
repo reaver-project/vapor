@@ -93,7 +93,7 @@ inline namespace _v1
         return fut;
     }
 
-    std::unique_ptr<statement> if_statement::_clone_with_replacement(replacements & repl) const
+    std::unique_ptr<statement> if_statement::_clone(replacements & repl) const
     {
         auto ret = std::unique_ptr<if_statement>(new if_statement(get_ast_info().value(),
             repl.claim(_condition.get()),

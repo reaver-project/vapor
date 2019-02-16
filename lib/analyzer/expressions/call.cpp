@@ -193,7 +193,7 @@ inline namespace _v1
         });
     }
 
-    std::unique_ptr<expression> call_expression::_clone_expr_with_replacement(replacements & repl) const
+    std::unique_ptr<expression> call_expression::_clone_expr(replacements & repl) const
     {
         if (_replacement_expr)
         {

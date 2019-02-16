@@ -80,7 +80,7 @@ inline namespace _v1
         }
 
     private:
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override
         {
             return std::make_unique<member_expression>(_parent, _name, get_type());
         }

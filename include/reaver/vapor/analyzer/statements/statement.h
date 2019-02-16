@@ -82,13 +82,13 @@ inline namespace _v1
         friend class replacements;
 
     private:
-        std::unique_ptr<statement> clone_with_replacement(replacements & repl) const
+        std::unique_ptr<statement> clone(replacements & repl) const
         {
-            return _clone_with_replacement(repl);
+            return _clone(repl);
         }
 
     public:
-        std::unique_ptr<statement> clone_with_replacement(const std::vector<expression *> & to_replace,
+        std::unique_ptr<statement> clone(const std::vector<expression *> & to_replace,
             const std::vector<expression *> & replacements) const
         {
             assert(to_replace.size() == replacements.size());
@@ -98,7 +98,7 @@ inline namespace _v1
                 repl.add_replacement(to_replace[i], replacements[i]);
             }
 
-            return _clone_with_replacement(repl);
+            return _clone(repl);
         }
 
         future<statement *> simplify(recursive_context ctx)
@@ -167,7 +167,7 @@ inline namespace _v1
             return make_ready_future();
         }
 
-        virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const = 0;
+        virtual std::unique_ptr<statement> _clone(replacements &) const = 0;
 
         virtual bool _invalidate_ir(ir_generation_context &) const
         {
@@ -202,7 +202,7 @@ inline namespace _v1
             return make_ready_future();
         }
 
-        virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override
+        virtual std::unique_ptr<statement> _clone(replacements &) const override
         {
             return std::make_unique<null_statement>();
         }

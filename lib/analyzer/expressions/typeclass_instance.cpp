@@ -113,7 +113,7 @@ inline namespace _v1
             .then([&] { _instance->import_default_definitions(); });
     }
 
-    std::unique_ptr<expression> typeclass_instance_expression::_clone_expr_with_replacement(
+    std::unique_ptr<expression> typeclass_instance_expression::_clone_expr(
         replacements & repl) const
     {
         assert(0);

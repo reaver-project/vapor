@@ -42,7 +42,7 @@ inline namespace _v1
             assert(0);
         }
 
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override
         {
             assert(0);
         }

@@ -81,7 +81,7 @@ inline namespace _v1
         }
 
     private:
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override
         {
             auto ret = std::make_unique<member_assignment_expression>(_type->member_name());
             ret->_rhs = _rhs;

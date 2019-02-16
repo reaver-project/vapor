@@ -139,38 +139,8 @@ inline namespace _v1
         return fut;
     }
 
-    void block::_ensure_cache() const
+    std::unique_ptr<statement> block::_clone(replacements & repl) const
     {
-        if (_is_clone_cache)
-        {
-            return;
-        }
-
-        std::lock_guard<std::mutex> lock{ _clone_cache_lock };
-        if (_clone)
-        {
-            return;
-        }
-
-        auto clone = std::unique_ptr<block>(new block(*this));
-        auto repl = replacements{};
-
-        clone->_statements = fmap(_statements, [&](auto && stmt) { return repl.claim(stmt.get()); });
-        clone->_value_expr = fmap(_value_expr, [&](auto && expr) { return repl.claim(expr.get()); });
-        clone->_is_clone_cache = true;
-
-        _clone = std::move(clone);
-    }
-
-    std::unique_ptr<statement> block::_clone_with_replacement(replacements & repl) const
-    {
-        _ensure_cache();
-
-        if (!_is_clone_cache)
-        {
-            return repl.claim(_clone.value().get());
-        }
-
         auto ret = std::unique_ptr<block>(new block(*this));
 
         ret->_statements = fmap(_statements, [&](auto && stmt) { return repl.claim(stmt.get()); });
@@ -181,8 +151,6 @@ inline namespace _v1
 
     future<statement *> block::_simplify(recursive_context ctx)
     {
-        _ensure_cache();
-
         if (!_value_expr && _statements.size() == 1)
         {
             return _statements.front()->simplify(ctx).then([&, ctx](auto && simpl) -> statement * {

@@ -186,7 +186,7 @@ inline namespace _v1
         return fut;
     }
 
-    std::unique_ptr<statement> declaration::_clone_with_replacement(replacements & repl) const
+    std::unique_ptr<statement> declaration::_clone(replacements & repl) const
     {
         assert(_type == declaration_type::variable);
         return repl.claim(_init_expr.value().get());

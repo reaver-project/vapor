@@ -71,7 +71,7 @@ inline namespace _v1
 
         virtual future<> _analyze(analysis_context &) override;
 
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override
         {
             if (_referenced)
             {

@@ -337,7 +337,7 @@ inline namespace _v1
         // I think I don't, but I'll need that as a debug tool one day
     }
 
-    std::unique_ptr<expression> import_expression::_clone_expr_with_replacement(replacements &) const
+    std::unique_ptr<expression> import_expression::_clone_expr(replacements &) const
     {
         return std::make_unique<import_expression>(get_ast_info().value(), _module);
     }

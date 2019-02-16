@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -102,7 +102,7 @@ inline namespace _v1
         }
 
         virtual future<> _analyze(analysis_context &) override;
-        virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override;
+        virtual std::unique_ptr<statement> _clone(replacements &) const override;
         virtual future<statement *> _simplify(recursive_context) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
@@ -111,12 +111,6 @@ inline namespace _v1
         std::vector<std::unique_ptr<statement>> _statements;
         std::optional<std::unique_ptr<expression>> _value_expr;
         const bool _is_top_level = false;
-
-        void _ensure_cache() const;
-
-        mutable std::mutex _clone_cache_lock;
-        bool _is_clone_cache = false;
-        mutable std::optional<std::unique_ptr<block>> _clone;
     };
 
     std::unique_ptr<block> preanalyze_block(precontext & ctx,

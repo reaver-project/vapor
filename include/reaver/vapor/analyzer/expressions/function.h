@@ -78,7 +78,7 @@ inline namespace _v1
             });
         }
 
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override
         {
             return std::unique_ptr<expression>(new function_expression(_fun, _type));
         }

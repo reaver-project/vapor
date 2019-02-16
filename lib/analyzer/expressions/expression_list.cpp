@@ -83,7 +83,7 @@ inline namespace _v1
             });
     }
 
-    std::unique_ptr<expression> expression_list::_clone_expr_with_replacement(replacements & repl) const
+    std::unique_ptr<expression> expression_list::_clone_expr(replacements & repl) const
     {
         auto ret = std::make_unique<expression_list>(get_ast_info().value());
 

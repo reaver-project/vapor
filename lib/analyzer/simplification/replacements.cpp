@@ -75,8 +75,9 @@
         }                                                                                                    \
                                                                                                              \
         return nullptr;                                                                                      \
-    }                                                                                                        \
-                                                                                                             \
+    }
+
+#define GENERATE_CLAIM(X)                                                                                    \
     std::unique_ptr<X> replacements::claim(const X * ptr)                                                    \
     {                                                                                                        \
         get_replacement(ptr);                                                                                \
@@ -155,19 +156,23 @@ inline namespace _v1
 
     auto replacements::_clone(const statement * ptr)
     {
-        auto ret = ptr->clone_with_replacement(*this);
+        auto ret = ptr->clone(*this);
         logger::dlog(logger::trace) << "[" << this << "] Clone for " << ptr << " is " << ret.get();
         return ret;
     }
 
     auto replacements::_clone(const expression * ptr)
     {
-        auto ret = ptr->clone_expr_with_replacement(*this);
+        auto ret = ptr->clone_expr(*this);
         logger::dlog(logger::trace) << "[" << this << "] Clone for " << ptr << " is " << ret.get();
         return ret;
     }
 
     GENERATE(statement);
     GENERATE(expression);
+    // GENERATE(type);
+
+    GENERATE_CLAIM(statement);
+    GENERATE_CLAIM(expression);
 }
 }

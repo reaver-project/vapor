@@ -92,7 +92,7 @@ inline namespace _v1
         return make_ready_future(make_runtime_value(get_type()).release());
     }
 
-    std::unique_ptr<expression> entity::_clone_expr_with_replacement(replacements & repl) const
+    std::unique_ptr<expression> entity::_clone_expr(replacements & repl) const
     {
         assert(0);
     }

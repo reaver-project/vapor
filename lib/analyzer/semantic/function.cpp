@@ -53,7 +53,7 @@ inline namespace _v1
                 [&] {
                     if (arguments.size())
                     {
-                        auto body = _body->clone_with_replacement(_parameters, arguments);
+                        auto body = _body->clone(_parameters, arguments);
                         auto proper_ctx = std::make_shared<simplification_context>(ctx.proper.results);
 
                         auto simplify = [this,

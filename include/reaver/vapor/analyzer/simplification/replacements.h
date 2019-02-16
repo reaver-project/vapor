@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -34,6 +34,7 @@ inline namespace _v1
 {
     class statement;
     class expression;
+    class type;
 
     class replacements
     {
@@ -47,12 +48,15 @@ inline namespace _v1
 
         void add_replacement(const statement *, statement *);
         void add_replacement(const expression *, expression *);
+        void add_replacement(const type *, type *);
 
         statement * get_replacement(const statement *);
         expression * get_replacement(const expression *);
+        type * get_replacement(const type *);
 
         statement * try_get_replacement(const statement *) const;
         expression * try_get_replacement(const expression *) const;
+        type * try_get_replacement(const type *) const;
 
         std::unique_ptr<statement> claim(const statement *);
         std::unique_ptr<expression> claim(const expression *);
@@ -81,12 +85,14 @@ inline namespace _v1
 
         std::unordered_map<statement const *, statement *> _statements = {};
         std::unordered_map<expression const *, expression *> _expressions = {};
+        std::unordered_map<type const *, type *> _types = {};
 
         std::unordered_map<statement const *, std::unique_ptr<statement>> _unclaimed_statements = {};
         std::unordered_map<expression const *, std::unique_ptr<expression>> _unclaimed_expressions = {};
 
         std::unordered_set<statement const *> _added_statements;
         std::unordered_set<expression const *> _added_expressions;
+        std::unordered_set<type const *> _added_types;
     };
 }
 }

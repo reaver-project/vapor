@@ -55,7 +55,7 @@ inline namespace _v1
         }
 
         virtual future<> _analyze(analysis_context &) override;
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
+        virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override;
         virtual future<expression *> _simplify_expr(recursive_context) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 

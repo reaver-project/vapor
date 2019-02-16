@@ -69,7 +69,7 @@ inline namespace _v1
         virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override;
 
     private:
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override
         {
             return std::make_unique<type_expression>(_type);
         }
