@@ -113,6 +113,36 @@ inline namespace _v1
         }
     }
 
+    template<typename Self>
+    auto postfix_expression::_get_replacement_helper(Self && self)
+    {
+        if (self._accessed_member)
+        {
+            return self._referenced_expression.value()->_get_replacement();
+        }
+
+        if (self._modifier)
+        {
+            return self._call_expression->_get_replacement();
+        }
+
+        return self._base_expr->_get_replacement();
+    }
+
+    expression * postfix_expression::_get_replacement()
+    {
+        auto repl = _get_replacement_helper(*this);
+        assert(repl);
+        return repl;
+    }
+
+    const expression * postfix_expression::_get_replacement() const
+    {
+        auto repl = _get_replacement_helper(*this);
+        assert(repl);
+        return repl;
+    }
+
     future<> postfix_expression::_analyze(analysis_context & ctx)
     {
         return _base_expr->analyze(ctx)

@@ -65,7 +65,39 @@ inline namespace _v1
 
     void typeclass_instance_expression::print(std::ostream & os, print_context ctx) const
     {
-        assert(0);
+        os << styles::def << ctx << styles::rule_name << "typeclass-instance-literal";
+        print_address_range(os, this);
+        os << '\n';
+
+        auto tc_ctx = ctx.make_branch(false);
+        os << styles::def << tc_ctx << styles::subrule_name << "typeclass:\n";
+        _instance->get_typeclass()->print(os, tc_ctx.make_branch(true));
+
+        auto inst_ctx = ctx.make_branch(false);
+        os << styles::def << inst_ctx << styles::subrule_name << "defined instance:\n";
+        _instance->print(os, inst_ctx.make_branch(true));
+
+        auto arg_ctx = ctx.make_branch(_instance->get_member_function_defs().empty());
+        os << styles::def << arg_ctx << styles::subrule_name << "arguments:\n";
+
+        std::size_t idx = 0;
+        for (auto && arg : _instance->get_arguments())
+        {
+            arg->print(os, arg_ctx.make_branch(++idx == _instance->get_arguments().size()));
+        }
+
+        if (_instance->get_member_function_defs().size())
+        {
+            auto defn_ctx = ctx.make_branch(true);
+            os << styles::def << defn_ctx << styles::subrule_name << "member function definitions:\n";
+
+            std::size_t idx = 0;
+            for (auto && member : _instance->get_member_function_defs())
+            {
+                member->print(
+                    os, defn_ctx.make_branch(++idx == _instance->get_member_function_defs().size()));
+            }
+        }
     }
 
     future<> typeclass_instance_expression::_analyze(analysis_context & ctx)
@@ -113,15 +145,16 @@ inline namespace _v1
             .then([&] { _instance->import_default_definitions(); });
     }
 
-    std::unique_ptr<expression> typeclass_instance_expression::_clone_expr(
-        replacements & repl) const
+    std::unique_ptr<expression> typeclass_instance_expression::_clone_expr(replacements & repl) const
     {
         assert(0);
     }
 
     future<expression *> typeclass_instance_expression::_simplify_expr(recursive_context ctx)
     {
-        assert(0);
+        return when_all(
+            fmap(_instance->get_member_function_defs(), [&](auto && decl) { return decl->simplify(ctx); }))
+            .then([&](auto &&) -> expression * { return this; });
     }
 
     statement_ir typeclass_instance_expression::_codegen_ir(ir_generation_context & ctx) const

@@ -64,6 +64,14 @@ inline namespace _v1
             return _typeclass_name;
         }
 
+        const typeclass * get_typeclass() const;
+        void print(std::ostream & os, print_context ctx) const;
+
+        std::optional<ast_node> get_ast_info() const
+        {
+            return std::make_optional(_node);
+        }
+
     private:
         ast_node _node;
 

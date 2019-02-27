@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2018 Michał "Griwes" Dominiak
+ * Copyright © 2014-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -52,6 +52,7 @@ int main(int argc, char ** argv) try
 {
     // force a single thread of execution
     reaver::default_executor(reaver::make_executor<reaver::thread_pool>(1));
+    // reaver::logger::default_logger().set_level(reaver::logger::trace);
 
     auto [options, exit] = reaver::vapor::cli::get_options(argc, argv);
 

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -147,11 +147,6 @@ inline namespace _v1
         std::optional<ast_node> get_ast_info() const
         {
             return _parse_info;
-        }
-
-        virtual void set_template_parameters(std::vector<parameter *>)
-        {
-            assert(!"this statement doesn't support being a template");
         }
 
     protected:

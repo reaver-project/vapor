@@ -1,0 +1,20 @@
+// compile: {vprc} {input} -l -a -c
+// link: {cc} {input}.o {runtime} -o {input}.bin
+// run: {input}.bin 0
+
+module main
+{
+    let int32 = sized_int(32);
+
+    function identity(arg : int32) -> int32
+    {
+        return arg;
+    }
+
+    function entry(arg : int32) -> int32
+    {
+        return identity(0);
+    }
+}
+
+// vim: filetype=cpp

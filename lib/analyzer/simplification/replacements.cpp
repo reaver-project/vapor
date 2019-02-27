@@ -36,34 +36,14 @@
         }                                                                                                    \
                                                                                                              \
         assert(_##X##s.count(original) == 0);                                                                \
-        logger::dlog(logger::trace) << "replacements @ " << this << ": add replacement " #X ": " << original \
-                                    << " => " << repl;                                                       \
+        logger::dlog(logger::trace) << "[" << this << "] Replacement for " << original << " ("               \
+                                    << typeid(*original).name() << ") is " << repl << " ("                   \
+                                    << typeid(*repl).name() << ")";                                          \
                                                                                                              \
         auto & repls = _##X##s;                                                                              \
         repls.emplace(original, repl);                                                                       \
                                                                                                              \
         _fix(original);                                                                                      \
-    }                                                                                                        \
-                                                                                                             \
-    X * replacements::get_replacement(const X * ptr)                                                         \
-    {                                                                                                        \
-        auto & repls = _##X##s;                                                                              \
-                                                                                                             \
-        auto & repl = repls[ptr];                                                                            \
-        if (!repl)                                                                                           \
-        {                                                                                                    \
-            auto & unclaimeds = _unclaimed_##X##s;                                                           \
-            auto clone = _clone(ptr);                                                                        \
-            repl = clone.get();                                                                              \
-            unclaimeds.emplace(ptr, std::move(clone));                                                       \
-                                                                                                             \
-            logger::dlog(logger::trace)                                                                      \
-                << "replacements @ " << this << ": add replacement " #X ": " << ptr << " => " << repl;       \
-                                                                                                             \
-            _fix(ptr);                                                                                       \
-        }                                                                                                    \
-                                                                                                             \
-        return repl;                                                                                         \
     }                                                                                                        \
                                                                                                              \
     X * replacements::try_get_replacement(const X * ptr) const                                               \
@@ -78,6 +58,24 @@
     }
 
 #define GENERATE_CLAIM(X)                                                                                    \
+    X * replacements::get_replacement(const X * ptr)                                                         \
+    {                                                                                                        \
+        auto & repls = _##X##s;                                                                              \
+                                                                                                             \
+        auto & repl = repls[ptr];                                                                            \
+        if (!repl)                                                                                           \
+        {                                                                                                    \
+            auto & unclaimeds = _unclaimed_##X##s;                                                           \
+            auto clone = _clone(ptr);                                                                        \
+            repl = clone.get();                                                                              \
+            unclaimeds.emplace(ptr, std::move(clone));                                                       \
+                                                                                                             \
+            _fix(ptr);                                                                                       \
+        }                                                                                                    \
+                                                                                                             \
+        return repl;                                                                                         \
+    }                                                                                                        \
+                                                                                                             \
     std::unique_ptr<X> replacements::claim(const X * ptr)                                                    \
     {                                                                                                        \
         get_replacement(ptr);                                                                                \
@@ -100,11 +98,7 @@
         auto repl = try_get_replacement(ptr);                                                                \
         if (repl)                                                                                            \
         {                                                                                                    \
-            if (_unclaimed_##X##s.count(ptr))                                                                \
-            {                                                                                                \
-                return claim(ptr);                                                                           \
-            }                                                                                                \
-            return copy_claim(repl);                                                                         \
+            return _clone(repl);                                                                             \
         }                                                                                                    \
                                                                                                              \
         return claim(ptr);                                                                                   \
@@ -157,20 +151,24 @@ inline namespace _v1
     auto replacements::_clone(const statement * ptr)
     {
         auto ret = ptr->clone(*this);
-        logger::dlog(logger::trace) << "[" << this << "] Clone for " << ptr << " is " << ret.get();
+        auto ret_raw = ret.get();
+        logger::dlog(logger::trace) << "[" << this << "] Clone for " << ptr << " (" << typeid(*ptr).name()
+                                    << ") is " << ret_raw << " (" << typeid(*ret_raw).name() << ")";
         return ret;
     }
 
     auto replacements::_clone(const expression * ptr)
     {
         auto ret = ptr->clone_expr(*this);
-        logger::dlog(logger::trace) << "[" << this << "] Clone for " << ptr << " is " << ret.get();
+        auto ret_raw = ret.get();
+        logger::dlog(logger::trace) << "[" << this << "] Clone for " << ptr << " (" << typeid(*ptr).name()
+                                    << ") is " << ret_raw << " (" << typeid(*ret_raw).name() << ")";
         return ret;
     }
 
     GENERATE(statement);
     GENERATE(expression);
-    // GENERATE(type);
+    GENERATE(type);
 
     GENERATE_CLAIM(statement);
     GENERATE_CLAIM(expression);

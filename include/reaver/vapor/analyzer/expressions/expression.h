@@ -93,8 +93,16 @@ inline namespace _v1
     public:
         future<expression *> simplify_expr(recursive_context ctx)
         {
-            return ctx.proper.get_future_or_init(this,
-                [&]() { return make_ready_future().then([this, ctx]() { return _simplify_expr(ctx); }); });
+            return ctx.proper.get_future_or_init(this, [&]() {
+                return make_ready_future()
+                    .then([this, ctx]() { return _simplify_expr(ctx); })
+                    .then([this](auto && expr) {
+                        logger::dlog(logger::trace)
+                            << "Simplified " << this << " (" << typeid(*this).name() << ") to " << expr
+                            << " (" << (expr ? typeid(*expr).name() : "?") << ")";
+                        return expr;
+                    });
+            });
         }
 
         void set_context(expression_context ctx)

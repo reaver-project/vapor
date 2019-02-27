@@ -131,5 +131,17 @@ inline namespace _v1
             }
         }
     }
+
+    const typeclass * typeclass_instance::get_typeclass() const
+    {
+        return _type->get_typeclass();
+    }
+
+    void typeclass_instance::print(std::ostream & os, print_context ctx) const
+    {
+        os << styles::def << ctx << styles::type << "typeclass instance";
+        print_address_range(os, this);
+        os << '\n';
+    }
 }
 }

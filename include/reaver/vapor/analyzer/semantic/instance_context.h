@@ -25,6 +25,7 @@
 #include <string>
 
 #include "../expressions/expression.h"
+#include "../expressions/type.h"
 #include "../simplification/replacements.h"
 #include "scope.h"
 #include "symbol.h"
@@ -56,6 +57,11 @@ inline namespace _v1
             for (std::size_t i = 0; i < arguments.size(); ++i)
             {
                 repl.add_replacement(params[i], arguments[i]);
+
+                auto type_param = params[i]->as<type_expression>();
+                auto type_arg = arguments[i]->as<type_expression>();
+                assert(type_param && type_arg);
+                repl.add_replacement(type_param, type_arg);
             }
 
             return repl;

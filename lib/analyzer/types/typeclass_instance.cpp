@@ -51,7 +51,6 @@ inline namespace _v1
             fn_instance.instance->set_parameters(
                 fmap(fn_instance.parameter_expressions, [](auto && expr) { return expr.get(); }));
 
-            logger::dlog() << utf8(name) << ": " << fn << ": " << fn->get_body();
             if (fn->get_body())
             {
                 auto body_stmt = repl.copy_claim(fn->get_body());
@@ -74,9 +73,14 @@ inline namespace _v1
         }
     }
 
+    std::string typeclass_instance_type::explain() const
+    {
+        return "a typeclass instance type (TODO: add name tracking to this)";
+    }
+
     void typeclass_instance_type::print(std::ostream & os, print_context ctx) const
     {
-        assert(0);
+        os << styles::def << ctx << styles::type << explain() << '\n';
     }
 
     future<> typeclass_instance_type::_analyze(analysis_context & ctx)

@@ -110,6 +110,8 @@ inline namespace _v1
                                    return ret->get_returned_expression()->is_equal(expr);
                                }))
                         {
+                            expr = expr->_get_replacement();
+
                             replacements a, b;
                             ctx.proper.results.save_call_result(call_frame{ this, arguments }, a.claim(expr));
                             return make_ready_future(b.claim(expr).release());

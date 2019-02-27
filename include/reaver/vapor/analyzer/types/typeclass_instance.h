@@ -41,11 +41,7 @@ inline namespace _v1
 
         typeclass_instance_type(typeclass * tc, std::vector<expression *> arguments);
 
-        virtual std::string explain() const override
-        {
-            return "a typeclass instance type (TODO: add name tracking to this)";
-        }
-
+        virtual std::string explain() const override;
         virtual void print(std::ostream & os, print_context ctx) const override;
 
         auto & overload_set_names() const
@@ -56,6 +52,11 @@ inline namespace _v1
         auto get_declaration_of(function * fn) const
         {
             return _function_instance_to_template.at(fn);
+        }
+
+        const typeclass * get_typeclass() const
+        {
+            return _ctx.tc;
         }
 
     private:

@@ -31,6 +31,7 @@
 #include "vapor/analyzer/semantic/function.h"
 #include "vapor/analyzer/semantic/overloads.h"
 #include "vapor/analyzer/semantic/symbol.h"
+#include "vapor/analyzer/types/archetype.h"
 #include "vapor/analyzer/types/pack.h"
 #include "vapor/analyzer/types/sized_integer.h"
 #include "vapor/analyzer/types/unconstrained.h"
@@ -127,6 +128,18 @@ inline namespace _v1
         {
             os << styles::def << ctx << styles::type << "type" << styles::def << " @ " << styles::address
                << this << styles::def << ": builtin type\n";
+        }
+
+        virtual bool is_meta() const override
+        {
+            return true;
+        }
+
+        virtual std::unique_ptr<archetype> generate_archetype(ast_node node,
+            std::u32string param_name) const override
+        {
+            auto arch = std::make_unique<archetype>(node, this, std::move(param_name));
+            return arch;
         }
 
         virtual std::unique_ptr<proto::type> generate_interface() const override

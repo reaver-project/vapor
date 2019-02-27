@@ -206,16 +206,6 @@ inline namespace _v1
         _body->print(os, body_ctx.make_branch(true));
     }
 
-    void function_declaration::set_template_parameters(std::vector<parameter *> params)
-    {
-        assert(!_template_params);
-        _template_params = std::move(params);
-        for (auto && param : _parameter_list)
-        {
-            param->set_template_parameters(_template_params.value());
-        }
-    }
-
     future<> function_declaration::_analyze(analysis_context & ctx)
     {
         _function = make_function("overloadable function", get_ast_info().value().range);
@@ -232,12 +222,9 @@ inline namespace _v1
             }
 
             return (*_return_type)->analyze(ctx).then([&] {
-                if (!_template_params)
-                {
-                    auto & type_expr = *_return_type;
-                    assert(type_expr->get_type() == builtin_types().type.get());
-                    assert(type_expr->is_constant());
-                }
+                auto & type_expr = *_return_type;
+                assert(type_expr->get_type() == builtin_types().type.get());
+                assert(type_expr->is_constant());
 
                 _function->set_return_type(_return_type->get()->_get_replacement());
             });
@@ -297,7 +284,7 @@ inline namespace _v1
 
     future<statement *> function_declaration::_simplify(recursive_context ctx)
     {
-        assert(0);
+        return make_ready_future<statement *>(this);
     }
 
     future<statement *> function_definition::_simplify(recursive_context ctx)

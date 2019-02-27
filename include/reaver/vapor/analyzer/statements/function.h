@@ -49,7 +49,6 @@ inline namespace _v1
             std::unique_ptr<scope> scope);
 
         virtual void print(std::ostream & os, print_context ctx) const override;
-        virtual void set_template_parameters(std::vector<parameter *>) override;
 
         scope * get_function_scope() const
         {
@@ -87,7 +86,6 @@ inline namespace _v1
         std::shared_ptr<overload_set> _overload_set;
 
         std::unique_ptr<function> _function;
-        std::optional<std::vector<parameter *>> _template_params;
     };
 
     class function_definition : public function_declaration
@@ -144,3 +142,4 @@ inline namespace _v1
         typeclass_instance_type * instance_type = nullptr);
 }
 }
+

@@ -358,8 +358,6 @@ inline namespace _v1
     {
         auto original = possible_overloads;
 
-        assert(!possible_overloads.empty());
-
         possible_overloads.erase(std::remove_if(possible_overloads.begin(),
                                      possible_overloads.end(),
                                      [&](auto && overload) { return !is_valid(overload, arguments, base); }),
@@ -419,8 +417,7 @@ inline namespace _v1
         expression * rhs,
         lexer::token_type op)
     {
-        return lhs->get_type()->get_candidates(op).then([&ctx, &range, lhs, rhs](auto && overloads) {
-            assert(overloads.size());
+        return lhs->get_type()->get_candidates(op).then([&ctx, range, lhs, rhs](auto && overloads) {
             return select_overload(ctx, range, std::vector<expression *>{ lhs, rhs }, overloads);
         });
     }
@@ -443,7 +440,6 @@ inline namespace _v1
                     .then([overloads] { return overloads; });
             })
             .then([&ctx, range, arguments, base_expr](auto overloads) mutable {
-                assert(overloads.size());
                 return select_overload(ctx, range, std::move(arguments), overloads, base_expr);
             });
     }

@@ -53,9 +53,18 @@ inline namespace _v1
         print_address_range(os, this);
         os << '\n';
 
-        auto tc_ctx = ctx.make_branch(_typeclass->get_member_function_decls().empty());
+        auto tc_ctx = ctx.make_branch(false);
         os << styles::def << tc_ctx << styles::subrule_name << "defined typeclass:\n";
         _typeclass->print(os, tc_ctx.make_branch(true));
+
+        auto params_ctx = ctx.make_branch(_typeclass->get_member_function_decls().empty());
+        os << styles::def << params_ctx << styles::subrule_name << "parameters:\n";
+
+        std::size_t idx = 0;
+        for (auto && param : _typeclass->get_parameter_expressions())
+        {
+            param->print(os, params_ctx.make_branch(++idx == _typeclass->get_parameter_expressions().size()));
+        }
 
         if (_typeclass->get_member_function_decls().size())
         {
@@ -76,10 +85,13 @@ inline namespace _v1
         return when_all(
             fmap(_typeclass->get_parameters(), [&](auto && param) { return param->analyze(ctx); }))
             .then([&] {
-                return when_all(fmap(_typeclass->get_member_function_decls(), [&](auto && decl) {
-                    decl->set_template_parameters(_typeclass->get_parameters());
-                    return decl->analyze(ctx);
-                }));
+                auto param_types =
+                    fmap(_typeclass->get_parameters(), [](auto && param) { return param->get_type(); });
+                _set_type(ctx.get_typeclass_type(param_types));
+            })
+            .then([&] {
+                return when_all(fmap(_typeclass->get_member_function_decls(),
+                    [&](auto && decl) { return decl->analyze(ctx); }));
             });
     }
 
@@ -90,7 +102,9 @@ inline namespace _v1
 
     future<expression *> typeclass_expression::_simplify_expr(recursive_context ctx)
     {
-        assert(0);
+        return when_all(
+            fmap(_typeclass->get_member_function_decls(), [&](auto && decl) { return decl->simplify(ctx); }))
+            .then([&](auto &&) -> expression * { return this; });
     }
 
     statement_ir typeclass_expression::_codegen_ir(ir_generation_context & ctx) const

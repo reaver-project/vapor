@@ -20,14 +20,29 @@
  *
  **/
 
-#pragma once
+#include "vapor/analyzer/types/archetype.h"
+#include "vapor/analyzer/semantic/symbol.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class archetype
+    archetype::archetype(ast_node node, const type * base, std::u32string param_name)
+        : _node{ node }, _param_name{ std::move(param_name) }, _base_type{ base }
     {
-    };
+    }
+
+    std::string archetype::explain() const
+    {
+        assert(_typeclasses.empty());
+        return std::string("archetype for `") + utf8(_param_name) + "` : " + _base_type->explain();
+    }
+
+    void archetype::print(std::ostream & os, print_context ctx) const
+    {
+        os << styles::def << ctx << styles::type << explain();
+        print_address_range(os, this);
+        os << '\n';
+    }
 }
 }

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -31,7 +31,13 @@ inline namespace _v1
     {
         return std::get<0>(fmap(val,
             make_overload_set([](const std::shared_ptr<variable> & var) { return var->type; },
-                [](const ir::integer_value &) { return ir::builtin_types().integer; },
+                [](const ir::integer_value & val) {
+                    if (val.size)
+                    {
+                        return ir::builtin_types().sized_integer(val.size.value());
+                    }
+                    return ir::builtin_types().integer;
+                },
                 [](const ir::boolean_value &) { return ir::builtin_types().boolean; },
                 [](auto &&) {
                     assert(0);

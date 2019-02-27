@@ -31,14 +31,35 @@ module test
         }
     };
 
+    let wrapped_int32 = struct
+    {
+        let x : int32;
+    };
+
+    let wrapped_factorial = instance algorithm(wrapped_int32)
+    {
+        function calculate(arg)
+        {
+            if (arg.x == 1)
+            {
+                // TODO: allow this conversion from int to int32 to work in the return context
+                // return 1;
+                return arg;
+            }
+
+            return wrapped_int32{ arg.x * calculate(wrapped_int32{ arg.x - 1 }).x };
+        }
+    };
+
+
     let entry = λ(arg : int32) -> int32
     {
-        let constant_foldable = factorial.calculate(5);
-        let non_constant_foldable = factorial.calculate(arg);
+        let not_wrapped = factorial.calculate(5);
+        let wrapped = wrapped_factorial.calculate(wrapped_int32{ arg });
 
         let one = factorial.identity(1);
 
-        return constant_foldable - non_constant_foldable;
+        return not_wrapped - wrapped.x;
     };
 }
 

@@ -58,6 +58,7 @@ inline namespace _v1
 {
     class function;
     class expression;
+    class archetype;
 
     class type
     {
@@ -178,6 +179,17 @@ inline namespace _v1
         virtual bool needs_conversion(type * other) const
         {
             return false;
+        }
+
+        virtual bool is_meta() const
+        {
+            return false;
+        }
+
+        virtual std::unique_ptr<archetype> generate_archetype(ast_node node, std::u32string param_name) const
+        {
+            assert(!is_meta() && "default generate_archetype hit, even though is_meta() is true");
+            assert(!"generate_archetype invoked on a non-meta type");
         }
 
         std::vector<codegen::ir::scope> codegen_scopes(ir_generation_context & ctx) const

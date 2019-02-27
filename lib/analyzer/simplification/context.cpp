@@ -85,7 +85,15 @@ inline namespace _v1
         return {};
     }
 
-    simplification_context::~simplification_context() = default;
+    simplification_context::~simplification_context()
+    {
+        for (auto && kept_alive : _keep_alive_stmt)
+        {
+            auto kept_raw = kept_alive.get();
+            logger::dlog(logger::trace) << "[~" << this << "] Destroying keep-alive " << kept_raw << " ("
+                                        << typeid(*kept_raw).name() << ")";
+        }
+    }
 
     void simplification_context::_handle_expressions(expression * ptr, future<expression *> & fut)
     {

@@ -22,6 +22,8 @@
 
 #include "vapor/analyzer/types/typeclass.h"
 
+#include <boost/algorithm/string/join.hpp>
+
 #include "expressions/type.pb.h"
 #include "type_reference.pb.h"
 
@@ -29,6 +31,18 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    std::string typeclass_type::explain() const
+    {
+        return "typeclass ("
+            + boost::join(fmap(_param_types, [](auto && param) { return param->explain(); }), ",") + ")";
+    }
+
+    void typeclass_type::print(std::ostream & os, print_context ctx) const
+    {
+        os << styles::def << ctx << styles::type << explain() << styles::def << " @ " << styles::address
+           << this << styles::def << ": builtin type\n";
+    }
+
     std::unique_ptr<proto::type> typeclass_type::generate_interface() const
     {
         auto ret = std::make_unique<proto::type>();

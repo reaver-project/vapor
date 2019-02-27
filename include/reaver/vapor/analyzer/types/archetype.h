@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2019 Michał "Griwes" Dominiak
+ * Copyright © 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,25 +22,36 @@
 
 #pragma once
 
-#include "../semantic/instance_context.h"
 #include "type.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class typeclass_type : public type
+    class typeclass;
+
+    class archetype : public type
     {
     public:
-        typeclass_type(std::vector<type *> param_types)
-            : type{ dont_init_expr }, _param_types{ std::move(param_types) }
+        archetype(ast_node node, const type * base, std::u32string param_name);
+
+        auto get_ast_info() const
         {
+            return std::make_optional(_node);
         }
 
         virtual std::string explain() const override;
         virtual void print(std::ostream & os, print_context ctx) const override;
-        virtual std::unique_ptr<proto::type> generate_interface() const override;
-        virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const override;
+
+        virtual std::unique_ptr<proto::type> generate_interface() const override
+        {
+            assert(0);
+        }
+
+        virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const override
+        {
+            assert(0);
+        }
 
     private:
         virtual void _codegen_type(ir_generation_context &) const override
@@ -48,13 +59,16 @@ inline namespace _v1
             assert(0);
         }
 
-        virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
+        virtual std::u32string _codegen_name(ir_generation_context &) const override
         {
             assert(0);
         }
 
-        std::vector<type *> _param_types;
+        ast_node _node;
+        std::u32string _param_name;
+
+        const type * _base_type;
+        std::vector<typeclass *> _typeclasses;
     };
 }
 }
-
