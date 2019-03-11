@@ -32,6 +32,11 @@ inline namespace _v1
 {
     future<expression *> function::simplify(recursive_context ctx, std::vector<expression *> arguments)
     {
+        if (_vtable_id)
+        {
+            return make_ready_future<expression *>(nullptr);
+        }
+
         if (_body)
         {
             auto new_frame = call_frame{ this, arguments };
@@ -138,9 +143,28 @@ inline namespace _v1
         });
     }
 
+    std::string function::explain() const
+    {
+        auto ret = _explanation;
+        fmap(_vtable_id, [&ret](auto && idx) {
+            std::stringstream stream;
+            stream << " [vtable slot " << idx << "]";
+            ret += stream.str();
+            return unit{};
+        });
+        fmap(_range, [&ret](auto && r) {
+            std::stringstream stream;
+            stream << " (at " << r << ")";
+            ret += stream.str();
+
+            return unit{};
+        });
+        return ret;
+    }
+
     void function::print(std::ostream & os, print_context ctx) const
     {
-        os << styles::def << ctx << styles::rule_name << "function";
+        os << styles::def << ctx << styles::type << "function";
         os << styles::def << " @ " << styles::address << this << styles::def;
 
         if (_range)
@@ -153,6 +177,8 @@ inline namespace _v1
 
     codegen::ir::function function::codegen_ir(ir_generation_context & ctx) const
     {
+        assert(!_vtable_id);
+
         auto state = ctx.top_level_generation;
         ctx.top_level_generation = false;
 

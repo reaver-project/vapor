@@ -66,7 +66,7 @@ inline namespace _v1
             std::unique_ptr<block> function_body;
             std::shared_ptr<expression> return_type_expression;
             std::vector<std::unique_ptr<expression>> parameter_expressions;
-            std::shared_ptr<class overload_set> overload_set;
+            std::unique_ptr<class overload_set_expression> overload_set_expression;
         };
 
         std::vector<expression *> _arguments;

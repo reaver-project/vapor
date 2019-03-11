@@ -69,7 +69,7 @@ inline namespace _v1
         {
             auto symb = instance_type->get_scope()->get(parse.signature.name.value.string);
             assert(symb);
-            auto oset = symb->get_expression()->as<overload_set>();
+            auto oset = symb->get_expression()->as<overload_set_expression>();
             assert(oset);
 
             auto && overloads = oset->get_overloads();
@@ -150,9 +150,16 @@ inline namespace _v1
           _name{ std::move(name) },
           _parameter_list{ std::move(params) },
           _return_type{ std::move(return_type) },
-          _overload_set{ get_overload_set(_scope->parent(), _name) }
+          _overload_set_expression{ get_overload_set(_scope->parent(), _name) }
     {
         _set_ast_info(parse);
+
+        _function = make_function(utf8(_name), get_ast_info().value().range);
+        _function->set_name(U"call");
+        _function->set_scopes_generator(
+            [this](auto && ctx) { return this->_overload_set_expression->get_type()->codegen_scopes(ctx); });
+
+        _overload_set_expression->get_overload_set()->add_function(this);
     }
 
     function_definition::function_definition(ast_node parse,
@@ -208,13 +215,6 @@ inline namespace _v1
 
     future<> function_declaration::_analyze(analysis_context & ctx)
     {
-        _function = make_function("overloadable function", get_ast_info().value().range);
-        _function->set_name(U"call");
-        _function->set_scopes_generator(
-            [this](auto && ctx) { return this->_overload_set->get_type()->codegen_scopes(ctx); });
-
-        _overload_set->add_function(this);
-
         auto initial_future = [&] {
             if (!_return_type)
             {
@@ -259,7 +259,6 @@ inline namespace _v1
                             }),
                         _body->codegen_return(ctx),
                         _body->codegen_ir(ctx) };
-                    ret.is_member = true;
                     return ret;
                 });
 

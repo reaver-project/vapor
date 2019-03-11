@@ -75,7 +75,7 @@ inline namespace _v1
     {
         for (auto && oset_name : type->overload_set_names())
         {
-            _member_overload_sets.push_back(create_overload_set(_scope.get(), oset_name));
+            _member_overload_set_exprs.push_back(create_overload_set(_scope.get(), oset_name));
         }
 
         // close here, because if the delayed preanalysis later *adds* new members, then we have a bug... the
@@ -127,7 +127,7 @@ inline namespace _v1
 
                 auto default_declaration = _type->get_declaration_of(default_overload);
                 assert(default_declaration->get_function()->get_body());
-                own_oset->add_function(default_declaration);
+                own_oset->get_overload_set()->add_function(default_declaration);
             }
         }
     }

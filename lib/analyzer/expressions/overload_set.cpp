@@ -38,16 +38,15 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<expression> overload_set::_clone_expr(replacements & repl) const
+    std::unique_ptr<expression> overload_set_expression::_clone_expr(replacements & repl) const
     {
-        // icky
-        return make_expression_ref(const_cast<overload_set *>(this), get_ast_info());
+        return std::make_unique<overload_set_expression>(_oset);
     }
 
-    statement_ir overload_set::_codegen_ir(ir_generation_context & ctx) const
+    statement_ir overload_set_expression::_codegen_ir(ir_generation_context & ctx) const
     {
-        auto var = codegen::ir::make_variable(_type->codegen_type(ctx));
-        var->scopes = _type->get_scope()->codegen_ir();
+        auto var = codegen::ir::make_variable(get_type()->codegen_type(ctx));
+        var->scopes = get_type()->get_scope()->codegen_ir();
         return { codegen::ir::instruction{ std::nullopt,
             std::nullopt,
             { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
@@ -55,27 +54,21 @@ inline namespace _v1
             codegen::ir::value{ std::move(var) } } };
     }
 
-    declaration_ir overload_set::declaration_codegen_ir(ir_generation_context & ctx) const
+    declaration_ir overload_set_expression::declaration_codegen_ir(ir_generation_context & ctx) const
     {
         return { { std::get<std::shared_ptr<codegen::ir::variable>>(codegen_ir(ctx).back().result) } };
     }
 
-    void overload_set::add_function(function_declaration * decl)
-    {
-        _function_decls.push_back(decl);
-        _type->add_function(decl->get_function());
-    }
-
-    std::unique_ptr<google::protobuf::Message> overload_set::_generate_interface() const
+    std::unique_ptr<google::protobuf::Message> overload_set_expression::_generate_interface() const
     {
         return std::make_unique<proto::overload_set>();
     }
 
-    std::shared_ptr<overload_set> create_overload_set(scope * lex_scope, std::u32string name)
+    std::unique_ptr<overload_set_expression> create_overload_set(scope * lex_scope, std::u32string name)
     {
         auto type_name = U"overload_set_type$" + name;
 
-        auto oset = std::make_shared<overload_set>(lex_scope);
+        auto oset = std::make_unique<overload_set_expression>(lex_scope);
         lex_scope->init(name, make_symbol(name, oset.get()));
 
         auto type = oset->get_type();
@@ -85,7 +78,7 @@ inline namespace _v1
         return oset;
     }
 
-    std::shared_ptr<overload_set> get_overload_set(scope * lex_scope, std::u32string name)
+    std::unique_ptr<overload_set_expression> get_overload_set(scope * lex_scope, std::u32string name)
     {
         auto symbol = lex_scope->try_get(name);
 
@@ -94,7 +87,8 @@ inline namespace _v1
             return create_overload_set(lex_scope, name);
         }
 
-        return symbol.value()->get_expression()->as<overload_set>()->shared_from_this();
+        return std::make_unique<overload_set_expression>(
+            symbol.value()->get_expression()->as<overload_set_expression>()->get_overload_set());
     }
 }
 }

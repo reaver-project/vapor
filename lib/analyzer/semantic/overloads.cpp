@@ -407,7 +407,7 @@ inline namespace _v1
 
         auto overload = best_matches.front();
         auto actual_arguments = prepare_actual_arguments(overload, arguments, base);
-        auto ret = make_call_expression(overload, std::move(actual_arguments));
+        auto ret = make_call_expression(overload, base, std::move(actual_arguments));
         return make_ready_future<std::unique_ptr<expression>>(std::move(ret));
     }
 

@@ -48,9 +48,16 @@ inline namespace _v1
         os << styles::def << type_ctx << styles::subrule_name << "type:\n";
         get_type()->print(os, type_ctx.make_branch(true));
 
-        auto function_ctx = ctx.make_branch(_args.empty());
+        auto function_ctx = ctx.make_branch(_args.empty() && !_vtable_arg);
         os << styles::def << function_ctx << styles::subrule_name << "function:\n";
         _function->print(os, function_ctx.make_branch(true));
+
+        if (_vtable_arg)
+        {
+            auto vtable_arg_ctx = ctx.make_branch(_args.empty());
+            os << styles::def << vtable_arg_ctx << styles::subrule_name << "vtable argument:";
+            os << styles::address << _vtable_arg << "\n";
+        }
 
         if (_args.size())
         {
@@ -201,7 +208,7 @@ inline namespace _v1
         }
 
         auto ret = std::make_unique<owning_call_expression>(
-            _function, fmap(_args, [&](auto arg) { return repl.copy_claim(arg); }));
+            _function, _vtable_arg, fmap(_args, [&](auto arg) { return repl.copy_claim(arg); }));
 
         ret->set_ast_info(get_ast_info().value());
 

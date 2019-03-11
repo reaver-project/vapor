@@ -53,7 +53,7 @@ inline namespace _v1
                 auto function = fun_expr->get_value();
                 assert(function);
 
-                auto replacement = make_call_expression(function, std::move(args));
+                auto replacement = make_call_expression(function, nullptr, std::move(args));
                 auto repl_ptr = replacement.get();
                 expr->replace_with(std::move(replacement));
 

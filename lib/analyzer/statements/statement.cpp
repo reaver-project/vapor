@@ -23,6 +23,7 @@
 #include "vapor/analyzer/statements/statement.h"
 #include "vapor/analyzer/expressions/expression.h"
 #include "vapor/analyzer/expressions/import.h"
+#include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/semantic/function.h"
 #include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/statements/declaration.h"

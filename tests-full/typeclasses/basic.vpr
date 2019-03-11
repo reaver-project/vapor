@@ -51,15 +51,15 @@ module test
         }
     };
 
-
     let entry = λ(arg : int32) -> int32
     {
         let not_wrapped = factorial.calculate(5);
         let wrapped = wrapped_factorial.calculate(wrapped_int32{ arg });
 
-        let one = factorial.identity(1);
+        let five = wrapped_factorial.identity(wrapped_int32{ 5 });
+        let runtime_five = factorial.identity(arg);
 
-        return not_wrapped - wrapped.x;
+        return not_wrapped - wrapped.x + five.x - runtime_five;
     };
 }
 

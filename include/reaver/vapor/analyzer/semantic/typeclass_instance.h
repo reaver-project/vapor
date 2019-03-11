@@ -30,7 +30,7 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     class function_definition;
-    class overload_set;
+    class overload_set_expression;
 
     class typeclass_instance
     {
@@ -82,7 +82,7 @@ inline namespace _v1
         std::vector<std::unique_ptr<expression>> _arguments;
         std::vector<std::unique_ptr<function_definition>> _member_function_definitions;
 
-        std::vector<std::shared_ptr<overload_set>> _member_overload_sets;
+        std::vector<std::unique_ptr<overload_set_expression>> _member_overload_set_exprs;
     };
 }
 }

@@ -21,12 +21,13 @@
  **/
 
 #include "vapor/analyzer/expressions/entity.h"
+#include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/expressions/runtime_value.h"
 #include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/semantic/function.h"
+#include "vapor/analyzer/semantic/overload_set.h"
 #include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/types/module.h"
-#include "vapor/analyzer/types/overload_set.h"
 #include "vapor/analyzer/types/unresolved.h"
 
 #include "entity.pb.h"
@@ -147,6 +148,7 @@ inline namespace _v1
         auto type = get_imported_type_ref(ctx, ent.type());
 
         std::unique_ptr<expression> expr;
+        std::map<std::string, expression *> imported_assoc;
 
         switch (ent.value_case())
         {
@@ -157,13 +159,16 @@ inline namespace _v1
             case proto::entity::kOverloadSet:
             {
                 assert(ent.associated_entities_size() == 1);
-                auto type = import_overload_set_type(
+                auto oset = import_overload_set(
                     ctx, associated.at(ent.associated_entities(0))->type_value().overload_set());
-                type->set_name(utf32(ent.associated_entities(0)));
-                auto type_expr = type->get_expression();
-                auto ret = std::make_unique<entity>(std::move(type));
-                ret->add_associated(ent.associated_entities(0), type_expr);
-                return ret;
+                oset->get_type()->set_name(utf32(ent.associated_entities(0)));
+
+                auto type_expr = oset->get_type()->get_expression();
+                imported_assoc[ent.associated_entities(0)] = type_expr;
+
+                expr = std::make_unique<overload_set_expression>(std::move(oset));
+
+                break;
             }
 
             default:
@@ -172,8 +177,14 @@ inline namespace _v1
                                                  << "` in imported file " << ctx.current_file.top();
         }
 
-        return std::get<0>(fmap(
-            type, [&](auto && type) { return std::make_unique<entity>(std::move(type), std::move(expr)); }));
+        return std::get<0>(fmap(type, [&](auto && type) {
+            auto ret = std::make_unique<entity>(std::move(type), std::move(expr));
+            for (auto && [name, expr] : imported_assoc)
+            {
+                ret->add_associated(name, expr);
+            }
+            return ret;
+        }));
     }
 }
 }

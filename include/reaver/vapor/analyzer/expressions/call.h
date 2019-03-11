@@ -33,8 +33,8 @@ inline namespace _v1
     class call_expression : public expression
     {
     public:
-        call_expression(function * fun, std::vector<expression *> args)
-            : _function{ fun }, _args{ std::move(args) }
+        call_expression(function * fun, expression * vtable_arg, std::vector<expression *> args)
+            : _function{ fun }, _vtable_arg{ vtable_arg }, _args{ std::move(args) }
         {
         }
 
@@ -87,7 +87,8 @@ inline namespace _v1
         }
 
     protected:
-        function * _function;
+        function * _function = nullptr;
+        expression * _vtable_arg = nullptr;
         std::unique_ptr<expression> _replacement_expr;
 
     private:
@@ -98,8 +99,10 @@ inline namespace _v1
     class owning_call_expression : public call_expression
     {
     public:
-        owning_call_expression(function * fun, std::vector<std::unique_ptr<expression>> args)
-            : call_expression{ fun, fmap(args, [](auto && arg) { return arg.get(); }) },
+        owning_call_expression(function * fun,
+            expression * vtable_arg,
+            std::vector<std::unique_ptr<expression>> args)
+            : call_expression{ fun, vtable_arg, fmap(args, [](auto && arg) { return arg.get(); }) },
               _var_exprs{ std::move(args) }
         {
         }
@@ -110,9 +113,9 @@ inline namespace _v1
         std::vector<std::unique_ptr<expression>> _var_exprs;
     };
 
-    inline auto make_call_expression(function * fun, std::vector<expression *> args)
+    inline auto make_call_expression(function * fun, expression * vtable_arg, std::vector<expression *> args)
     {
-        return std::make_unique<call_expression>(fun, args);
+        return std::make_unique<call_expression>(fun, vtable_arg, args);
     }
 }
 }

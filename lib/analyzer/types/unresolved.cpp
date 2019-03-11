@@ -136,7 +136,7 @@ inline namespace _v1
             }
 
             case proto::type::DetailsCase::kOverloadSet:
-                assert(!"overload sets should be associated!");
+                assert(!"overload set types should be associated!");
 
             default:
                 assert(0);

@@ -61,6 +61,12 @@ inline namespace _v1
 
         scope_ptr->close();
 
+        std::unordered_map<std::u32string, std::size_t> overload_set_function_counts;
+        for (auto && fn_decl : fn_decls)
+        {
+            fn_decl->get_function()->mark_virtual(overload_set_function_counts[fn_decl->get_name()]++);
+        }
+
         return std::make_unique<typeclass>(
             make_node(parse), std::move(scope), std::move(params), std::move(fn_decls));
     }

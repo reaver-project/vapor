@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,7 +24,7 @@
 
 #include <memory>
 
-#include "../types/overload_set.h"
+#include "../semantic/overload_set.h"
 #include "expression.h"
 
 namespace reaver::vapor::analyzer
@@ -33,25 +33,24 @@ inline namespace _v1
 {
     class function_declaration;
     class function_definition;
+    class overload_set;
 
-    class overload_set : public expression, public std::enable_shared_from_this<overload_set>
+    class overload_set_expression : public expression
     {
     public:
-        overload_set(scope * lex_scope) : _type{ std::make_unique<overload_set_type>(lex_scope) }
+        overload_set_expression(scope * lex_scope) : _oset{ std::make_unique<overload_set>(lex_scope) }
         {
-            _set_type(_type.get());
+            _set_type(_oset->get_type());
         }
 
-        overload_set(std::unique_ptr<overload_set_type> t) : _type{ std::move(t) }
+        overload_set_expression(std::shared_ptr<overload_set> t) : _oset{ std::move(t) }
         {
-            _set_type(_type.get());
+            _set_type(_oset->get_type());
         }
-
-        void add_function(function_declaration * fn);
 
         const std::vector<function *> & get_overloads() const
         {
-            return _type->get_overloads();
+            return _oset->get_overloads();
         }
 
         virtual void print(std::ostream & os, print_context) const override
@@ -63,12 +62,12 @@ inline namespace _v1
 
         virtual void mark_exported() override
         {
-            _type->mark_exported();
+            _oset->get_type()->mark_exported();
         }
 
-        overload_set_type * get_overload_set_type() const
+        std::shared_ptr<overload_set> get_overload_set() const
         {
-            return _type.get();
+            return _oset;
         }
 
     private:
@@ -76,11 +75,10 @@ inline namespace _v1
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override;
 
-        std::vector<function_declaration *> _function_decls;
-        std::unique_ptr<overload_set_type> _type;
+        std::shared_ptr<overload_set> _oset;
     };
 
-    std::shared_ptr<overload_set> create_overload_set(scope * lex_scope, std::u32string name);
-    std::shared_ptr<overload_set> get_overload_set(scope * lex_scope, std::u32string name);
+    std::unique_ptr<overload_set_expression> create_overload_set(scope * lex_scope, std::u32string name);
+    std::unique_ptr<overload_set_expression> get_overload_set(scope * lex_scope, std::u32string name);
 }
 }

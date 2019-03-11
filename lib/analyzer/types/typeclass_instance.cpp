@@ -50,6 +50,10 @@ inline namespace _v1
                 fmap(fn->parameters(), [&](auto && param) { return repl.copy_claim(param); });
             fn_instance.instance->set_parameters(
                 fmap(fn_instance.parameter_expressions, [](auto && expr) { return expr.get(); }));
+            fmap(fn->vtable_slot(), [&](auto && id) {
+                fn_instance.instance->mark_virtual(id);
+                return unit{};
+            });
 
             if (fn->get_body())
             {
@@ -63,8 +67,8 @@ inline namespace _v1
                 fn_instance.instance->set_body(fn_instance.function_body.get());
             }
 
-            fn_instance.overload_set = get_overload_set(get_scope(), name);
-            fn_instance.overload_set->get_overload_set_type()->add_function(fn_instance.instance.get());
+            fn_instance.overload_set_expression = get_overload_set(get_scope(), name);
+            fn_instance.overload_set_expression->get_overload_set()->add_function(fn_instance.instance.get());
 
             _oset_names.insert(name);
 

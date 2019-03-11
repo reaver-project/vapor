@@ -79,19 +79,7 @@ inline namespace _v1
             return _parameters;
         }
 
-        std::string explain() const
-        {
-            auto ret = _explanation;
-            fmap(_range, [&ret](auto && r) {
-                std::stringstream stream;
-                stream << " (at " << r << ")";
-                ret += stream.str();
-
-                return unit{};
-            });
-            return ret;
-        }
-
+        std::string explain() const;
         void print(std::ostream & os, print_context ctx) const;
 
         future<expression *> simplify(recursive_context, std::vector<expression *>);
@@ -196,6 +184,17 @@ inline namespace _v1
             _is_builtin = true;
         }
 
+        std::optional<std::size_t> vtable_slot() const
+        {
+            return _vtable_id;
+        }
+
+        void mark_virtual(std::size_t id)
+        {
+            assert(!_vtable_id);
+            _vtable_id = id;
+        }
+
         void set_scopes_generator(scopes_generator generator)
         {
             _scopes_generator = std::move(generator);
@@ -220,6 +219,7 @@ inline namespace _v1
 
         bool _is_member = false;
         bool _is_builtin = false;
+        std::optional<std::size_t> _vtable_id;
         std::vector<expression *> _parameters;
         std::optional<std::u32string> _name;
         std::optional<function_codegen> _codegen;

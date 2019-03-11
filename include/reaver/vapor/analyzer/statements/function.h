@@ -37,7 +37,7 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     class function_definition;
-    class overload_set;
+    class overload_set_expression;
 
     class function_declaration : public statement
     {
@@ -83,7 +83,7 @@ inline namespace _v1
         std::u32string _name;
         parameter_list _parameter_list;
         std::optional<std::unique_ptr<expression>> _return_type;
-        std::shared_ptr<overload_set> _overload_set;
+        std::unique_ptr<overload_set_expression> _overload_set_expression;
 
         std::unique_ptr<function> _function;
     };
@@ -111,7 +111,7 @@ inline namespace _v1
         virtual future<statement *> _simplify(recursive_context) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
-        std::shared_ptr<overload_set> _overload_set;
+        std::unique_ptr<overload_set_expression> _overload_set_expression;
         std::unique_ptr<block> _body;
         std::unique_ptr<expression> _self;
     };
