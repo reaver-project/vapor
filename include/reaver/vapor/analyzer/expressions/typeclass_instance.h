@@ -47,6 +47,8 @@ inline namespace _v1
         virtual ~typeclass_instance_expression() override;
 
         virtual void print(std::ostream & os, print_context ctx) const override;
+        virtual expression * get_member(const std::u32string & name) const override;
+        virtual bool is_constant() const override;
 
     private:
         virtual future<> _analyze(analysis_context & ctx) override;

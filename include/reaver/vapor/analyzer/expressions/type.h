@@ -69,18 +69,10 @@ inline namespace _v1
         virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override;
 
     private:
-        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override
-        {
-            return std::make_unique<type_expression>(_type);
-        }
-
+        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override;
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
 
-        virtual bool _is_equal(const expression * rhs) const override
-        {
-            auto type_rhs = rhs->as<type_expression>();
-            return type_rhs && _type == type_rhs->_type;
-        }
+        virtual bool _is_equal(const expression * rhs) const override;
 
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override;
 

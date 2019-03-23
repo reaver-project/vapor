@@ -34,32 +34,58 @@ inline namespace _v1
     class function_declaration;
     struct imported_function;
 
-    class overload_set
+    class overload_set_base
     {
     public:
-        overload_set(scope *);
+        virtual ~overload_set_base() = default;
 
         void add_function(function * fn);
         void add_function(std::unique_ptr<imported_function> fn);
-        void add_function(function_declaration * decl);
 
-        const std::vector<function *> & get_overloads() const
-        {
-            return _functions;
-        }
+        virtual std::vector<function *> get_overloads() const = 0;
 
-        overload_set_type * get_type() const
-        {
-            return _type.get();
-        }
+        virtual overload_set_type * get_type() const = 0;
+
+    protected:
+        std::vector<function *> _functions;
+        // shared so that this is destructible without knowing the definition
+        std::vector<std::shared_ptr<imported_function>> _imported_functions;
+    };
+
+    class overload_set final : public overload_set_base
+    {
+    public:
+        overload_set(scope *);
+        ~overload_set() = default;
+
+        virtual std::vector<function *> get_overloads() const override;
+        virtual overload_set_type * get_type() const override;
 
     private:
         std::unique_ptr<overload_set_type> _type;
+    };
 
-        std::vector<function *> _functions;
-        std::vector<function_declaration *> _function_decls;
-        // shared so that this is destructible without knowing the definition
-        std::vector<std::shared_ptr<imported_function>> _imported_functions;
+    class refined_overload_set final : public overload_set_base
+    {
+    public:
+        refined_overload_set(overload_set * base);
+
+        virtual std::vector<function *> get_overloads() const override;
+        virtual overload_set_type * get_type() const override;
+
+        overload_set * get_base() const
+        {
+            return _base;
+        }
+
+        void resolve_overrides();
+        void verify_overrides() const;
+        function * get_vtable_entry(std::size_t vtable_id) const;
+
+    private:
+        overload_set * _base;
+
+        std::unordered_map<std::size_t, function *> _vtable_entries;
     };
 }
 }

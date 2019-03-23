@@ -44,14 +44,9 @@ inline namespace _v1
         virtual std::string explain() const override;
         virtual void print(std::ostream & os, print_context ctx) const override;
 
-        auto & overload_set_names() const
+        auto & get_overload_sets() const
         {
-            return _oset_names;
-        }
-
-        auto get_declaration_of(function * fn) const
-        {
-            return _function_instance_to_template.at(fn);
+            return _osets;
         }
 
         const typeclass * get_typeclass() const
@@ -69,12 +64,15 @@ inline namespace _v1
             std::unique_ptr<class overload_set_expression> overload_set_expression;
         };
 
+        std::unique_ptr<scope> _oset_scope = std::make_unique<scope>();
+
         std::vector<expression *> _arguments;
         instance_context _ctx;
 
-        std::set<std::u32string> _oset_names;
+        std::map<std::u32string, overload_set *> _osets;
         std::vector<_function_instance> _function_instances;
-        std::unordered_map<function *, function_declaration *> _function_instance_to_template;
+
+        std::vector<std::unique_ptr<expression>> _member_expressions;
 
         future<> _analyze(analysis_context & ctx);
 

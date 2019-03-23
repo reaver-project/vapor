@@ -55,8 +55,8 @@ inline namespace _v1
         if (_vtable_arg)
         {
             auto vtable_arg_ctx = ctx.make_branch(_args.empty());
-            os << styles::def << vtable_arg_ctx << styles::subrule_name << "vtable argument:";
-            os << styles::address << _vtable_arg << "\n";
+            os << styles::def << vtable_arg_ctx << styles::subrule_name << "vtable argument:\n";
+            _vtable_arg->print(os, vtable_arg_ctx.make_branch(true));
         }
 
         if (_args.size())
@@ -207,22 +207,45 @@ inline namespace _v1
             return repl.claim(_replacement_expr.get());
         }
 
+        auto fn = repl.try_get_replacement(_function);
+        if (!fn)
+        {
+            fn = _function;
+        }
+
+        std::unique_ptr<expression> vtable_arg;
+        if (_vtable_arg && fn->vtable_slot())
+        {
+            vtable_arg = repl.claim(_vtable_arg.get());
+        }
+
         auto ret = std::make_unique<owning_call_expression>(
-            _function, _vtable_arg, fmap(_args, [&](auto arg) { return repl.copy_claim(arg); }));
+            fn, std::move(vtable_arg), fmap(_args, [&](auto arg) { return repl.copy_claim(arg); }));
 
         ret->set_ast_info(get_ast_info().value());
 
         if (_cloned_type_expr)
         {
             ret->_cloned_type_expr = repl.claim(_cloned_type_expr.get());
-            auto type = ret->_cloned_type_expr->as<type_expression>();
-            assert(type);
-            ret->_set_type(type->get_value());
+            auto type_expr = ret->_cloned_type_expr->as<type_expression>();
+            assert(type_expr);
+
+            auto type = type_expr->get_type();
+            if (auto new_type = repl.try_get_replacement(type))
+            {
+                type = new_type;
+            }
+            ret->_set_type(type);
             return ret;
         }
 
-        ret->_set_type(get_type());
+        auto type = repl.try_get_replacement(get_type());
+        if (!type)
+        {
+            type = get_type();
+        }
 
+        ret->_set_type(type);
         return ret;
     }
 
@@ -233,7 +256,30 @@ inline namespace _v1
             return make_ready_future(_replacement_expr.release());
         }
 
-        return when_all(fmap(_args, [&](auto && arg) { return arg->simplify_expr(ctx); }))
+        auto vtable_arg_future = make_ready_future();
+
+        if (_vtable_arg)
+        {
+            vtable_arg_future = _vtable_arg->simplify_expr(ctx).then(
+                [&, ctx](auto && expr) { replace_uptr(_vtable_arg, expr, ctx.proper); });
+        }
+
+        return vtable_arg_future
+            .then([&, ctx] {
+                if (_vtable_arg)
+                {
+                    assert(_function->vtable_slot());
+                    auto repl_fn = _vtable_arg->get_vtable_entry(_function->vtable_slot().value());
+                    if (repl_fn)
+                    {
+                        _function = repl_fn;
+                        _vtable_arg.reset();
+                        ctx.proper.something_happened();
+                    }
+                }
+
+                return when_all(fmap(_args, [&](auto && arg) { return arg->simplify_expr(ctx); }));
+            })
             .then([&, ctx](auto && repl) {
                 assert(_args.size() == repl.size());
                 for (std::size_t i = 0; i < _args.size(); ++i)

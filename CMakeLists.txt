@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
+    message(FATAL_ERROR "Don't configure this project in-source!")
+endif()
+
 project(Vapor C CXX)
 
 find_package(Threads REQUIRED)

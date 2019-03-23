@@ -38,6 +38,13 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    bool overload_set_expression::is_constant() const
+    {
+        auto overloads = _oset->get_overloads();
+        return std::all_of(
+            overloads.begin(), overloads.end(), [](auto && fn) { return !fn->vtable_slot().has_value(); });
+    }
+
     std::unique_ptr<expression> overload_set_expression::_clone_expr(replacements & repl) const
     {
         return std::make_unique<overload_set_expression>(_oset);
@@ -64,31 +71,141 @@ inline namespace _v1
         return std::make_unique<proto::overload_set>();
     }
 
-    std::unique_ptr<overload_set_expression> create_overload_set(scope * lex_scope, std::u32string name)
+    refined_overload_set_expression::refined_overload_set_expression(
+        std::shared_ptr<refined_overload_set> oset)
+        : _oset{ std::move(oset) }
     {
-        auto type_name = U"overload_set_type$" + name;
-
-        auto oset = std::make_unique<overload_set_expression>(lex_scope);
-        lex_scope->init(name, make_symbol(name, oset.get()));
-
-        auto type = oset->get_type();
-        type->set_name(type_name);
-        lex_scope->init(type_name, make_symbol(type_name, type->get_expression()));
-
-        return oset;
+        _set_type(_oset->get_type());
     }
 
-    std::unique_ptr<overload_set_expression> get_overload_set(scope * lex_scope, std::u32string name)
+    refined_overload_set_expression::refined_overload_set_expression(overload_set * base)
+        : _oset{ std::make_unique<refined_overload_set>(base) }
     {
-        auto symbol = lex_scope->try_get(name);
+        _set_type(base->get_type());
+    }
 
-        if (!symbol)
+    bool refined_overload_set_expression::is_constant() const
+    {
+        return true;
+    }
+
+    function * refined_overload_set_expression::get_vtable_entry(std::size_t id) const
+    {
+        return _oset->get_vtable_entry(id);
+    }
+
+    std::unique_ptr<expression> refined_overload_set_expression::_clone_expr(replacements &) const
+    {
+        return std::unique_ptr<expression>{ new refined_overload_set_expression{ _oset } };
+    }
+
+    statement_ir refined_overload_set_expression::_codegen_ir(ir_generation_context &) const
+    {
+        assert(0);
+    }
+
+    std::unique_ptr<google::protobuf::Message> refined_overload_set_expression::_generate_interface() const
+    {
+        assert(0);
+    }
+
+    namespace _detail
+    {
+        template<typename F>
+        auto create_overload_set(scope * lex_scope, std::u32string name, F create)
         {
-            return create_overload_set(lex_scope, name);
+            auto type_name = U"overload_set_type$" + name;
+
+            auto oset = create();
+            lex_scope->init(name, make_symbol(name, oset.get()));
+
+            auto type = oset->get_type();
+            type->set_name(type_name);
+            lex_scope->init(type_name, make_symbol(type_name, type->get_expression()));
+
+            return oset;
+        }
+    }
+
+    std::unique_ptr<overload_set_expression> create_overload_set(scope * lex_scope, std::u32string name)
+    {
+        return _detail::create_overload_set(
+            lex_scope, name, [&] { return std::make_unique<overload_set_expression>(lex_scope); });
+    }
+
+    std::unique_ptr<refined_overload_set_expression> create_refined_overload_set(scope * lex_scope,
+        std::u32string name,
+        overload_set * base)
+    {
+        return _detail::create_overload_set(
+            lex_scope, name, [&] { return std::make_unique<refined_overload_set_expression>(base); });
+    }
+
+    namespace _detail
+    {
+        template<typename F, typename G>
+        auto get_overload_set(scope * lex_scope, std::u32string name, F create, G clone)
+        {
+            auto symbol = lex_scope->try_get(name);
+
+            if (!symbol)
+            {
+                return create();
+            }
+
+            return clone(symbol.value()->get_expression());
         }
 
-        return std::make_unique<overload_set_expression>(
-            symbol.value()->get_expression()->as<overload_set_expression>()->get_overload_set());
+        std::unique_ptr<overload_set_expression> clone_oset_expr(expression * expr)
+        {
+            using T = overload_set_expression;
+            auto downcasted = expr->as<T>();
+            assert(downcasted);
+            return std::make_unique<T>(*downcasted);
+        }
+
+        std::unique_ptr<refined_overload_set_expression> clone_refined_oset_expr(expression * expr,
+            overload_set * base)
+        {
+            using T = refined_overload_set_expression;
+            auto downcasted = expr->as<T>();
+            assert(downcasted);
+            assert(!base || downcasted->get_overload_set()->get_base() == base);
+            return std::make_unique<T>(*downcasted);
+        }
+    }
+
+    std::unique_ptr<overload_set_expression_base> get_overload_set(scope * lex_scope, std::u32string name)
+    {
+        return _detail::get_overload_set(lex_scope,
+            name,
+            [&]() -> std::unique_ptr<overload_set_expression_base> {
+                return create_overload_set(lex_scope, name);
+            },
+            [](expression * expr) -> std::unique_ptr<overload_set_expression_base> {
+                // this will dynamic_cast twice, but until this proves problematic, it seems fine
+                if (expr->as<overload_set_expression>())
+                {
+                    return _detail::clone_oset_expr(expr);
+                }
+                return _detail::clone_refined_oset_expr(expr, nullptr);
+            });
+    }
+
+    std::unique_ptr<overload_set_expression> get_overload_set_special(scope * lex_scope, std::u32string name)
+    {
+        return _detail::get_overload_set(
+            lex_scope, name, [&] { return create_overload_set(lex_scope, name); }, _detail::clone_oset_expr);
+    }
+
+    std::unique_ptr<refined_overload_set_expression> get_refined_overload_set(scope * lex_scope,
+        std::u32string name,
+        overload_set * base)
+    {
+        return _detail::get_overload_set(lex_scope,
+            std::move(name),
+            [&] { return create_refined_overload_set(lex_scope, name, base); },
+            [&](expression * expr) { return _detail::clone_refined_oset_expr(expr, base); });
     }
 }
 }

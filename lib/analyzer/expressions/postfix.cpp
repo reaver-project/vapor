@@ -221,6 +221,10 @@ inline namespace _v1
             return expr;
         });
 
+        if (auto new_type = repl.try_get_replacement(type))
+        {
+            type = new_type;
+        }
         ret->_set_type(type);
 
         return ret;

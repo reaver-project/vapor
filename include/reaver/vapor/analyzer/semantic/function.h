@@ -79,6 +79,11 @@ inline namespace _v1
             return _parameters;
         }
 
+        const std::string & get_explanation() const
+        {
+            return _explanation;
+        }
+
         std::string explain() const;
         void print(std::ostream & os, print_context ctx) const;
 
@@ -114,7 +119,6 @@ inline namespace _v1
 
         void set_return_type(expression * ret)
         {
-            std::unique_lock<std::mutex> lock{ _ret_lock };
             assert(!_return_type_expression);
             assert(ret);
             _return_type_expression = ret;
@@ -210,7 +214,6 @@ inline namespace _v1
         std::optional<range_type> _range;
 
         block * _body = nullptr;
-        mutable std::mutex _ret_lock;
         expression * _return_type_expression = nullptr;
         std::optional<future<expression *>> _return_type_future;
         std::optional<manual_promise<expression *>> _return_type_promise;

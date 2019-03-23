@@ -100,6 +100,16 @@ inline namespace _v1
         }
     }
 
+    expression * typeclass_instance_expression::get_member(const std::u32string & name) const
+    {
+        return _instance->get_scope()->get(name)->get_expression();
+    }
+
+    bool typeclass_instance_expression::is_constant() const
+    {
+        return true;
+    }
+
     future<> typeclass_instance_expression::_analyze(analysis_context & ctx)
     {
         auto name = _instance->typeclass_name();
@@ -116,8 +126,9 @@ inline namespace _v1
                     .then([&](auto && expr) {
                         return expr->analyze(ctx).then([expr] { return expr->get_type()->get_scope(); });
                     })
-                    .then([name = std::move(name)](
-                        const scope * lex_scope) { return lex_scope->get(name)->get_expression_future(); });
+                    .then([name = std::move(name)](const scope * lex_scope) {
+                        return lex_scope->get(name)->get_expression_future();
+                    });
             });
         }
 
@@ -142,7 +153,7 @@ inline namespace _v1
                 return when_all(fmap(_instance->get_member_function_defs(),
                     [&](auto && fn_def) { return fn_def->analyze(ctx); }));
             })
-            .then([&] { _instance->import_default_definitions(); });
+            .then([&] { _instance->import_default_definitions(ctx); });
     }
 
     std::unique_ptr<expression> typeclass_instance_expression::_clone_expr(replacements & repl) const

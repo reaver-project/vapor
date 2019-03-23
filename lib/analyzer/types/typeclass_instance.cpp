@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/types/typeclass_instance.h"
+#include "vapor/analyzer/expressions/member.h"
 #include "vapor/analyzer/semantic/typeclass.h"
 #include "vapor/analyzer/semantic/typeclass_instance.h"
 #include "vapor/analyzer/statements/block.h"
@@ -36,6 +37,7 @@ inline namespace _v1
         // _self_expression = std::make_unique<type_expression>(this, type_kind::typeclass);
 
         auto repl = _ctx.get_replacements();
+        std::unordered_map<function *, block *> function_block_defs;
 
         for (auto && fn_decl : tc->get_member_function_decls())
         {
@@ -43,7 +45,8 @@ inline namespace _v1
             auto & name = fn_decl->get_name();
 
             _function_instance fn_instance;
-            fn_instance.instance = make_function(fn->explain(), fn->get_range());
+            fn_instance.instance = make_function(fn->get_explanation(), fn->get_range());
+            repl.add_replacement(fn, fn_instance.instance.get());
             fn_instance.return_type_expression = repl.copy_claim(fn->return_type_expression());
             fn_instance.instance->set_return_type(fn_instance.return_type_expression);
             fn_instance.parameter_expressions =
@@ -57,23 +60,41 @@ inline namespace _v1
 
             if (fn->get_body())
             {
-                auto body_stmt = repl.copy_claim(fn->get_body());
-
-                auto body_block = dynamic_cast<block *>(body_stmt.get());
-                assert(body_block);
-                fn_instance.function_body.reset(body_block);
-                body_stmt.release();
-
-                fn_instance.instance->set_body(fn_instance.function_body.get());
+                function_block_defs.emplace(fn_instance.instance.get(), fn->get_body());
             }
 
-            fn_instance.overload_set_expression = get_overload_set(get_scope(), name);
+            fn_instance.overload_set_expression = get_overload_set_special(_oset_scope.get(), name);
             fn_instance.overload_set_expression->get_overload_set()->add_function(fn_instance.instance.get());
 
-            _oset_names.insert(name);
+            _osets.emplace(name, fn_instance.overload_set_expression->get_overload_set());
 
-            _function_instance_to_template.emplace(fn_instance.instance.get(), fn_decl);
             _function_instances.push_back(std::move(fn_instance));
+        }
+
+        for (auto && fn_instance : _function_instances)
+        {
+            auto it = function_block_defs.find(fn_instance.instance.get());
+            if (it == function_block_defs.end())
+            {
+                continue;
+            }
+
+            auto body_stmt = repl.copy_claim(it->second);
+
+            auto body_block = dynamic_cast<block *>(body_stmt.get());
+            assert(body_block);
+            fn_instance.function_body.reset(body_block);
+            body_stmt.release();
+
+            fn_instance.instance->set_body(fn_instance.function_body.get());
+        }
+
+        _member_expressions.reserve(_osets.size());
+        for (auto && [oset_name, oset] : _osets)
+        {
+            auto member_expression = make_member_expression(this, oset_name, oset->get_type());
+            get_scope()->init(oset_name, make_symbol(oset_name, member_expression.get()));
+            _member_expressions.push_back(std::move(member_expression));
         }
     }
 

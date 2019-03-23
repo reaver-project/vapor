@@ -31,6 +31,8 @@ inline namespace _v1
 {
     class function_definition;
     class overload_set_expression;
+    class refined_overload_set_expression;
+    class block;
 
     class typeclass_instance
     {
@@ -47,7 +49,7 @@ inline namespace _v1
 
         void set_type(typeclass_instance_type * type);
         function_definition_handler get_function_definition_handler();
-        void import_default_definitions();
+        void import_default_definitions(analysis_context & ctx);
 
         scope * get_scope()
         {
@@ -73,6 +75,12 @@ inline namespace _v1
         }
 
     private:
+        struct _function_specialization
+        {
+            std::unique_ptr<function> spec;
+            std::unique_ptr<block> function_body;
+        };
+
         ast_node _node;
 
         std::unique_ptr<scope> _scope;
@@ -82,7 +90,8 @@ inline namespace _v1
         std::vector<std::unique_ptr<expression>> _arguments;
         std::vector<std::unique_ptr<function_definition>> _member_function_definitions;
 
-        std::vector<std::unique_ptr<overload_set_expression>> _member_overload_set_exprs;
+        std::vector<_function_specialization> _function_specializations;
+        std::vector<std::unique_ptr<refined_overload_set_expression>> _member_overload_set_exprs;
     };
 }
 }

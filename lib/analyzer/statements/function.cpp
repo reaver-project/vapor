@@ -67,11 +67,7 @@ inline namespace _v1
         std::optional<instance_function_context> fn_ctx;
         if (instance_type)
         {
-            auto symb = instance_type->get_scope()->get(parse.signature.name.value.string);
-            assert(symb);
-            auto oset = symb->get_expression()->as<overload_set_expression>();
-            assert(oset);
-
+            auto oset = instance_type->get_overload_sets().at(parse.signature.name.value.string);
             auto && overloads = oset->get_overloads();
 
             auto pred = [&](auto && fn) {
@@ -113,10 +109,10 @@ inline namespace _v1
             [&](auto && ret_type) { return preanalyze_expression(prectx, ret_type, function_scope.get()); });
         if (!ret_type && instance_type)
         {
-            auto original_ret = original_overload->get_return_type().try_get();
+            auto original_ret = original_overload->return_type_expression();
             assert(original_ret);
             replacements repl;
-            ret_type = repl.claim(original_ret.value());
+            ret_type = repl.claim(original_ret);
         }
 
         auto ret = std::make_unique<function_definition>(make_node(parse),
@@ -159,7 +155,7 @@ inline namespace _v1
         _function->set_scopes_generator(
             [this](auto && ctx) { return this->_overload_set_expression->get_type()->codegen_scopes(ctx); });
 
-        _overload_set_expression->get_overload_set()->add_function(this);
+        _overload_set_expression->get_overload_set()->add_function(_function.get());
     }
 
     function_definition::function_definition(ast_node parse,

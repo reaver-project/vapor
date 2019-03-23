@@ -8,9 +8,9 @@ module test
     {
         function calculate(arg : arithmetic) -> arithmetic;
 
-        function identity(arg : arithmetic) -> arithmetic
+        function indirection(arg : arithmetic) -> arithmetic
         {
-            return arg;
+            return calculate(arg);
         }
     };
 
@@ -56,10 +56,10 @@ module test
         let not_wrapped = factorial.calculate(5);
         let wrapped = wrapped_factorial.calculate(wrapped_int32{ arg });
 
-        let five = wrapped_factorial.identity(wrapped_int32{ 5 });
-        let runtime_five = factorial.identity(arg);
+        let indirect = wrapped_factorial.indirection(wrapped_int32{ 5 });
+        let runtime_indirect = factorial.indirection(arg);
 
-        return not_wrapped - wrapped.x + five.x - runtime_five;
+        return not_wrapped - wrapped.x + indirect.x - runtime_indirect;
     };
 }
 

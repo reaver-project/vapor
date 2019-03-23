@@ -20,8 +20,10 @@
  *
  **/
 
-#include "vapor/analyzer/semantic/typeclass_instance.h"
+#include <reaver/future_get.h>
+
 #include "vapor/analyzer/semantic/symbol.h"
+#include "vapor/analyzer/semantic/typeclass_instance.h"
 #include "vapor/analyzer/statements/function.h"
 #include "vapor/analyzer/types/typeclass_instance.h"
 #include "vapor/parser/typeclass.h"
@@ -73,9 +75,9 @@ inline namespace _v1
 
     void typeclass_instance::set_type(typeclass_instance_type * type)
     {
-        for (auto && oset_name : type->overload_set_names())
+        for (auto && [oset_name, oset] : type->get_overload_sets())
         {
-            _member_overload_set_exprs.push_back(create_overload_set(_scope.get(), oset_name));
+            _member_overload_set_exprs.push_back(create_refined_overload_set(_scope.get(), oset_name, oset));
         }
 
         // close here, because if the delayed preanalysis later *adds* new members, then we have a bug... the
@@ -96,39 +98,59 @@ inline namespace _v1
         };
     }
 
-    void typeclass_instance::import_default_definitions()
+    void typeclass_instance::import_default_definitions(analysis_context & ctx)
     {
-        for (auto && oset_name : _type->overload_set_names())
+        replacements repl;
+        std::unordered_map<function *, block *> function_block_defs;
+
+        for (auto && roset_expr : _member_overload_set_exprs)
         {
-            auto && own_oset = get_overload_set(_scope.get(), oset_name);
-            auto && default_oset = get_overload_set(_type->get_scope(), oset_name);
+            auto && roset = roset_expr->get_overload_set();
+            roset->resolve_overrides();
 
-            auto && own_overloads = own_oset->get_overloads();
-
-            for (auto && default_overload : default_oset->get_overloads())
+            auto && base = roset->get_base();
+            for (auto && fn : base->get_overloads())
             {
-                if (std::find_if(own_overloads.begin(),
-                        own_overloads.end(),
-                        [&](function * fn) {
-                            auto && f1p = fn->parameters();
-                            auto && f2p = default_overload->parameters();
-                            return std::equal(f1p.begin(),
-                                f1p.end(),
-                                f2p.begin(),
-                                f2p.end(),
-                                [](expression * lhs, expression * rhs) {
-                                    return lhs->get_type() == rhs->get_type();
-                                });
-                        })
-                    != own_overloads.end())
+                assert(fn->vtable_slot());
+                if (roset->get_vtable_entry(fn->vtable_slot().value()))
                 {
                     continue;
                 }
 
-                auto default_declaration = _type->get_declaration_of(default_overload);
-                assert(default_declaration->get_function()->get_body());
-                own_oset->get_overload_set()->add_function(default_declaration);
+                assert(fn->get_body());
+
+                _function_specialization fn_spec;
+                fn_spec.spec = make_function(fn->get_explanation(), fn->get_range());
+                repl.add_replacement(fn, fn_spec.spec.get());
+                fn_spec.spec->set_return_type(fn->return_type_expression());
+                fn_spec.spec->set_parameters(fn->parameters());
+
+                function_block_defs.emplace(fn_spec.spec.get(), fn->get_body());
+
+                roset->add_function(fn_spec.spec.get());
+
+                _function_specializations.push_back(std::move(fn_spec));
             }
+
+            roset->resolve_overrides();
+        }
+
+        for (auto && fn_spec : _function_specializations)
+        {
+            auto it = function_block_defs.find(fn_spec.spec.get());
+            if (it == function_block_defs.end())
+            {
+                continue;
+            }
+
+            auto body_stmt = repl.copy_claim(it->second);
+
+            auto body_block = dynamic_cast<block *>(body_stmt.get());
+            assert(body_block);
+            fn_spec.function_body.reset(body_block);
+            body_stmt.release();
+
+            fn_spec.spec->set_body(fn_spec.function_body.get());
         }
     }
 

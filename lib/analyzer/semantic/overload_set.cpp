@@ -94,12 +94,7 @@ inline namespace _v1
         return ret;
     }
 
-    overload_set::overload_set(scope * lex_scope)
-        : _type{ std::make_unique<overload_set_type>(lex_scope, this) }
-    {
-    }
-
-    void overload_set::add_function(function * fn)
+    void overload_set_base::add_function(function * fn)
     {
         if (std::find_if(_functions.begin(),
                 _functions.end(),
@@ -112,16 +107,110 @@ inline namespace _v1
         _functions.push_back(fn);
     }
 
-    void overload_set::add_function(std::unique_ptr<imported_function> fn)
+    void overload_set_base::add_function(std::unique_ptr<imported_function> fn)
     {
         add_function(fn->function.get());
         _imported_functions.push_back(std::move(fn));
     }
 
-    void overload_set::add_function(function_declaration * decl)
+    overload_set::overload_set(scope * lex_scope)
+        : _type{ std::make_unique<overload_set_type>(lex_scope, this) }
     {
-        add_function(decl->get_function());
-        _function_decls.push_back(decl);
+    }
+
+    std::vector<function *> overload_set::get_overloads() const
+    {
+        return _functions;
+    }
+
+    overload_set_type * overload_set::get_type() const
+    {
+        return _type.get();
+    }
+
+    refined_overload_set::refined_overload_set(overload_set * base) : _base{ base }
+    {
+    }
+
+    std::vector<function *> refined_overload_set::get_overloads() const
+    {
+        std::vector<function *> ret;
+        ret.reserve(_functions.size() + _vtable_entries.size());
+        ret = _functions;
+        for (auto && [idx, fn] : _vtable_entries)
+        {
+            ret.push_back(fn);
+        }
+        return ret;
+    }
+
+    overload_set_type * refined_overload_set::get_type() const
+    {
+        return _base->get_type();
+    }
+
+    void refined_overload_set::resolve_overrides()
+    {
+        auto base_overloads = _base->get_overloads();
+
+        while (!_functions.empty())
+        {
+            auto fn = _functions.back();
+
+            auto orig_it = std::find_if(base_overloads.begin(), base_overloads.end(), [&](function * orig) {
+                auto fn_ret_type_expr = fn->return_type_expression()->as<type_expression>();
+                auto orig_ret_type_expr = orig->return_type_expression()->as<type_expression>();
+
+                assert(fn_ret_type_expr && orig_ret_type_expr);
+
+                if (fn_ret_type_expr->get_value() != orig_ret_type_expr->get_value())
+                {
+                    return false;
+                }
+
+                return std::equal(fn->parameters().begin(),
+                    fn->parameters().end(),
+                    orig->parameters().begin(),
+                    orig->parameters().end(),
+                    [&](auto && fn_param, auto && orig_param) {
+                        return fn_param->get_type() == orig_param->get_type();
+                    });
+            });
+
+            if (orig_it == base_overloads.end())
+            {
+                assert(0);
+            }
+
+            auto orig = *orig_it;
+            auto slot = orig->vtable_slot();
+            assert(slot);
+
+            auto result = _vtable_entries.emplace(slot.value(), fn);
+            assert(result.second);
+
+            base_overloads.erase(orig_it);
+            _functions.pop_back();
+        }
+    }
+
+    void refined_overload_set::verify_overrides() const
+    {
+        for (auto && overload : _base->get_overloads())
+        {
+            // TODO: turn this into actual error reporting
+            assert(get_vtable_entry(overload->vtable_slot().value()));
+        }
+    }
+
+    function * refined_overload_set::get_vtable_entry(std::size_t vtable_id) const
+    {
+        auto it = _vtable_entries.find(vtable_id);
+        if (it != _vtable_entries.end())
+        {
+            return it->second;
+        }
+        return nullptr;
     }
 }
 }

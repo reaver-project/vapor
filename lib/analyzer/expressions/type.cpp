@@ -41,6 +41,23 @@ inline namespace _v1
         _type->print(os, type_ctx.make_branch(true));
     }
 
+    bool type_expression::_is_equal(const expression * rhs) const
+    {
+        auto type_rhs = rhs->as<type_expression>();
+        return type_rhs && _type == type_rhs->_type;
+    }
+
+    std::unique_ptr<expression> type_expression::_clone_expr(replacements & repl) const
+    {
+        auto type = repl.try_get_replacement(_type);
+        if (!type)
+        {
+            type = _type;
+        }
+
+        return std::make_unique<type_expression>(type);
+    }
+
     declaration_ir type_expression::declaration_codegen_ir(ir_generation_context & ctx) const
     {
         return { { std::get<std::shared_ptr<codegen::ir::variable>>(_codegen_ir(ctx).back().result) } };

@@ -211,6 +211,11 @@ inline namespace _v1
             return repl->get_member(name);
         }
 
+        virtual function * get_vtable_entry(std::size_t) const
+        {
+            return nullptr;
+        }
+
         template<typename T>
         T * as()
         {
@@ -261,8 +266,7 @@ inline namespace _v1
     protected:
         void _set_type(type * t)
         {
-            assert(!_type);
-            assert(t);
+            assert((!_type) ^ (_type == t));
             _type = t;
         }
 

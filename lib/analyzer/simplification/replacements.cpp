@@ -22,6 +22,7 @@
 
 #include "vapor/analyzer/simplification/replacements.h"
 #include "vapor/analyzer/expressions/expression.h"
+#include "vapor/analyzer/semantic/function.h"
 #include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/statements/statement.h"
 
@@ -169,6 +170,7 @@ inline namespace _v1
     GENERATE(statement);
     GENERATE(expression);
     GENERATE(type);
+    GENERATE(function);
 
     GENERATE_CLAIM(statement);
     GENERATE_CLAIM(expression);
