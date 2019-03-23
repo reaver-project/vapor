@@ -26,6 +26,7 @@
 #include "vapor/analyzer/semantic/typeclass_instance.h"
 #include "vapor/analyzer/statements/function.h"
 #include "vapor/analyzer/types/typeclass_instance.h"
+#include "vapor/parser/expr.h"
 #include "vapor/parser/typeclass.h"
 
 namespace reaver::vapor::analyzer
