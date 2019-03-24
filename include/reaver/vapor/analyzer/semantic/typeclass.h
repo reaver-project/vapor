@@ -46,11 +46,6 @@ inline namespace _v1
 
         ~typeclass();
 
-        std::string explain() const
-        {
-            return "a typeclass (TODO: add name tracking to this stuff)";
-        }
-
         std::vector<parameter *> get_parameters() const;
         std::vector<expression *> get_parameter_expressions() const;
 
@@ -79,9 +74,11 @@ inline namespace _v1
 
         void print(std::ostream & os, print_context ctx, bool print_members = false) const;
 
+        void set_name(std::u32string name);
+
     private:
         ast_node _parse;
-        bool _is_exported = false;
+        std::optional<std::u32string> _name;
 
         std::unique_ptr<scope> _scope;
         std::vector<std::unique_ptr<parameter>> _parameters;

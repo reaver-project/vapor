@@ -74,6 +74,8 @@ inline namespace _v1
             return std::make_optional(_node);
         }
 
+        void set_name(std::u32string name);
+
     private:
         struct _function_specialization
         {
@@ -82,6 +84,7 @@ inline namespace _v1
         };
 
         ast_node _node;
+        std::optional<std::u32string> _name;
 
         std::unique_ptr<scope> _scope;
         std::vector<std::u32string> _typeclass_name;

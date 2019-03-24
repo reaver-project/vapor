@@ -38,16 +38,13 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override;
 
-        const scope * get_scope() const
-        {
-            assert(0);
-            // return _instance_template->get_scope();
-        }
-
         typeclass * get_typeclass() const
         {
             return _typeclass.get();
         }
+
+        virtual void set_name(std::u32string name) override;
+        virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override;
 
     private:
         virtual future<> _analyze(analysis_context & ctx) override;

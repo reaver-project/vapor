@@ -80,6 +80,16 @@ inline namespace _v1
         }
     }
 
+    void typeclass_expression::set_name(std::u32string name)
+    {
+        _typeclass->set_name(std::move(name));
+    }
+
+    declaration_ir typeclass_expression::declaration_codegen_ir(ir_generation_context & ctx) const
+    {
+        assert(0);
+    }
+
     future<> typeclass_expression::_analyze(analysis_context & ctx)
     {
         return when_all(

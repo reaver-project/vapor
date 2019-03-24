@@ -110,6 +110,16 @@ inline namespace _v1
         return true;
     }
 
+    void typeclass_instance_expression::set_name(std::u32string name)
+    {
+        _instance->set_name(std::move(name));
+    }
+
+    declaration_ir typeclass_instance_expression::declaration_codegen_ir(ir_generation_context & ctx) const
+    {
+        assert(0);
+    }
+
     future<> typeclass_instance_expression::_analyze(analysis_context & ctx)
     {
         auto name = _instance->typeclass_name();

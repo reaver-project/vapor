@@ -50,6 +50,9 @@ inline namespace _v1
         virtual expression * get_member(const std::u32string & name) const override;
         virtual bool is_constant() const override;
 
+        virtual void set_name(std::u32string name) override;
+        virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override;
+
     private:
         virtual future<> _analyze(analysis_context & ctx) override;
         virtual future<expression *> _simplify_expr(recursive_context ctx) override;

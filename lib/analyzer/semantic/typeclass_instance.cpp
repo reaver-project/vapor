@@ -179,6 +179,10 @@ inline namespace _v1
     {
         os << styles::def << ctx << styles::type << "typeclass instance";
         print_address_range(os, this);
+        if (_name)
+        {
+            os << ' ' << styles::string_value << utf8(_name.value());
+        }
         os << '\n';
 
         if (print_members)
@@ -211,6 +215,12 @@ inline namespace _v1
                 spec_info.function_body->print(os, body_ctx.make_branch(true));
             }
         }
+    }
+
+    void typeclass_instance::set_name(std::u32string name)
+    {
+        assert(!_name);
+        _name = std::move(name);
     }
 }
 }

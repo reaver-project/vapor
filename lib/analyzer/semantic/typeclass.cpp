@@ -88,6 +88,10 @@ inline namespace _v1
     {
         os << styles::def << ctx << styles::type << "typeclass";
         print_address_range(os, this);
+        if (_name)
+        {
+            os << ' ' << styles::string_value << utf8(_name.value());
+        }
         os << '\n';
 
         if (print_members)
@@ -134,6 +138,12 @@ inline namespace _v1
         }
 
         return type_info.analysis_future.value();
+    }
+
+    void typeclass::set_name(std::u32string name)
+    {
+        assert(!_name);
+        _name = std::move(name);
     }
 }
 }
