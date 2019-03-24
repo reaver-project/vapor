@@ -84,11 +84,32 @@ inline namespace _v1
 
     typeclass::~typeclass() = default;
 
-    void typeclass::print(std::ostream & os, print_context ctx) const
+    void typeclass::print(std::ostream & os, print_context ctx, bool print_members) const
     {
         os << styles::def << ctx << styles::type << "typeclass";
         print_address_range(os, this);
         os << '\n';
+
+        if (print_members)
+        {
+            auto osets_ctx = ctx.make_branch(true);
+            os << styles::def << osets_ctx << styles::subrule_name << "overload sets:\n";
+
+            std::vector<overload_set *> osets;
+            for (auto && symbol : _scope->symbols_in_order())
+            {
+                if (auto oset = symbol->get_expression()->as<overload_set_expression>())
+                {
+                    osets.push_back(oset->get_overload_set());
+                }
+            }
+
+            std::size_t idx = 0;
+            for (auto && oset : osets)
+            {
+                oset->print(os, osets_ctx.make_branch(++idx == osets.size()), true);
+            }
+        }
     }
 
     std::vector<parameter *> typeclass::get_parameters() const

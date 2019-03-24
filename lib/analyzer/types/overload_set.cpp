@@ -88,13 +88,8 @@ inline namespace _v1
     void overload_set_type::print(std::ostream & os, print_context ctx) const
     {
         os << styles::def << ctx << styles::type << "overload set type";
-        os << styles::def << " @ " << styles::address << this << styles::def << ":\n";
-
-        std::size_t idx = 0;
-        for (auto && function : _oset->get_overloads())
-        {
-            function->print(os, ctx.make_branch(++idx == _oset->get_overloads().size()));
-        }
+        os << styles::def << " @ " << styles::address << this << styles::def << ": " << styles::string_value
+           << utf8(get_name()) << '\n';
     }
 
     std::unique_ptr<google::protobuf::Message> overload_set_type::_user_defined_interface() const

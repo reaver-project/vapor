@@ -55,7 +55,7 @@ inline namespace _v1
 
         auto tc_ctx = ctx.make_branch(false);
         os << styles::def << tc_ctx << styles::subrule_name << "defined typeclass:\n";
-        _typeclass->print(os, tc_ctx.make_branch(true));
+        _typeclass->print(os, tc_ctx.make_branch(true), true);
 
         auto params_ctx = ctx.make_branch(_typeclass->get_member_function_decls().empty());
         os << styles::def << params_ctx << styles::subrule_name << "parameters:\n";

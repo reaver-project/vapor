@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/semantic/function.h"
+#include "vapor/analyzer/expressions/type.h"
 #include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/return.h"
@@ -162,17 +163,40 @@ inline namespace _v1
         return ret;
     }
 
-    void function::print(std::ostream & os, print_context ctx) const
+    void function::print(std::ostream & os, print_context ctx, bool print_signature) const
     {
         os << styles::def << ctx << styles::type << "function";
         os << styles::def << " @ " << styles::address << this << styles::def;
-
         if (_range)
         {
             os << " (" << styles::range << _range.value() << styles::def << ')';
         }
+        os << ": " << styles::string_value << _explanation;
+        if (_vtable_id)
+        {
+            os << styles::def << " [vtable slot " << _vtable_id.value() << "]";
+        }
+        os << '\n';
 
-        os << ": " << _explanation << '\n';
+        if (print_signature)
+        {
+            auto type_expr = _return_type_expression->as<type_expression>();
+            if (type_expr)
+            {
+                auto ret_type_ctx = ctx.make_branch(false);
+                os << styles::def << ret_type_ctx << styles::subrule_name << "return type:\n";
+                type_expr->get_value()->print(os, ret_type_ctx.make_branch(true));
+            }
+
+            auto param_types_ctx = ctx.make_branch(true);
+            os << styles::def << param_types_ctx << styles::subrule_name << "parameter types:\n";
+
+            std::size_t idx = 0;
+            for (auto && param : _parameters)
+            {
+                param->get_type()->print(os, param_types_ctx.make_branch(++idx == _parameters.size()));
+            }
+        }
     }
 
     codegen::ir::function function::codegen_ir(ir_generation_context & ctx) const

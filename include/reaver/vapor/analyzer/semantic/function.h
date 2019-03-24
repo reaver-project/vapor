@@ -85,7 +85,7 @@ inline namespace _v1
         }
 
         std::string explain() const;
-        void print(std::ostream & os, print_context ctx) const;
+        void print(std::ostream & os, print_context ctx, bool print_signature = false) const;
 
         future<expression *> simplify(recursive_context, std::vector<expression *>);
 

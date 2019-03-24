@@ -179,6 +179,10 @@ inline namespace _v1
         print_address_range(os, this);
         os << ' ' << styles::string_value << utf8(_name) << '\n';
 
+        auto fn_ctx = ctx.make_branch(false);
+        os << styles::def << fn_ctx << styles::rule_name << "declared function:\n";
+        _function->print(os, fn_ctx.make_branch(true), true);
+
         if (_parameter_list.size())
         {
             auto params_ctx = ctx.make_branch(false);

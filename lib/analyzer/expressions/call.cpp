@@ -320,6 +320,11 @@ inline namespace _v1
             return _replacement_expr->codegen_ir(ctx);
         }
 
+        if (_function->vtable_slot())
+        {
+            assert(!"runtime virtual calls not yet supported");
+        }
+
         if (_function->is_member())
         {
             ctx.push_base_expression(_args.front());

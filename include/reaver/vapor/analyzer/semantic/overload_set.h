@@ -61,6 +61,8 @@ inline namespace _v1
         virtual std::vector<function *> get_overloads() const override;
         virtual overload_set_type * get_type() const override;
 
+        void print(std::ostream & os, print_context ctx, bool print_members = false) const;
+
     private:
         std::unique_ptr<overload_set_type> _type;
     };
@@ -81,6 +83,8 @@ inline namespace _v1
         void resolve_overrides();
         void verify_overrides() const;
         function * get_vtable_entry(std::size_t vtable_id) const;
+
+        void print(std::ostream & os, print_context ctx, bool print_members = false) const;
 
     private:
         overload_set * _base;

@@ -75,7 +75,7 @@ inline namespace _v1
 
         auto inst_ctx = ctx.make_branch(false);
         os << styles::def << inst_ctx << styles::subrule_name << "defined instance:\n";
-        _instance->print(os, inst_ctx.make_branch(true));
+        _instance->print(os, inst_ctx.make_branch(true), true);
 
         auto arg_ctx = ctx.make_branch(_instance->get_member_function_defs().empty());
         os << styles::def << arg_ctx << styles::subrule_name << "arguments:\n";

@@ -53,15 +53,8 @@ inline namespace _v1
     class overload_set_expression : public overload_set_expression_base
     {
     public:
-        overload_set_expression(scope * lex_scope) : _oset{ std::make_unique<overload_set>(lex_scope) }
-        {
-            _set_type(_oset->get_type());
-        }
-
-        overload_set_expression(std::shared_ptr<overload_set> t) : _oset{ std::move(t) }
-        {
-            _set_type(_oset->get_type());
-        }
+        overload_set_expression(scope * lex_scope);
+        overload_set_expression(std::shared_ptr<overload_set> t);
 
         // TODO: =default once I've thrown the analysis future nonsense out of this hierarchy
         // and into analysis_context
@@ -94,15 +87,15 @@ inline namespace _v1
 
     class refined_overload_set_expression : public overload_set_expression_base
     {
-        refined_overload_set_expression(std::shared_ptr<refined_overload_set> oset);
-
     public:
         refined_overload_set_expression(overload_set * base);
+        refined_overload_set_expression(std::shared_ptr<refined_overload_set> oset);
 
         // TODO: =default once I've thrown the analysis future nonsense out of this hierarchy
         // and into analysis_context
         refined_overload_set_expression(const refined_overload_set_expression & other) : _oset{ other._oset }
         {
+            _set_type(_oset->get_type());
         }
 
         virtual refined_overload_set * get_overload_set() const override

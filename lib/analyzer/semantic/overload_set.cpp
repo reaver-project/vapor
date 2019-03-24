@@ -128,6 +128,28 @@ inline namespace _v1
         return _type.get();
     }
 
+    void overload_set::print(std::ostream & os, print_context ctx, bool print_members) const
+    {
+        os << styles::def << ctx << styles::rule_name << "overload set" << styles::def << " @ "
+           << styles::address << this << styles::def << ":\n";
+
+        auto type_ctx = ctx.make_branch(_functions.empty() || !print_members);
+        os << styles::def << type_ctx << styles::subrule_name << "type:\n";
+        _type->print(os, type_ctx.make_branch(true));
+
+        if (!_functions.empty() && print_members)
+        {
+            auto members_ctx = ctx.make_branch(true);
+            os << styles::def << members_ctx << styles::subrule_name << "functions:\n";
+
+            std::size_t idx = 0;
+            for (auto && fn : _functions)
+            {
+                fn->print(os, members_ctx.make_branch(++idx == _functions.size()), true);
+            }
+        }
+    }
+
     refined_overload_set::refined_overload_set(overload_set * base) : _base{ base }
     {
     }
@@ -211,6 +233,30 @@ inline namespace _v1
             return it->second;
         }
         return nullptr;
+    }
+
+    void refined_overload_set::print(std::ostream & os, print_context ctx, bool print_members) const
+    {
+        os << styles::def << ctx << styles::rule_name << "overload set" << styles::def << " @ "
+           << styles::address << this << styles::def << ":\n";
+
+        auto functions = get_overloads();
+
+        auto type_ctx = ctx.make_branch(functions.empty() || !print_members);
+        os << styles::def << type_ctx << styles::subrule_name << "type:\n";
+        _base->get_type()->print(os, type_ctx.make_branch(true));
+
+        if (!functions.empty() && print_members)
+        {
+            auto members_ctx = ctx.make_branch(true);
+            os << styles::def << members_ctx << styles::subrule_name << "functions:\n";
+
+            std::size_t idx = 0;
+            for (auto && fn : functions)
+            {
+                fn->print(os, members_ctx.make_branch(++idx == functions.size()), true);
+            }
+        }
     }
 }
 }

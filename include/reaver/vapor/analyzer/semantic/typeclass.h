@@ -77,7 +77,7 @@ inline namespace _v1
         future<typeclass_instance_type *> type_for(analysis_context & ctx,
             const std::vector<expression *> & args);
 
-        void print(std::ostream & os, print_context ctx) const;
+        void print(std::ostream & os, print_context ctx, bool print_members = false) const;
 
     private:
         ast_node _parse;

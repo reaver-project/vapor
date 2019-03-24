@@ -152,6 +152,20 @@ inline namespace _v1
             body_stmt.release();
 
             fn_spec.spec->set_body(fn_spec.function_body.get());
+
+            fn_spec.spec->set_name(U"call");
+            fn_spec.spec->set_codegen([fn = fn_spec.spec.get()](ir_generation_context & ctx) {
+                auto ret = codegen::ir::function{ U"call",
+                    {},
+                    fmap(fn->parameters(),
+                        [&](auto && param) {
+                            return std::get<std::shared_ptr<codegen::ir::variable>>(
+                                param->codegen_ir(ctx).back().result);
+                        }),
+                    fn->get_body()->codegen_return(ctx),
+                    fn->get_body()->codegen_ir(ctx) };
+                return ret;
+            });
         }
     }
 
@@ -160,11 +174,47 @@ inline namespace _v1
         return _type->get_typeclass();
     }
 
-    void typeclass_instance::print(std::ostream & os, print_context ctx) const
+    void typeclass_instance::print(std::ostream & os, print_context ctx, bool print_members) const
     {
         os << styles::def << ctx << styles::type << "typeclass instance";
         print_address_range(os, this);
         os << '\n';
+
+        if (print_members)
+        {
+            auto rosets_ctx = ctx.make_branch(false);
+            os << styles::def << rosets_ctx << styles::subrule_name << "refined overload sets:\n";
+
+            std::set<refined_overload_set *> rosets;
+            for (auto && roset_expr : _member_overload_set_exprs)
+            {
+                rosets.insert(roset_expr->get_overload_set());
+            }
+
+            std::size_t idx = 0;
+            for (auto && roset : rosets)
+            {
+                roset->print(os, rosets_ctx.make_branch(++idx == rosets.size()), true);
+            }
+
+            auto specs_ctx = ctx.make_branch(true);
+            os << styles::def << specs_ctx << styles::subrule_name << "function specializations:\n";
+
+            idx = 0;
+            for (auto && spec_info : _function_specializations)
+            {
+                auto spec_ctx = specs_ctx.make_branch(++idx == _function_specializations.size());
+                os << styles::def << spec_ctx << styles::subrule_name << "specialization:\n";
+
+                auto fn_ctx = spec_ctx.make_branch(false);
+                os << styles::def << fn_ctx << styles::subrule_name << "function:\n";
+                spec_info.spec->print(os, fn_ctx.make_branch(true), true);
+
+                auto body_ctx = spec_ctx.make_branch(true);
+                os << styles::def << body_ctx << styles::subrule_name << "body:\n";
+                spec_info.function_body->print(os, body_ctx.make_branch(true));
+            }
+        }
     }
 }
 }

@@ -38,6 +38,17 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    overload_set_expression::overload_set_expression(scope * lex_scope)
+        : _oset{ std::make_unique<overload_set>(lex_scope) }
+    {
+        _set_type(_oset->get_type());
+    }
+
+    overload_set_expression::overload_set_expression(std::shared_ptr<overload_set> t) : _oset{ std::move(t) }
+    {
+        _set_type(_oset->get_type());
+    }
+
     bool overload_set_expression::is_constant() const
     {
         auto overloads = _oset->get_overloads();
@@ -81,7 +92,7 @@ inline namespace _v1
     refined_overload_set_expression::refined_overload_set_expression(overload_set * base)
         : _oset{ std::make_unique<refined_overload_set>(base) }
     {
-        _set_type(base->get_type());
+        _set_type(_oset->get_type());
     }
 
     bool refined_overload_set_expression::is_constant() const
@@ -96,7 +107,7 @@ inline namespace _v1
 
     std::unique_ptr<expression> refined_overload_set_expression::_clone_expr(replacements &) const
     {
-        return std::unique_ptr<expression>{ new refined_overload_set_expression{ _oset } };
+        return std::make_unique<refined_overload_set_expression>(_oset);
     }
 
     statement_ir refined_overload_set_expression::_codegen_ir(ir_generation_context &) const

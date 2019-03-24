@@ -67,7 +67,7 @@ inline namespace _v1
         }
 
         const typeclass * get_typeclass() const;
-        void print(std::ostream & os, print_context ctx) const;
+        void print(std::ostream & os, print_context ctx, bool print_members = false) const;
 
         std::optional<ast_node> get_ast_info() const
         {
