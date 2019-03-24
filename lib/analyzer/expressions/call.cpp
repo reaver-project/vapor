@@ -269,7 +269,8 @@ inline namespace _v1
                 if (_vtable_arg)
                 {
                     assert(_function->vtable_slot());
-                    auto repl_fn = _vtable_arg->get_vtable_entry(_function->vtable_slot().value());
+                    auto repl_fn =
+                        _vtable_arg->_get_replacement()->get_vtable_entry(_function->vtable_slot().value());
                     if (repl_fn)
                     {
                         _function = repl_fn;

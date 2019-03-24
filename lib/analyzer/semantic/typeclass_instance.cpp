@@ -113,8 +113,9 @@ inline namespace _v1
             for (auto && fn : base->get_overloads())
             {
                 assert(fn->vtable_slot());
-                if (roset->get_vtable_entry(fn->vtable_slot().value()))
+                if (auto refinement = roset->get_vtable_entry(fn->vtable_slot().value()))
                 {
+                    repl.add_replacement(fn, refinement);
                     continue;
                 }
 
@@ -185,16 +186,11 @@ inline namespace _v1
             auto rosets_ctx = ctx.make_branch(false);
             os << styles::def << rosets_ctx << styles::subrule_name << "refined overload sets:\n";
 
-            std::set<refined_overload_set *> rosets;
-            for (auto && roset_expr : _member_overload_set_exprs)
-            {
-                rosets.insert(roset_expr->get_overload_set());
-            }
-
             std::size_t idx = 0;
-            for (auto && roset : rosets)
+            for (auto && roset : _member_overload_set_exprs)
             {
-                roset->print(os, rosets_ctx.make_branch(++idx == rosets.size()), true);
+                roset->get_overload_set()->print(
+                    os, rosets_ctx.make_branch(++idx == _member_overload_set_exprs.size()), true);
             }
 
             auto specs_ctx = ctx.make_branch(true);
