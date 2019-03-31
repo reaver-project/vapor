@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -31,8 +31,9 @@ inline namespace _v1
     {
         if (var.type == ir::builtin_types().type)
         {
-            assert(var.refers_to);
-            ctx.put_into_global_before += ctx.define_if_necessary(var.refers_to);
+            auto refers_to = std::get_if<std::shared_ptr<ir::type>>(&var.initializer);
+            assert(refers_to);
+            ctx.put_into_global_before += ctx.define_if_necessary(*refers_to);
             return {};
         }
 

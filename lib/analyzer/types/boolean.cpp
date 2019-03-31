@@ -32,7 +32,7 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void boolean_type::_codegen_type(ir_generation_context &) const
+    void boolean_type::_codegen_type(ir_generation_context &, std::shared_ptr<codegen::ir::user_type>) const
     {
         _codegen_t = codegen::ir::builtin_types().boolean;
     }

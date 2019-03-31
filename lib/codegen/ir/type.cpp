@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017, 2019 Michał "Griwes" Dominiak
+ * Copyright © 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,35 +20,33 @@
  *
  **/
 
-#include "vapor/codegen/generator.h"
 #include "vapor/codegen/ir/type.h"
-
-#include <cassert>
 
 namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    std::u32string codegen_context::declare_if_necessary(std::shared_ptr<ir::type> type)
+    namespace ir::detail
     {
-        if (_declared_types.find(type) != _declared_types.end())
+        std::shared_ptr<struct type> builtin_types_t::sized_integer(std::size_t size) const
         {
-            return {};
+            static std::unordered_map<std::size_t, std::shared_ptr<struct type>> types;
+
+            auto & type = types[size];
+            if (!type)
+            {
+                auto sized_type = std::make_shared<sized_integer_type>();
+                sized_type->integer_size = size;
+                type = sized_type;
+            }
+            return type;
         }
 
-        _declared_types.insert(type);
-        return _generator->generate_declaration(type, *this);
-    }
-
-    std::u32string codegen_context::define_if_necessary(std::shared_ptr<ir::type> type)
-    {
-        if (_defined_types.find(type) != _defined_types.end())
+        std::shared_ptr<struct type> builtin_types_t::function(std::shared_ptr<struct type> return_type,
+            std::vector<std::shared_ptr<struct type>> parameter_types) const
         {
-            return {};
+            assert(0);
         }
-
-        _defined_types.insert(type);
-        return _generator->generate_definition(type, *this);
     }
 }
 }

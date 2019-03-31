@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017, 2019 Michał "Griwes" Dominiak
+ * Copyright © 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,35 +20,27 @@
  *
  **/
 
-#include "vapor/codegen/generator.h"
-#include "vapor/codegen/ir/type.h"
+#pragma once
 
-#include <cassert>
+#include "boolean.h"
+#include "integer.h"
+#include "struct.h"
+#include "variable.h"
 
 namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    std::u32string codegen_context::declare_if_necessary(std::shared_ptr<ir::type> type)
+    namespace ir
     {
-        if (_declared_types.find(type) != _declared_types.end())
+        struct value
+            : public std::
+                  variant<std::shared_ptr<variable>, integer_value, boolean_value, struct_value, label>
         {
-            return {};
-        }
+            using variant::variant;
+        };
 
-        _declared_types.insert(type);
-        return _generator->generate_declaration(type, *this);
-    }
-
-    std::u32string codegen_context::define_if_necessary(std::shared_ptr<ir::type> type)
-    {
-        if (_defined_types.find(type) != _defined_types.end())
-        {
-            return {};
-        }
-
-        _defined_types.insert(type);
-        return _generator->generate_definition(type, *this);
+        std::shared_ptr<type> get_type(const value &);
     }
 }
 }

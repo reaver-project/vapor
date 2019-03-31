@@ -55,7 +55,7 @@ inline namespace _v1
         return type;
     }
 
-    void sized_integer::_codegen_type(ir_generation_context &) const
+    void sized_integer::_codegen_type(ir_generation_context &, std::shared_ptr<codegen::ir::user_type>) const
     {
         _codegen_t = codegen::ir::builtin_types().sized_integer(_size);
     }

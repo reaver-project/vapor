@@ -225,7 +225,6 @@ inline namespace _v1
             auto var = std::get<std::shared_ptr<codegen::ir::variable>>(ir.back().result);
             ir.back().declared_variable = var;
             var->name = _name;
-            var->temporary = false;
         }
         return ir;
     }

@@ -44,7 +44,6 @@ inline namespace _v1
         }
 
         virtual void set_name(std::u32string name) override;
-        virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override;
 
     private:
         virtual future<> _analyze(analysis_context & ctx) override;

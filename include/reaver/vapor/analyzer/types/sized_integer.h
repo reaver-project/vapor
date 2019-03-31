@@ -108,7 +108,8 @@ inline namespace _v1
         virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const override;
 
     private:
-        virtual void _codegen_type(ir_generation_context & ctx) const override;
+        virtual void _codegen_type(ir_generation_context & ctx,
+            std::shared_ptr<codegen::ir::user_type>) const override;
 
         virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
         {

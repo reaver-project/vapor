@@ -126,5 +126,22 @@ inline namespace _v1
     {
         assert(0);
     }
+
+    void typeclass_instance_type::_codegen_type(ir_generation_context & ctx,
+        std::shared_ptr<codegen::ir::user_type> actual_type) const
+    {
+        auto members = fmap(_member_expressions,
+            [&](auto && member) { return codegen::ir::member{ member->member_codegen_ir(ctx) }; });
+
+        auto type =
+            codegen::ir::user_type{ _codegen_name(ctx), get_scope()->codegen_ir(), 0, std::move(members) };
+
+        *actual_type = std::move(type);
+    }
+
+    std::u32string typeclass_instance_type::_codegen_name(ir_generation_context &) const
+    {
+        assert(0);
+    }
 }
 }

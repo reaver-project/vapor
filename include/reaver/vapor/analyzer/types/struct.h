@@ -107,7 +107,8 @@ inline namespace _v1
 
     private:
         virtual std::unique_ptr<google::protobuf::Message> _user_defined_interface() const override;
-        virtual void _codegen_type(ir_generation_context &) const override;
+        virtual void _codegen_type(ir_generation_context &,
+            std::shared_ptr<codegen::ir::user_type>) const override;
 
         ast_node _parse;
         bool _is_imported = false;

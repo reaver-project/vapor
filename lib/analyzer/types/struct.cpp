@@ -271,11 +271,10 @@ inline namespace _v1
         _aggregate_copy_ctor_promise->set(_aggregate_copy_ctor.get());
     }
 
-    void struct_type::_codegen_type(ir_generation_context & ctx) const
+    void struct_type::_codegen_type(ir_generation_context & ctx,
+        std::shared_ptr<codegen::ir::user_type> actual_type) const
     {
-        auto actual_type = *_codegen_t;
-
-        auto type = codegen::ir::variable_type{ get_name(), get_scope()->codegen_ir(), 0, {} };
+        auto type = codegen::ir::user_type{ get_name(), get_scope()->codegen_ir(), 0, {} };
 
         auto members = fmap(_data_members,
             [&](auto && member) { return codegen::ir::member{ member->member_codegen_ir(ctx) }; });

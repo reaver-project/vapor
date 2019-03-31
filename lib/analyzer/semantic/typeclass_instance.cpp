@@ -123,6 +123,15 @@ inline namespace _v1
 
                 _function_specialization fn_spec;
                 fn_spec.spec = make_function(fn->get_explanation(), fn->get_range());
+                fn_spec.spec->set_scopes_generator([this](auto && ctx) {
+                    auto ret = this->get_scope()->codegen_ir();
+                    for (auto && scope : ret)
+                    {
+                        logger::dlog() << utf8(scope.name);
+                    }
+                    return ret;
+                });
+
                 repl.add_replacement(fn, fn_spec.spec.get());
                 fn_spec.spec->set_return_type(fn->return_type_expression());
                 fn_spec.spec->set_parameters(fn->parameters());
@@ -220,6 +229,7 @@ inline namespace _v1
     void typeclass_instance::set_name(std::u32string name)
     {
         assert(!_name);
+        _scope->set_name(name, codegen::ir::scope_type::type);
         _name = std::move(name);
     }
 }

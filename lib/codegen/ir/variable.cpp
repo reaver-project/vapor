@@ -27,21 +27,23 @@ namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    std::shared_ptr<ir::variable_type> ir::get_type(const ir::value & val)
+    std::shared_ptr<ir::type> ir::get_type(const ir::value & val)
     {
         return std::get<0>(fmap(val,
             make_overload_set([](const std::shared_ptr<variable> & var) { return var->type; },
-                [](const ir::integer_value & val) {
+                [](const ir::integer_value & val) -> std::shared_ptr<ir::type> {
                     if (val.size)
                     {
                         return ir::builtin_types().sized_integer(val.size.value());
                     }
                     return ir::builtin_types().integer;
                 },
-                [](const ir::boolean_value &) { return ir::builtin_types().boolean; },
+                [](const ir::boolean_value &) -> std::shared_ptr<ir::type> {
+                    return ir::builtin_types().boolean;
+                },
                 [](auto &&) {
                     assert(0);
-                    return std::shared_ptr<ir::variable_type>();
+                    return std::shared_ptr<ir::type>();
                 })));
     }
 }

@@ -117,7 +117,7 @@ inline namespace _v1
 
     declaration_ir typeclass_instance_expression::declaration_codegen_ir(ir_generation_context & ctx) const
     {
-        assert(0);
+        return { { std::get<std::shared_ptr<codegen::ir::variable>>(codegen_ir(ctx).back().result) } };
     }
 
     future<> typeclass_instance_expression::_analyze(analysis_context & ctx)
@@ -180,7 +180,13 @@ inline namespace _v1
 
     statement_ir typeclass_instance_expression::_codegen_ir(ir_generation_context & ctx) const
     {
-        assert(0);
+        auto var = codegen::ir::make_variable(get_type()->codegen_type(ctx));
+        var->scopes = _instance->get_scope()->codegen_ir();
+        return { codegen::ir::instruction{ std::nullopt,
+            std::nullopt,
+            { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
+            {},
+            codegen::ir::value{ std::move(var) } } };
     }
 }
 }

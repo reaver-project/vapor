@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,12 +24,12 @@
 
 #include <optional>
 #include <variant>
+#include <vector>
+
+#include <reaver/variant.h>
 
 #include "../../utf.h"
-#include "boolean.h"
-#include "integer.h"
 #include "scope.h"
-#include "struct.h"
 
 namespace reaver::vapor::codegen
 {
@@ -37,40 +37,26 @@ inline namespace _v1
 {
     namespace ir
     {
-        struct variable_type;
+        struct type;
+        struct value;
 
         struct variable
         {
-            virtual ~variable() = default;
-
-            variable(std::shared_ptr<variable_type> type, std::optional<std::u32string> name)
+            variable(std::shared_ptr<type> type, std::optional<std::u32string> name)
                 : type{ std::move(type) }, name{ std::move(name) }
             {
             }
 
-            std::shared_ptr<variable_type> type;
+            std::shared_ptr<struct type> type;
             std::optional<std::u32string> name;
             bool declared = false;
             bool destroyed = false;
             bool parameter = false;
-            bool temporary = true;
             bool imported = false;
             std::vector<scope> scopes = {};
 
-            std::shared_ptr<variable_type> refers_to; // this is a huge hack
-
-            virtual bool is_move() const
-            {
-                return temporary;
-            }
-        };
-
-        struct move_variable : variable
-        {
-            virtual bool is_move() const override
-            {
-                return true;
-            }
+            std::variant<std::nullopt_t, std::shared_ptr<struct type>, recursive_wrapper<value>> initializer =
+                std::nullopt;
         };
 
         struct label
@@ -79,20 +65,11 @@ inline namespace _v1
             std::vector<scope> scopes;
         };
 
-        inline std::shared_ptr<variable> make_variable(std::shared_ptr<variable_type> type,
+        inline std::shared_ptr<variable> make_variable(std::shared_ptr<struct type> type,
             std::optional<std::u32string> name = std::nullopt)
         {
             return std::make_shared<variable>(variable{ std::move(type), std::move(name) });
         }
-
-        struct value
-            : public std::
-                  variant<std::shared_ptr<variable>, integer_value, boolean_value, struct_value, label>
-        {
-            using variant::variant;
-        };
-
-        std::shared_ptr<variable_type> get_type(const value &);
     }
 }
 }

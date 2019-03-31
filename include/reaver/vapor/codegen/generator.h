@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -36,7 +36,7 @@ inline namespace _v1
 {
     namespace ir
     {
-        struct variable_type;
+        struct type;
         struct variable;
         struct function;
         struct instruction;
@@ -52,8 +52,8 @@ inline namespace _v1
         {
         }
 
-        std::u32string declare_if_necessary(std::shared_ptr<ir::variable_type>);
-        std::u32string define_if_necessary(std::shared_ptr<ir::variable_type>);
+        std::u32string declare_if_necessary(std::shared_ptr<ir::type>);
+        std::u32string define_if_necessary(std::shared_ptr<ir::type>);
 
         std::size_t unnamed_variable_index = 0;
         std::size_t storage_object_index = 0;
@@ -61,7 +61,7 @@ inline namespace _v1
         std::u32string put_into_global;
         std::u32string put_into_function_header;
 
-        std::shared_ptr<ir::variable_type> declaring_members_for;
+        std::shared_ptr<ir::type> declaring_members_for;
         bool in_function_definition = false;
 
         auto & generator() const
@@ -70,8 +70,8 @@ inline namespace _v1
         }
 
     private:
-        std::unordered_set<std::shared_ptr<ir::variable_type>> _declared_types;
-        std::unordered_set<std::shared_ptr<ir::variable_type>> _defined_types;
+        std::unordered_set<std::shared_ptr<ir::type>> _declared_types;
+        std::unordered_set<std::shared_ptr<ir::type>> _defined_types;
         std::shared_ptr<code_generator> _generator;
     };
 
@@ -90,15 +90,13 @@ inline namespace _v1
             return {};
         }
 
-        virtual std::u32string generate_declaration(std::shared_ptr<ir::variable_type> type,
-            codegen_context &) const
+        virtual std::u32string generate_declaration(std::shared_ptr<ir::type>, codegen_context &) const
         {
             return {};
         }
 
         virtual std::u32string generate_definitions(std::vector<ir::entity> &, codegen_context &) = 0;
-        virtual std::u32string generate_definition(std::shared_ptr<ir::variable_type> type,
-            codegen_context &) = 0;
+        virtual std::u32string generate_definition(std::shared_ptr<ir::type> type, codegen_context &) = 0;
     };
 }
 }

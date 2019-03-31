@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -99,7 +99,8 @@ inline namespace _v1
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
         {
             auto ir = fmap(_fields_in_order, [&](auto && field) { return field->codegen_ir(ctx); });
-            auto result = codegen::ir::struct_value{ _type->codegen_type(ctx),
+            auto type = std::dynamic_pointer_cast<codegen::ir::user_type>(_type->codegen_type(ctx));
+            auto result = codegen::ir::struct_value{ std::move(type),
                 fmap(ir, [&](auto && field_ir) { return field_ir.back().result; }) };
 
             return { codegen::ir::instruction{ std::nullopt,

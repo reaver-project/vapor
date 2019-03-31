@@ -66,7 +66,7 @@ inline namespace _v1
     statement_ir type_expression::_codegen_ir(ir_generation_context & ctx) const
     {
         auto ret = codegen::ir::make_variable(codegen::ir::builtin_types().type);
-        ret->refers_to = _type->codegen_type(ctx);
+        ret->initializer = _type->codegen_type(ctx);
 
         return { codegen::ir::instruction{ std::nullopt,
             std::nullopt,

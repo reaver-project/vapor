@@ -51,16 +51,34 @@ inline namespace _v1
         return make_ready_future(std::vector<function *>{});
     }
 
-    void overload_set_type::_codegen_type(ir_generation_context & ctx) const
+    void overload_set_type::_codegen_type(ir_generation_context & ctx,
+        std::shared_ptr<codegen::ir::user_type> actual_type) const
     {
-        auto actual_type = *_codegen_t;
-        auto members = fmap(_oset->get_overloads(), [&](auto && fn) {
+        auto overloads = _oset->get_overloads();
+        bool is_vtable =
+            std::any_of(overloads.begin(), overloads.end(), [](auto && fn) { return fn->vtable_slot(); });
+
+        auto members = fmap(overloads, [&](auto && fn) {
+            if (is_vtable)
+            {
+                // vtable, which means no actual functions need to be generated; instead, a vtable layout must
+                // be created
+
+                // TODO: figure out a split somewhere that'd make this be dispatched on, instead of having a
+                // branch completely changing the nature of the output language type that is being generated
+                // here
+
+                assert(0);
+            }
+
+            // not vtable, which means this is a real overload set, which means it only needs to generate
+            // function bodies for all the contained functions
+
             ctx.add_generated_function(fn);
             return codegen::ir::member{ fn->codegen_ir(ctx) };
         });
-        auto type = codegen::ir::variable_type{
-            _codegen_name(ctx), get_scope()->codegen_ir(), 0, std::move(members)
-        };
+        auto type =
+            codegen::ir::user_type{ _codegen_name(ctx), get_scope()->codegen_ir(), 0, std::move(members) };
 
         auto scopes = get_scope()->codegen_ir();
         scopes.emplace_back(type.name, codegen::ir::scope_type::type);

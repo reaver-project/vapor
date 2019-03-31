@@ -51,8 +51,7 @@ inline namespace _v1
         return ret;
     }
 
-    std::u32string llvm_ir_generator::type_name(std::shared_ptr<ir::variable_type> type,
-        codegen_context & ctx)
+    std::u32string llvm_ir_generator::type_name(std::shared_ptr<ir::type> type, codegen_context & ctx)
     {
         if (type == ir::builtin_types().integer)
         {
@@ -69,14 +68,19 @@ inline namespace _v1
             return U"i" + utf32(std::to_string(sized->integer_size));
         }
 
-        std::u32string scopes;
-        for (auto && scope : type->scopes)
+        if (auto user = dynamic_cast<const ir::user_type *>(type.get()))
         {
-            scopes += scope.name + U".";
+            std::u32string scopes;
+            for (auto && scope : user->scopes)
+            {
+                scopes += scope.name + U".";
+            }
+
+            ctx.put_into_global_before += ctx.define_if_necessary(type);
+            return U"%\"" + scopes + user->name + U"\"";
         }
 
-        ctx.put_into_global_before += ctx.define_if_necessary(type);
-        return U"%\"" + scopes + type->name + U"\"";
+        assert(!"unsupported type in codegen ir!");
     }
 
     std::u32string llvm_ir_generator::function_name(ir::function & fn, codegen_context & ctx)
@@ -98,6 +102,82 @@ inline namespace _v1
         }
 
         return (ctx.in_function_definition ? U"%\"" : U"@\"") + scopes + var.name.value() + U"\"";
+    }
+
+    std::u32string llvm_ir_generator::variable_of(const ir::value & val, codegen_context & ctx)
+    {
+        assert(val.index() == 0);
+        return variable_name(*std::get<std::shared_ptr<ir::variable>>(val), ctx);
+    }
+
+    std::u32string llvm_ir_generator::type_of(const ir::value & val, codegen_context & ctx)
+    {
+        return std::get<std::u32string>(fmap(val,
+            make_overload_set(
+                [&](const ir::integer_value & val) {
+                    assert(val.size);
+
+                    std::ostringstream os;
+                    os << "i" << val.size.value();
+                    return utf32(os.str());
+                },
+                [&](const ir::boolean_value &) -> std::u32string { return U"i1"; },
+                [&](const std::shared_ptr<ir::variable> & var) {
+                    ctx.put_into_global_before += ctx.define_if_necessary(var->type);
+                    return type_name(var->type, ctx);
+                },
+                [&](const ir::label &) {
+                    assert(0);
+                    return unit{};
+                },
+                [&](const ir::struct_value & val) {
+                    ctx.put_into_global_before += ctx.define_if_necessary(val.type);
+                    return type_name(val.type, ctx);
+                },
+                [](auto &&) {
+                    assert(0);
+                    return unit{};
+                })));
+    }
+
+    std::u32string llvm_ir_generator::value_of(const ir::value & val, codegen_context & ctx)
+    {
+        return std::get<std::u32string>(fmap(val,
+            make_overload_set(
+                [&](const codegen::ir::integer_value & val) {
+                    std::ostringstream os;
+                    os << val.value;
+                    return utf32(os.str());
+                },
+                [&](const codegen::ir::boolean_value & val) -> std::u32string {
+                    return val.value ? U"true" : U"false";
+                },
+                [&](const std::shared_ptr<ir::variable> & var) { return variable_name(*var, ctx); },
+                [&](const codegen::ir::label & label) {
+                    assert(label.scopes.empty());
+                    return U"%\"" + label.name + U"\"";
+                },
+                [&](const codegen::ir::struct_value & val) {
+                    std::u32string ret;
+                    ret += U"{";
+
+                    for (auto && member : val.fields)
+                    {
+                        ret += U" " + type_of(member, ctx) + U" " + value_of(member, ctx) + U",";
+                    }
+
+                    if (ret.back() == U',')
+                    {
+                        ret.pop_back();
+                    }
+                    ret += U" }";
+
+                    return ret;
+                },
+                [&](auto &&) {
+                    assert(0);
+                    return unit{};
+                })));
     }
 }
 }

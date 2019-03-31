@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -37,20 +37,33 @@ inline namespace _v1
 {
     namespace ir
     {
-        struct variable_type;
+        struct type;
 
         struct member_variable
         {
             std::u32string name;
-            std::shared_ptr<variable_type> type;
-            std::size_t offset;
+            std::shared_ptr<struct type> type;
         };
 
         using member = std::variant<member_variable, codegen::ir::function>;
 
-        struct variable_type
+        struct user_type;
+
+        struct type
         {
-            variable_type(std::u32string name = {},
+            virtual ~type() = default;
+
+            virtual bool is_fundamental() const
+            {
+                return true;
+            }
+
+            void operator=(const user_type &) = delete;
+        };
+
+        struct user_type : type
+        {
+            user_type(std::u32string name = {},
                 std::vector<scope> scopes = {},
                 std::size_t size = {},
                 std::vector<member> members = {})
@@ -61,7 +74,12 @@ inline namespace _v1
             {
             }
 
-            virtual ~variable_type() = default;
+            virtual bool is_fundamental() const
+            {
+                return false;
+            }
+
+            user_type & operator=(const user_type &) = default;
 
             std::u32string name;
             std::vector<scope> scopes;
@@ -69,45 +87,38 @@ inline namespace _v1
             std::vector<member> members;
         };
 
-        struct sized_integer_type : variable_type
+        struct sized_integer_type : type
         {
-            using variable_type::variable_type;
-
             std::size_t integer_size;
         };
 
-        inline const auto & builtin_types()
+        struct function_type : type
+        {
+            std::shared_ptr<type> return_type;
+            std::vector<std::shared_ptr<type>> parameter_types;
+        };
+
+        namespace detail
         {
             struct builtin_types_t
             {
-                std::shared_ptr<variable_type> integer;
-                std::shared_ptr<variable_type> boolean;
-                std::shared_ptr<variable_type> type;
+                std::shared_ptr<struct type> integer;
+                std::shared_ptr<struct type> boolean;
+                std::shared_ptr<struct type> type;
 
-                std::shared_ptr<variable_type> sized_integer(std::size_t size) const
-                {
-                    static std::unordered_map<std::size_t, std::shared_ptr<variable_type>> types;
-
-                    auto & type = types[size];
-                    if (!type)
-                    {
-                        auto sized_type = std::make_shared<sized_integer_type>(
-                            U"sized_integer_" + utf32(std::to_string(size)));
-                        sized_type->integer_size = size;
-                        type = sized_type;
-                    }
-                    return type;
-                }
+                std::shared_ptr<struct type> sized_integer(std::size_t size) const;
+                std::shared_ptr<struct type> function(std::shared_ptr<struct type> return_type,
+                    std::vector<std::shared_ptr<struct type>> parameter_types) const;
             };
+        }
 
+        inline const auto & builtin_types()
+        {
             static auto types = [] {
-                builtin_types_t types;
-                types.integer = std::make_shared<variable_type>();
-                types.integer->name = U"int";
-                types.boolean = std::make_shared<variable_type>();
-                types.boolean->name = U"bool";
-                types.type = std::make_shared<variable_type>();
-                types.type->name = U"type";
+                detail::builtin_types_t types;
+                types.integer = std::make_shared<type>();
+                types.boolean = std::make_shared<type>();
+                types.type = std::make_shared<type>();
                 return types;
             }();
 

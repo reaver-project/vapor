@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -86,7 +86,10 @@ inline namespace _v1
         // TODO: the operand generated for this instruction should probably be ir::member_variable directly
         // this also means that member_variable needs *index* in addition to offset
         auto member_name = std::get<ir::label>(inst.operands[1]).name;
-        auto & members = std::get<std::shared_ptr<ir::variable>>(inst.operands[0])->type->members;
+        auto user_type = dynamic_cast<ir::user_type *>(
+            std::get<std::shared_ptr<ir::variable>>(inst.operands[0])->type.get());
+        assert(user_type);
+        auto & members = user_type->members;
 
         std::size_t index = 0;
         auto member_ir = std::find_if(members.begin(), members.end(), [&](auto && v) {
@@ -94,6 +97,8 @@ inline namespace _v1
                 make_overload_set(
                     [&](const ir::member_variable & member) {
                         ++index;
+                        logger::dlog() << utf8(member.name) << ", " << utf8(member_name);
+                        logger::default_logger().sync();
                         return member.name == member_name;
                     },
                     [&](const ir::function &) { return false; })));
