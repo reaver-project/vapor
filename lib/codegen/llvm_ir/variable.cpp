@@ -54,8 +54,8 @@ inline namespace _v1
         {
             initializer = value_of(var.initializer.value(), ctx);
         }
-        ret +=
-            variable_name(var, ctx) + U" = global " + type_name(var.type, ctx) + U" " + initializer + U"\n\n";
+        ret += variable_name(var, ctx) + U" = " + (var.constant ? U"constant " : U"global ")
+            + type_name(var.type, ctx) + U" " + initializer + U"\n\n";
 
         return ret;
     }

@@ -114,6 +114,7 @@ inline namespace _v1
     {
         auto ret = codegen::ir::make_variable(get_type()->codegen_type(ctx));
         ret->initializer = _constinit_ir(ctx);
+        ret->constant = true;
         return { std::move(ret) };
     }
 

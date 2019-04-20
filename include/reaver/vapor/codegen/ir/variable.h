@@ -53,6 +53,7 @@ inline namespace _v1
             bool destroyed = false;
             bool parameter = false;
             bool imported = false;
+            bool constant = false;
             std::vector<scope> scopes = {};
 
             std::optional<recursive_wrapper<value>> initializer;
