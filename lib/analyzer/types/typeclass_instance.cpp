@@ -152,7 +152,10 @@ inline namespace _v1
 
     std::u32string typeclass_instance_type::_codegen_name(ir_generation_context & ctx) const
     {
-        return U"tci$" + _ctx.tc->codegen_name(ctx) + U"("
+        return U"tci$"
+            + boost::join(
+                  fmap(_ctx.tc->get_scope()->codegen_ir(), [](auto && scope) { return scope.name; }), U".")
+            + U"." + _ctx.tc->codegen_name(ctx) + U"("
             + boost::join(fmap(_arguments,
                               [&](expression * arg) {
                                   auto type_expr = arg->as<type_expression>();
