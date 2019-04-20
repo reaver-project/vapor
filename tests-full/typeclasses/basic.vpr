@@ -2,7 +2,7 @@
 // link: {cc} {input}.o {runtime} -o {input}.bin
 // run: {input}.bin 5
 
-module test
+module main
 {
     typeclass algorithm(arithmetic : type)
     {
