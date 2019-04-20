@@ -46,7 +46,7 @@ inline namespace _v1
                 fmap(member,
                     make_overload_set(
                         [&](ir::member_variable & var) {
-                            ret += U" " + type_name(var.type, ctx) + U",";
+                            ret += U"\n  " + type_name(var.type, ctx) + U",";
                             return unit{};
                         },
                         [&](ir::function & func) {
@@ -60,7 +60,7 @@ inline namespace _v1
                 ret.pop_back();
             }
 
-            ret += U" }\n\n";
+            ret += U"\n}\n\n";
 
             return ret;
         }

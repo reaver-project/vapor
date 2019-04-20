@@ -95,7 +95,12 @@ inline namespace _v1
 
     statement_ir struct_literal::_codegen_ir(ir_generation_context & ctx) const
     {
-        return {};
+        assert(0);
+    }
+
+    constant_init_ir struct_literal::_constinit_ir(ir_generation_context &) const
+    {
+        assert(0);
     }
 }
 }

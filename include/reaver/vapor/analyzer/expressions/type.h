@@ -23,7 +23,7 @@
 #pragma once
 
 #include "../types/type.h"
-#include "expression.h"
+#include "constant.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -34,7 +34,7 @@ inline namespace _v1
         type
     };
 
-    class type_expression : public expression
+    class type_expression : public constant
     {
     private:
         type * _select(type_kind kind)
@@ -47,11 +47,11 @@ inline namespace _v1
         }
 
     public:
-        type_expression(type * t, type_kind kind = type_kind::type) : expression{ _select(kind) }, _type{ t }
+        type_expression(type * t, type_kind kind = type_kind::type) : constant{ _select(kind) }, _type{ t }
         {
         }
 
-        type_expression(type * t, type * base_type) : expression{ base_type }, _type{ t }
+        type_expression(type * t, type * base_type) : constant{ base_type }, _type{ t }
         {
         }
 
@@ -60,17 +60,11 @@ inline namespace _v1
             return _type;
         }
 
-        virtual bool is_constant() const override
-        {
-            return _type;
-        }
-
         virtual void print(std::ostream & os, print_context ctx) const override;
-        virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override;
 
     private:
         virtual std::unique_ptr<expression> _clone_expr(replacements &) const override;
-        virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
+        virtual constant_init_ir _constinit_ir(ir_generation_context & ctx) const override;
 
         virtual bool _is_equal(const expression * rhs) const override;
 

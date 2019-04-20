@@ -184,6 +184,11 @@ inline namespace _v1
             { std::move(var) } } };
     }
 
+    constant_init_ir closure::_constinit_ir(ir_generation_context &) const
+    {
+        assert(0);
+    }
+
     declaration_ir closure::declaration_codegen_ir(ir_generation_context & ctx) const
     {
         return { { std::get<std::shared_ptr<codegen::ir::variable>>(codegen_ir(ctx).back().result) } };

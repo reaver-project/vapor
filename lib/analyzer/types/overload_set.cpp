@@ -58,7 +58,7 @@ inline namespace _v1
         bool is_vtable =
             std::any_of(overloads.begin(), overloads.end(), [](auto && fn) { return fn->vtable_slot(); });
 
-        auto members = fmap(overloads, [&](auto && fn) {
+        auto members = fmap(overloads, [&](function * fn) {
             if (is_vtable)
             {
                 // vtable, which means no actual functions need to be generated; instead, a vtable layout must
@@ -68,7 +68,15 @@ inline namespace _v1
                 // branch completely changing the nature of the output language type that is being generated
                 // here
 
-                assert(0);
+                auto ret_expr = fn->return_type_expression();
+                assert(ret_expr);
+                auto ret_type_expr = ret_expr->as<type_expression>();
+                assert(ret_type_expr);
+
+                return codegen::ir::member{ codegen::ir::member_variable{ {},
+                    codegen::ir::builtin_types().function(ret_type_expr->get_value()->codegen_type(ctx),
+                        fmap(fn->parameters(),
+                            [&](auto && param) { return param->get_type()->codegen_type(ctx); })) } };
             }
 
             // not vtable, which means this is a real overload set, which means it only needs to generate
@@ -93,6 +101,7 @@ inline namespace _v1
 
                         return unit{};
                     },
+                    [&](codegen::ir::member_variable &) { return unit{}; },
                     [&](auto &&) {
                         assert(0);
                         return unit{};

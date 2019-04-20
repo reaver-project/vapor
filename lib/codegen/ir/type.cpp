@@ -22,15 +22,17 @@
 
 #include "vapor/codegen/ir/type.h"
 
+#include <boost/functional/hash.hpp>
+
 namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
     namespace ir::detail
     {
-        std::shared_ptr<struct type> builtin_types_t::sized_integer(std::size_t size) const
+        std::shared_ptr<sized_integer_type> builtin_types_t::sized_integer(std::size_t size) const
         {
-            static std::unordered_map<std::size_t, std::shared_ptr<struct type>> types;
+            static std::unordered_map<std::size_t, std::shared_ptr<sized_integer_type>> types;
 
             auto & type = types[size];
             if (!type)
@@ -42,10 +44,63 @@ inline namespace _v1
             return type;
         }
 
-        std::shared_ptr<struct type> builtin_types_t::function(std::shared_ptr<struct type> return_type,
+        struct signature
+        {
+            std::shared_ptr<type> return_type;
+            std::vector<std::shared_ptr<type>> parameter_types;
+
+            bool operator==(const signature & other) const
+            {
+                return return_type == other.return_type && parameter_types == other.parameter_types;
+            }
+        };
+    }
+}
+}
+
+namespace std
+{
+template<>
+struct std::hash<reaver::vapor::codegen::ir::detail::signature>
+{
+    std::size_t operator()(const reaver::vapor::codegen::ir::detail::signature & sign) const
+    {
+        std::size_t seed = 0;
+
+        boost::hash_combine(seed, sign.return_type.get());
+        boost::hash_combine(seed, sign.parameter_types.size());
+        for (auto && param : sign.parameter_types)
+        {
+            boost::hash_combine(seed, param.get());
+        }
+
+        return seed;
+    }
+};
+}
+
+namespace reaver::vapor::codegen
+{
+inline namespace _v1
+{
+    namespace ir::detail
+    {
+        std::shared_ptr<function_type> builtin_types_t::function(std::shared_ptr<struct type> return_type,
             std::vector<std::shared_ptr<struct type>> parameter_types) const
         {
-            assert(0);
+            static std::unordered_map<signature, std::shared_ptr<function_type>> types;
+
+            auto sign = signature{ std::move(return_type), std::move(parameter_types) };
+
+            auto & type = types[sign];
+            if (!type)
+            {
+                auto fn_type = std::make_shared<function_type>();
+                fn_type->return_type = std::move(sign.return_type);
+                fn_type->parameter_types = std::move(sign.parameter_types);
+                type = fn_type;
+            }
+            return type;
         }
     }
 }

@@ -145,6 +145,12 @@ inline namespace _v1
         assert(!_name);
         _name = std::move(name);
     }
+
+    std::u32string typeclass::codegen_name(ir_generation_context &) const
+    {
+        assert(_name || !"typeclasses with no name bound in the frontend are not supported yet!");
+        return _name.value();
+    }
 }
 }
 

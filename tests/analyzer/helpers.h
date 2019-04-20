@@ -117,6 +117,11 @@ inline namespace _v1
             throw unexpected_call{ __PRETTY_FUNCTION__ };
         }
 
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override
+        {
+            throw unexpected_call{ __PRETTY_FUNCTION__ };
+        }
+
         virtual bool _is_equal(const expression * rhs) const override
         {
             throw unexpected_call{ __PRETTY_FUNCTION__ };

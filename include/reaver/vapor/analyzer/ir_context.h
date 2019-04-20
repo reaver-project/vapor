@@ -28,12 +28,21 @@
 
 #include <reaver/logger.h>
 
+#include "../codegen/ir/entity.h"
+#include "../codegen/ir/function.h"
+#include "../codegen/ir/instruction.h"
+#include "../codegen/ir/variable.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
     class function;
     class expression;
+
+    using statement_ir = std::vector<codegen::ir::instruction>;
+    using declaration_ir = std::vector<codegen::ir::entity>;
+    using constant_init_ir = codegen::ir::value;
 
     class ir_generation_context
     {

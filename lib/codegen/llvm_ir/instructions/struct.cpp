@@ -97,8 +97,6 @@ inline namespace _v1
                 make_overload_set(
                     [&](const ir::member_variable & member) {
                         ++index;
-                        logger::dlog() << utf8(member.name) << ", " << utf8(member_name);
-                        logger::default_logger().sync();
                         return member.name == member_name;
                     },
                     [&](const ir::function &) { return false; })));

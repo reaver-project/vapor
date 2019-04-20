@@ -29,13 +29,9 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    statement_ir sized_integer_constant::_codegen_ir(ir_generation_context &) const
+    constant_init_ir sized_integer_constant::_constinit_ir(ir_generation_context &) const
     {
-        return { codegen::ir::instruction{ std::nullopt,
-            std::nullopt,
-            { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
-            {},
-            codegen::ir::value{ codegen::ir::integer_value{ _value, _type->size() } } } };
+        return { codegen::ir::integer_value{ _value, _type->size() } };
     }
 }
 }

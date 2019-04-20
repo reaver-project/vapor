@@ -33,9 +33,12 @@ inline namespace _v1
 {
     namespace ir
     {
-        struct value
-            : public std::
-                  variant<std::shared_ptr<variable>, integer_value, boolean_value, struct_value, label>
+        struct value : public std::variant<std::shared_ptr<variable>,
+                           std::shared_ptr<type>,
+                           integer_value,
+                           boolean_value,
+                           struct_value,
+                           label>
         {
             using variant::variant;
         };

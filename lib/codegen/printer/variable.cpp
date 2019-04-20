@@ -31,7 +31,8 @@ inline namespace _v1
     {
         if (var.type == ir::builtin_types().type)
         {
-            auto refers_to = std::get_if<std::shared_ptr<ir::type>>(&var.initializer);
+            assert(var.initializer);
+            auto refers_to = std::get_if<std::shared_ptr<ir::type>>(var.initializer.value().operator->());
             assert(refers_to);
             ctx.put_into_global_before += ctx.define_if_necessary(*refers_to);
             return {};

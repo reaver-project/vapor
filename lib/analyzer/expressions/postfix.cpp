@@ -319,5 +319,10 @@ inline namespace _v1
 
         return _call_expression->codegen_ir(ctx);
     }
+
+    constant_init_ir postfix_expression::_constinit_ir(ir_generation_context &) const
+    {
+        assert(0);
+    }
 }
 }

@@ -110,6 +110,11 @@ inline namespace _v1
                 std::move(result) } };
         }
 
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override
+        {
+            assert(0);
+        }
+
         virtual bool _is_equal(const expression * rhs) const override
         {
             auto rhs_struct = rhs->as<struct_expression>();

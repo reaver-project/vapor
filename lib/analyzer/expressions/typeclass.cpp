@@ -114,7 +114,12 @@ inline namespace _v1
 
     statement_ir typeclass_expression::_codegen_ir(ir_generation_context & ctx) const
     {
-        return {};
+        assert(0);
+    }
+
+    constant_init_ir typeclass_expression::_constinit_ir(ir_generation_context &) const
+    {
+        assert(0);
     }
 }
 }

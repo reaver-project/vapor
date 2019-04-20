@@ -74,6 +74,11 @@ inline namespace _v1
             return std::make_optional(_node);
         }
 
+        const typeclass_instance_type * get_type() const
+        {
+            return _type;
+        }
+
         void set_name(std::u32string name);
 
     private:

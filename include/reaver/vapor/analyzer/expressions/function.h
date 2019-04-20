@@ -88,6 +88,11 @@ inline namespace _v1
             assert(0);
         }
 
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override
+        {
+            assert(0);
+        }
+
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
         {
             assert(0);

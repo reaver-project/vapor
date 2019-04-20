@@ -55,8 +55,7 @@ inline namespace _v1
             bool imported = false;
             std::vector<scope> scopes = {};
 
-            std::variant<std::nullopt_t, std::shared_ptr<struct type>, recursive_wrapper<value>> initializer =
-                std::nullopt;
+            std::optional<recursive_wrapper<value>> initializer;
         };
 
         struct label

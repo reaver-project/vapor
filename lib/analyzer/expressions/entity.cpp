@@ -112,6 +112,11 @@ inline namespace _v1
             codegen::ir::make_variable(get_type()->codegen_type(ctx)) } };
     }
 
+    constant_init_ir entity::_constinit_ir(ir_generation_context &) const
+    {
+        assert(0);
+    }
+
     std::vector<codegen::ir::entity> entity::module_codegen_ir(ir_generation_context & ctx) const
     {
         assert(_owned);

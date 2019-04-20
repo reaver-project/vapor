@@ -117,6 +117,11 @@ inline namespace _v1
             retvar } };
     }
 
+    constant_init_ir member_access_expression::_constinit_ir(ir_generation_context &) const
+    {
+        assert(0);
+    }
+
     bool member_access_expression::_invalidate_ir(ir_generation_context & ctx) const
     {
         return ctx.get_current_base() != _base;

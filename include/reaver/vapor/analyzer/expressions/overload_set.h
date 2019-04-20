@@ -80,6 +80,7 @@ inline namespace _v1
     private:
         virtual std::unique_ptr<expression> _clone_expr(replacements &) const override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override;
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override;
 
         std::shared_ptr<overload_set> _oset;
@@ -109,6 +110,7 @@ inline namespace _v1
     private:
         virtual std::unique_ptr<expression> _clone_expr(replacements &) const override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override;
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override;
 
         std::shared_ptr<refined_overload_set> _oset;

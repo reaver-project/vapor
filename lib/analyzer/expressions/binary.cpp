@@ -130,5 +130,10 @@ inline namespace _v1
         // (...probably)
         return _call_expression->codegen_ir(ctx);
     }
+
+    constant_init_ir binary_expression::_constinit_ir(ir_generation_context &) const
+    {
+        assert(0);
+    }
 }
 }

@@ -21,6 +21,9 @@
  **/
 
 #include "vapor/codegen/llvm_ir.h"
+
+#include <boost/algorithm/string/join.hpp>
+
 #include "vapor/codegen/ir/entity.h"
 #include "vapor/codegen/ir/type.h"
 
@@ -66,6 +69,15 @@ inline namespace _v1
         if (auto sized = dynamic_cast<const ir::sized_integer_type *>(type.get()))
         {
             return U"i" + utf32(std::to_string(sized->integer_size));
+        }
+
+        if (auto function = dynamic_cast<const ir::function_type *>(type.get()))
+        {
+            return type_name(function->return_type, ctx) + U" ("
+                + boost::join(fmap(function->parameter_types,
+                                  [&](auto && param_type) { return type_name(param_type, ctx); }),
+                      U", ")
+                + U") *"; // TODO: this decay to pointer to function should probably happen earlier?
         }
 
         if (auto user = dynamic_cast<const ir::user_type *>(type.get()))

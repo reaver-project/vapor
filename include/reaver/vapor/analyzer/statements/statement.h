@@ -24,10 +24,6 @@
 
 #include <reaver/future.h>
 
-#include "../../codegen/ir/entity.h"
-#include "../../codegen/ir/function.h"
-#include "../../codegen/ir/instruction.h"
-#include "../../codegen/ir/variable.h"
 #include "../../print_helpers.h"
 #include "../ir_context.h"
 #include "../semantic/context.h"
@@ -41,9 +37,6 @@ inline namespace _v1
     class return_statement;
     class scope;
     class parameter;
-
-    using statement_ir = std::vector<codegen::ir::instruction>;
-    using declaration_ir = std::vector<codegen::ir::entity>;
 
     class statement
     {

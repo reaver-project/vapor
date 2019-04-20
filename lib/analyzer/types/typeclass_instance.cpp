@@ -21,6 +21,9 @@
  **/
 
 #include "vapor/analyzer/types/typeclass_instance.h"
+
+#include <boost/algorithm/string.hpp>
+
 #include "vapor/analyzer/expressions/member.h"
 #include "vapor/analyzer/semantic/typeclass.h"
 #include "vapor/analyzer/semantic/typeclass_instance.h"
@@ -130,8 +133,16 @@ inline namespace _v1
     void typeclass_instance_type::_codegen_type(ir_generation_context & ctx,
         std::shared_ptr<codegen::ir::user_type> actual_type) const
     {
-        auto members = fmap(_member_expressions,
-            [&](auto && member) { return codegen::ir::member{ member->member_codegen_ir(ctx) }; });
+        auto members = fmap(_member_expressions, [&](auto && member) {
+            auto ret = member->member_codegen_ir(ctx);
+
+            // set scopes on the overload set type
+            auto udt = dynamic_cast<codegen::ir::user_type *>(ret.type.get());
+            assert(udt); // ...a type of an overload set better be an UDT...
+            udt->scopes = codegen_scopes(ctx);
+
+            return codegen::ir::member{ std::move(ret) };
+        });
 
         auto type =
             codegen::ir::user_type{ _codegen_name(ctx), get_scope()->codegen_ir(), 0, std::move(members) };
@@ -139,9 +150,17 @@ inline namespace _v1
         *actual_type = std::move(type);
     }
 
-    std::u32string typeclass_instance_type::_codegen_name(ir_generation_context &) const
+    std::u32string typeclass_instance_type::_codegen_name(ir_generation_context & ctx) const
     {
-        assert(0);
+        return U"tci$" + _ctx.tc->codegen_name(ctx) + U"("
+            + boost::join(fmap(_arguments,
+                              [&](expression * arg) {
+                                  auto type_expr = arg->as<type_expression>();
+                                  assert(type_expr);
+                                  return type_expr->get_value()->codegen_scopes(ctx).back().name;
+                              }),
+                  ", ")
+            + U")";
     }
 }
 }

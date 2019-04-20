@@ -135,7 +135,7 @@ inline namespace _v1
     future<expression *> parameter::_simplify_expr(recursive_context ctx)
     {
         return _type_expression->simplify_expr(ctx).then(
-            [&ctx = ctx.proper, this](auto && simpl)->expression * {
+            [&ctx = ctx.proper, this](auto && simpl) -> expression * {
                 replace_uptr(_type_expression, simpl, ctx);
                 return this;
             });
@@ -158,6 +158,11 @@ inline namespace _v1
             { boost::typeindex::type_id<codegen::ir::materialization_instruction>() },
             {},
             { std::move(var) } } };
+    }
+
+    constant_init_ir parameter::_constinit_ir(ir_generation_context &) const
+    {
+        assert(0);
     }
 
     std::unique_ptr<google::protobuf::Message> parameter::_generate_interface() const

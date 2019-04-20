@@ -60,24 +60,24 @@ inline namespace _v1
             imported->function->set_return_type(imported->return_type.get());
             imported->function->set_parameters(
                 fmap(imported->parameters, [](auto && param) { return param.get(); }));
-            imported->function->set_codegen(
-                [imported = imported.get()](ir_generation_context & ctx) -> codegen::ir::function {
-                    auto params = fmap(imported->parameters, [&](auto && param) {
-                        return std::get<std::shared_ptr<codegen::ir::variable>>(
-                            param->codegen_ir(ctx).back().result);
-                    });
-
-                    auto ret = codegen::ir::function{ U"call",
-                        {},
-                        std::move(params),
-                        codegen::ir::make_variable(
-                            imported->return_type->as<type_expression>()->get_value()->codegen_type(ctx)),
-                        {} };
-                    ret.is_member = true;
-                    ret.is_defined = false;
-
-                    return ret;
+            imported->function->set_codegen([imported = imported.get(), type = ret->get_type()](
+                                                ir_generation_context & ctx) -> codegen::ir::function {
+                auto params = fmap(imported->parameters, [&](auto && param) {
+                    return std::get<std::shared_ptr<codegen::ir::variable>>(
+                        param->codegen_ir(ctx).back().result);
                 });
+
+                auto ret = codegen::ir::function{ U"call",
+                    {},
+                    std::move(params),
+                    codegen::ir::make_variable(
+                        imported->return_type->as<type_expression>()->get_value()->codegen_type(ctx)),
+                    {} };
+                ret.is_member = true;
+                ret.is_defined = false;
+
+                return ret;
+            });
 
             if (overload.is_member())
             {

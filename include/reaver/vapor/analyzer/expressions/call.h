@@ -82,6 +82,7 @@ inline namespace _v1
 
     private:
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        virtual constant_init_ir _constinit_ir(ir_generation_context & ctx) const override;
 
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
         {

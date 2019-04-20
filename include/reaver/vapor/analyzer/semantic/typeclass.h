@@ -75,6 +75,7 @@ inline namespace _v1
         void print(std::ostream & os, print_context ctx, bool print_members = false) const;
 
         void set_name(std::u32string name);
+        std::u32string codegen_name(ir_generation_context &) const;
 
     private:
         ast_node _parse;

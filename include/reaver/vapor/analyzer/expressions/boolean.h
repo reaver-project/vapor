@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -25,17 +25,17 @@
 #include <memory>
 
 #include "../../parser/literal.h"
-#include "expression.h"
+#include "constant.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class boolean_constant : public expression
+    class boolean_constant : public constant
     {
     public:
         boolean_constant(bool value, ast_node parse = {})
-            : expression{ builtin_types().boolean.get() }, _value{ std::move(value) }
+            : constant{ builtin_types().boolean.get() }, _value{ std::move(value) }
         {
             _set_ast_info(parse);
         }
@@ -50,11 +50,6 @@ inline namespace _v1
         auto get_value() const
         {
             return _value;
-        }
-
-        virtual bool is_constant() const override
-        {
-            return true;
         }
 
     private:
@@ -73,7 +68,7 @@ inline namespace _v1
             return make_ready_future<expression *>(this);
         }
 
-        virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        virtual constant_init_ir _constinit_ir(ir_generation_context & ctx) const override;
 
         virtual bool _is_equal(const expression * rhs) const override
         {

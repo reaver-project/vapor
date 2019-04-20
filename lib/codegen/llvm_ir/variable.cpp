@@ -31,7 +31,8 @@ inline namespace _v1
     {
         if (var.type == ir::builtin_types().type)
         {
-            auto refers_to = std::get_if<std::shared_ptr<ir::type>>(&var.initializer);
+            assert(var.initializer);
+            auto refers_to = std::get_if<std::shared_ptr<ir::type>>(var.initializer.value().operator->());
             assert(refers_to);
             ctx.put_into_global_before += ctx.define_if_necessary(*refers_to);
             return {};
@@ -47,7 +48,13 @@ inline namespace _v1
         ret += ctx.define_if_necessary(var.type);
 
         assert(!ctx.in_function_definition);
-        ret += variable_name(var, ctx) + U" = global " + type_name(var.type, ctx) + U" { }\n\n";
+
+        std::u32string initializer = U"{ }";
+        if (var.initializer)
+        {
+            initializer = value_of(var.initializer.value(), ctx);
+        }
+        ret += variable_name(var, ctx) + U" = global " + type_name(var.type, ctx) + initializer + U"\n\n";
 
         return ret;
     }

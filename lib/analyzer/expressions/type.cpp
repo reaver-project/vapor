@@ -58,21 +58,9 @@ inline namespace _v1
         return std::make_unique<type_expression>(type);
     }
 
-    declaration_ir type_expression::declaration_codegen_ir(ir_generation_context & ctx) const
+    constant_init_ir type_expression::_constinit_ir(ir_generation_context & ctx) const
     {
-        return { { std::get<std::shared_ptr<codegen::ir::variable>>(_codegen_ir(ctx).back().result) } };
-    }
-
-    statement_ir type_expression::_codegen_ir(ir_generation_context & ctx) const
-    {
-        auto ret = codegen::ir::make_variable(codegen::ir::builtin_types().type);
-        ret->initializer = _type->codegen_type(ctx);
-
-        return { codegen::ir::instruction{ std::nullopt,
-            std::nullopt,
-            { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
-            {},
-            std::move(ret) } };
+        return _type->codegen_type(ctx);
     }
 
     std::unique_ptr<google::protobuf::Message> type_expression::_generate_interface() const

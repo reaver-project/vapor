@@ -58,6 +58,7 @@ inline namespace _v1
         virtual std::unique_ptr<expression> _clone_expr(replacements &) const override;
         virtual future<expression *> _simplify_expr(recursive_context) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override;
 
         virtual bool _is_equal(const expression * rhs) const override
         {

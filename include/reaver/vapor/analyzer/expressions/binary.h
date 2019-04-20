@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -70,6 +70,7 @@ inline namespace _v1
         virtual std::unique_ptr<expression> _clone_expr(replacements &) const override;
         virtual future<expression *> _simplify_expr(recursive_context) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        virtual constant_init_ir _constinit_ir(ir_generation_context & ctx) const override;
 
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
         {

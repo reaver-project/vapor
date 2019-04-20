@@ -106,8 +106,8 @@ inline namespace _v1
                 std::shared_ptr<struct type> boolean;
                 std::shared_ptr<struct type> type;
 
-                std::shared_ptr<struct type> sized_integer(std::size_t size) const;
-                std::shared_ptr<struct type> function(std::shared_ptr<struct type> return_type,
+                std::shared_ptr<sized_integer_type> sized_integer(std::size_t size) const;
+                std::shared_ptr<function_type> function(std::shared_ptr<struct type> return_type,
                     std::vector<std::shared_ptr<struct type>> parameter_types) const;
             };
         }

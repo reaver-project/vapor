@@ -72,6 +72,11 @@ inline namespace _v1
             codegen::ir::value{ std::move(var) } } };
     }
 
+    constant_init_ir overload_set_expression::_constinit_ir(ir_generation_context &) const
+    {
+        assert(0);
+    }
+
     declaration_ir overload_set_expression::declaration_codegen_ir(ir_generation_context & ctx) const
     {
         return { { std::get<std::shared_ptr<codegen::ir::variable>>(codegen_ir(ctx).back().result) } };
@@ -110,7 +115,12 @@ inline namespace _v1
         return std::make_unique<refined_overload_set_expression>(_oset);
     }
 
-    statement_ir refined_overload_set_expression::_codegen_ir(ir_generation_context &) const
+    statement_ir refined_overload_set_expression::_codegen_ir(ir_generation_context & ctx) const
+    {
+        assert(0);
+    }
+
+    constant_init_ir refined_overload_set_expression::_constinit_ir(ir_generation_context &) const
     {
         assert(0);
     }
@@ -125,7 +135,7 @@ inline namespace _v1
         template<typename F>
         auto create_overload_set(scope * lex_scope, std::u32string name, F create)
         {
-            auto type_name = U"overload_set_type$" + name;
+            auto type_name = U"oset$" + name;
 
             auto oset = create();
             lex_scope->init(name, make_symbol(name, oset.get()));

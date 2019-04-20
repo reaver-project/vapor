@@ -366,5 +366,10 @@ inline namespace _v1
 
         return ret;
     }
+
+    constant_init_ir call_expression::_constinit_ir(ir_generation_context &) const
+    {
+        assert(0);
+    }
 }
 }

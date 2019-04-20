@@ -58,6 +58,7 @@ inline namespace _v1
         virtual future<expression *> _simplify_expr(recursive_context ctx) override;
         virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override;
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override;
 
         late_preanalysis_type _late_preanalysis;
         std::shared_ptr<typeclass_instance> _instance;

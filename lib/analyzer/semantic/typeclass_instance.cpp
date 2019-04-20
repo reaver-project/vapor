@@ -123,14 +123,8 @@ inline namespace _v1
 
                 _function_specialization fn_spec;
                 fn_spec.spec = make_function(fn->get_explanation(), fn->get_range());
-                fn_spec.spec->set_scopes_generator([this](auto && ctx) {
-                    auto ret = this->get_scope()->codegen_ir();
-                    for (auto && scope : ret)
-                    {
-                        logger::dlog() << utf8(scope.name);
-                    }
-                    return ret;
-                });
+                fn_spec.spec->set_scopes_generator(
+                    [this](auto && ctx) { return this->get_scope()->codegen_ir(); });
 
                 repl.add_replacement(fn, fn_spec.spec.get());
                 fn_spec.spec->set_return_type(fn->return_type_expression());

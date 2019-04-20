@@ -263,6 +263,12 @@ inline namespace _v1
         {
         }
 
+        constant_init_ir constinit_ir(ir_generation_context & ctx) const
+        {
+            assert(is_constant());
+            return _constinit_ir(ctx);
+        }
+
     protected:
         void _set_type(type * t)
         {
@@ -292,6 +298,8 @@ inline namespace _v1
         {
             return make_ready_future(this);
         }
+
+        virtual constant_init_ir _constinit_ir(ir_generation_context & ctx) const = 0;
 
         virtual bool _is_equal([[maybe_unused]] const expression * expr) const
         {

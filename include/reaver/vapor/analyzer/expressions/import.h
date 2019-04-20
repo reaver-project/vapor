@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016, 2018 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016, 2018-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -66,6 +66,11 @@ inline namespace _v1
         virtual statement_ir _codegen_ir(ir_generation_context &) const override
         {
             return {};
+        }
+
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override
+        {
+            assert(0);
         }
 
         entity * _module;

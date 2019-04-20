@@ -180,13 +180,30 @@ inline namespace _v1
 
     statement_ir typeclass_instance_expression::_codegen_ir(ir_generation_context & ctx) const
     {
-        auto var = codegen::ir::make_variable(get_type()->codegen_type(ctx));
+        auto type = get_type()->codegen_type(ctx);
+        auto var = codegen::ir::make_variable(type);
+        // TODO: figure out how to get rid of this dynamic pointer cast that is really irritating here
+        auto val = codegen::ir::struct_value{ std::dynamic_pointer_cast<codegen::ir::user_type>(type), {} };
+        assert(val.type);
+        val.fields.reserve(_instance->get_type()->get_overload_sets().size());
+
+        for (auto && [name, base_oset] : _instance->get_type()->get_overload_sets())
+        {
+            val.fields.push_back(_instance->get_scope()->get(name)->get_expression()->constinit_ir(ctx));
+        }
+
+        var->initializer = codegen::ir::value{ std::move(val) };
         var->scopes = _instance->get_scope()->codegen_ir();
         return { codegen::ir::instruction{ std::nullopt,
             std::nullopt,
             { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
             {},
             codegen::ir::value{ std::move(var) } } };
+    }
+
+    constant_init_ir typeclass_instance_expression::_constinit_ir(ir_generation_context &) const
+    {
+        assert(0);
     }
 }
 }

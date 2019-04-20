@@ -113,7 +113,7 @@ inline namespace _v1
 
         virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
         {
-            assert(0);
+            return U"sized_int(" + utf32(std::to_string(_size)) + U")";
         }
 
         std::size_t _size;

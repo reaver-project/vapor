@@ -213,6 +213,11 @@ inline namespace _v1
             _ir->is_member = _is_member;
             _ir->is_builtin = _is_builtin;
 
+            if (_scopes_generator)
+            {
+                _ir->scopes = _scopes_generator.value()(ctx);
+            }
+
             if (_entry)
             {
                 _ir->is_entry = true;

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -132,6 +132,11 @@ inline namespace _v1
                 { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
                 {},
                 { referenced_ir.back().result } } };
+        }
+
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override
+        {
+            assert(0);
         }
 
         virtual bool _is_equal(const expression * rhs) const override
