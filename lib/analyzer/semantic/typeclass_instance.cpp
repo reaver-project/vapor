@@ -109,6 +109,12 @@ inline namespace _v1
             auto && roset = roset_expr->get_overload_set();
             roset->resolve_overrides();
 
+            auto scopes_gen = [this, name = roset->get_type()->get_name()](auto && ctx) {
+                auto instance_scopes = this->get_scope()->codegen_ir();
+                instance_scopes.push_back(codegen::ir::scope{ name, codegen::ir::scope_type::type });
+                return instance_scopes;
+            };
+
             auto && base = roset->get_base();
             for (auto && fn : base->get_overloads())
             {
@@ -116,6 +122,7 @@ inline namespace _v1
                 if (auto refinement = roset->get_vtable_entry(fn->vtable_slot().value()))
                 {
                     repl.add_replacement(fn, refinement);
+                    refinement->set_scopes_generator(scopes_gen);
                     continue;
                 }
 
@@ -123,8 +130,7 @@ inline namespace _v1
 
                 _function_specialization fn_spec;
                 fn_spec.spec = make_function(fn->get_explanation(), fn->get_range());
-                fn_spec.spec->set_scopes_generator(
-                    [this](auto && ctx) { return this->get_scope()->codegen_ir(); });
+                fn_spec.spec->set_scopes_generator(scopes_gen);
 
                 repl.add_replacement(fn, fn_spec.spec.get());
                 fn_spec.spec->set_return_type(fn->return_type_expression());

@@ -113,7 +113,7 @@ inline namespace _v1
         return { codegen::ir::instruction{ std::nullopt,
             std::nullopt,
             { boost::typeindex::type_id<codegen::ir::member_access_instruction>() },
-            { base_variable, codegen::ir::label{ _name, {} } },
+            { base_variable, codegen::ir::label{ _name } },
             retvar } };
     }
 

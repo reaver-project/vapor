@@ -146,6 +146,7 @@ inline namespace _v1
                     ctx.put_into_global_before += ctx.define_if_necessary(val.type);
                     return type_name(val.type, ctx);
                 },
+                [&](const ir::function_value & val) { return type_name(val.type, ctx); },
                 [](auto &&) {
                     assert(0);
                     return unit{};
@@ -156,33 +157,49 @@ inline namespace _v1
     {
         return std::get<std::u32string>(fmap(val,
             make_overload_set(
-                [&](const codegen::ir::integer_value & val) {
+                [&](const ir::integer_value & val) {
                     std::ostringstream os;
                     os << val.value;
                     return utf32(os.str());
                 },
-                [&](const codegen::ir::boolean_value & val) -> std::u32string {
+                [&](const ir::boolean_value & val) -> std::u32string {
                     return val.value ? U"true" : U"false";
                 },
                 [&](const std::shared_ptr<ir::variable> & var) { return variable_name(*var, ctx); },
-                [&](const codegen::ir::label & label) {
-                    assert(label.scopes.empty());
-                    return U"%\"" + label.name + U"\"";
-                },
-                [&](const codegen::ir::struct_value & val) {
+                [&](const ir::label & label) { return U"%\"" + label.name + U"\""; },
+                [&](const ir::struct_value & val) {
                     std::u32string ret;
+                    std::u32string indent(ctx.nested_indent, U' ');
+
                     ret += U"{";
+
+                    ctx.nested_indent += 2;
 
                     for (auto && member : val.fields)
                     {
-                        ret += U" " + type_of(member, ctx) + U" " + value_of(member, ctx) + U",";
+                        ret += U"\n  " + indent + type_of(member, ctx) + U" " + value_of(member, ctx) + U",";
                     }
+
+                    ctx.nested_indent -= 2;
 
                     if (ret.back() == U',')
                     {
                         ret.pop_back();
                     }
-                    ret += U" }";
+                    ret += U"\n" + indent + U"}";
+
+                    return ret;
+                },
+                [&](const ir::function_value & val) {
+                    std::u32string ret;
+
+                    ret += U"@\"";
+                    for (auto && scope : val.scopes)
+                    {
+                        ret += scope.name + U".";
+                    }
+                    ret += val.name;
+                    ret += U"\"";
 
                     return ret;
                 },

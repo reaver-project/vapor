@@ -335,7 +335,7 @@ inline namespace _v1
 
         auto arguments_values =
             fmap(arguments_instructions, [](auto && insts) { return insts.back().result; });
-        arguments_values.insert(arguments_values.begin(), _function->call_operand_ir(ctx));
+        arguments_values.insert(arguments_values.begin(), _function->pointer_ir(ctx));
 
         if (_function->is_member())
         {

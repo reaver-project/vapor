@@ -105,11 +105,6 @@ inline namespace _v1
         return _instance->get_scope()->get(name)->get_expression();
     }
 
-    bool typeclass_instance_expression::is_constant() const
-    {
-        return true;
-    }
-
     void typeclass_instance_expression::set_name(std::u32string name)
     {
         _instance->set_name(std::move(name));
@@ -117,7 +112,9 @@ inline namespace _v1
 
     declaration_ir typeclass_instance_expression::declaration_codegen_ir(ir_generation_context & ctx) const
     {
-        return { { std::get<std::shared_ptr<codegen::ir::variable>>(codegen_ir(ctx).back().result) } };
+        auto ret = codegen::ir::make_variable(get_type()->codegen_type(ctx));
+        ret->initializer = _constinit_ir(ctx);
+        return { std::move(ret) };
     }
 
     future<> typeclass_instance_expression::_analyze(analysis_context & ctx)
@@ -178,10 +175,9 @@ inline namespace _v1
             .then([&](auto &&) -> expression * { return this; });
     }
 
-    statement_ir typeclass_instance_expression::_codegen_ir(ir_generation_context & ctx) const
+    constant_init_ir typeclass_instance_expression::_constinit_ir(ir_generation_context & ctx) const
     {
         auto type = get_type()->codegen_type(ctx);
-        auto var = codegen::ir::make_variable(type);
         // TODO: figure out how to get rid of this dynamic pointer cast that is really irritating here
         auto val = codegen::ir::struct_value{ std::dynamic_pointer_cast<codegen::ir::user_type>(type), {} };
         assert(val.type);
@@ -192,18 +188,7 @@ inline namespace _v1
             val.fields.push_back(_instance->get_scope()->get(name)->get_expression()->constinit_ir(ctx));
         }
 
-        var->initializer = codegen::ir::value{ std::move(val) };
-        var->scopes = _instance->get_scope()->codegen_ir();
-        return { codegen::ir::instruction{ std::nullopt,
-            std::nullopt,
-            { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
-            {},
-            codegen::ir::value{ std::move(var) } } };
-    }
-
-    constant_init_ir typeclass_instance_expression::_constinit_ir(ir_generation_context &) const
-    {
-        assert(0);
+        return val;
     }
 }
 }

@@ -33,11 +33,21 @@ inline namespace _v1
 {
     namespace ir
     {
+        struct function_type;
+
+        struct function_value
+        {
+            std::u32string name;
+            std::vector<scope> scopes;
+            std::shared_ptr<function_type> type;
+        };
+
         struct value : public std::variant<std::shared_ptr<variable>,
                            std::shared_ptr<type>,
                            integer_value,
                            boolean_value,
                            struct_value,
+                           function_value,
                            label>
         {
             using variant::variant;

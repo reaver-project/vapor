@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "vapor/analyzer/expressions/expression.h"
+#include "vapor/analyzer/expressions/constant.h"
 #include "vapor/analyzer/expressions/type.h"
 #include "vapor/analyzer/semantic/instance_context.h"
 #include "vapor/analyzer/types/typeclass.h"
@@ -35,7 +35,7 @@ inline namespace _v1
     class function_definition;
     class typeclass_instance;
 
-    class typeclass_instance_expression : public expression
+    class typeclass_instance_expression : public constant
     {
     public:
         using late_preanalysis_type = reaver::unique_function<void(function_definition_handler)>;
@@ -48,7 +48,6 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override;
         virtual expression * get_member(const std::u32string & name) const override;
-        virtual bool is_constant() const override;
 
         virtual void set_name(std::u32string name) override;
         virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override;
@@ -57,7 +56,6 @@ inline namespace _v1
         virtual future<> _analyze(analysis_context & ctx) override;
         virtual future<expression *> _simplify_expr(recursive_context ctx) override;
         virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override;
-        virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
         virtual constant_init_ir _constinit_ir(ir_generation_context &) const override;
 
         late_preanalysis_type _late_preanalysis;

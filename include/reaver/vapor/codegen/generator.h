@@ -64,6 +64,8 @@ inline namespace _v1
         std::shared_ptr<ir::type> declaring_members_for;
         bool in_function_definition = false;
 
+        int nested_indent = 0;
+
         auto & generator() const
         {
             return *_generator;

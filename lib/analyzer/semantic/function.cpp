@@ -234,5 +234,25 @@ inline namespace _v1
 
         return *_ir;
     }
+
+    codegen::ir::function_value function::pointer_ir(ir_generation_context & ctx) const
+    {
+        auto scopes = [&]() -> std::vector<codegen::ir::scope> {
+            if (_scopes_generator)
+            {
+                return _scopes_generator.value()(ctx);
+            }
+            return {};
+        }();
+
+        assert(_return_type_expression);
+        auto ret_type_expr = _return_type_expression->as<type_expression>();
+        assert(ret_type_expr);
+
+        return { *_name,
+            std::move(scopes),
+            codegen::ir::builtin_types().function(ret_type_expr->get_value()->codegen_type(ctx),
+                fmap(_parameters, [&](auto && param) { return param->get_type()->codegen_type(ctx); })) };
+    }
 }
 }

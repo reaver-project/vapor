@@ -98,18 +98,7 @@ inline namespace _v1
         }
 
         codegen::ir::function codegen_ir(ir_generation_context & ctx) const;
-
-        codegen::ir::value call_operand_ir(ir_generation_context & ctx) const
-        {
-            auto scopes = [&]() -> std::vector<codegen::ir::scope> {
-                if (_scopes_generator)
-                {
-                    return _scopes_generator.value()(ctx);
-                }
-                return {};
-            }();
-            return { codegen::ir::label{ *_name, scopes } };
-        }
+        codegen::ir::function_value pointer_ir(ir_generation_context & ctx) const;
 
         void set_return_type(std::shared_ptr<expression> ret)
         {

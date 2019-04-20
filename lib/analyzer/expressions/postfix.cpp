@@ -308,7 +308,7 @@ inline namespace _v1
             auto access_instruction = codegen::ir::instruction{ std::nullopt,
                 std::nullopt,
                 { boost::typeindex::type_id<codegen::ir::member_access_instruction>() },
-                { base_variable, codegen::ir::label{ _accessed_member.value(), {} } },
+                { base_variable, codegen::ir::label{ _accessed_member.value() } },
                 { codegen::ir::make_variable(
                     _referenced_expression.value()->get_type()->codegen_type(ctx)) } };
 

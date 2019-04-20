@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -56,17 +56,10 @@ inline namespace _v1
             arguments.pop_back();
         }
 
-        auto call_operand = std::get<codegen::ir::label>(inst.operands[actual_argument_offset - 1]);
-        std::u32string call_operand_str;
-
-        for (auto && scope : call_operand.scopes)
-        {
-            call_operand_str += scope.name + U".";
-        }
-        call_operand_str += call_operand.name;
-
-        return variable_of(inst.result, ctx) + U" = call " + type_of(inst.result, ctx) + U" @\""
-            + call_operand_str + U"\"(" + arguments + U")\n";
+        auto && call_operand =
+            std::get<codegen::ir::function_value>(inst.operands[actual_argument_offset - 1]);
+        return variable_of(inst.result, ctx) + U" = call " + type_of(inst.result, ctx) + U" "
+            + value_of(call_operand, ctx) + +U"(" + arguments + U")\n";
     }
 }
 }

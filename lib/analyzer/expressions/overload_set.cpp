@@ -117,12 +117,30 @@ inline namespace _v1
 
     statement_ir refined_overload_set_expression::_codegen_ir(ir_generation_context & ctx) const
     {
-        assert(0);
+        return { codegen::ir::instruction{ std::nullopt,
+            std::nullopt,
+            { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
+            {},
+            _constinit_ir(ctx) } };
     }
 
-    constant_init_ir refined_overload_set_expression::_constinit_ir(ir_generation_context &) const
+    constant_init_ir refined_overload_set_expression::_constinit_ir(ir_generation_context & ctx) const
     {
-        assert(0);
+        auto type = get_type()->codegen_type(ctx);
+        // TODO: figure out how to get rid of this dynamic pointer cast that is really irritating here
+        auto val = codegen::ir::struct_value{ std::dynamic_pointer_cast<codegen::ir::user_type>(type), {} };
+        assert(val.type);
+
+        auto overloads = get_overloads();
+        val.fields.reserve(overloads.size());
+
+        for (auto && fn : overloads)
+        {
+            val.fields.push_back(fn->pointer_ir(ctx));
+            ctx.add_function_to_generate(fn);
+        }
+
+        return val;
     }
 
     std::unique_ptr<google::protobuf::Message> refined_overload_set_expression::_generate_interface() const

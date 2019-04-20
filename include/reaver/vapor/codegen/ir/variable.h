@@ -61,7 +61,6 @@ inline namespace _v1
         struct label
         {
             std::u32string name;
-            std::vector<scope> scopes;
         };
 
         inline std::shared_ptr<variable> make_variable(std::shared_ptr<struct type> type,

@@ -179,7 +179,7 @@ inline namespace _v1
                     {},
                     { boost::typeindex::type_id<codegen::ir::noop_instruction>() },
                     {},
-                    codegen::ir::label{ else_label, {} } } };
+                    codegen::ir::label{ else_label } } };
             }
 
             ir.front().label = else_label;
@@ -189,22 +189,20 @@ inline namespace _v1
         auto jump = codegen::ir::instruction{ {},
             {},
             { boost::typeindex::type_id<codegen::ir::conditional_jump_instruction>() },
-            { condition_variable,
-                codegen::ir::label{ then_label, {} },
-                codegen::ir::label{ else_label, {} } },
+            { condition_variable, codegen::ir::label{ then_label }, codegen::ir::label{ else_label } },
             condition_variable };
 
         auto jump_after_else = codegen::ir::instruction{ {},
             {},
             { boost::typeindex::type_id<codegen::ir::jump_instruction>() },
-            { codegen::ir::label{ after_else_label, {} } },
+            { codegen::ir::label{ after_else_label } },
             condition_variable };
 
         auto after_else = codegen::ir::instruction{ after_else_label,
             {},
             { boost::typeindex::type_id<codegen::ir::noop_instruction>() },
             {},
-            codegen::ir::label{ after_else_label, {} } };
+            codegen::ir::label{ after_else_label } };
 
         statement_ir ret;
         ret.reserve(condition_instructions.size() + 4 + then_instructions.size() + else_instructions.size());

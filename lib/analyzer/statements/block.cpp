@@ -274,7 +274,7 @@ inline namespace _v1
                     label = stmt.label.value();
                 }
 
-                labeled_return_values.emplace_back(codegen::ir::label{ label, {} });
+                labeled_return_values.emplace_back(codegen::ir::label{ label });
                 labeled_return_values.emplace_back(stmt.result);
             }
 
@@ -296,7 +296,7 @@ inline namespace _v1
                     }
 
                     stmt.instruction = boost::typeindex::type_id<codegen::ir::jump_instruction>();
-                    stmt.operands = { codegen::ir::label{ U"return_phi", {} } };
+                    stmt.operands = { codegen::ir::label{ U"return_phi" } };
 
                     // create a variable for the constant return value
                     if (stmt.result.index() != 0)
