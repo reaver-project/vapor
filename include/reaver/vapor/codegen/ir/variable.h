@@ -42,7 +42,7 @@ inline namespace _v1
 
         struct variable
         {
-            variable(std::shared_ptr<type> type, std::optional<std::u32string> name)
+            variable(std::shared_ptr<struct type> type, std::optional<std::u32string> name)
                 : type{ std::move(type) }, name{ std::move(name) }
             {
             }
