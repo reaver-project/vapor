@@ -61,7 +61,7 @@ inline namespace _v1
 namespace std
 {
 template<>
-struct std::hash<reaver::vapor::codegen::ir::detail::signature>
+struct hash<reaver::vapor::codegen::ir::detail::signature>
 {
     std::size_t operator()(const reaver::vapor::codegen::ir::detail::signature & sign) const
     {
