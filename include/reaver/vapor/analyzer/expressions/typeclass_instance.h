@@ -58,6 +58,8 @@ inline namespace _v1
         virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override;
         virtual constant_init_ir _constinit_ir(ir_generation_context &) const override;
 
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override;
+
         late_preanalysis_type _late_preanalysis;
         std::shared_ptr<typeclass_instance> _instance;
     };

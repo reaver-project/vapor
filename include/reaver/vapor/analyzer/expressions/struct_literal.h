@@ -65,10 +65,7 @@ inline namespace _v1
             assert(0);
         }
 
-        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
-        {
-            return _type->get_expression()->_do_generate_interface();
-        }
+        virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override;
 
         std::shared_ptr<struct_type> _type;
     };

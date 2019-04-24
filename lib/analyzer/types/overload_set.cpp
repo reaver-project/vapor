@@ -141,6 +141,11 @@ inline namespace _v1
             }
 
             fn->set_is_member(func->is_member());
+
+            if (auto slot = func->vtable_slot())
+            {
+                fn->set_vtable_id(slot.value());
+            }
         }
 
         return t;

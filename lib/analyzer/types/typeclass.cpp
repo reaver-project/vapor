@@ -53,7 +53,15 @@ inline namespace _v1
     std::unique_ptr<proto::type_reference> typeclass_type::generate_interface_reference() const
     {
         auto ret = std::make_unique<proto::type_reference>();
-        ret->set_builtin(proto::typeclass);
+
+        auto builtin_tc_ref = std::make_unique<proto::typeclass_type>();
+        for (auto && param : _param_types)
+        {
+            builtin_tc_ref->add_parameters()->set_allocated_type(
+                param->generate_interface_reference().release());
+        }
+
+        ret->set_allocated_typeclass(builtin_tc_ref.release());
         return ret;
     }
 }

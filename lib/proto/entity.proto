@@ -27,6 +27,7 @@ package reaver.vapor.proto;
 import "type_reference.proto";
 import "expressions/type.proto";
 import "expressions/overload_set.proto";
+import "expressions/typeclass.proto";
 
 message entity
 {
@@ -37,5 +38,7 @@ message entity
     oneof value {
         type type_value = 16;
         overload_set overload_set = 17;
+        typeclass typeclass = 18;
+        typeclass_instance typeclass_instance = 19;
     }
 }

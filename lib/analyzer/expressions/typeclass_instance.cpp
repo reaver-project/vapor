@@ -31,6 +31,8 @@
 #include "vapor/parser/expr.h"
 #include "vapor/parser/typeclass.h"
 
+#include "expressions/typeclass.pb.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -190,6 +192,11 @@ inline namespace _v1
         }
 
         return val;
+    }
+
+    std::unique_ptr<google::protobuf::Message> typeclass_instance_expression::_generate_interface() const
+    {
+        return _instance->generate_interface();
     }
 }
 }

@@ -29,6 +29,10 @@
 #include "vapor/parser/expr.h"
 #include "vapor/parser/typeclass.h"
 
+#include "expressions/type.pb.h"
+#include "expressions/typeclass.pb.h"
+#include "types/overload_set.pb.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -150,6 +154,57 @@ inline namespace _v1
     {
         assert(_name || !"typeclasses with no name bound in the frontend are not supported yet!");
         return _name.value();
+    }
+
+    std::unique_ptr<proto::typeclass> typeclass::generate_interface() const
+    {
+        auto ret = std::make_unique<proto::typeclass>();
+
+        for (auto && param : _parameters)
+        {
+            ret->add_parameters()->set_allocated_type(
+                param->get_type()->generate_interface_reference().release());
+        }
+
+        auto & mut_osets = *ret->mutable_overload_sets();
+        for (auto && symbol : _scope->symbols_in_order())
+        {
+            if (auto oset = symbol->get_expression()->as<overload_set_expression>())
+            {
+                auto interface = oset->get_type()->generate_interface();
+                assert(interface->has_overload_set());
+                mut_osets[utf8(symbol->get_name())] = interface->overload_set();
+            }
+        }
+
+        return ret;
+    }
+
+    std::unique_ptr<proto::user_defined_reference> typeclass::generate_interface_reference() const
+    {
+        auto user_defined = std::make_unique<proto::user_defined_reference>();
+
+        for (auto scope : get_scope()->codegen_ir())
+        {
+            switch (scope.type)
+            {
+                case codegen::ir::scope_type::module:
+                    *user_defined->add_module() = utf8(scope.name);
+                    break;
+
+                case codegen::ir::scope_type::type:
+                    *user_defined->add_scope() = utf8(scope.name);
+                    break;
+
+                default:
+                    assert(0);
+            }
+        }
+
+        assert(_name);
+        user_defined->set_name(utf8(_name.value()));
+
+        return user_defined;
     }
 }
 }

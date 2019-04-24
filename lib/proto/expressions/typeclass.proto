@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2018-2019 Michał "Griwes" Dominiak
+ * Copyright © 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -25,9 +25,16 @@ syntax = "proto3";
 package reaver.vapor.proto;
 
 import "type_reference.proto";
+import "types/overload_set.proto";
 
-message overload_set_type
+message typeclass
 {
-    repeated function_signature functions = 1;
+    repeated parameter parameters = 1;
+    map<string, overload_set_type> overload_sets = 2;
 }
 
+message typeclass_instance
+{
+    user_defined_reference typeclass = 1;
+    repeated type_reference arguments = 2;
+}

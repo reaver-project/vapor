@@ -29,6 +29,8 @@
 #include "vapor/parser/expr.h"
 #include "vapor/parser/typeclass.h"
 
+#include "expressions/typeclass.pb.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -231,6 +233,21 @@ inline namespace _v1
         assert(!_name);
         _scope->set_name(name, codegen::ir::scope_type::type);
         _name = std::move(name);
+    }
+
+    std::unique_ptr<proto::typeclass_instance> typeclass_instance::generate_interface() const
+    {
+        auto ret = std::make_unique<proto::typeclass_instance>();
+
+        ret->set_allocated_typeclass(_type->get_typeclass()->generate_interface_reference().release());
+
+        for (auto && arg : _arguments)
+        {
+            auto interface = arg->as<type_expression>()->get_value()->generate_interface_reference();
+            *ret->add_arguments() = *interface;
+        }
+
+        return ret;
     }
 }
 }

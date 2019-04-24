@@ -23,6 +23,8 @@
 #include "vapor/analyzer/types/archetype.h"
 #include "vapor/analyzer/semantic/symbol.h"
 
+#include "type_reference.pb.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -43,6 +45,17 @@ inline namespace _v1
         os << styles::def << ctx << styles::type << explain();
         print_address_range(os, this);
         os << '\n';
+    }
+
+    std::unique_ptr<proto::type_reference> archetype::generate_interface_reference() const
+    {
+        auto ret = std::make_unique<proto::type_reference>();
+
+        auto arch = std::make_unique<proto::parameter_archetype>();
+        arch->set_name(utf8(_param_name));
+
+        ret->set_allocated_archetype(arch.release());
+        return ret;
     }
 }
 }

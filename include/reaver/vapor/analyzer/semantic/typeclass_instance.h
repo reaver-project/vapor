@@ -25,6 +25,11 @@
 #include "../expressions/expression.h"
 #include "instance_context.h"
 
+namespace reaver::vapor::proto
+{
+struct typeclass_instance;
+}
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -80,6 +85,8 @@ inline namespace _v1
         }
 
         void set_name(std::u32string name);
+
+        std::unique_ptr<proto::typeclass_instance> generate_interface() const;
 
     private:
         struct _function_specialization

@@ -133,7 +133,10 @@ inline namespace _v1
         return true;                                                                                         \
     })
 
-        dynamic_switch(HANDLE_TYPE(type, type_value), HANDLE_TYPE(overload_set, overload_set));
+        dynamic_switch(HANDLE_TYPE(type, type_value),
+            HANDLE_TYPE(overload_set, overload_set),
+            HANDLE_TYPE(typeclass, typeclass),
+            HANDLE_TYPE(typeclass_instance, typeclass_instance));
 
 #undef HANDLE_TYPE
     }

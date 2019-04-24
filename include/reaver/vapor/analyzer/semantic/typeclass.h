@@ -28,6 +28,12 @@
 #include "context.h"
 #include "scope.h"
 
+namespace reaver::vapor::proto
+{
+struct typeclass;
+struct user_defined_reference;
+}
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
@@ -76,6 +82,9 @@ inline namespace _v1
 
         void set_name(std::u32string name);
         std::u32string codegen_name(ir_generation_context &) const;
+
+        std::unique_ptr<proto::typeclass> generate_interface() const;
+        std::unique_ptr<proto::user_defined_reference> generate_interface_reference() const;
 
     private:
         ast_node _parse;

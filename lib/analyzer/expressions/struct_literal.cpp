@@ -102,5 +102,10 @@ inline namespace _v1
     {
         assert(0);
     }
+
+    std::unique_ptr<google::protobuf::Message> struct_literal::_generate_interface() const
+    {
+        return _type->get_expression()->_do_generate_interface();
+    }
 }
 }

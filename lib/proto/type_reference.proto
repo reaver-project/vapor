@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2018 Michał "Griwes" Dominiak
+ * Copyright © 2018-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,14 +24,44 @@ syntax = "proto3";
 
 package reaver.vapor.proto;
 
+message parameter
+{
+    string name = 1;
+    type_reference type = 2;
+}
+
+message function_signature
+{
+    type_reference return_type = 1;
+    repeated parameter parameters = 2;
+
+    bool is_member = 32;
+    bool vtable_id = 33;
+}
+
 message sized_integer
 {
     int64 size = 1;
 }
 
+message typeclass_type
+{
+    repeated parameter parameters = 1;
+}
+
+message typeclass_instance_type
+{
+    user_defined_reference typeclass = 1;
+    repeated type_reference arguments = 2;
+}
+
+message parameter_archetype
+{
+    string name = 1;
+}
+
 enum simple_builtin {
     type_ = 0;
-    typeclass = 1;
     integer = 64;
     boolean = 65;
 }
@@ -48,7 +78,10 @@ message type_reference
     oneof details {
         simple_builtin builtin = 1;
         sized_integer sized_int = 2;
+        typeclass_type typeclass = 3;
 
         user_defined_reference user_defined = 65;
+        typeclass_instance_type typeclass_instance_type = 66;
+        parameter_archetype archetype = 67;
     }
 }
