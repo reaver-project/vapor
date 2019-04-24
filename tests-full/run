@@ -3,7 +3,7 @@
 #
 # Vapor Compiler Licence
 #
-# Copyright © 2017-2018 Michał "Griwes" Dominiak
+# Copyright © 2017-2019 Michał "Griwes" Dominiak
 #
 # This software is provided 'as-is', without any express or implied
 # warranty. In no event will the authors be held liable for any damages
@@ -106,7 +106,7 @@ def test_file(file_path, test_dir):
     print_if(ps, '-- Testing %s ' % os.path.relpath(file_path, test_dir), end = '', flush = True)
 
     if test_info['failed']:
-        failed_tests.append(os.path.relpath(file_path, test_dir))
+        failed_tests.append(file_path)
         print('\n%s%s-- Failed: %s:%s' % (bcolors.FAIL, bcolors.BOLD, os.path.relpath(file_path, test_dir), bcolors.ENDC))
         print('%s * %s%s' % (bcolors.FAIL, test_info['reason'], bcolors.ENDC))
         if pt:
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     if len(failed_tests) != 0:
         print('\n%s%s-- Some tests failed:' % (bcolors.FAIL, bcolors.BOLD))
         for failed in failed_tests:
-            print(' * %s' % os.path.relpath(failed, test_dir))
+            print(' * %s' % failed)
         print(bcolors.ENDC)
 
         print('%s%sPassed%s: %d / %d%s' % (bcolors.BOLD, bcolors.OKGREEN, bcolors.ENDC + bcolors.BOLD, passed_count, passed_count + len(failed_tests), bcolors.ENDC))
