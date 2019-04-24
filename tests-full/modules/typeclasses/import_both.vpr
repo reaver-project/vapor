@@ -1,0 +1,51 @@
+// compile: {vprc} {input} -I {directory}/imports -l -a -c
+// link: {cc} {runtime} {input}.o {directory}/imports/export_both.vpr.o -o {input}.bin
+// run: {input}.bin 2
+
+import export_both;
+
+module main
+{
+    let int32 = sized_int(32);
+
+    /*
+     * TODO: enable this one once default implementations are exported
+     *
+    export let use_default = instance export_both.tc(int32) {
+        function without_default(arg) {
+            return arg * 2 + 1;
+        }
+    };
+     */
+
+    export let override_default = instance export_both.tc(int32) {
+        function with_default(arg) {
+            return arg / 2 - 1;
+        }
+
+        function without_default(arg) {
+            return arg * arg;
+        }
+    };
+
+    let entry = λ(arg : int32) {
+        /*
+         * TODO: enable this once default implementations are exported
+        let a = use_default.with_default(arg);
+        let b = use_default.without_default(arg);
+         */
+
+        let c = override_default.with_default(arg);
+        let d = override_default.without_default(arg);
+
+        let e = export_both.instance_use_default.with_default(arg);
+        let f = export_both.instance_use_default.without_default(arg);
+
+        let g = export_both.instance_override_default.with_default(arg);
+        let h = export_both.instance_override_default.without_default(arg);
+
+        return c + d + e + f + g + h;
+    };
+}
+
+// vim: filetype=cpp

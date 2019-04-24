@@ -1,0 +1,22 @@
+// compile: {vprc} {input} -I {directory}/imports -l -a -c
+// link: {cc} {runtime} {input}.o {directory}/imports/export_instance.vpr.o -o {input}.bin
+// run: {input}.bin 2
+
+import export_instance;
+
+module main
+{
+    let int32 = sized_int(32);
+
+    let entry = λ(arg : int32) {
+        let a = export_instance.instance_use_default.with_default(arg);
+        let b = export_instance.instance_use_default.without_default(arg);
+
+        let c = export_instance.instance_override_default.with_default(arg);
+        let d = export_instance.instance_override_default.without_default(arg);
+
+        return a + b + c + d;
+    };
+}
+
+// vim: filetype=cpp

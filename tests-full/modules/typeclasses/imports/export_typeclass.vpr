@@ -1,0 +1,14 @@
+// IGNORE: true
+
+module export_typeclass
+{
+    export let exported = typeclass (t : type) {
+        function with_default(arg : t) -> t {
+            return arg;
+        }
+
+        function without_default(arg : t) -> t;
+    };
+}
+
+// vim: filetype=cpp

@@ -1,0 +1,30 @@
+// IGNORE: true
+
+import export_typeclass;
+
+module export_instance_external_typeclass
+{
+    let int32 = sized_int(32);
+
+    /*
+     * TODO: enable this one once default implementations are exported
+     *
+    export let exported_use_default = instance export_typeclass.exported(int32) {
+        function without_default(arg) {
+            return arg * 2 + 1;
+        }
+    };
+     */
+
+    export let exported_override_default = instance export_typeclass.exported(int32) {
+        function with_default(arg) {
+            return arg / 2 - 1;
+        }
+
+        function without_default(arg) {
+            return arg * arg;
+        }
+    };
+}
+
+// vim: filetype=cpp
