@@ -118,6 +118,8 @@ inline namespace _v1
     }();
 
     const std::unordered_map<std::u32string, token_type> keywords = {
+        { U"lambda", token_type::lambda },
+
         { U"true", token_type::boolean },
         { U"false", token_type::boolean },
 
