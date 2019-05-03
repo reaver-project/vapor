@@ -21,6 +21,7 @@
  **/
 
 #include "vapor/analyzer/expressions/typeclass.h"
+#include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/semantic/typeclass.h"
 #include "vapor/analyzer/statements/function.h"
@@ -99,6 +100,23 @@ inline namespace _v1
             .then([&] {
                 return when_all(fmap(_typeclass->get_member_function_decls(),
                     [&](auto && decl) { return decl->analyze(ctx); }));
+            })
+            .then([&] {
+                // analyze possible unresolved types in function signatures
+                return when_all(fmap(_typeclass->get_scope()->symbols_in_order(), [&](symbol * symb) {
+                    auto && oset = symb->get_expression()->as<overload_set_expression>();
+                    if (oset)
+                    {
+                        return when_all(fmap(oset->get_overloads(), [&](function * fn) {
+                            return fn->return_type_expression()->analyze(ctx).then([fn, &ctx] {
+                                return when_all(fmap(
+                                    fn->parameters(), [&](auto && param) { return param->analyze(ctx); }));
+                            });
+                        }));
+                    }
+
+                    return make_ready_future();
+                }));
             });
     }
 
@@ -109,9 +127,9 @@ inline namespace _v1
 
     future<expression *> typeclass_expression::_simplify_expr(recursive_context ctx)
     {
-        return when_all(
-            fmap(_typeclass->get_member_function_decls(), [&](auto && decl) { return decl->simplify(ctx); }))
-            .then([&](auto &&) -> expression * { return this; });
+        return when_all(fmap(_typeclass->get_member_function_decls(), [&](auto && decl) {
+            return decl->simplify(ctx);
+        })).then([&](auto &&) -> expression * { return this; });
     }
 
     statement_ir typeclass_expression::_codegen_ir(ir_generation_context & ctx) const

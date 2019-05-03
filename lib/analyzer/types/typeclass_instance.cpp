@@ -40,36 +40,43 @@ inline namespace _v1
         auto repl = _ctx.get_replacements();
         std::unordered_map<function *, block *> function_block_defs;
 
-        for (auto && fn_decl : tc->get_member_function_decls())
+        for (auto && symb : tc->get_scope()->symbols_in_order())
         {
-            auto fn = fn_decl->get_function();
-            auto & name = fn_decl->get_name();
-
-            _function_instance fn_instance;
-            fn_instance.instance = make_function(fn->get_explanation(), fn->get_range());
-            repl.add_replacement(fn, fn_instance.instance.get());
-            fn_instance.return_type_expression = repl.copy_claim(fn->return_type_expression());
-            fn_instance.instance->set_return_type(fn_instance.return_type_expression);
-            fn_instance.parameter_expressions =
-                fmap(fn->parameters(), [&](auto && param) { return repl.copy_claim(param); });
-            fn_instance.instance->set_parameters(
-                fmap(fn_instance.parameter_expressions, [](auto && expr) { return expr.get(); }));
-            fmap(fn->vtable_slot(), [&](auto && id) {
-                fn_instance.instance->mark_virtual(id);
-                return unit{};
-            });
-
-            if (fn->get_body())
+            auto && oset = symb->get_expression()->as<overload_set_expression>();
+            if (oset)
             {
-                function_block_defs.emplace(fn_instance.instance.get(), fn->get_body());
+                auto && name = symb->get_name();
+
+                for (auto && fn : oset->get_overload_set()->get_overloads())
+                {
+                    _function_instance fn_instance;
+                    fn_instance.instance = make_function(fn->get_explanation(), fn->get_range());
+                    repl.add_replacement(fn, fn_instance.instance.get());
+                    fn_instance.return_type_expression = repl.copy_claim(fn->return_type_expression());
+                    fn_instance.instance->set_return_type(fn_instance.return_type_expression);
+                    fn_instance.parameter_expressions =
+                        fmap(fn->parameters(), [&](auto && param) { return repl.copy_claim(param); });
+                    fn_instance.instance->set_parameters(
+                        fmap(fn_instance.parameter_expressions, [](auto && expr) { return expr.get(); }));
+                    fmap(fn->vtable_slot(), [&](auto && id) {
+                        fn_instance.instance->mark_virtual(id);
+                        return unit{};
+                    });
+
+                    if (fn->get_body())
+                    {
+                        function_block_defs.emplace(fn_instance.instance.get(), fn->get_body());
+                    }
+
+                    fn_instance.overload_set_expression = get_overload_set_special(_oset_scope.get(), name);
+                    fn_instance.overload_set_expression->get_overload_set()->add_function(
+                        fn_instance.instance.get());
+
+                    _osets.emplace(name, fn_instance.overload_set_expression->get_overload_set());
+
+                    _function_instances.push_back(std::move(fn_instance));
+                }
             }
-
-            fn_instance.overload_set_expression = get_overload_set_special(_oset_scope.get(), name);
-            fn_instance.overload_set_expression->get_overload_set()->add_function(fn_instance.instance.get());
-
-            _osets.emplace(name, fn_instance.overload_set_expression->get_overload_set());
-
-            _function_instances.push_back(std::move(fn_instance));
         }
 
         for (auto && fn_instance : _function_instances)
@@ -154,7 +161,7 @@ inline namespace _v1
     {
         return U"tci$"
             + boost::join(
-                  fmap(_ctx.tc->get_scope()->codegen_ir(), [](auto && scope) { return scope.name; }), U".")
+                fmap(_ctx.tc->get_scope()->codegen_ir(), [](auto && scope) { return scope.name; }), U".")
             + U"." + _ctx.tc->codegen_name(ctx) + U"("
             + boost::join(fmap(_arguments,
                               [&](expression * arg) {
@@ -162,7 +169,7 @@ inline namespace _v1
                                   assert(type_expr);
                                   return type_expr->get_value()->codegen_scopes(ctx).back().name;
                               }),
-                  ", ")
+                ", ")
             + U")";
     }
 }

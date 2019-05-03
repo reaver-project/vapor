@@ -23,10 +23,12 @@
 #include "vapor/analyzer/expressions/entity.h"
 #include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/expressions/runtime_value.h"
+#include "vapor/analyzer/expressions/typeclass.h"
 #include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/semantic/function.h"
 #include "vapor/analyzer/semantic/overload_set.h"
 #include "vapor/analyzer/semantic/symbol.h"
+#include "vapor/analyzer/semantic/typeclass.h"
 #include "vapor/analyzer/types/module.h"
 #include "vapor/analyzer/types/unresolved.h"
 
@@ -176,10 +178,22 @@ inline namespace _v1
                 break;
             }
 
+            case proto::entity::kTypeclass:
+            {
+                auto tc = import_typeclass(ctx, ent.typeclass());
+                expr = std::make_unique<typeclass_expression>(
+                    imported_ast_node(ctx, ent.range()), std::move(tc));
+                expr->set_name(utf32(ctx.current_symbol));
+                break;
+            }
+
+            case proto::entity::kTypeclassInstance:
+                assert(0);
+
             default:
                 throw exception{ logger::fatal } << "unknown expression kind of symbol `"
                                                  << ctx.current_scope.top() << "." << ctx.current_symbol
-                                                 << "` in imported file " << ctx.current_file.top();
+                                                 << "` in imported file " << ctx.current_module.top().module;
         }
 
         return std::get<0>(fmap(type, [&](auto && type) {

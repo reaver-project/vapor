@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -35,8 +35,13 @@ namespace analyzer
 {
     inline namespace _v1
     {
+        class precontext;
         class expression;
     }
+}
+namespace proto
+{
+    struct range;
 }
 inline namespace _v1
 {
@@ -123,6 +128,8 @@ inline namespace _v1
         const void * address;
         range_type range;
     };
+
+    ast_node imported_ast_node(analyzer::precontext & ctx, const proto::range & range);
 
     template<typename T>
     auto make_node(const T & t)

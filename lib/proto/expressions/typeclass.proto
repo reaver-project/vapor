@@ -24,17 +24,20 @@ syntax = "proto3";
 
 package reaver.vapor.proto;
 
+import "range.proto";
 import "type_reference.proto";
 import "types/overload_set.proto";
 
 message typeclass
 {
-    repeated parameter parameters = 1;
-    map<string, overload_set_type> overload_sets = 2;
+    range range = 1;
+    repeated parameter parameters = 2;
+    map<string, overload_set_type> overload_sets = 3;
 }
 
 message typeclass_instance
 {
-    user_defined_reference typeclass = 1;
-    repeated type_reference arguments = 2;
+    range range = 1;
+    user_defined_reference typeclass = 2;
+    repeated type_reference arguments = 3;
 }

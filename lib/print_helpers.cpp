@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2018-2019 Michał "Griwes" Dominiak
+ * Copyright © 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -20,27 +20,27 @@
  *
  **/
 
-syntax = "proto3";
+#include "vapor/print_helpers.h"
+#include "vapor/analyzer/precontext.h"
 
-package reaver.vapor.proto;
+#include "range.pb.h"
 
-import "range.proto";
-import "type_reference.proto";
-import "expressions/type.proto";
-import "expressions/overload_set.proto";
-import "expressions/typeclass.proto";
-
-message entity
+namespace reaver::vapor
 {
-    type_reference type = 1;
-    repeated string associated_entities = 2;
-    bool is_associated = 3;
-    range range = 4;
+inline namespace _v1
+{
+    ast_node imported_ast_node(analyzer::precontext & ctx, const proto::range & r)
+    {
+        auto import_position = [&ctx](const proto::position p) {
+            position ret;
+            ret.offset = p.offset();
+            ret.line = p.line();
+            ret.column = p.column();
+            ret.file_path = ctx.current_module.top().source;
+            return ret;
+        };
 
-    oneof value {
-        type type_value = 16;
-        overload_set overload_set = 17;
-        typeclass typeclass = 18;
-        typeclass_instance typeclass_instance = 19;
+        return { nullptr, { import_position(r.start()), import_position(r.end()) } };
     }
+}
 }

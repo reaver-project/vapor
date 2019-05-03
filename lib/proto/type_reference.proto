@@ -24,10 +24,13 @@ syntax = "proto3";
 
 package reaver.vapor.proto;
 
+import "range.proto";
+
 message parameter
 {
     string name = 1;
     type_reference type = 2;
+    range range = 3;
 }
 
 message function_signature
@@ -36,7 +39,8 @@ message function_signature
     repeated parameter parameters = 2;
 
     bool is_member = 32;
-    bool vtable_id = 33;
+    bool has_vtable_id = 33;
+    int64 vtable_id = 34;
 }
 
 message sized_integer
@@ -46,7 +50,7 @@ message sized_integer
 
 message typeclass_type
 {
-    repeated parameter parameters = 1;
+    repeated type_reference parameters = 1;
 }
 
 message typeclass_instance_type

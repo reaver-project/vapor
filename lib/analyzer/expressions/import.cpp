@@ -151,7 +151,7 @@ inline namespace _v1
             }
         }
 
-        ctx.current_file.push(boost::filesystem::canonical(path));
+        ctx.current_module.push({ boost::filesystem::canonical(path), ast->compilation_info().filepath() });
 
         if (ast->imports_size())
         {
@@ -168,7 +168,7 @@ inline namespace _v1
                     != module_name.end())
             {
                 throw exception{ logger::error } << "invalid module name `" << name << "` in module file "
-                                                 << ctx.current_file.top();
+                                                 << ctx.current_module.top().module;
             }
 
             std::string cumulative_name;
@@ -210,7 +210,7 @@ inline namespace _v1
                 saved->set_import_name({ module.name().begin(), module.name().end() });
             }
 
-            ctx.module_scope = lex_scope;
+            ctx.current_lex_scope = lex_scope;
 
             // seems that protobuf's map doesn't have a deterministic order of iteration
             // we can't let that happen in a compiler...
@@ -254,7 +254,7 @@ inline namespace _v1
             ctx.current_scope.pop();
         }
 
-        ctx.current_file.pop();
+        ctx.current_module.pop();
     }
 
     entity * import_module(precontext & ctx, const std::vector<std::string> & module_name)

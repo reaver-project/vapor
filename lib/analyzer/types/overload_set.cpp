@@ -144,6 +144,7 @@ inline namespace _v1
 
             if (auto slot = func->vtable_slot())
             {
+                fn->set_has_vtable_id(true);
                 fn->set_vtable_id(slot.value());
             }
         }

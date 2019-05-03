@@ -57,8 +57,7 @@ inline namespace _v1
         auto builtin_tc_ref = std::make_unique<proto::typeclass_type>();
         for (auto && param : _param_types)
         {
-            builtin_tc_ref->add_parameters()->set_allocated_type(
-                param->generate_interface_reference().release());
+            *builtin_tc_ref->add_parameters() = *param->generate_interface_reference();
         }
 
         ret->set_allocated_typeclass(builtin_tc_ref.release());

@@ -47,9 +47,11 @@ inline namespace _v1
             return _type->resolve(ctx);
         }
 
-        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override
         {
-            assert(0);
+            auto type = _type->get_resolved();
+            assert(type);
+            return repl.copy_claim(type->get_expression());
         }
 
         virtual statement_ir _codegen_ir(ir_generation_context &) const override

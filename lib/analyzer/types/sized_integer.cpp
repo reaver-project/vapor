@@ -147,6 +147,8 @@ inline namespace _v1
             (this, ));
         ADD_OPERATION(
             multiplication, U"__builtin_sized_integer_" + u32size + U"_operator_star", *, this, sized_integer, (this, ));
+        ADD_OPERATION(
+            division, U"__builtin_sized_integer_" + u32size + U"_operator_slash", *, this, sized_integer, (this, ));
         ADD_OPERATION(equal_comparison,
             U"__builtin_sized_integer_" + u32size + U"_operator_equals",
             ==,

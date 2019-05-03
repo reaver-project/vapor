@@ -31,6 +31,7 @@
 
 #include "expressions/type.pb.h"
 #include "expressions/typeclass.pb.h"
+#include "type_reference.pb.h"
 #include "types/overload_set.pb.h"
 
 namespace reaver::vapor::analyzer
@@ -75,6 +76,44 @@ inline namespace _v1
             make_node(parse), std::move(scope), std::move(params), std::move(fn_decls));
     }
 
+    std::unique_ptr<typeclass> import_typeclass(precontext & ctx, const proto::typeclass & tc)
+    {
+        auto tc_scope = ctx.current_lex_scope->clone_for_class();
+        auto old_scope = std::exchange(ctx.current_lex_scope, tc_scope.get());
+
+        std::vector<std::unique_ptr<parameter>> params;
+        params.reserve(tc.parameters().size());
+        for (auto && param : tc.parameters())
+        {
+            auto parm = std::make_unique<parameter>(imported_ast_node(ctx, param.range()),
+                utf32(param.name()),
+                get_imported_type_ref_expr(ctx, param.type()));
+            tc_scope->init(utf32(param.name()), make_symbol(utf32(param.name()), parm.get()));
+            params.push_back(std::move(parm));
+        }
+
+        std::vector<std::unique_ptr<expression>> keepalive;
+        keepalive.reserve(tc.overload_sets().size());
+        // for some reason clang-7 explodes when this loop below uses structured bindings. wut?
+        // probably related with the fact that clang-7 based YCM thinks that proto::typeclas is incomplete in
+        // this file, which is also unhinged?
+        // trying to creduce the ICE, but it's going slowly, so to be able
+        // to work in the meantime, we'll just avoid using structured bindings here for now
+        for (auto && overset : tc.overload_sets())
+        {
+            auto oset = import_overload_set(ctx, overset.second);
+            auto expr = std::make_unique<overload_set_expression>(std::move(oset));
+            tc_scope->init(utf32(overset.first), make_symbol(utf32(overset.first), expr.get()));
+            keepalive.push_back(std::move(expr));
+        }
+
+        tc_scope->close();
+        ctx.current_lex_scope = old_scope;
+
+        return std::make_unique<typeclass>(
+            imported_ast_node(ctx, tc.range()), std::move(tc_scope), std::move(params), std::move(keepalive));
+    }
+
     typeclass::typeclass(ast_node parse,
         std::unique_ptr<scope> member_scope,
         std::vector<std::unique_ptr<parameter>> parameters,
@@ -83,6 +122,17 @@ inline namespace _v1
           _scope{ std::move(member_scope) },
           _parameters{ std::move(parameters) },
           _member_function_declarations{ std::move(member_function_decls) }
+    {
+    }
+
+    typeclass::typeclass(ast_node parse,
+        std::unique_ptr<scope> member_scope,
+        std::vector<std::unique_ptr<parameter>> parameters,
+        std::vector<std::unique_ptr<expression>> keepalive)
+        : _parse{ parse },
+          _scope{ std::move(member_scope) },
+          _parameters{ std::move(parameters) },
+          _keepalive{ std::move(keepalive) }
     {
     }
 
@@ -162,8 +212,9 @@ inline namespace _v1
 
         for (auto && param : _parameters)
         {
-            ret->add_parameters()->set_allocated_type(
-                param->get_type()->generate_interface_reference().release());
+            auto parm = ret->add_parameters();
+            parm->set_name(utf8(param->get_name()));
+            parm->set_allocated_type(param->get_type()->generate_interface_reference().release());
         }
 
         auto & mut_osets = *ret->mutable_overload_sets();

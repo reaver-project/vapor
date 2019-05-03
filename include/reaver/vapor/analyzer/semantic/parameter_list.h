@@ -25,6 +25,7 @@
 #include "../expressions/expression.h"
 #include "../expressions/expression_ref.h"
 #include "../expressions/type.h"
+#include "../types/unresolved.h"
 #include "instance_context.h"
 #include "symbol.h"
 
@@ -45,6 +46,11 @@ inline namespace _v1
         expression * get_type_expression() const
         {
             return _type_expression.get();
+        }
+
+        const std::u32string & get_name() const
+        {
+            return _name;
         }
 
     private:

@@ -73,7 +73,7 @@ inline namespace _v1
 
     std::unique_ptr<struct_type> import_struct_type(precontext & ctx, const proto::struct_type & str)
     {
-        auto member_scope = ctx.module_scope->clone_for_class();
+        auto member_scope = ctx.current_lex_scope->clone_for_class();
 
         std::vector<std::unique_ptr<declaration>> decls;
 

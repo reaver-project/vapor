@@ -30,8 +30,8 @@
 
 namespace reaver::vapor::proto
 {
-struct typeclass;
-struct user_defined_reference;
+class typeclass;
+class user_defined_reference;
 }
 
 namespace reaver::vapor::analyzer
@@ -49,6 +49,10 @@ inline namespace _v1
             std::unique_ptr<scope> member_scope,
             std::vector<std::unique_ptr<parameter>> parameters,
             std::vector<std::unique_ptr<function_declaration>> member_function_decls);
+        typeclass(ast_node parse,
+            std::unique_ptr<scope> member_scope,
+            std::vector<std::unique_ptr<parameter>> parameters,
+            std::vector<std::unique_ptr<expression>> keepalive);
 
         ~typeclass();
 
@@ -92,6 +96,7 @@ inline namespace _v1
 
         std::unique_ptr<scope> _scope;
         std::vector<std::unique_ptr<parameter>> _parameters;
+        std::vector<std::unique_ptr<expression>> _keepalive;
 
         std::vector<std::unique_ptr<function_declaration>> _member_function_declarations;
         std::vector<function *> _member_functions;
@@ -129,5 +134,6 @@ inline namespace _v1
     std::unique_ptr<typeclass> make_typeclass(precontext & ctx,
         const parser::typeclass_literal & parse,
         scope * lex_scope);
+    std::unique_ptr<typeclass> import_typeclass(precontext & ctx, const proto::typeclass &);
 }
 }

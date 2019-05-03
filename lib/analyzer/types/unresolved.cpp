@@ -29,9 +29,11 @@
 #include "vapor/analyzer/expressions/unresolved_type.h"
 #include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/semantic/symbol.h"
+#include "vapor/analyzer/types/archetype.h"
 #include "vapor/analyzer/types/overload_set.h"
 #include "vapor/analyzer/types/sized_integer.h"
 #include "vapor/analyzer/types/struct.h"
+#include "vapor/analyzer/types/typeclass.h"
 
 #include <google/protobuf/util/message_differencer.h>
 #include "expressions/type.pb.h"
@@ -67,7 +69,18 @@ inline namespace _v1
     }
 
     unresolved_type::unresolved_type(const proto::user_defined_reference * reference, scope * lex_scope)
-        : _lex_scope{ lex_scope }, _reference{ std::make_unique<proto::user_defined_reference>(*reference) }
+        : _reference{ _unresolved_reference{ lex_scope,
+            std::make_unique<proto::user_defined_reference>(*reference) } }
+    {
+    }
+
+    unresolved_type::unresolved_type(typeclass_type_tag, std::vector<imported_type> params)
+        : _reference{ _unresolved_typeclass_type{ std::move(params) } }
+    {
+    }
+
+    unresolved_type::unresolved_type(archetype_type_tag, scope * lex_scope, std::u32string name)
+        : _reference{ _unresolved_archetype_type{ lex_scope, std::move(name) } }
     {
     }
 
@@ -75,41 +88,69 @@ inline namespace _v1
     {
         if (!_analysis_future)
         {
-            auto go_one_level = [&ctx](scope * lex_scope, const std::string & name) {
-                auto symb = lex_scope->try_get(utf32(name));
-                assert(symb
-                    && "currently, using unexported types in exported signatures is not allowed; this will "
-                       "change in the future");
-                auto expr = symb.value()->get_expression();
-                return expr->analyze(ctx).then([expr] { return expr->get_type()->get_scope(); });
-            };
+            _analysis_future = std::get<0>(fmap(_reference,
+                make_overload_set([&](std::monostate) -> future<> { assert(0); },
 
-            auto kinds = { &_reference->module(), &_reference->scope() };
-            _analysis_future = std::accumulate(kinds.begin(),
-                kinds.end(),
-                make_ready_future(_lex_scope),
-                [&, go_one_level](auto future, auto && kind) {
-                    return std::accumulate(
-                        kind->begin(), kind->end(), future, [go_one_level](auto future, const auto & name) {
-                            logger::dlog() << name;
-                            logger::default_logger().sync();
-                            return future.then(
-                                [&name, go_one_level](auto scope) { return go_one_level(scope, name); });
-                        });
-                })
-                                   .then([&ctx, this](scope * lex_scope) {
-                                       auto symb = lex_scope->try_get(utf32(_reference->name()));
-                                       assert(symb
-                                           && "currently, using unexported types in exported signatures is "
-                                              "not allowed; this will change in the future");
+                    [&](_unresolved_reference & ref) -> future<> {
+                        auto go_one_level = [&ctx](scope * lex_scope, const std::string & name) {
+                            auto symb = lex_scope->try_get(utf32(name));
+                            assert(symb
+                                && "currently, using unexported types in exported signatures is not allowed; "
+                                   "this will change in the future");
+                            auto expr = symb.value()->get_expression();
+                            return expr->analyze(ctx).then([expr] { return expr->get_type()->get_scope(); });
+                        };
 
-                                       auto expr = symb.value()->get_expression();
-                                       return expr->analyze(ctx).then([expr, this] {
-                                           auto type_expr = expr->as<type_expression>();
-                                           assert(type_expr);
-                                           _resolved = type_expr->get_value();
-                                       });
-                                   });
+                        auto kinds = { &ref.udr->module(), &ref.udr->scope() };
+                        return std::accumulate(kinds.begin(),
+                            kinds.end(),
+                            make_ready_future(ref.lex_scope),
+                            [&, go_one_level](auto future, auto && kind) {
+                                return std::accumulate(kind->begin(),
+                                    kind->end(),
+                                    future,
+                                    [go_one_level](auto future, const auto & name) {
+                                        return future.then([&name, go_one_level](auto scope) {
+                                            return go_one_level(scope, name);
+                                        });
+                                    });
+                            })
+                            .then([&ctx, &ref, this](scope * lex_scope) {
+                                auto symb = lex_scope->try_get(utf32(ref.udr->name()));
+                                assert(symb
+                                    && "currently, using unexported types in exported signatures is "
+                                       "not allowed; this will change in the future");
+
+                                auto expr = symb.value()->get_expression();
+                                return expr->analyze(ctx).then([expr, this] {
+                                    auto type_expr = expr->as<type_expression>();
+                                    assert(type_expr);
+                                    _resolved = type_expr->get_value();
+                                });
+                            });
+                    },
+
+                    [&](_unresolved_typeclass_type & tc) -> future<> {
+                        return when_all(fmap(tc.parameter_types, [&](auto && imported) {
+                            return std::get<0>(fmap(imported,
+                                make_overload_set(
+                                    [&](type * resolved) { return make_ready_future(resolved); },
+                                    [&](std::shared_ptr<unresolved_type> unresolved) {
+                                        return unresolved->resolve(ctx).then(
+                                            [unresolved] { return unresolved->get_resolved(); });
+                                    })));
+                        })).then([&](auto && types) { _resolved = ctx.get_typeclass_type(types); });
+                    },
+
+                    [&](_unresolved_archetype_type & arch) -> future<> {
+                        auto && symb = arch.lex_scope->get(arch.name);
+                        auto && type_expr = symb->get_expression()->as<type_expression>();
+                        assert(type_expr);
+                        assert(dynamic_cast<archetype *>(type_expr->get_value()));
+                        _resolved = type_expr->get_value();
+
+                        return make_ready_future();
+                    })));
         }
 
         return _analysis_future.value();
@@ -164,6 +205,14 @@ inline namespace _v1
             case proto::type_reference::DetailsCase::kSizedInt:
                 return ctx.proper.get_sized_integer_type(type.sized_int().size());
 
+            case proto::type_reference::kTypeclass:
+            {
+                std::vector<proto::type_reference> params{ type.typeclass().parameters().begin(),
+                    type.typeclass().parameters().end() };
+                return std::make_shared<unresolved_type>(unresolved_typeclass_type,
+                    fmap(params, [&](auto && type) { return get_imported_type_ref(ctx, type); }));
+            }
+
             case proto::type_reference::kUserDefined:
             {
                 auto & ud = ctx.user_defined_types[&type.user_defined()];
@@ -174,6 +223,13 @@ inline namespace _v1
 
                 return ud;
             }
+
+            case proto::type_reference::kTypeclassInstanceType:
+                assert(0);
+
+            case proto::type_reference::kArchetype:
+                return std::make_shared<unresolved_type>(
+                    unresolved_archetype_type, ctx.current_lex_scope, utf32(type.archetype().name()));
 
             default:
                 assert(0);
@@ -191,7 +247,12 @@ inline namespace _v1
                     std::get<0>(get_imported_type_ref(ctx, reference))->get_expression(), std::nullopt);
 
             case proto::type_reference::DetailsCase::kUserDefined:
+            case proto::type_reference::DetailsCase::kTypeclass:
+            case proto::type_reference::kArchetype:
                 return std::get<1>(get_imported_type_ref(ctx, reference))->get_expression();
+
+            case proto::type_reference::DetailsCase::kTypeclassInstanceType:
+                assert(0);
 
             default:
                 assert(0);

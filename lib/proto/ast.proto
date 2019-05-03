@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2018 Michał "Griwes" Dominiak
+ * Copyright © 2018-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -31,6 +31,7 @@ message compilation_information
 {
     int64 time = 1;
     bytes source_hash = 2;
+    string filepath = 3;
 }
 
 message ast

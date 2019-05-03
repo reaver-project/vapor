@@ -60,6 +60,9 @@ inline namespace _v1
                 case lexer::token_type::star:
                     return ret(_multiplication);
 
+                case lexer::token_type::slash:
+                    return ret(_division);
+
                 case lexer::token_type::equals:
                     return ret(_equal_comparison);
 
@@ -125,6 +128,7 @@ inline namespace _v1
         std::unique_ptr<function> _addition;
         std::unique_ptr<function> _subtraction;
         std::unique_ptr<function> _multiplication;
+        std::unique_ptr<function> _division;
         std::unique_ptr<function> _equal_comparison;
         std::unique_ptr<function> _less_comparison;
         std::unique_ptr<function> _less_equal_comparison;

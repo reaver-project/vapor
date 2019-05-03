@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -69,28 +69,29 @@ inline namespace _v1
 
         return base
             + generate_helper<ir::function_call_instruction,
-                  ir::materialization_instruction,
-                  ir::destruction_instruction,
-                  ir::temporary_destruction_instruction,
-                  ir::pass_value_instruction,
-                  ir::return_instruction,
-                  ir::jump_instruction,
-                  ir::conditional_jump_instruction,
-                  ir::phi_instruction,
-                  ir::noop_instruction,
+                ir::materialization_instruction,
+                ir::destruction_instruction,
+                ir::temporary_destruction_instruction,
+                ir::pass_value_instruction,
+                ir::return_instruction,
+                ir::jump_instruction,
+                ir::conditional_jump_instruction,
+                ir::phi_instruction,
+                ir::noop_instruction,
 
-                  ir::aggregate_init_instruction,
-                  ir::member_access_instruction,
+                ir::aggregate_init_instruction,
+                ir::member_access_instruction,
 
-                  ir::integer_addition_instruction,
-                  ir::integer_subtraction_instruction,
-                  ir::integer_multiplication_instruction,
-                  ir::integer_equal_comparison_instruction,
-                  ir::integer_less_comparison_instruction,
-                  ir::integer_less_equal_comparison_instruction,
+                ir::integer_addition_instruction,
+                ir::integer_subtraction_instruction,
+                ir::integer_multiplication_instruction,
+                ir::integer_division_instruction,
+                ir::integer_equal_comparison_instruction,
+                ir::integer_less_comparison_instruction,
+                ir::integer_less_equal_comparison_instruction,
 
-                  ir::boolean_equal_comparison_instruction,
-                  ir::boolean_negation_instruction>(inst, ctx);
+                ir::boolean_equal_comparison_instruction,
+                ir::boolean_negation_instruction>(inst, ctx);
     }
 
     template<>

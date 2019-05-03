@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2018 Michał "Griwes" Dominiak
+ * Copyright © 2018-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -66,9 +66,15 @@ inline namespace _v1
             user_defined_types = {};
 
         scope * global_scope = nullptr;
-        scope * module_scope = nullptr;
+        scope * current_lex_scope = nullptr;
 
-        std::stack<boost::filesystem::path> current_file = {};
+        struct module_paths
+        {
+            boost::filesystem::path module;
+            std::string_view source;
+        };
+
+        std::stack<module_paths> current_module = {};
         std::stack<std::string> current_scope = {};
         std::string current_symbol = {};
 

@@ -1,6 +1,6 @@
 // compile: {vprc} {input} -I {directory}/imports -l -a -c
 // link: {cc} {runtime} {input}.o {directory}/imports/export_typeclass.vpr.o -o {input}.bin
-// run: {input}.bin 2
+// run: {input}.bin 6
 
 import export_typeclass;
 
@@ -38,7 +38,7 @@ module main
         let c = override_default.with_default(arg);
         let d = override_default.without_default(arg);
 
-        return c + d;
+        return c + d - 38;
     };
 }
 

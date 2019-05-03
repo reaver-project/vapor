@@ -41,7 +41,7 @@ inline namespace _v1
 
     std::unique_ptr<overload_set> import_overload_set(precontext & ctx, const proto::overload_set_type & type)
     {
-        auto ret = std::make_unique<overload_set>(ctx.module_scope);
+        auto ret = std::make_unique<overload_set>(ctx.current_lex_scope);
 
         assert(type.functions_size() != 0);
 
@@ -52,8 +52,10 @@ inline namespace _v1
 
             for (auto && param : overload.parameters())
             {
-                auto type = get_imported_type_ref(ctx, param.type());
-                imported->parameters.push_back(make_entity(std::move(type)));
+                auto parm = std::make_unique<parameter>(imported_ast_node(ctx, param.range()),
+                    utf32(param.name()),
+                    get_imported_type_ref_expr(ctx, param.type()));
+                imported->parameters.push_back(std::move(parm));
             }
 
             imported->function = make_function("overloadable function");
@@ -82,6 +84,11 @@ inline namespace _v1
             if (overload.is_member())
             {
                 imported->function->make_member();
+            }
+
+            if (overload.has_vtable_id())
+            {
+                imported->function->mark_virtual(overload.vtable_id());
             }
 
             imported->function->set_name(U"call");
