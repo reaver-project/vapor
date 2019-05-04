@@ -93,8 +93,11 @@ inline namespace _v1
         return when_all(
             fmap(_typeclass->get_parameters(), [&](auto && param) { return param->analyze(ctx); }))
             .then([&] {
-                auto param_types =
-                    fmap(_typeclass->get_parameters(), [](auto && param) { return param->get_type(); });
+                auto param_types = fmap(_typeclass->get_parameters(), [](auto && param) {
+                    auto ret = param->get_type();
+                    assert(ret->is_meta());
+                    return ret;
+                });
                 _set_type(ctx.get_typeclass_type(param_types));
             })
             .then([&] {
