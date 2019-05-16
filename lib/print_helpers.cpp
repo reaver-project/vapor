@@ -36,7 +36,7 @@ inline namespace _v1
             ret.offset = p.offset();
             ret.line = p.line();
             ret.column = p.column();
-            ret.file_path = ctx.current_module.top().source;
+            ret.file_path = ctx.module_path_stack.back().source;
             return ret;
         };
 

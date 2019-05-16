@@ -46,6 +46,7 @@ inline namespace _v1
             std::unique_ptr<scope> member_scope,
             std::vector<std::u32string> typeclass_name,
             std::vector<std::unique_ptr<expression>> arguments);
+        typeclass_instance(ast_node parse, std::unique_ptr<scope> member_scope, imported_type type);
 
         std::vector<expression *> get_arguments() const;
         future<> simplify_arguments(analysis_context &);
@@ -54,7 +55,7 @@ inline namespace _v1
 
         void set_type(typeclass_instance_type * type);
         function_definition_handler get_function_definition_handler();
-        void import_default_definitions(analysis_context & ctx);
+        void import_default_definitions(analysis_context & ctx, bool is_imported = false);
 
         scope * get_scope()
         {
@@ -66,9 +67,9 @@ inline namespace _v1
             return _scope.get();
         }
 
-        const std::vector<std::u32string> & typeclass_name() const
+        const auto & typeclass_reference() const
         {
-            return _typeclass_name;
+            return _typeclass_reference;
         }
 
         const typeclass * get_typeclass() const;
@@ -99,7 +100,7 @@ inline namespace _v1
         std::optional<std::u32string> _name;
 
         std::unique_ptr<scope> _scope;
-        std::vector<std::u32string> _typeclass_name;
+        std::variant<std::vector<std::u32string>, imported_type> _typeclass_reference;
         typeclass_instance_type * _type = nullptr;
 
         std::vector<std::unique_ptr<expression>> _arguments;
@@ -126,5 +127,8 @@ inline namespace _v1
     std::unique_ptr<typeclass_instance> make_typeclass_instance(precontext & ctx,
         const parser::instance_literal & parse,
         scope * lex_scope);
+    std::unique_ptr<typeclass_instance> import_typeclass_instance(precontext & ctx,
+        imported_type,
+        const proto::typeclass_instance &);
 }
 }

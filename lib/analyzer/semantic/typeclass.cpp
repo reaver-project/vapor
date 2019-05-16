@@ -244,8 +244,7 @@ inline namespace _v1
                     break;
 
                 case codegen::ir::scope_type::type:
-                    *user_defined->add_scope() = utf8(scope.name);
-                    break;
+                    assert(!"should probably implement nested UDT references now... ;)");
 
                 default:
                     assert(0);

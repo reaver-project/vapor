@@ -73,8 +73,7 @@ enum simple_builtin {
 message user_defined_reference
 {
     repeated string module = 1;
-    repeated string scope = 2;
-    string name = 3;
+    string name = 2;
 }
 
 message type_reference

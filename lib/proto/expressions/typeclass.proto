@@ -35,9 +35,11 @@ message typeclass
     map<string, overload_set_type> overload_sets = 3;
 }
 
+// typeclass_instance could contain a reference to its typeclass and a list of arguments
+// but that information is already readily available in the type of the entity that is being loaded
+// when this kind of an object is encountered
+// so instead of this dance, that type will be used to pass that information around, to avoid duplication
 message typeclass_instance
 {
     range range = 1;
-    user_defined_reference typeclass = 2;
-    repeated type_reference arguments = 3;
 }

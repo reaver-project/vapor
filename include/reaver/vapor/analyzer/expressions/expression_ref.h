@@ -103,6 +103,11 @@ inline namespace _v1
             {
                 ret->_set_ast_info(ast_info.value());
             }
+            if (has_entity_name())
+            {
+                ret->set_name(get_entity_name());
+            }
+
             return ret;
         }
 

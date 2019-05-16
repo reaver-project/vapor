@@ -77,6 +77,11 @@ inline namespace _v1
         return _function->run_analysis_hooks(ctx, this, _args).then([&]() {
             if (_replacement_expr)
             {
+                if (has_entity_name())
+                {
+                    _replacement_expr->set_name(get_entity_name());
+                }
+
                 return _replacement_expr->analyze(ctx).then(
                     [&] { this->_set_type(_replacement_expr->get_type()); });
             }
@@ -204,7 +209,12 @@ inline namespace _v1
     {
         if (_replacement_expr)
         {
-            return repl.claim(_replacement_expr.get());
+            auto ret = repl.claim(_replacement_expr.get());
+            if (has_entity_name())
+            {
+                ret->set_name(get_entity_name());
+            }
+            return ret;
         }
 
         auto fn = repl.try_get_replacement(_function);
@@ -223,6 +233,10 @@ inline namespace _v1
             fn, std::move(vtable_arg), fmap(_args, [&](auto arg) { return repl.copy_claim(arg); }));
 
         ret->set_ast_info(get_ast_info().value());
+        if (has_entity_name())
+        {
+            ret->set_name(get_entity_name());
+        }
 
         if (_cloned_type_expr)
         {
@@ -294,6 +308,13 @@ inline namespace _v1
 
                 logger::dlog(logger::trace) << "Simplifying call_expr " << this;
                 return _function->simplify(ctx, _args);
+            })
+            .then([this](auto ret) {
+                if (ret && has_entity_name())
+                {
+                    ret->set_name(get_entity_name());
+                }
+                return ret;
             });
     }
 
@@ -307,11 +328,12 @@ inline namespace _v1
             });
         }
 
-        return when_all(fmap(_var_exprs, [&](auto && arg) { return arg->simplify_expr(ctx); }))
-            .then([&, ctx](auto && repl) {
-                replace_uptrs(_var_exprs, repl, ctx.proper);
-                return this->call_expression::_simplify_expr(ctx);
-            });
+        return when_all(fmap(_var_exprs, [&](auto && arg) {
+            return arg->simplify_expr(ctx);
+        })).then([&, ctx](auto && repl) {
+            replace_uptrs(_var_exprs, repl, ctx.proper);
+            return this->call_expression::_simplify_expr(ctx);
+        });
     }
 
     statement_ir call_expression::_codegen_ir(ir_generation_context & ctx) const

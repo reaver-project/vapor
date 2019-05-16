@@ -205,10 +205,7 @@ inline namespace _v1
             return _name;
         }
 
-        void set_name(std::u32string name)
-        {
-            _name = std::move(name);
-        }
+        void set_name(std::u32string name);
 
         virtual std::unique_ptr<proto::type> generate_interface() const = 0;
         virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const = 0;

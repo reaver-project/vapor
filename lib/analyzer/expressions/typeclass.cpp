@@ -83,7 +83,7 @@ inline namespace _v1
         }
     }
 
-    void typeclass_expression::set_name(std::u32string name)
+    void typeclass_expression::_set_name(std::u32string name)
     {
         _typeclass->set_name(std::move(name));
     }

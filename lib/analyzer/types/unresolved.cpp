@@ -22,18 +22,22 @@
 
 #include "vapor/analyzer/types/unresolved.h"
 
+#include <boost/algorithm/string/join.hpp>
 #include <boost/functional/hash.hpp>
 
 #include "vapor/analyzer/expressions/expression_ref.h"
 #include "vapor/analyzer/expressions/struct_literal.h"
+#include "vapor/analyzer/expressions/typeclass.h"
 #include "vapor/analyzer/expressions/unresolved_type.h"
 #include "vapor/analyzer/precontext.h"
+#include "vapor/analyzer/semantic/overload_set.h"
 #include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/types/archetype.h"
 #include "vapor/analyzer/types/overload_set.h"
 #include "vapor/analyzer/types/sized_integer.h"
 #include "vapor/analyzer/types/struct.h"
 #include "vapor/analyzer/types/typeclass.h"
+#include "vapor/analyzer/types/typeclass_instance.h"
 
 #include <google/protobuf/util/message_differencer.h>
 #include "expressions/type.pb.h"
@@ -43,13 +47,18 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    bool user_defined_reference_compare::operator()(const proto::user_defined_reference * lhs,
+    bool udr_compare::operator()(const proto::user_defined_reference * lhs,
         const proto::user_defined_reference * rhs) const
     {
         return google::protobuf::util::MessageDifferencer::Equals(*lhs, *rhs);
     }
 
-    std::size_t user_defined_reference_hash::operator()(const proto::user_defined_reference * udr) const
+    bool udr_compare::operator()(const synthesized_udr & lhs, const synthesized_udr & rhs) const
+    {
+        return lhs.module == rhs.module && lhs.name == rhs.name;
+    }
+
+    std::size_t udr_hash::operator()(const proto::user_defined_reference * udr) const
     {
         std::size_t seed = 0;
 
@@ -58,19 +67,28 @@ inline namespace _v1
             boost::hash_combine(seed, module);
         }
 
-        for (auto && scope : udr->scope())
-        {
-            boost::hash_combine(seed, scope);
-        }
-
         boost::hash_combine(seed, udr->name());
 
         return seed;
     }
 
-    unresolved_type::unresolved_type(const proto::user_defined_reference * reference, scope * lex_scope)
-        : _reference{ _unresolved_reference{ lex_scope,
-            std::make_unique<proto::user_defined_reference>(*reference) } }
+    std::size_t udr_hash::operator()(const synthesized_udr & udr) const
+    {
+        std::size_t seed = 0;
+
+        boost::hash_combine(seed, udr.module);
+        boost::hash_combine(seed, udr.name);
+
+        return seed;
+    }
+
+    unresolved_type::unresolved_type(user_defined_reference_tag,
+        precontext & ctx,
+        const proto::user_defined_reference * reference)
+        : _reference{ _unresolved_reference{ &ctx,
+            std::unique_ptr<synthesized_udr>{
+                new synthesized_udr{ boost::algorithm::join(reference->module(), "."),
+                    reference->name() } } } }
     {
     }
 
@@ -84,53 +102,48 @@ inline namespace _v1
     {
     }
 
+    unresolved_type::unresolved_type(typeclass_instance_type_tag,
+        precontext & ctx,
+        const proto::user_defined_reference * tc,
+        std::vector<std::unique_ptr<expression>> arguments)
+        : _reference{ _unresolved_typeclass_instance_type{ &ctx,
+            std::unique_ptr<synthesized_udr>{
+                new synthesized_udr{ boost::algorithm::join(tc->module(), "."), tc->name() } },
+            std::move(arguments) } }
+    {
+    }
+
     future<> unresolved_type::resolve(analysis_context & ctx)
     {
         if (!_analysis_future)
         {
+            constexpr auto get_udr = +[](precontext * prectx, const synthesized_udr & ref) {
+                auto it = prectx->imported_entities.find(ref);
+                if (it == prectx->imported_entities.end())
+                {
+                    logger::dlog(logger::crash) << "can't find an entity for a user defined reference "
+                                                << ref.module << "." << ref.name << styles::def;
+                    logger::default_logger().sync();
+                    assert(0);
+                }
+                auto expr = it->second.get();
+                assert(expr);
+                return expr;
+            };
+
             _analysis_future = std::get<0>(fmap(_reference,
                 make_overload_set([&](std::monostate) -> future<> { assert(0); },
 
-                    [&](_unresolved_reference & ref) -> future<> {
-                        auto go_one_level = [&ctx](scope * lex_scope, const std::string & name) {
-                            auto symb = lex_scope->try_get(utf32(name));
-                            assert(symb
-                                && "currently, using unexported types in exported signatures is not allowed; "
-                                   "this will change in the future");
-                            auto expr = symb.value()->get_expression();
-                            return expr->analyze(ctx).then([expr] { return expr->get_type()->get_scope(); });
-                        };
-
-                        auto kinds = { &ref.udr->module(), &ref.udr->scope() };
-                        return std::accumulate(kinds.begin(),
-                            kinds.end(),
-                            make_ready_future(ref.lex_scope),
-                            [&, go_one_level](auto future, auto && kind) {
-                                return std::accumulate(kind->begin(),
-                                    kind->end(),
-                                    future,
-                                    [go_one_level](auto future, const auto & name) {
-                                        return future.then([&name, go_one_level](auto scope) {
-                                            return go_one_level(scope, name);
-                                        });
-                                    });
-                            })
-                            .then([&ctx, &ref, this](scope * lex_scope) {
-                                auto symb = lex_scope->try_get(utf32(ref.udr->name()));
-                                assert(symb
-                                    && "currently, using unexported types in exported signatures is "
-                                       "not allowed; this will change in the future");
-
-                                auto expr = symb.value()->get_expression();
-                                return expr->analyze(ctx).then([expr, this] {
-                                    auto type_expr = expr->as<type_expression>();
-                                    assert(type_expr);
-                                    _resolved = type_expr->get_value();
-                                });
-                            });
+                    [&ctx, this](_unresolved_reference & ref) -> future<> {
+                        auto expr = get_udr(ref.ctx, *ref.udr);
+                        return expr->analyze(ctx).then([expr, this] {
+                            auto type_expr = expr->as<type_expression>();
+                            assert(type_expr);
+                            _resolved = type_expr->get_value();
+                        });
                     },
 
-                    [&](_unresolved_typeclass_type & tc) -> future<> {
+                    [&ctx, this](_unresolved_typeclass_type & tc) -> future<> {
                         return when_all(fmap(tc.parameter_types, [&](auto && imported) {
                             return std::get<0>(fmap(imported,
                                 make_overload_set(
@@ -142,7 +155,7 @@ inline namespace _v1
                         })).then([&](auto && types) { _resolved = ctx.get_typeclass_type(types); });
                     },
 
-                    [&](_unresolved_archetype_type & arch) -> future<> {
+                    [this](_unresolved_archetype_type & arch) -> future<> {
                         auto && symb = arch.lex_scope->get(arch.name);
                         auto && type_expr = symb->get_expression()->as<type_expression>();
                         assert(type_expr);
@@ -150,6 +163,22 @@ inline namespace _v1
                         _resolved = type_expr->get_value();
 
                         return make_ready_future();
+                    },
+
+                    [&ctx, this](_unresolved_typeclass_instance_type & inst_type) -> future<> {
+                        return when_all(
+                            fmap(inst_type.arguments, [&](auto && arg) { return arg->analyze(ctx); }))
+                            .then([&] { return get_udr(inst_type.ctx, *inst_type.tc); })
+                            .then([&](expression * tc_expr) {
+                                return tc_expr->analyze(ctx).then([tc_expr] { return tc_expr; });
+                            })
+                            .then([&](expression * tc_expr) {
+                                auto tc = tc_expr->as<typeclass_expression>();
+                                return tc->get_typeclass()
+                                    ->type_for(
+                                        ctx, fmap(inst_type.arguments, [](auto && arg) { return arg.get(); }))
+                                    .then([this](type * inst_type) { _resolved = inst_type; });
+                            });
                     })));
         }
 
@@ -177,7 +206,14 @@ inline namespace _v1
             }
 
             case proto::type::DetailsCase::kOverloadSet:
-                assert(!"overload set types should be associated!");
+            {
+                auto oset = import_overload_set(ctx, type.overload_set());
+                auto type = oset->get_type();
+                ctx.imported_overload_sets[{ ctx.module_stack.back(), ctx.current_symbol }] = std::move(oset);
+
+                type->set_name(utf32(ctx.current_symbol));
+                return make_type_expression(type);
+            }
 
             default:
                 assert(0);
@@ -218,14 +254,27 @@ inline namespace _v1
                 auto & ud = ctx.user_defined_types[&type.user_defined()];
                 if (!ud)
                 {
-                    ud = std::make_shared<unresolved_type>(&type.user_defined(), ctx.global_scope);
+                    ud = std::make_shared<unresolved_type>(
+                        unresolved_user_defined_reference, ctx, &type.user_defined());
                 }
 
                 return ud;
             }
 
             case proto::type_reference::kTypeclassInstanceType:
-                assert(0);
+            {
+                std::vector<std::unique_ptr<expression>> arguments;
+                arguments.reserve(type.typeclass_instance_type().arguments_size());
+                for (auto && arg : type.typeclass_instance_type().arguments())
+                {
+                    arguments.push_back(get_imported_type_ref_expr(ctx, arg));
+                }
+
+                return std::make_shared<unresolved_type>(unresolved_typeclass_instance_type,
+                    ctx,
+                    &type.typeclass_instance_type().typeclass(),
+                    std::move(arguments));
+            }
 
             case proto::type_reference::kArchetype:
                 return std::make_shared<unresolved_type>(

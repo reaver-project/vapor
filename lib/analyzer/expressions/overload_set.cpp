@@ -20,10 +20,13 @@
  *
  **/
 
+#include "vapor/analyzer/expressions/overload_set.h"
+
 #include <numeric>
 
+#include <boost/algorithm/string/join.hpp>
+
 #include "vapor/analyzer/expressions/expression_ref.h"
-#include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/semantic/function.h"
 #include "vapor/analyzer/semantic/symbol.h"
@@ -33,11 +36,24 @@
 #include "vapor/parser.h"
 
 #include "expressions/overload_set.pb.h"
+#include "type_reference.pb.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    std::unordered_set<expression *> overload_set_expression_base::get_associated_entities() const
+    {
+        std::unordered_set<expression *> ret;
+
+        // FIXME: this should also include all types that appear in signatures of the functions
+        // TODO: fix the above and add tests that verify it
+        // further FIXME: and also all types that appear in the definitions of functions with exported bodies
+        ret.insert(get_overload_set()->get_type()->get_expression());
+
+        return ret;
+    }
+
     overload_set_expression::overload_set_expression(scope * lex_scope)
         : _oset{ std::make_unique<overload_set>(lex_scope) }
     {
@@ -156,6 +172,7 @@ inline namespace _v1
             auto type_name = U"oset$" + name;
 
             auto oset = create();
+            oset->set_name(name);
             lex_scope->init(name, make_symbol(name, oset.get()));
 
             auto type = oset->get_type();
@@ -216,7 +233,8 @@ inline namespace _v1
 
     std::unique_ptr<overload_set_expression_base> get_overload_set(scope * lex_scope, std::u32string name)
     {
-        return _detail::get_overload_set(lex_scope,
+        return _detail::get_overload_set(
+            lex_scope,
             name,
             [&]() -> std::unique_ptr<overload_set_expression_base> {
                 return create_overload_set(lex_scope, name);
@@ -241,10 +259,70 @@ inline namespace _v1
         std::u32string name,
         overload_set * base)
     {
-        return _detail::get_overload_set(lex_scope,
+        return _detail::get_overload_set(
+            lex_scope,
             std::move(name),
             [&] { return create_refined_overload_set(lex_scope, name, base); },
             [&](expression * expr) { return _detail::clone_refined_oset_expr(expr, base); });
+    }
+
+    unresolved_overload_set_expression::unresolved_overload_set_expression(precontext & ctx,
+        const proto::user_defined_reference * udr)
+        : _ctx{ &ctx }, _udr{ boost::algorithm::join(udr->module(), "."), udr->name() }
+    {
+    }
+
+    future<> unresolved_overload_set_expression::_analyze(analysis_context &)
+    {
+        auto && oset = _ctx->imported_overload_sets[_udr];
+        assert(oset);
+        _resolved = std::make_unique<overload_set_expression>(oset);
+        _set_type(oset->get_type());
+
+        return make_ready_future();
+    }
+
+    overload_set_base * unresolved_overload_set_expression::get_overload_set() const
+    {
+        assert(_resolved);
+        return _resolved->get_overload_set();
+    }
+
+    bool unresolved_overload_set_expression::is_constant() const
+    {
+        assert(_resolved);
+        return _resolved->is_constant();
+    }
+
+    function * unresolved_overload_set_expression::get_vtable_entry(std::size_t id) const
+    {
+        assert(_resolved);
+        return _resolved->get_vtable_entry(id);
+    }
+
+    std::unique_ptr<expression> unresolved_overload_set_expression::_clone_expr(replacements & repl) const
+    {
+        assert(_resolved);
+        return repl.claim(_resolved.get());
+    }
+
+    statement_ir unresolved_overload_set_expression::_codegen_ir(ir_generation_context & ctx) const
+    {
+        assert(_resolved);
+        return _resolved->codegen_ir(ctx);
+    }
+
+    constant_init_ir unresolved_overload_set_expression::_constinit_ir(ir_generation_context & ctx) const
+    {
+        assert(_resolved);
+        return _resolved->constinit_ir(ctx);
+    }
+
+    std::unique_ptr<unresolved_overload_set_expression> make_unresolved_overload_set_expression(
+        precontext & ctx,
+        const proto::user_defined_reference * udr)
+    {
+        return std::make_unique<unresolved_overload_set_expression>(ctx, udr);
     }
 }
 }

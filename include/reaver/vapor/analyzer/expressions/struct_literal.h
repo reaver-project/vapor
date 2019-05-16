@@ -39,11 +39,11 @@ inline namespace _v1
             return _type->get_expression()->declaration_codegen_ir(ctx);
         }
 
-        virtual void set_name(std::u32string name) override;
-
         virtual void mark_exported() override;
 
     private:
+        virtual void _set_name(std::u32string name) override;
+
         virtual expression * _get_replacement() override
         {
             return _type->get_expression();

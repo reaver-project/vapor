@@ -48,7 +48,8 @@ void run_process(const std::string & cmdline)
     }
 }
 
-int main(int argc, char ** argv) try
+int main(int argc, char ** argv)
+try
 {
     // force a single thread of execution
     reaver::default_executor(reaver::make_executor<reaver::thread_pool>(1));

@@ -20,11 +20,13 @@
  *
  **/
 
+#include "vapor/analyzer/expressions/module.h"
+
 #include <reaver/future_get.h>
 #include <reaver/prelude/monad.h>
 #include <reaver/traits.h>
 
-#include "vapor/analyzer/expressions/module.h"
+#include "vapor/analyzer/expressions/typeclass.h"
 #include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/types/sized_integer.h"
 #include "vapor/parser.h"
@@ -100,40 +102,38 @@ inline namespace _v1
 
     future<> module::_analyze(analysis_context & ctx)
     {
-        return when_all(fmap(_statements, [&](auto && stmt) { return stmt->analyze(ctx); }))
-            .then([this, &ctx] {
-                if (name() == U"main")
+        return when_all(fmap(_statements, [&](auto && stmt) {
+            return stmt->analyze(ctx);
+        })).then([this, &ctx] {
+            if (name() == U"main")
+            {
+                // set entry(int32) as the entry point
+                if (auto entry = _type->get_scope()->try_get(U"entry"))
                 {
-                    // set entry(int32) as the entry point
-                    if (auto entry = _type->get_scope()->try_get(U"entry"))
-                    {
-                        auto type = entry.value()->get_type();
-                        return type->get_candidates(lexer::token_type::round_bracket_open)
-                            .then([&ctx, expr = entry.value()->get_expression()](auto && overloads) {
-                                // maybe this can be relaxed in the future?
-                                assert(overloads.size() == 1);
-                                assert(overloads[0]->parameters().size() == 1);
-                                assert(overloads[0]->parameters()[0]->get_type()
-                                    == ctx.get_sized_integer_type(32));
+                    auto type = entry.value()->get_type();
+                    return type->get_candidates(lexer::token_type::round_bracket_open)
+                        .then([&ctx, expr = entry.value()->get_expression()](auto && overloads) {
+                            // maybe this can be relaxed in the future?
+                            assert(overloads.size() == 1);
+                            assert(overloads[0]->parameters().size() == 1);
+                            assert(
+                                overloads[0]->parameters()[0]->get_type() == ctx.get_sized_integer_type(32));
 
-                                overloads[0]->mark_as_entry(ctx, expr);
-                            });
-                    }
+                            overloads[0]->mark_as_entry(ctx, expr);
+                        });
                 }
+            }
 
-                return make_ready_future();
-            });
+            return make_ready_future();
+        });
     }
 
     future<expression *> module::_simplify_expr(recursive_context ctx)
     {
-        return when_all(fmap(_statements,
-                            [&](auto && stmt) {
-                                return stmt->simplify(ctx).then(
-                                    [&ctx = ctx.proper, &stmt](
-                                        auto && simplified) { replace_uptr(stmt, simplified, ctx); });
-                            }))
-            .then([this]() -> expression * { return this; });
+        return when_all(fmap(_statements, [&](auto && stmt) {
+            return stmt->simplify(ctx).then(
+                [&ctx = ctx.proper, &stmt](auto && simplified) { replace_uptr(stmt, simplified, ctx); });
+        })).then([this]() -> expression * { return this; });
     }
 
     void module::print(std::ostream & os, print_context ctx) const
@@ -184,25 +184,72 @@ inline namespace _v1
     void module::generate_interface(proto::module & mod) const
     {
         auto scope = _type->get_scope();
+        auto own_scope_ir = scope->codegen_ir();
 
         auto name = fmap(_name, utf8);
         std::copy(name.begin(), name.end(), RepeatedFieldBackInserter(mod.mutable_name()));
 
+        std::unordered_set<expression *> associated_entities;
+        std::unordered_set<expression *> exported_entities;
+        std::unordered_set<expression *> named_exports;
+
         auto & mut_symbols = *mod.mutable_symbols();
 
-        for (auto && symbol : scope->declared_symbols())
+        for (auto && [_, symbol] : scope->declared_symbols())
         {
-            if (!symbol.second->is_exported())
+            if (!symbol->is_exported())
             {
                 continue;
             }
 
-            auto & symb = mut_symbols[utf8(symbol.first)];
-            symbol.second->get_expression()->generate_interface(symb);
-            symb.set_is_associated(symbol.second->is_associated());
-            for (auto && assoc : symbol.second->get_associated())
+            auto expr = symbol->get_expression();
+            exported_entities.insert(expr);
+            named_exports.insert(expr);
+
+            auto associated = expr->get_associated_entities();
+            associated_entities.insert(associated.begin(), associated.end());
+        }
+
+        for (auto && associated : associated_entities)
+        {
+            if (auto && scope = [&]() -> class scope * {
+                    if (auto && type_expr = associated->as<type_expression>())
+                    {
+                        return type_expr->get_value()->get_scope();
+                    }
+
+                    if (auto && tc_expr = associated->as<typeclass_expression>())
+                    {
+                        return tc_expr->get_typeclass()->get_scope();
+                    }
+
+                    return nullptr;
+                }())
             {
-                *symb.add_associated_entities() = utf8(assoc);
+                auto && scope_ir = scope->codegen_ir();
+
+                if (codegen::ir::same_module(scope_ir, own_scope_ir))
+                {
+                    logger::dlog() << "adding " << associated;
+                    exported_entities.insert(associated);
+                }
+            }
+
+            else
+            {
+                assert(0);
+            }
+        }
+
+        for (auto && entity : exported_entities)
+        {
+            auto & symb = mut_symbols[utf8(entity->get_entity_name())];
+            entity->generate_interface(symb);
+
+            auto it = named_exports.find(entity);
+            if (it != named_exports.end())
+            {
+                symb.set_is_name_exported(true);
             }
         }
     }

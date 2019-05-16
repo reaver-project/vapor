@@ -33,9 +33,8 @@ import "expressions/typeclass.proto";
 message entity
 {
     type_reference type = 1;
-    repeated string associated_entities = 2;
-    bool is_associated = 3;
-    range range = 4;
+    range range = 2;
+    bool is_name_exported = 3;
 
     oneof value {
         type type_value = 16;

@@ -38,16 +38,6 @@ inline namespace _v1
 
         virtual void print(std::ostream &, print_context) const override;
 
-        void add_associated(std::string name, expression * expr)
-        {
-            _associated.emplace(std::move(name), expr);
-        }
-
-        const auto & get_associated() const
-        {
-            return _associated;
-        }
-
         virtual expression * _get_replacement() override
         {
             return _wrapped ? _wrapped->_get_replacement() : this;
@@ -121,8 +111,6 @@ inline namespace _v1
         std::optional<std::unique_ptr<type>> _owned;
         std::unique_ptr<expression> _wrapped;
 
-        std::map<std::string, expression *> _associated;
-
         std::string _source_hash;
         std::int64_t _timestamp;
         std::vector<std::string> _name;
@@ -142,8 +130,6 @@ inline namespace _v1
         return std::make_unique<entity>(std::move(owned));
     }
 
-    std::unique_ptr<entity> get_entity(precontext &,
-        const proto::entity &,
-        const std::map<std::string, const proto::entity *> & associated = {});
+    std::unique_ptr<entity> get_entity(precontext &, const proto::entity &);
 }
 }

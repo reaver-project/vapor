@@ -34,8 +34,7 @@ inline namespace _v1
     class typeclass;
     class block;
 
-    class typeclass_instance_type : public user_defined_type,
-                                    public std::enable_shared_from_this<typeclass_instance_type>
+    class typeclass_instance_type : public type, public std::enable_shared_from_this<typeclass_instance_type>
     {
     public:
         friend class typeclass;
@@ -44,6 +43,9 @@ inline namespace _v1
 
         virtual std::string explain() const override;
         virtual void print(std::ostream & os, print_context ctx) const override;
+
+        virtual std::unique_ptr<proto::type> generate_interface() const override;
+        virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const override;
 
         auto & get_overload_sets() const
         {
@@ -77,7 +79,6 @@ inline namespace _v1
 
         future<> _analyze(analysis_context & ctx);
 
-        virtual std::unique_ptr<google::protobuf::Message> _user_defined_interface() const override;
         virtual void _codegen_type(ir_generation_context &,
             std::shared_ptr<codegen::ir::user_type>) const override;
         virtual std::u32string _codegen_name(ir_generation_context &) const override;

@@ -25,6 +25,7 @@
 #include <memory>
 
 #include "../../print_helpers.h"
+#include "../types/unresolved.h"
 #include "context.h"
 #include "scope.h"
 

@@ -34,6 +34,7 @@ inline namespace _v1
     class expression_list;
     class function_definition;
     class typeclass_instance;
+    class typeclass_expression;
 
     class typeclass_instance_expression : public constant
     {
@@ -43,16 +44,19 @@ inline namespace _v1
         typeclass_instance_expression(ast_node parse,
             late_preanalysis_type late_pre,
             std::unique_ptr<typeclass_instance> instance);
+        typeclass_instance_expression(ast_node parse, std::unique_ptr<typeclass_instance> instance);
 
         virtual ~typeclass_instance_expression() override;
 
         virtual void print(std::ostream & os, print_context ctx) const override;
         virtual expression * get_member(const std::u32string & name) const override;
 
-        virtual void set_name(std::u32string name) override;
         virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override;
+        virtual std::unordered_set<expression *> get_associated_entities() const override;
 
     private:
+        virtual void _set_name(std::u32string name) override;
+
         virtual future<> _analyze(analysis_context & ctx) override;
         virtual future<expression *> _simplify_expr(recursive_context ctx) override;
         virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override;
@@ -60,8 +64,9 @@ inline namespace _v1
 
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override;
 
-        late_preanalysis_type _late_preanalysis;
+        std::optional<late_preanalysis_type> _late_preanalysis;
         std::shared_ptr<typeclass_instance> _instance;
+        typeclass_expression * _tc = nullptr;
     };
 }
 }

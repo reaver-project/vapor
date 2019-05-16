@@ -188,7 +188,13 @@ inline namespace _v1
                         _call_expression = std::move(call_expr);
                         return _call_expression->analyze(ctx);
                     })
-                    .then([&] { this->_set_type(_call_expression->get_type()); });
+                    .then([&] {
+                        this->_set_type(_call_expression->get_type());
+                        if (has_entity_name())
+                        {
+                            _call_expression->set_name(get_entity_name());
+                        }
+                    });
             });
     }
 
@@ -257,6 +263,10 @@ inline namespace _v1
 
                 if (!_modifier)
                 {
+                    if (has_entity_name())
+                    {
+                        _base_expr->set_name(get_entity_name());
+                    }
                     return make_ready_future(_base_expr.release());
                 }
 

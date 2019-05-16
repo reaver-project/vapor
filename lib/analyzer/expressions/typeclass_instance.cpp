@@ -63,6 +63,13 @@ inline namespace _v1
         _set_ast_info(parse);
     }
 
+    typeclass_instance_expression::typeclass_instance_expression(ast_node parse,
+        std::unique_ptr<typeclass_instance> instance)
+        : _instance{ std::move(instance) }
+    {
+        _set_ast_info(parse);
+    }
+
     typeclass_instance_expression::~typeclass_instance_expression() = default;
 
     void typeclass_instance_expression::print(std::ostream & os, print_context ctx) const
@@ -107,11 +114,6 @@ inline namespace _v1
         return _instance->get_scope()->get(name)->get_expression();
     }
 
-    void typeclass_instance_expression::set_name(std::u32string name)
-    {
-        _instance->set_name(std::move(name));
-    }
-
     declaration_ir typeclass_instance_expression::declaration_codegen_ir(ir_generation_context & ctx) const
     {
         auto ret = codegen::ir::make_variable(get_type()->codegen_type(ctx));
@@ -120,50 +122,98 @@ inline namespace _v1
         return { std::move(ret) };
     }
 
+    std::unordered_set<expression *> typeclass_instance_expression::get_associated_entities() const
+    {
+        std::unordered_set<expression *> ret;
+
+        // FIXME: also include the associated entities of the typeclass
+        // FIXME: also include arguments
+        // FIXME: also include the associated entities of arguments?
+        ret.insert(_tc);
+
+        return ret;
+    }
+
+    void typeclass_instance_expression::_set_name(std::u32string name)
+    {
+        _instance->set_name(std::move(name));
+    }
+
     future<> typeclass_instance_expression::_analyze(analysis_context & ctx)
     {
-        auto name = _instance->typeclass_name();
-        auto top_level = std::move(name.front());
-        name.erase(name.begin());
+        future<typeclass_instance_type *> type = std::get<0>(fmap(_instance->typeclass_reference(),
+            make_overload_set(
+                [&ctx, this](std::vector<std::u32string> name) {
+                    auto top_level = std::move(name.front());
+                    name.erase(name.begin());
 
-        future<expression *> expr =
-            _instance->get_scope()->parent()->resolve(top_level)->get_expression_future();
+                    future<expression *> expr =
+                        _instance->get_scope()->parent()->resolve(top_level)->get_expression_future();
 
-        if (!name.empty())
-        {
-            expr = foldl(name, std::move(expr), [&ctx](future<expression *> expr, auto && name) {
-                return expr
-                    .then([&](auto && expr) {
-                        return expr->analyze(ctx).then([expr] { return expr->get_type()->get_scope(); });
-                    })
-                    .then([name = std::move(name)](const scope * lex_scope) {
-                        return lex_scope->get(name)->get_expression_future();
-                    });
-            });
-        }
+                    if (!name.empty())
+                    {
+                        expr = foldl(name, std::move(expr), [&ctx](future<expression *> expr, auto && name) {
+                            return expr
+                                .then([&](auto && expr) {
+                                    return expr->analyze(ctx).then(
+                                        [expr] { return expr->get_type()->get_scope(); });
+                                })
+                                .then([name = std::move(name)](const scope * lex_scope) {
+                                    return lex_scope->get(name)->get_expression_future();
+                                });
+                        });
+                    }
 
-        return expr.then([&](expression * expr) { return expr->analyze(ctx).then([expr] { return expr; }); })
-            .then([&](expression * expr) {
-                return when_all(
-                    fmap(_instance->get_arguments(), [&](auto && arg) { return arg->analyze(ctx); }))
-                    .then([&] { return _instance->simplify_arguments(ctx); })
-                    .then([expr] { return expr; });
-            })
-            .then([&](expression * expr) {
-                auto tc = expr->_get_replacement()->as<typeclass_expression>();
-                assert(tc);
+                    return expr
+                        .then([&](expression * expr) {
+                            return expr->analyze(ctx).then([expr] { return expr; });
+                        })
+                        .then([&](expression * expr) {
+                            return when_all(fmap(_instance->get_arguments(),
+                                                [&](auto && arg) { return arg->analyze(ctx); }))
+                                .then([&] { return _instance->simplify_arguments(ctx); })
+                                .then([expr] { return expr; });
+                        })
+                        .then([&](expression * expr) {
+                            _tc = expr->_get_replacement()->as<typeclass_expression>();
+                            assert(_tc);
 
-                return tc->get_typeclass()->type_for(ctx, _instance->get_arguments());
-            })
-            .then([&](auto instance_type) {
-                _set_type(instance_type);
-                _instance->set_type(instance_type);
-                _late_preanalysis(_instance->get_function_definition_handler());
+                            return _tc->get_typeclass()->type_for(ctx, _instance->get_arguments());
+                        });
+                },
+                [&ctx](const imported_type & imported) -> future<typeclass_instance_type *> {
+                    return std::get<0>(
+                        fmap(imported,
+                            make_overload_set(
+                                [](class type * resolved) { return make_ready_future(resolved); },
 
-                return when_all(fmap(_instance->get_member_function_defs(),
-                    [&](auto && fn_def) { return fn_def->analyze(ctx); }));
-            })
-            .then([&] { _instance->import_default_definitions(ctx); });
+                                [&ctx](std::shared_ptr<unresolved_type> unresolved) {
+                                    return unresolved->resolve(ctx).then(
+                                        [unresolved] { return unresolved->get_resolved(); });
+                                })))
+                        .then([](class type * resolved) {
+                            auto tc_type = dynamic_cast<typeclass_instance_type *>(resolved);
+                            assert(tc_type);
+                            return tc_type;
+                        });
+                })));
+
+        return type.then([&](auto instance_type) {
+            _set_type(instance_type);
+            _instance->set_type(instance_type);
+
+            if (!_late_preanalysis)
+            {
+                _instance->import_default_definitions(ctx, true);
+                return make_ready_future();
+            }
+
+            _late_preanalysis.value()(_instance->get_function_definition_handler());
+
+            return when_all(fmap(_instance->get_member_function_defs(), [&](auto && fn_def) {
+                return fn_def->analyze(ctx);
+            })).then([&] { _instance->import_default_definitions(ctx); });
+        });
     }
 
     std::unique_ptr<expression> typeclass_instance_expression::_clone_expr(replacements & repl) const
@@ -173,9 +223,9 @@ inline namespace _v1
 
     future<expression *> typeclass_instance_expression::_simplify_expr(recursive_context ctx)
     {
-        return when_all(
-            fmap(_instance->get_member_function_defs(), [&](auto && decl) { return decl->simplify(ctx); }))
-            .then([&](auto &&) -> expression * { return this; });
+        return when_all(fmap(_instance->get_member_function_defs(), [&](auto && decl) {
+            return decl->simplify(ctx);
+        })).then([&](auto &&) -> expression * { return this; });
     }
 
     constant_init_ir typeclass_instance_expression::_constinit_ir(ir_generation_context & ctx) const

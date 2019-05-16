@@ -37,6 +37,11 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     struct precontext;
+    struct synthesized_udr;
+
+    constexpr struct user_defined_reference_tag
+    {
+    } unresolved_user_defined_reference;
 
     constexpr struct typeclass_type_tag
     {
@@ -46,6 +51,10 @@ inline namespace _v1
     {
     } unresolved_archetype_type;
 
+    constexpr struct typeclass_instance_type_tag
+    {
+    } unresolved_typeclass_instance_type;
+
     class unresolved_type;
 
     using imported_type = std::variant<type *, std::shared_ptr<unresolved_type>>;
@@ -53,9 +62,15 @@ inline namespace _v1
     class unresolved_type : public std::enable_shared_from_this<unresolved_type>
     {
     public:
-        unresolved_type(const proto::user_defined_reference * reference, scope * lex_scope);
+        unresolved_type(user_defined_reference_tag,
+            precontext & ctx,
+            const proto::user_defined_reference * reference);
         unresolved_type(typeclass_type_tag, std::vector<imported_type>);
         unresolved_type(archetype_type_tag, scope * lex_scope, std::u32string name);
+        unresolved_type(typeclass_instance_type_tag,
+            precontext & ctx,
+            const proto::user_defined_reference * tc,
+            std::vector<std::unique_ptr<expression>> arguments);
 
         future<> resolve(analysis_context &);
 
@@ -71,8 +86,8 @@ inline namespace _v1
 
         struct _unresolved_reference
         {
-            scope * lex_scope;
-            std::unique_ptr<proto::user_defined_reference> udr;
+            precontext * ctx;
+            std::unique_ptr<synthesized_udr> udr;
         };
 
         struct _unresolved_typeclass_type
@@ -86,10 +101,18 @@ inline namespace _v1
             std::u32string name;
         };
 
+        struct _unresolved_typeclass_instance_type
+        {
+            precontext * ctx;
+            std::unique_ptr<synthesized_udr> tc;
+            std::vector<std::unique_ptr<expression>> arguments;
+        };
+
         std::variant<std::monostate,
             _unresolved_reference,
             _unresolved_typeclass_type,
-            _unresolved_archetype_type>
+            _unresolved_archetype_type,
+            _unresolved_typeclass_instance_type>
             _reference;
 
         std::optional<future<>> _analysis_future;

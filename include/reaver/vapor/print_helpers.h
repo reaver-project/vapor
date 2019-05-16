@@ -35,7 +35,7 @@ namespace analyzer
 {
     inline namespace _v1
     {
-        class precontext;
+        struct precontext;
         class expression;
     }
 }

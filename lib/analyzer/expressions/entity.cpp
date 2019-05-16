@@ -24,11 +24,14 @@
 #include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/expressions/runtime_value.h"
 #include "vapor/analyzer/expressions/typeclass.h"
+#include "vapor/analyzer/expressions/typeclass_instance.h"
 #include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/semantic/function.h"
 #include "vapor/analyzer/semantic/overload_set.h"
 #include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/semantic/typeclass.h"
+#include "vapor/analyzer/semantic/typeclass_instance.h"
+#include "vapor/analyzer/statements/function.h"
 #include "vapor/analyzer/types/module.h"
 #include "vapor/analyzer/types/unresolved.h"
 
@@ -148,14 +151,11 @@ inline namespace _v1
         return mod;
     }
 
-    std::unique_ptr<entity> get_entity(precontext & ctx,
-        const proto::entity & ent,
-        const std::map<std::string, const proto::entity *> & associated)
+    std::unique_ptr<entity> get_entity(precontext & ctx, const proto::entity & ent)
     {
         auto type = get_imported_type_ref(ctx, ent.type());
 
         std::unique_ptr<expression> expr;
-        std::map<std::string, expression *> imported_assoc;
 
         switch (ent.value_case())
         {
@@ -164,19 +164,8 @@ inline namespace _v1
                 break;
 
             case proto::entity::kOverloadSet:
-            {
-                assert(ent.associated_entities_size() == 1);
-                auto oset = import_overload_set(
-                    ctx, associated.at(ent.associated_entities(0))->type_value().overload_set());
-                oset->get_type()->set_name(utf32(ent.associated_entities(0)));
-
-                auto type_expr = oset->get_type()->get_expression();
-                imported_assoc[ent.associated_entities(0)] = type_expr;
-
-                expr = std::make_unique<overload_set_expression>(std::move(oset));
-
+                expr = make_unresolved_overload_set_expression(ctx, &ent.type().user_defined());
                 break;
-            }
 
             case proto::entity::kTypeclass:
             {
@@ -188,22 +177,23 @@ inline namespace _v1
             }
 
             case proto::entity::kTypeclassInstance:
-                assert(0);
+            {
+                auto inst = import_typeclass_instance(ctx, type, ent.typeclass_instance());
+                expr = std::make_unique<typeclass_instance_expression>(
+                    imported_ast_node(ctx, ent.range()), std::move(inst));
+                expr->set_name(utf32(ctx.current_symbol));
+                break;
+            }
 
             default:
                 throw exception{ logger::fatal } << "unknown expression kind of symbol `"
-                                                 << ctx.current_scope.top() << "." << ctx.current_symbol
-                                                 << "` in imported file " << ctx.current_module.top().module;
+                                                 << ctx.module_stack.back() << "." << ctx.current_symbol
+                                                 << "` in imported file "
+                                                 << ctx.module_path_stack.back().module_file_path;
         }
 
-        return std::get<0>(fmap(type, [&](auto && type) {
-            auto ret = std::make_unique<entity>(std::move(type), std::move(expr));
-            for (auto && [name, expr] : imported_assoc)
-            {
-                ret->add_associated(name, expr);
-            }
-            return ret;
-        }));
+        return std::get<0>(fmap(
+            type, [&](auto && type) { return std::make_unique<entity>(std::move(type), std::move(expr)); }));
     }
 }
 }

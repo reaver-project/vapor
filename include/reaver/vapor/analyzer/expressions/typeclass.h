@@ -43,9 +43,9 @@ inline namespace _v1
             return _typeclass.get();
         }
 
-        virtual void set_name(std::u32string name) override;
-
     private:
+        virtual void _set_name(std::u32string name) override;
+
         virtual future<> _analyze(analysis_context & ctx) override;
         virtual future<expression *> _simplify_expr(recursive_context ctx) override;
         virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override;

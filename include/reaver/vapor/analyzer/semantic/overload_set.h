@@ -104,7 +104,7 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class precontext;
+    struct precontext;
 
     std::unique_ptr<overload_set> import_overload_set(precontext &, const proto::overload_set_type &);
 }

@@ -7,6 +7,11 @@ endif()
 project(Vapor C CXX)
 
 find_package(Threads REQUIRED)
+
+# Boost 1.70 breaks the FindBoost world rather spectacularly
+# do NOT delegate to boost-specific cmake config files
+# and force the old-and-proven FindBoost behavior
+set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost 1.64 REQUIRED
     COMPONENTS system program_options filesystem iostreams
 )

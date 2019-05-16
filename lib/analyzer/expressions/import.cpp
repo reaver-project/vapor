@@ -151,7 +151,8 @@ inline namespace _v1
             }
         }
 
-        ctx.current_module.push({ boost::filesystem::canonical(path), ast->compilation_info().filepath() });
+        ctx.module_path_stack.push_back(
+            { boost::filesystem::canonical(path), ast->compilation_info().filepath() });
 
         if (ast->imports_size())
         {
@@ -161,14 +162,14 @@ inline namespace _v1
         for (auto && module : ast->modules())
         {
             auto name = boost::algorithm::join(module.name(), ".");
-            ctx.current_scope.push(name);
+            ctx.module_stack.emplace_back(name);
 
             if (static_cast<std::size_t>(module.name_size()) < module_name.size()
                 || std::mismatch(module_name.begin(), module_name.end(), module.name().begin()).first
                     != module_name.end())
             {
                 throw exception{ logger::error } << "invalid module name `" << name << "` in module file "
-                                                 << ctx.current_module.top().module;
+                                                 << ctx.module_path_stack.back().module_file_path;
             }
 
             std::string cumulative_name;
@@ -193,8 +194,7 @@ inline namespace _v1
                 auto scope = lex_scope->clone_for_class();
                 scope->set_name(utf32(name_part), codegen::ir::scope_type::module);
 
-                auto old_scope = lex_scope;
-                lex_scope = scope.get();
+                auto old_scope = std::exchange(lex_scope, scope.get());
 
                 auto type_uptr = std::make_unique<module_type>(std::move(scope), name_part);
                 type = type_uptr.get();
@@ -226,35 +226,23 @@ inline namespace _v1
 
             for (auto && imported_entity : symbols)
             {
-                if (imported_entity.second->is_associated())
-                {
-                    assert(imported_entity.second->associated_entities_size() == 0);
-                    continue;
-                }
-
-                std::map<std::string, const proto::entity *> associated;
-                for (auto && assoc : imported_entity.second->associated_entities())
-                {
-                    associated.emplace(assoc, &module.symbols().at(assoc));
-                }
-
                 ctx.current_symbol = *imported_entity.first;
-                auto ent = get_entity(ctx, *imported_entity.second, associated);
+                auto ent = get_entity(ctx, *imported_entity.second);
                 ent->set_name(utf32(*imported_entity.first));
-                type->add_symbol(*imported_entity.first, ent.get());
-                for (auto && assoc : ent->get_associated())
+
+                if (imported_entity.second->is_name_exported())
                 {
-                    type->add_symbol(assoc.first, assoc.second);
-                    assoc.second->set_name(utf32(assoc.first));
+                    type->add_symbol(*imported_entity.first, ent.get());
                 }
 
-                ctx.imported_entities.insert(std::move(ent));
+                ctx.imported_entities.emplace(
+                    synthesized_udr{ ctx.module_stack.back(), ctx.current_symbol }, std::move(ent));
             }
 
-            ctx.current_scope.pop();
+            ctx.module_stack.pop_back();
         }
 
-        ctx.current_module.pop();
+        ctx.module_path_stack.pop_back();
     }
 
     entity * import_module(precontext & ctx, const std::vector<std::string> & module_name)
@@ -313,6 +301,7 @@ inline namespace _v1
 
                     if (mode == import_mode::statement)
                     {
+                        // FIXME: this is wrong, because parent symbols won't be unhidden
                         ent->get_symbol()->unhide();
                     }
 

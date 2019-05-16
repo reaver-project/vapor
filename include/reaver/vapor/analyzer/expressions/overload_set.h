@@ -24,6 +24,7 @@
 
 #include <memory>
 
+#include "../precontext.h"
 #include "../semantic/overload_set.h"
 #include "expression.h"
 
@@ -48,6 +49,7 @@ inline namespace _v1
         }
 
         virtual overload_set_base * get_overload_set() const = 0;
+        virtual std::unordered_set<expression *> get_associated_entities() const override;
     };
 
     class overload_set_expression : public overload_set_expression_base
@@ -125,5 +127,40 @@ inline namespace _v1
     std::unique_ptr<refined_overload_set_expression> get_refined_overload_set(scope * lex_scope,
         std::u32string name,
         overload_set * base);
+}
+}
+
+namespace reaver::vapor::proto
+{
+class user_defined_reference;
+}
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    class unresolved_overload_set_expression : public overload_set_expression_base
+    {
+    public:
+        unresolved_overload_set_expression(precontext & ctx, const proto::user_defined_reference * udr);
+
+        virtual overload_set_base * get_overload_set() const override;
+        virtual bool is_constant() const override;
+        virtual function * get_vtable_entry(std::size_t id) const override;
+
+    private:
+        virtual future<> _analyze(analysis_context &) override;
+        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override;
+        virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override;
+
+        precontext * _ctx;
+        synthesized_udr _udr;
+        std::unique_ptr<overload_set_expression_base> _resolved;
+    };
+
+    std::unique_ptr<unresolved_overload_set_expression> make_unresolved_overload_set_expression(
+        precontext & ctx,
+        const proto::user_defined_reference * udr);
 }
 }

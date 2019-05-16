@@ -30,12 +30,14 @@
 #include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/function.h"
 
+#include "type_reference.pb.h"
+
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
     typeclass_instance_type::typeclass_instance_type(typeclass * tc, std::vector<expression *> arguments)
-        : user_defined_type{ dont_init_expr }, _arguments{ std::move(arguments) }, _ctx{ tc, _arguments }
+        : type{ dont_init_expr }, _arguments{ std::move(arguments) }, _ctx{ tc, _arguments }
     {
         auto repl = _ctx.get_replacements();
         std::unordered_map<function *, block *> function_block_defs;
@@ -116,6 +118,26 @@ inline namespace _v1
         os << styles::def << ctx << styles::type << explain() << '\n';
     }
 
+    std::unique_ptr<proto::type> typeclass_instance_type::generate_interface() const
+    {
+        assert(0);
+    }
+
+    std::unique_ptr<proto::type_reference> typeclass_instance_type::generate_interface_reference() const
+    {
+        auto ret = std::make_unique<proto::type_reference>();
+
+        auto type = std::make_unique<proto::typeclass_instance_type>();
+        type->set_allocated_typeclass(_ctx.tc->generate_interface_reference().release());
+        for (auto && arg : _arguments)
+        {
+            *type->add_arguments() = *arg->as<type_expression>()->get_value()->generate_interface_reference();
+        }
+
+        ret->set_allocated_typeclass_instance_type(type.release());
+        return ret;
+    }
+
     future<> typeclass_instance_type::_analyze(analysis_context & ctx)
     {
         return when_all(fmap(_function_instances, [&](auto && instance) {
@@ -130,11 +152,6 @@ inline namespace _v1
                     return make_ready_future();
                 });
         }));
-    }
-
-    std::unique_ptr<google::protobuf::Message> typeclass_instance_type::_user_defined_interface() const
-    {
-        assert(0);
     }
 
     void typeclass_instance_type::_codegen_type(ir_generation_context & ctx,

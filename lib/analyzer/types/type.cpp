@@ -60,6 +60,12 @@ inline namespace _v1
         return _self_expression->_get_replacement();
     }
 
+    void type::set_name(std::u32string name)
+    {
+        get_expression()->set_name(name);
+        _name = std::move(name);
+    }
+
     class type_type : public type
     {
     public:
@@ -221,8 +227,7 @@ inline namespace _v1
                     break;
 
                 case codegen::ir::scope_type::type:
-                    *user_defined->add_scope() = utf8(scope.name);
-                    break;
+                    assert(!"should probably implemented nested UDT references now... ;)");
 
                 default:
                     assert(0);

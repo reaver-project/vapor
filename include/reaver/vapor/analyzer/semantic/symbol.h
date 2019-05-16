@@ -68,26 +68,6 @@ inline namespace _v1
             return _hidden;
         }
 
-        void mark_associated()
-        {
-            _is_associated = true;
-        }
-
-        bool is_associated() const
-        {
-            return _is_associated;
-        }
-
-        void add_associated(std::u32string assoc)
-        {
-            _associated.emplace(std::move(assoc));
-        }
-
-        const std::set<std::u32string> & get_associated() const
-        {
-            return _associated;
-        }
-
         void set_expression(expression * var)
         {
             _ulock lock{ _lock };

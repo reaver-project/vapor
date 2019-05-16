@@ -255,8 +255,31 @@ inline namespace _v1
             return _generate_interface();
         }
 
-        virtual void set_name([[maybe_unused]] std::u32string name)
+        virtual std::unordered_set<expression *> get_associated_entities() const
         {
+            return {};
+        }
+
+        void set_name(std::u32string name)
+        {
+            _name = name;
+            _set_name(std::move(name));
+        }
+
+        bool has_entity_name() const
+        {
+            return _name.has_value();
+        }
+
+        const std::u32string & get_entity_name() const
+        {
+            if (!_name)
+            {
+                throw exception{ logger::crash }
+                    << "tried to get the entity name of an unnamed object of type " << typeid(*this).name()
+                    << " @ " << this;
+            }
+            return _name.value();
         }
 
         virtual void mark_exported()
@@ -274,6 +297,10 @@ inline namespace _v1
         {
             assert((!_type) ^ (_type == t));
             _type = t;
+        }
+
+        virtual void _set_name(std::u32string)
+        {
         }
 
         virtual future<> _analyze(analysis_context &) override
@@ -326,6 +353,7 @@ inline namespace _v1
     private:
         type * _type = nullptr;
         expression * _default_value = nullptr;
+        std::optional<std::u32string> _name;
 
         expression_context _expr_ctx;
     };

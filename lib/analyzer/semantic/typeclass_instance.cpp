@@ -20,16 +20,19 @@
  *
  **/
 
+#include "vapor/analyzer/semantic/typeclass_instance.h"
+
 #include <reaver/future_get.h>
 
+#include "vapor/analyzer/precontext.h"
 #include "vapor/analyzer/semantic/symbol.h"
-#include "vapor/analyzer/semantic/typeclass_instance.h"
 #include "vapor/analyzer/statements/function.h"
 #include "vapor/analyzer/types/typeclass_instance.h"
 #include "vapor/parser/expr.h"
 #include "vapor/parser/typeclass.h"
 
 #include "expressions/typeclass.pb.h"
+#include "type_reference.pb.h"
 
 namespace reaver::vapor::analyzer
 {
@@ -49,14 +52,29 @@ inline namespace _v1
                 [&](auto && arg) { return preanalyze_expression(ctx, arg, scope_ptr); }));
     }
 
+    std::unique_ptr<typeclass_instance> import_typeclass_instance(precontext & ctx,
+        imported_type type,
+        const proto::typeclass_instance & inst)
+    {
+        return std::make_unique<typeclass_instance>(
+            imported_ast_node(ctx, inst.range()), ctx.current_lex_scope->clone_for_class(), std::move(type));
+    }
+
     typeclass_instance::typeclass_instance(ast_node parse,
         std::unique_ptr<scope> member_scope,
         std::vector<std::u32string> typeclass_name,
         std::vector<std::unique_ptr<expression>> arguments)
         : _node{ parse },
           _scope{ std::move(member_scope) },
-          _typeclass_name{ std::move(typeclass_name) },
+          _typeclass_reference{ std::move(typeclass_name) },
           _arguments{ std::move(arguments) }
+    {
+    }
+
+    typeclass_instance::typeclass_instance(ast_node parse,
+        std::unique_ptr<scope> member_scope,
+        imported_type type)
+        : _node{ parse }, _scope{ std::move(member_scope) }, _typeclass_reference{ std::move(type) }
     {
     }
 
@@ -67,8 +85,9 @@ inline namespace _v1
 
     future<> typeclass_instance::simplify_arguments(analysis_context & ctx)
     {
-        return when_all(fmap(_arguments, [&](auto && arg) { return simplification_loop(ctx, arg); }))
-            .then([](auto &&) {});
+        return when_all(fmap(_arguments, [&](auto && arg) {
+            return simplification_loop(ctx, arg);
+        })).then([](auto &&) {});
     }
 
     std::vector<function_definition *> typeclass_instance::get_member_function_defs() const
@@ -101,7 +120,7 @@ inline namespace _v1
         };
     }
 
-    void typeclass_instance::import_default_definitions(analysis_context & ctx)
+    void typeclass_instance::import_default_definitions(analysis_context & ctx, bool is_imported)
     {
         replacements repl;
         std::unordered_map<function *, block *> function_block_defs;
@@ -128,7 +147,7 @@ inline namespace _v1
                     continue;
                 }
 
-                assert(fn->get_body());
+                assert(is_imported || fn->get_body());
 
                 _function_specialization fn_spec;
                 fn_spec.spec = make_function(fn->get_explanation(), fn->get_range());
@@ -138,7 +157,10 @@ inline namespace _v1
                 fn_spec.spec->set_return_type(fn->return_type_expression());
                 fn_spec.spec->set_parameters(fn->parameters());
 
-                function_block_defs.emplace(fn_spec.spec.get(), fn->get_body());
+                if (!is_imported)
+                {
+                    function_block_defs.emplace(fn_spec.spec.get(), fn->get_body());
+                }
 
                 roset->add_function(fn_spec.spec.get());
 
@@ -238,14 +260,6 @@ inline namespace _v1
     std::unique_ptr<proto::typeclass_instance> typeclass_instance::generate_interface() const
     {
         auto ret = std::make_unique<proto::typeclass_instance>();
-
-        ret->set_allocated_typeclass(_type->get_typeclass()->generate_interface_reference().release());
-
-        for (auto && arg : _arguments)
-        {
-            auto interface = arg->as<type_expression>()->get_value()->generate_interface_reference();
-            *ret->add_arguments() = *interface;
-        }
 
         return ret;
     }
