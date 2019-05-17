@@ -146,7 +146,7 @@ inline namespace _v1
 
     std::string function::explain() const
     {
-        auto ret = _explanation;
+        auto ret = _explanation + utf8(U"`" + _name.value_or(U"?") + U"`");
         fmap(_vtable_id, [&ret](auto && idx) {
             std::stringstream stream;
             stream << " [vtable slot " << idx << "]";
@@ -211,7 +211,12 @@ inline namespace _v1
             assert(_codegen);
             _ir = _codegen.value()(ctx);
             _ir->is_member = _is_member;
-            _ir->is_builtin = _is_builtin;
+
+            if (_is_exported)
+            {
+                // do not override the value that came from the provided codegen function
+                _ir->is_exported = true;
+            }
 
             if (_scopes_generator)
             {

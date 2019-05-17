@@ -38,24 +38,18 @@ inline namespace _v1
             return {};
         }
 
-        if (var.imported)
-        {
-            return {};
-        }
-
         std::u32string ret;
 
         ret += ctx.define_if_necessary(var.type);
 
         assert(!ctx.in_function_definition);
 
-        std::u32string initializer = U"{ }";
-        if (var.initializer)
-        {
-            initializer = value_of(var.initializer.value(), ctx);
-        }
-        ret += variable_name(var, ctx) + U" = " + (var.constant ? U"constant " : U"global ")
-            + type_name(var.type, ctx) + U" " + initializer + U"\n\n";
+        std::u32string initializer = var.imported
+            ? U""
+            : fmap(var.initializer, [&](auto && init) { return value_of(init, ctx); }).value_or(U"{ }");
+        ret += variable_name(var, ctx) + U" = " + (var.imported ? U"external " : U"")
+            + (var.constant ? U"constant " : U"global ") + type_name(var.type, ctx) + U" " + initializer
+            + U"\n\n";
 
         return ret;
     }

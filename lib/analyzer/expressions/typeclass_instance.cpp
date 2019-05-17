@@ -122,6 +122,11 @@ inline namespace _v1
         return { std::move(ret) };
     }
 
+    void typeclass_instance_expression::mark_exported()
+    {
+        _instance->mark_exported();
+    }
+
     std::unordered_set<expression *> typeclass_instance_expression::get_associated_entities() const
     {
         std::unordered_set<expression *> ret;

@@ -229,11 +229,8 @@ inline namespace _v1
                 ctx.current_symbol = *imported_entity.first;
                 auto ent = get_entity(ctx, *imported_entity.second);
                 ent->set_name(utf32(*imported_entity.first));
-
-                if (imported_entity.second->is_name_exported())
-                {
-                    type->add_symbol(*imported_entity.first, ent.get());
-                }
+                type->add_symbol(
+                    *imported_entity.first, ent.get(), imported_entity.second->is_name_exported());
 
                 ctx.imported_entities.emplace(
                     synthesized_udr{ ctx.module_stack.back(), ctx.current_symbol }, std::move(ent));

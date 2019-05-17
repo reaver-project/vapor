@@ -57,6 +57,8 @@ inline namespace _v1
         function_definition_handler get_function_definition_handler();
         void import_default_definitions(analysis_context & ctx, bool is_imported = false);
 
+        void mark_exported();
+
         scope * get_scope()
         {
             return _scope.get();
@@ -102,6 +104,7 @@ inline namespace _v1
         std::unique_ptr<scope> _scope;
         std::variant<std::vector<std::u32string>, imported_type> _typeclass_reference;
         typeclass_instance_type * _type = nullptr;
+        bool _exported = false;
 
         std::vector<std::unique_ptr<expression>> _arguments;
         std::vector<std::unique_ptr<function_definition>> _member_function_definitions;

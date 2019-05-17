@@ -90,12 +90,7 @@ inline namespace _v1
 
     future<expression *> entity::_simplify_expr(recursive_context ctx)
     {
-        if (_wrapped)
-        {
-            return make_ready_future(_wrapped.release());
-        }
-
-        return make_ready_future(make_runtime_value(get_type()).release());
+        return make_ready_future<expression *>(this);
     }
 
     std::unique_ptr<expression> entity::_clone_expr(replacements & repl) const
@@ -120,6 +115,26 @@ inline namespace _v1
     constant_init_ir entity::_constinit_ir(ir_generation_context &) const
     {
         assert(0);
+    }
+
+    declaration_ir entity::declaration_codegen_ir(ir_generation_context & ctx) const
+    {
+        if (!has_entity_name() || get_type()->is_meta())
+        {
+            return {};
+        }
+
+        if (_wrapped)
+        {
+            // trigger side-effects of generating the IR for the underlying entity
+            // such as emitting declarations of typeclass instance functions
+            static_cast<void>(_wrapped->codegen_ir(ctx));
+            if (_wrapped->is_constant())
+            {
+                static_cast<void>(_wrapped->constinit_ir(ctx));
+            }
+        }
+        return { codegen::ir::make_variable(get_type()->codegen_type(ctx), get_entity_name()) };
     }
 
     std::vector<codegen::ir::entity> entity::module_codegen_ir(ir_generation_context & ctx) const

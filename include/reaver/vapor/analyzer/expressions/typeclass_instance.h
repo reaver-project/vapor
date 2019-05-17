@@ -53,6 +53,7 @@ inline namespace _v1
 
         virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override;
         virtual std::unordered_set<expression *> get_associated_entities() const override;
+        virtual void mark_exported() override;
 
     private:
         virtual void _set_name(std::u32string name) override;

@@ -37,6 +37,11 @@ inline namespace _v1
         {
         }
 
+        virtual bool is_meta() const override
+        {
+            return true;
+        }
+
         virtual std::string explain() const override;
         virtual void print(std::ostream & os, print_context ctx) const override;
         virtual std::unique_ptr<proto::type> generate_interface() const override;

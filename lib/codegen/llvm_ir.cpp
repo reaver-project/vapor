@@ -76,7 +76,7 @@ inline namespace _v1
             return type_name(function->return_type, ctx) + U" ("
                 + boost::join(fmap(function->parameter_types,
                                   [&](auto && param_type) { return type_name(param_type, ctx); }),
-                      U", ")
+                    U", ")
                 + U") *"; // TODO: this decay to pointer to function should probably happen earlier?
         }
 

@@ -59,28 +59,17 @@ inline namespace _v1
         fun->set_return_type(return_type->get_expression());
         fun->set_parameters({ lhs_arg, rhs_arg });
         fun->set_eval(eval);
-        fun->mark_builtin();
-        fun->set_codegen(
-            [name, return_type, lhs = std::move(lhs), rhs = std::move(rhs)](ir_generation_context & ctx) {
-                auto lhs_ir = get_ir_variable(lhs->codegen_ir(ctx));
-                auto rhs_ir = get_ir_variable(rhs->codegen_ir(ctx));
-
+        fun->set_intrinsic_codegen(
+            [return_type, lhs = std::move(lhs), rhs = std::move(rhs)](
+                ir_generation_context & ctx, std::vector<codegen::ir::value> arguments) {
+                assert(arguments.size() == 2);
                 auto retval = codegen::ir::make_variable(return_type->codegen_type(ctx));
 
-                return codegen::ir::function{ name,
-                    {},
-                    { lhs_ir, rhs_ir },
-                    retval,
-                    { codegen::ir::instruction{ std::nullopt,
-                          std::nullopt,
-                          { boost::typeindex::type_id<Instruction>() },
-                          { lhs_ir, rhs_ir },
-                          retval },
-                        codegen::ir::instruction{ std::nullopt,
-                            std::nullopt,
-                            { boost::typeindex::type_id<codegen::ir::return_instruction>() },
-                            {},
-                            retval } } };
+                return statement_ir{ codegen::ir::instruction{ std::nullopt,
+                    std::nullopt,
+                    { boost::typeindex::type_id<Instruction>() },
+                    std::move(arguments),
+                    retval } };
             });
         return fun;
     }

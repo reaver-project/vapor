@@ -99,6 +99,7 @@ inline namespace _v1
         }
 
         std::vector<codegen::ir::entity> module_codegen_ir(ir_generation_context & ctx) const;
+        virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override;
 
     private:
         virtual future<> _analyze(analysis_context &) override;

@@ -28,9 +28,13 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void module_type::add_symbol(std::string name, expression * entity)
+    void module_type::add_symbol(std::string name, expression * entity, bool is_visible)
     {
         auto symbol = make_symbol(utf32(name), entity);
+        if (!is_visible)
+        {
+            symbol->hide();
+        }
         _member_scope->init(utf32(name), std::move(symbol));
     }
 

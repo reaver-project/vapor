@@ -46,7 +46,6 @@ inline namespace _v1
 
             bool is_member = false; // this is a terrible name for this feature, but naming things is hard
             bool is_defined = true;
-            bool is_builtin = false;
             bool is_exported = false;
 
             bool is_entry = false;

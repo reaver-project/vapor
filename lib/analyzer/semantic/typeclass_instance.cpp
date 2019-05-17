@@ -151,13 +151,37 @@ inline namespace _v1
 
                 _function_specialization fn_spec;
                 fn_spec.spec = make_function(fn->get_explanation(), fn->get_range());
+
+                fn_spec.spec->set_name(U"call");
                 fn_spec.spec->set_scopes_generator(scopes_gen);
 
                 repl.add_replacement(fn, fn_spec.spec.get());
                 fn_spec.spec->set_return_type(fn->return_type_expression());
                 fn_spec.spec->set_parameters(fn->parameters());
 
-                if (!is_imported)
+                if (is_imported)
+                {
+                    fn_spec.spec->set_codegen([fn = fn_spec.spec.get(), type = fn->return_type_expression()](
+                                                  ir_generation_context & ctx) -> codegen::ir::function {
+                        auto params = fmap(fn->parameters(), [&](auto && param) {
+                            return std::get<std::shared_ptr<codegen::ir::variable>>(
+                                param->codegen_ir(ctx).back().result);
+                        });
+
+                        auto ret = codegen::ir::function{ U"call",
+                            {},
+                            std::move(params),
+                            codegen::ir::make_variable(fn->return_type_expression()
+                                                           ->as<type_expression>()
+                                                           ->get_value()
+                                                           ->codegen_type(ctx)),
+                            {} };
+                        ret.is_defined = false;
+
+                        return ret;
+                    });
+                }
+                else
                 {
                     function_block_defs.emplace(fn_spec.spec.get(), fn->get_body());
                 }
@@ -186,9 +210,7 @@ inline namespace _v1
             body_stmt.release();
 
             fn_spec.spec->set_body(fn_spec.function_body.get());
-
-            fn_spec.spec->set_name(U"call");
-            fn_spec.spec->set_codegen([fn = fn_spec.spec.get()](ir_generation_context & ctx) {
+            fn_spec.spec->set_codegen([this, fn = fn_spec.spec.get()](ir_generation_context & ctx) {
                 auto ret = codegen::ir::function{ U"call",
                     {},
                     fmap(fn->parameters(),
@@ -198,8 +220,18 @@ inline namespace _v1
                         }),
                     fn->get_body()->codegen_return(ctx),
                     fn->get_body()->codegen_ir(ctx) };
+                ret.is_exported = _exported;
                 return ret;
             });
+        }
+    }
+
+    void typeclass_instance::mark_exported()
+    {
+        _exported = true;
+        for (auto && oset : _member_overload_set_exprs)
+        {
+            oset->mark_exported();
         }
     }
 

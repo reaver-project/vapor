@@ -58,7 +58,7 @@ inline namespace _v1
             assert(0);
         }
 
-        void add_symbol(std::string name, expression * ent);
+        void add_symbol(std::string name, expression * ent, bool is_visible = true);
         void close_scope();
 
     private:

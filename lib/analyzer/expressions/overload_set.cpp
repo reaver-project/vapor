@@ -88,9 +88,13 @@ inline namespace _v1
             codegen::ir::value{ std::move(var) } } };
     }
 
-    constant_init_ir overload_set_expression::_constinit_ir(ir_generation_context &) const
+    constant_init_ir overload_set_expression::_constinit_ir(ir_generation_context & ctx) const
     {
-        assert(0);
+        assert(is_constant());
+
+        auto type = get_type()->codegen_type(ctx);
+        // TODO: figure out how to get rid of this dynamic pointer cast that is really irritating here
+        return codegen::ir::struct_value{ std::dynamic_pointer_cast<codegen::ir::user_type>(type), {} };
     }
 
     declaration_ir overload_set_expression::declaration_codegen_ir(ir_generation_context & ctx) const
@@ -153,6 +157,10 @@ inline namespace _v1
         for (auto && fn : overloads)
         {
             val.fields.push_back(fn->pointer_ir(ctx));
+            if (_is_exported)
+            {
+                fn->mark_exported();
+            }
             ctx.add_function_to_generate(fn);
         }
 

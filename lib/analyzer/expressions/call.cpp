@@ -357,29 +357,34 @@ inline namespace _v1
 
         auto arguments_values =
             fmap(arguments_instructions, [](auto && insts) { return insts.back().result; });
-        arguments_values.insert(arguments_values.begin(), _function->pointer_ir(ctx));
-
-        if (_function->is_member())
-        {
-            assert(arguments_values.size() >= 2);
-            std::swap(arguments_values[0], arguments_values[1]);
-            auto base = arguments_values[0];
-        }
-
-        auto call_expr_instruction = codegen::ir::instruction{ std::nullopt,
-            std::nullopt,
-            { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
-            std::move(arguments_values),
-            { codegen::ir::make_variable(get_type()->codegen_type(ctx)) } };
-
-        ctx.add_function_to_generate(_function);
 
         statement_ir ret;
         fmap(arguments_instructions, [&](auto && insts) {
             std::move(insts.begin(), insts.end(), std::back_inserter(ret));
             return unit{};
         });
-        ret.push_back(std::move(call_expr_instruction));
+
+        if (_function->is_intrinsic())
+        {
+            auto intrinsic_instructions = _function->intrinsic_codegen_ir(ctx, std::move(arguments_values));
+            std::move(intrinsic_instructions.begin(), intrinsic_instructions.end(), std::back_inserter(ret));
+        }
+        else
+        {
+            arguments_values.insert(arguments_values.begin(), _function->pointer_ir(ctx));
+            if (_function->is_member())
+            {
+                assert(arguments_values.size() >= 2);
+                std::swap(arguments_values[0], arguments_values[1]);
+            }
+
+            auto call_expr_instruction = codegen::ir::instruction{ std::nullopt,
+                std::nullopt,
+                { boost::typeindex::type_id<codegen::ir::function_call_instruction>() },
+                std::move(arguments_values),
+                { codegen::ir::make_variable(get_type()->codegen_type(ctx)) } };
+            ret.push_back(std::move(call_expr_instruction));
+        }
 
         if (_function->is_member())
         {

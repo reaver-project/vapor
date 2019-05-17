@@ -45,6 +45,8 @@ inline namespace _v1
     class call_expression;
 
     using function_codegen = reaver::unique_function<codegen::ir::function(ir_generation_context &) const>;
+    using intrinsic_codegen =
+        reaver::unique_function<statement_ir(ir_generation_context &, std::vector<codegen::ir::value>) const>;
     using function_hook = reaver::unique_function<
         reaver::future<>(analysis_context &, call_expression *, std::vector<expression *>)>;
     using function_eval =
@@ -100,6 +102,13 @@ inline namespace _v1
         codegen::ir::function codegen_ir(ir_generation_context & ctx) const;
         codegen::ir::function_value pointer_ir(ir_generation_context & ctx) const;
 
+        statement_ir intrinsic_codegen_ir(ir_generation_context & ctx,
+            std::vector<codegen::ir::value> arguments) const
+        {
+            assert(_intrinsic_codegen);
+            return _intrinsic_codegen.value()(ctx, std::move(arguments));
+        }
+
         void set_return_type(std::shared_ptr<expression> ret)
         {
             _owned_expression = ret;
@@ -134,8 +143,14 @@ inline namespace _v1
 
         void set_codegen(function_codegen cdg)
         {
-            assert(!_codegen);
+            assert(!_codegen && !_intrinsic_codegen);
             _codegen = std::move(cdg);
+        }
+
+        void set_intrinsic_codegen(intrinsic_codegen cdg)
+        {
+            assert(!_codegen && !_intrinsic_codegen);
+            _intrinsic_codegen = std::move(cdg);
         }
 
         block * get_body() const
@@ -172,9 +187,9 @@ inline namespace _v1
             _is_member = true;
         }
 
-        void mark_builtin()
+        bool is_intrinsic() const
         {
-            _is_builtin = true;
+            return _intrinsic_codegen.has_value();
         }
 
         std::optional<std::size_t> vtable_slot() const
@@ -186,6 +201,11 @@ inline namespace _v1
         {
             assert(!_vtable_id);
             _vtable_id = id;
+        }
+
+        void mark_exported()
+        {
+            _is_exported = true;
         }
 
         void set_scopes_generator(scopes_generator generator)
@@ -210,11 +230,13 @@ inline namespace _v1
         std::shared_ptr<expression> _owned_expression;
 
         bool _is_member = false;
-        bool _is_builtin = false;
+        bool _is_intrinsic = false;
+        bool _is_exported = false;
         std::optional<std::size_t> _vtable_id;
         std::vector<expression *> _parameters;
         std::optional<std::u32string> _name;
         std::optional<function_codegen> _codegen;
+        std::optional<intrinsic_codegen> _intrinsic_codegen;
         mutable std::optional<codegen::ir::function> _ir;
 
         std::vector<function_hook> _analysis_hooks;

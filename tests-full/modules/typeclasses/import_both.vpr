@@ -1,6 +1,6 @@
 // compile: {vprc} {input} -I {directory}/imports -l -a -c
 // link: {cc} {runtime} {input}.o {directory}/imports/export_both.vpr.o -o {input}.bin
-// run: {input}.bin 2
+// run: {input}.bin 4
 
 import export_both;
 
@@ -44,7 +44,7 @@ module main
         let g = export_both.instance_override_default.with_default(arg);
         let h = export_both.instance_override_default.without_default(arg);
 
-        return c + d + e + f + g + h;
+        return c + d + e + f + g + h - 30;
     };
 }
 
