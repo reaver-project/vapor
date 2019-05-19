@@ -137,6 +137,15 @@ inline namespace _v1
 
         serialized.set_allocated_compilation_info(info.release());
 
+        std::unordered_set<entity *> import_deps;
+        auto add_import = [&](auto && self, entity * module) -> void {
+            import_deps.insert(module);
+            for (auto && import_dep : module->get_import_dependencies())
+            {
+                self(self, import_dep);
+            }
+        };
+
         for (auto && [name, module] : _ctx.modules)
         {
             if (module->is_local())
@@ -144,6 +153,11 @@ inline namespace _v1
                 continue;
             }
 
+            add_import(add_import, module.get());
+        }
+
+        for (auto && module : import_deps)
+        {
             auto & imp = *serialized.add_imports();
 
             imp.set_target_compilation_time(module->get_timestamp());

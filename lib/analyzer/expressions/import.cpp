@@ -136,27 +136,61 @@ inline namespace _v1
 
         if (auto source_path = find_module(ctx, module_name, true))
         {
-            if (static_cast<std::int64_t>(boost::filesystem::last_write_time(source_path.value()))
-                > ast->compilation_info().time())
-            {
-                boost::iostreams::mapped_file_source source{ source_path->string() };
-                auto sha256sum = sha256(source.data(), source.size());
-
-                if (sha256sum != ast->compilation_info().source_hash())
+            auto check_module = [&ctx](auto && comp_time, auto && comp_hash, auto && module_name) {
+                if (auto source_path = find_module(ctx, module_name, true))
                 {
-                    ctx.options.compile_file(source_path.value());
-                    import_module(ctx, module_name);
-                    return;
+                    if (static_cast<std::int64_t>(boost::filesystem::last_write_time(source_path.value()))
+                        > comp_time)
+                    {
+                        boost::iostreams::mapped_file_source source{ source_path->string() };
+                        auto sha256sum = sha256(source.data(), source.size());
+
+                        if (sha256sum != comp_hash)
+                        {
+                            return false;
+                        }
+                    }
                 }
+
+                return true;
+            };
+
+            bool is_up_to_date = check_module(
+                ast->compilation_info().time(), ast->compilation_info().source_hash(), module_name);
+
+            if (is_up_to_date)
+            {
+                for (auto && import : ast->imports())
+                {
+                    if (!check_module(import.target_compilation_time(),
+                            import.target_source_hash(),
+                            std::vector<std::string>{ import.name().begin(), import.name().end() }))
+                    {
+                        is_up_to_date = false;
+                        break;
+                    }
+                }
+            }
+
+            if (!is_up_to_date)
+            {
+                ctx.options.compile_file(source_path.value());
+                import_module(ctx, module_name);
+                return;
             }
         }
 
         ctx.module_path_stack.push_back(
             { boost::filesystem::canonical(path), ast->compilation_info().filepath() });
 
+        std::unordered_set<entity *> import_deps;
         if (ast->imports_size())
         {
-            throw exception{ logger::fatal } << "not implemented yet: loading a module with imports";
+            for (auto && import : ast->imports())
+            {
+                std::vector<std::string> name{ import.name().begin(), import.name().end() };
+                import_deps.insert(import_module(ctx, name));
+            }
         }
 
         for (auto && module : ast->modules())
@@ -208,6 +242,10 @@ inline namespace _v1
                 saved->set_timestamp(ast->compilation_info().time());
                 saved->set_source_hash(ast->compilation_info().source_hash());
                 saved->set_import_name({ module.name().begin(), module.name().end() });
+                for (auto && dep : import_deps)
+                {
+                    saved->add_import_dependency(dep);
+                }
             }
 
             ctx.current_lex_scope = lex_scope;

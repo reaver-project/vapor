@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -176,6 +176,12 @@ options_result get_options(int argc, char ** argv)
         HANDLE_DIR(binary, "--odir");
 
 #undef HANDLE_DIR
+
+        for (auto && module_path : ctx.module_paths())
+        {
+            argv.push_back("-I");
+            argv.push_back(module_path.string());
+        }
 
         logger::dlog() << "Compiling dependency: " << path << "...";
         logger::default_logger().sync();

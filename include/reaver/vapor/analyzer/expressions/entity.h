@@ -78,6 +78,16 @@ inline namespace _v1
             return _name;
         }
 
+        void add_import_dependency(entity * ent)
+        {
+            _import_deps.push_back(ent);
+        }
+
+        auto & get_import_dependencies() const
+        {
+            return _import_deps;
+        }
+
         void mark_local()
         {
             _is_local = true;
@@ -115,6 +125,7 @@ inline namespace _v1
         std::string _source_hash;
         std::int64_t _timestamp;
         std::vector<std::string> _name;
+        std::vector<entity *> _import_deps;
 
         bool _is_local = false;
         symbol * _symbol = nullptr;
