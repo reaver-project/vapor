@@ -44,6 +44,8 @@ inline namespace _v1
                 case type_kind::type:
                     return builtin_types().type.get();
             }
+
+            assert(0);
         }
 
     public:

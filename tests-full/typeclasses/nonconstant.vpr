@@ -1,0 +1,17 @@
+// compile: {vprc} {input} -I {directory}/imports -l -a -c
+// link: {cc} {runtime} {input}.o {directory}/imports/export_instance.vpr.o {directory}/imports/export_function.vpr.o -o {input}.bin
+// run: {input}.bin 7
+
+import export_instance;
+import export_function;
+
+module main
+{
+    let int32 = sized_int(32);
+
+    let entry = λ(arg : int32) {
+        return export_function.exported(arg, export_instance.exported) - 31;
+    };
+}
+
+// vim: filetype=cpp
