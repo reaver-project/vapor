@@ -146,7 +146,7 @@ inline namespace _v1
 
     std::string function::explain() const
     {
-        auto ret = _explanation + utf8(U"`" + _name.value_or(U"?") + U"`");
+        auto ret = _explanation + utf8(U" `" + _name.value_or(U"?") + U"`");
         fmap(_vtable_id, [&ret](auto && idx) {
             std::stringstream stream;
             stream << " [vtable slot " << idx << "]";

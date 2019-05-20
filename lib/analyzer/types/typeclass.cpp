@@ -24,6 +24,12 @@
 
 #include <boost/algorithm/string/join.hpp>
 
+#include "vapor/analyzer/expressions/call.h"
+#include "vapor/analyzer/expressions/runtime_value.h"
+#include "vapor/analyzer/expressions/typeclass.h"
+#include "vapor/analyzer/semantic/function.h"
+#include "vapor/analyzer/types/typeclass_instance.h"
+
 #include "expressions/type.pb.h"
 #include "type_reference.pb.h"
 
@@ -31,6 +37,39 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    typeclass_type::typeclass_type(std::vector<type *> param_types)
+        : _param_types{ std::move(param_types) },
+          _call_operator{ make_function("typeclass type call operator") }
+    {
+        _call_operator_params = fmap(_param_types, [](auto && type) { return make_runtime_value(type); });
+        _call_operator_params.insert(_call_operator_params.begin(), make_runtime_value(this));
+
+        _call_operator->set_return_type(builtin_types().type->get_expression());
+        auto params = fmap(_call_operator_params, [](auto && param) { return param.get(); });
+        _call_operator->set_parameters(std::move(params));
+        _call_operator->make_member();
+
+        _call_operator->add_analysis_hook(
+            [this](auto && ctx, call_expression * call_expr, std::vector<expression *> args) {
+                assert(args.size() == 1 + _param_types.size());
+                assert(args.front()->get_type() == this);
+
+                auto tc_expr = args.front()->as<typeclass_expression>();
+                auto tc = tc_expr->get_typeclass();
+                args.erase(args.begin());
+
+                return tc
+                    ->type_for(ctx,
+                        fmap(args,
+                            [](auto && arg) {
+                                assert(arg->is_constant());
+                                return arg->_get_replacement();
+                            }))
+                    .then([call_expr](
+                              auto && tc_type) { call_expr->replace_with(make_type_expression(tc_type)); });
+            });
+    }
+
     std::string typeclass_type::explain() const
     {
         return "typeclass ("
@@ -41,6 +80,11 @@ inline namespace _v1
     {
         os << styles::def << ctx << styles::type << explain() << styles::def << " @ " << styles::address
            << this << styles::def << ": builtin type\n";
+    }
+
+    future<std::vector<function *>> typeclass_type::get_candidates(lexer::token_type) const
+    {
+        return make_ready_future(std::vector<function *>{ _call_operator.get() });
     }
 
     std::unique_ptr<proto::type> typeclass_type::generate_interface() const

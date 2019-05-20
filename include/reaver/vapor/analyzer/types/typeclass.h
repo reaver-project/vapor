@@ -32,10 +32,7 @@ inline namespace _v1
     class typeclass_type : public type
     {
     public:
-        typeclass_type(std::vector<type *> param_types)
-            : type{ dont_init_expr }, _param_types{ std::move(param_types) }
-        {
-        }
+        typeclass_type(std::vector<type *> param_types);
 
         virtual bool is_meta() const override
         {
@@ -44,6 +41,7 @@ inline namespace _v1
 
         virtual std::string explain() const override;
         virtual void print(std::ostream & os, print_context ctx) const override;
+        virtual future<std::vector<function *>> get_candidates(lexer::token_type) const override;
         virtual std::unique_ptr<proto::type> generate_interface() const override;
         virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const override;
 
@@ -60,6 +58,8 @@ inline namespace _v1
         }
 
         std::vector<type *> _param_types;
+        std::unique_ptr<function> _call_operator;
+        std::vector<std::unique_ptr<expression>> _call_operator_params;
     };
 }
 }
