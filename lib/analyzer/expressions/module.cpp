@@ -230,7 +230,6 @@ inline namespace _v1
 
                 if (codegen::ir::same_module(scope_ir, own_scope_ir))
                 {
-                    logger::dlog() << "adding " << associated;
                     exported_entities.insert(associated);
                 }
             }

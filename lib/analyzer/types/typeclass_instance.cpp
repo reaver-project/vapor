@@ -37,7 +37,7 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     typeclass_instance_type::typeclass_instance_type(typeclass * tc, std::vector<expression *> arguments)
-        : type{ dont_init_expr }, _arguments{ std::move(arguments) }, _ctx{ tc, _arguments }
+        : _arguments{ std::move(arguments) }, _ctx{ tc, _arguments }
     {
         auto repl = _ctx.get_replacements();
         std::unordered_map<function *, block *> function_block_defs;

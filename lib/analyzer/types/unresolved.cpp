@@ -297,11 +297,9 @@ inline namespace _v1
 
             case proto::type_reference::DetailsCase::kUserDefined:
             case proto::type_reference::DetailsCase::kTypeclass:
+            case proto::type_reference::DetailsCase::kTypeclassInstanceType:
             case proto::type_reference::kArchetype:
                 return std::get<1>(get_imported_type_ref(ctx, reference))->get_expression();
-
-            case proto::type_reference::DetailsCase::kTypeclassInstanceType:
-                assert(0);
 
             default:
                 assert(0);
