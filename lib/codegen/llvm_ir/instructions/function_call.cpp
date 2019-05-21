@@ -32,7 +32,11 @@ inline namespace _v1
     std::u32string llvm_ir_generator::generate<ir::function_call_instruction>(const ir::instruction & inst,
         codegen_context & ctx)
     {
-        std::size_t actual_argument_offset = inst.operands.front().index() == 0 ? 2 : 1;
+        std::size_t actual_argument_offset =
+            // if the first operand is a variable, this is a member function call
+            // but only if the second argument is a function; otherwise, the first argument is a function
+            // pointer (this is a beautiful proof that I really need to make all of this better typed)
+            (inst.operands.front().index() == 0 && inst.operands[1].index() == 5) ? 2 : 1;
 
         std::u32string arguments;
         std::for_each(
@@ -56,10 +60,12 @@ inline namespace _v1
             arguments.pop_back();
         }
 
-        auto && call_operand =
-            std::get<codegen::ir::function_value>(inst.operands[actual_argument_offset - 1]);
-        return variable_of(inst.result, ctx) + U" = call " + type_of(inst.result, ctx) + U" "
-            + value_of(call_operand, ctx) + +U"(" + arguments + U")\n";
+        auto call_operand = std::get<std::u32string>(fmap(inst.operands[actual_argument_offset - 1],
+            make_overload_set([&](const codegen::ir::function_value & func) { return value_of(func, ctx); },
+                [&](const std::shared_ptr<codegen::ir::variable> & var) { return variable_name(*var, ctx); },
+                [](auto &&) -> std::u32string { assert(0); })));
+        return variable_of(inst.result, ctx) + U" = call " + type_of(inst.result, ctx) + U" " + call_operand
+            + U"(" + arguments + U")\n";
     }
 }
 }

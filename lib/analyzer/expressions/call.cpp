@@ -343,22 +343,38 @@ inline namespace _v1
             return _replacement_expr->codegen_ir(ctx);
         }
 
-        if (_function->vtable_slot())
-        {
-            assert(!"runtime virtual calls not yet supported");
-        }
-
         if (_function->is_member())
         {
             ctx.push_base_expression(_args.front());
         }
 
-        auto arguments_instructions = fmap(_args, [&](auto && arg) { return arg->codegen_ir(ctx); });
+        statement_ir ret;
 
+        auto arguments_instructions = fmap(_args, [&](auto && arg) { return arg->codegen_ir(ctx); });
         auto arguments_values =
             fmap(arguments_instructions, [](auto && insts) { return insts.back().result; });
 
-        statement_ir ret;
+        if (_function->vtable_slot())
+        {
+            auto vtable_argument_ir = _vtable_arg->codegen_ir(ctx);
+            auto vtable = vtable_argument_ir.back().result;
+            std::move(vtable_argument_ir.begin(), vtable_argument_ir.end(), std::back_inserter(ret));
+
+            // TODO/FIXME: this should not operate on values, but on pointers; simiarly, passing an instance
+            // should pass the vtable by pointer, not by value
+            auto call_operand = codegen::ir::instruction{ std::nullopt,
+                std::nullopt,
+                { boost::typeindex::type_id<codegen::ir::member_access_instruction>() },
+                { vtable, codegen::ir::integer_value{ _function->vtable_slot().value() } },
+                { codegen::ir::make_variable(
+                    codegen::ir::builtin_types().function(get_type()->codegen_type(ctx),
+                        fmap(_args, [&](auto && arg) { return arg->get_type()->codegen_type(ctx); }))) } };
+
+            arguments_values.insert(arguments_values.begin(), call_operand.result);
+
+            ret.push_back(std::move(call_operand));
+        }
+
         fmap(arguments_instructions, [&](auto && insts) {
             std::move(insts.begin(), insts.end(), std::back_inserter(ret));
             return unit{};
@@ -371,7 +387,11 @@ inline namespace _v1
         }
         else
         {
-            arguments_values.insert(arguments_values.begin(), _function->pointer_ir(ctx));
+            if (!_function->vtable_slot())
+            {
+                arguments_values.insert(arguments_values.begin(), _function->pointer_ir(ctx));
+            }
+
             if (_function->is_member())
             {
                 assert(arguments_values.size() >= 2);
