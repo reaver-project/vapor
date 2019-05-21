@@ -119,7 +119,10 @@ try
     {
         reaver::logger::dlog() << "Generating module interface file...";
         auto module_path = options->module_path();
-        boost::filesystem::create_directories(module_path.parent_path());
+        if (auto module_dir = module_path.parent_path(); !module_dir.empty())
+        {
+            boost::filesystem::create_directories(module_dir);
+        }
         std::ofstream interface_file{ module_path.string() };
         if (!interface_file)
         {
@@ -142,11 +145,14 @@ try
 
     namespace modes = reaver::vapor::config::compilation_modes;
 
-    auto name = options->llvm_path();
+    auto llvm_ir_path = options->llvm_path();
 
     {
-        boost::filesystem::create_directories(name.parent_path());
-        std::ofstream out{ name.string(), std::ios::trunc | std::ios::out };
+        if (auto llvm_ir_dir = llvm_ir_path.parent_path(); !llvm_ir_dir.empty())
+        {
+            boost::filesystem::create_directories(llvm_ir_dir);
+        }
+        std::ofstream out{ llvm_ir_path.string(), std::ios::trunc | std::ios::out };
         out << generated_code;
     }
 
@@ -166,21 +172,27 @@ try
 
     if (options->compilation_mode() == modes::assembly || options->should_generate_assembly_file())
     {
-        auto name = options->assembly_path();
+        auto assembly_path = options->assembly_path();
 
-        boost::filesystem::create_directories(name.parent_path());
+        if (auto assembly_dir = assembly_path.parent_path(); !assembly_dir.empty())
+        {
+            boost::filesystem::create_directories(assembly_dir);
+        }
         run_process((lbd / "llc").string() + " " + options->llvm_path().string()
-            + " -filetype=asm -relocation-model=pic -o " + name.string());
+            + " -filetype=asm -relocation-model=pic -o " + assembly_path.string());
     }
 
     if (options->compilation_mode() >= modes::object)
     {
-        auto name =
+        auto object_path =
             options->compilation_mode() == modes::object ? options->binary_path() : options->object_path();
 
-        boost::filesystem::create_directories(name.parent_path());
+        if (auto object_dir = object_path.parent_path(); !object_dir.empty())
+        {
+            boost::filesystem::create_directories(object_dir);
+        }
         run_process((lbd / "llc").string() + " " + options->llvm_path().string()
-            + " -filetype=obj -relocation-model=pic -o " + name.string());
+            + " -filetype=obj -relocation-model=pic -o " + object_path.string());
     }
 
     if (!options->should_generate_llvm_ir_file())
@@ -190,7 +202,6 @@ try
 
     if (options->compilation_mode() >= modes::link)
     {
-        boost::filesystem::create_directories(options->binary_path().parent_path());
         assert("need to figure this shit out, yo");
     }
 
