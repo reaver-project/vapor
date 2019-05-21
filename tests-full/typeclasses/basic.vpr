@@ -1,0 +1,66 @@
+// compile: {vprc} {input} -l -a -c
+// link: {cc} {input}.o {runtime} -o {input}.bin
+// run: {input}.bin 5
+
+module main
+{
+    typeclass algorithm(arithmetic : type)
+    {
+        function calculate(arg : arithmetic) -> arithmetic;
+
+        function indirection(arg : arithmetic) -> arithmetic
+        {
+            return calculate(arg);
+        }
+    };
+
+    let int32 = sized_int(32);
+
+    let factorial = instance algorithm(int32)
+    {
+        function calculate(arg)
+        {
+            if (arg == 1)
+            {
+                // TODO: allow this conversion from int to int32 to work in the return context
+                // return 1;
+                return arg;
+            }
+
+            return arg * calculate(arg - 1);
+        }
+    };
+
+    let wrapped_int32 = struct
+    {
+        let x : int32;
+    };
+
+    let wrapped_factorial = instance algorithm(wrapped_int32)
+    {
+        function calculate(arg)
+        {
+            if (arg.x == 1)
+            {
+                // TODO: allow this conversion from int to int32 to work in the return context
+                // return 1;
+                return arg;
+            }
+
+            return wrapped_int32{ arg.x * calculate(wrapped_int32{ arg.x - 1 }).x };
+        }
+    };
+
+    let entry = λ(arg : int32) -> int32
+    {
+        let not_wrapped = factorial.calculate(5);
+        let wrapped = wrapped_factorial.calculate(wrapped_int32{ arg });
+
+        let indirect = wrapped_factorial.indirection(wrapped_int32{ 5 });
+        let runtime_indirect = factorial.indirection(arg);
+
+        return not_wrapped - wrapped.x + indirect.x - runtime_indirect;
+    };
+}
+
+// vim: filetype=cpp

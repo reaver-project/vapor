@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -34,8 +34,12 @@ inline namespace _v1
         expression_ref() = default;
 
     public:
-        expression_ref(expression * expr) : expression{ expr->get_type() }, _referenced{ expr }
+        expression_ref(expression * expr) : _referenced{ expr }
         {
+            if (auto type = _referenced->try_get_type())
+            {
+                _set_type(type);
+            }
         }
 
         virtual void print(std::ostream & os, print_context ctx) const override
@@ -43,13 +47,16 @@ inline namespace _v1
             os << styles::def << ctx << styles::rule_name << "expression-ref";
             os << styles::def << " @ " << styles::address << this << styles::def << ":\n";
 
-            auto expr_ctx = ctx.make_branch(false);
+            auto expr_ctx = ctx.make_branch(!try_get_type());
             os << styles::def << expr_ctx << styles::subrule_name << "referenced expression";
             os << styles::def << " @ " << styles::address << _referenced << '\n';
 
-            auto type_ctx = ctx.make_branch(true);
-            os << styles::def << type_ctx << styles::subrule_name << "referenced expression type:\n";
-            get_type()->print(os, type_ctx.make_branch(true));
+            if (try_get_type())
+            {
+                auto type_ctx = ctx.make_branch(true);
+                os << styles::def << type_ctx << styles::subrule_name << "referenced expression type:\n";
+                get_type()->print(os, type_ctx.make_branch(true));
+            }
         }
 
     private:
@@ -65,10 +72,24 @@ inline namespace _v1
 
         virtual future<> _analyze(analysis_context & ctx) override
         {
-            return _referenced->analyze(ctx).then([&] { _referenced = _referenced->_get_replacement(); });
+            return _referenced->analyze(ctx).then([&] {
+                auto type = _referenced->try_get_type();
+                if (type)
+                {
+                    if (try_get_type())
+                    {
+                        assert(type == try_get_type());
+                        return;
+                    }
+
+                    _set_type(type);
+                }
+
+                assert(try_get_type());
+            });
         }
 
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override
         {
             auto referenced = _referenced;
 
@@ -77,7 +98,17 @@ inline namespace _v1
                 referenced = replaced;
             }
 
-            return std::make_unique<expression_ref>(referenced);
+            auto ret = std::make_unique<expression_ref>(referenced);
+            if (auto ast_info = get_ast_info())
+            {
+                ret->_set_ast_info(ast_info.value());
+            }
+            if (has_entity_name())
+            {
+                ret->set_name(get_entity_name());
+            }
+
+            return ret;
         }
 
         virtual future<expression *> _simplify_expr(recursive_context ctx) override
@@ -89,6 +120,11 @@ inline namespace _v1
                 }
                 _referenced = _referenced->_get_replacement();
 
+                if (!try_get_type() && _referenced->try_get_type())
+                {
+                    _set_type(_referenced->try_get_type());
+                }
+
                 return this;
             });
         }
@@ -96,8 +132,16 @@ inline namespace _v1
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
         {
             auto referenced_ir = _referenced->codegen_ir(ctx);
-            return { codegen::ir::instruction{
-                std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, { referenced_ir.back().result } } };
+            return { codegen::ir::instruction{ std::nullopt,
+                std::nullopt,
+                { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
+                {},
+                { referenced_ir.back().result } } };
+        }
+
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override
+        {
+            assert(0);
         }
 
         virtual bool _is_equal(const expression * rhs) const override
@@ -107,13 +151,21 @@ inline namespace _v1
 
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override;
 
+        friend std::unique_ptr<expression> make_expression_ref(expression *, std::optional<ast_node>);
+
     protected:
         expression * _referenced = nullptr;
     };
 
-    inline std::unique_ptr<expression> make_expression_ref(expression * expr)
+    inline std::unique_ptr<expression> make_expression_ref(expression * expr,
+        std::optional<ast_node> ast_info)
     {
-        return std::make_unique<expression_ref>(expr);
+        auto ret = std::make_unique<expression_ref>(expr);
+        if (ast_info)
+        {
+            ret->_set_ast_info(ast_info.value());
+        }
+        return ret;
     }
 }
 }

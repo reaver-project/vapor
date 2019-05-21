@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -31,20 +31,23 @@ inline namespace _v1
     {
         if (var.type == ir::builtin_types().type)
         {
-            assert(var.refers_to);
-            ctx.put_into_global_before += ctx.define_if_necessary(var.refers_to);
+            assert(var.initializer);
+            auto refers_to = std::get_if<std::shared_ptr<ir::type>>(var.initializer.value().operator->());
+            assert(refers_to);
+            ctx.put_into_global_before += ctx.define_if_necessary(*refers_to);
             return {};
         }
 
         ctx.put_into_global += ctx.define_if_necessary(var.type);
-        return U"define variable @ " + _pointer_to_string(&var) + U" : type @ " + _pointer_to_string(var.type.get()) + U" `"
+        return U"define variable @ " + _pointer_to_string(&var) + U" : type @ "
+            + _pointer_to_string(var.type.get()) + U" `"
             + (var.name ? _scope_string(var.scopes) + U"." + var.name.value() : U"") + U"`\n";
     }
 
     std::u32string ir_printer::generate_definition(const ir::member_variable & mem_var, codegen_context & ctx)
     {
-        return U"define member variable @ " + _pointer_to_string(&mem_var) + U" : type @ " + _pointer_to_string(mem_var.type.get()) + U" `" + mem_var.name
-            + U"`\n";
+        return U"define member variable @ " + _pointer_to_string(&mem_var) + U" : type @ "
+            + _pointer_to_string(mem_var.type.get()) + U" `" + mem_var.name + U"`\n";
     }
 }
 }

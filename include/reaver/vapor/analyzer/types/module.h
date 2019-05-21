@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2018 Michał "Griwes" Dominiak
+ * Copyright © 2018-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -36,7 +36,8 @@ inline namespace _v1
     class module_type : public type
     {
     public:
-        module_type(std::unique_ptr<scope> lex_scope, std::string name) : type{ std::move(lex_scope) }, _name{ std::move(name) }
+        module_type(std::unique_ptr<scope> lex_scope, std::string name)
+            : type{ std::move(lex_scope) }, _name{ std::move(name) }
         {
         }
 
@@ -57,11 +58,12 @@ inline namespace _v1
             assert(0);
         }
 
-        void add_symbol(std::string name, expression * ent);
+        void add_symbol(std::string name, expression * ent, bool is_visible = true);
         void close_scope();
 
     private:
-        virtual void _codegen_type(ir_generation_context &) const override
+        virtual void _codegen_type(ir_generation_context &,
+            std::shared_ptr<codegen::ir::user_type>) const override
         {
             assert(0);
         }

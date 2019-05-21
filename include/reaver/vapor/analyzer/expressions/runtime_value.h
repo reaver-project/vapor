@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -39,7 +39,7 @@ inline namespace _v1
         }
 
     private:
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override
         {
             return std::make_unique<runtime_value_expression>(get_type());
         }
@@ -51,6 +51,11 @@ inline namespace _v1
                 { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
                 {},
                 codegen::ir::make_variable(get_type()->codegen_type(ctx)) } };
+        }
+
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override
+        {
+            assert(0);
         }
 
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override

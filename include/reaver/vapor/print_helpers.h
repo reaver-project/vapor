@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -35,15 +35,22 @@ namespace analyzer
 {
     inline namespace _v1
     {
+        struct precontext;
         class expression;
     }
+}
+namespace proto
+{
+    struct range;
 }
 inline namespace _v1
 {
     namespace styles
     {
         static const style::style def = {};
-        static const style::style rule_name = { style::colors::bgreen, style::colors::def, style::styles::bold };
+        static const style::style rule_name = { style::colors::bgreen,
+            style::colors::def,
+            style::styles::bold };
         static const style::style subrule_name = { style::colors::bgreen, style::colors::def };
         static const style::style range = { style::colors::brown };
         static const style::style string_value = { style::colors::green };
@@ -121,6 +128,8 @@ inline namespace _v1
         const void * address;
         range_type range;
     };
+
+    ast_node imported_ast_node(analyzer::precontext & ctx, const proto::range & range);
 
     template<typename T>
     auto make_node(const T & t)

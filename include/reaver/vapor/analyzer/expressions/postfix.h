@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -48,41 +48,17 @@ inline namespace _v1
         }
 
     private:
-        static auto _get_replacement_helper()
-        {
-            return [](auto && self) {
-                if (self->_accessed_member)
-                {
-                    return self->_referenced_expression.value()->_get_replacement();
-                }
+        template<typename Self>
+        static auto _get_replacement_helper(Self &&);
 
-                if (self->_modifier)
-                {
-                    return self->_call_expression->_get_replacement();
-                }
-
-                return self->_base_expr->_get_replacement();
-            };
-        }
-
-        virtual expression * _get_replacement() override
-        {
-            auto repl = _get_replacement_helper()(this);
-            assert(repl);
-            return repl;
-        }
-
-        virtual const expression * _get_replacement() const override
-        {
-            auto repl = _get_replacement_helper()(this);
-            assert(repl);
-            return repl;
-        }
+        virtual expression * _get_replacement() override;
+        virtual const expression * _get_replacement() const override;
 
         virtual future<> _analyze(analysis_context &) override;
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
+        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override;
         virtual future<expression *> _simplify_expr(recursive_context) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override;
 
         virtual bool _is_equal(const expression * rhs) const override
         {
@@ -129,6 +105,8 @@ inline namespace _v1
 {
     struct precontext;
 
-    std::unique_ptr<postfix_expression> preanalyze_postfix_expression(precontext & ctx, const parser::postfix_expression & parse, scope * lex_scope);
+    std::unique_ptr<postfix_expression> preanalyze_postfix_expression(precontext & ctx,
+        const parser::postfix_expression & parse,
+        scope * lex_scope);
 }
 }

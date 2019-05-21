@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "../function.h"
+#include "../semantic/function.h"
 #include "type.h"
 
 namespace reaver::vapor::analyzer
@@ -41,8 +41,8 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            os << styles::def << ctx << styles::type << "sized_integer(" << std::to_string(_size) << ")" << styles::def << " @ " << styles::address << this
-               << styles::def << ": builtin type\n";
+            os << styles::def << ctx << styles::type << "sized_integer(" << std::to_string(_size) << ")"
+               << styles::def << " @ " << styles::address << this << styles::def << ": builtin type\n";
         }
 
         virtual future<std::vector<function *>> get_candidates(lexer::token_type token) const override
@@ -59,6 +59,9 @@ inline namespace _v1
 
                 case lexer::token_type::star:
                     return ret(_multiplication);
+
+                case lexer::token_type::slash:
+                    return ret(_division);
 
                 case lexer::token_type::equals:
                     return ret(_equal_comparison);
@@ -108,11 +111,12 @@ inline namespace _v1
         virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const override;
 
     private:
-        virtual void _codegen_type(ir_generation_context & ctx) const override;
+        virtual void _codegen_type(ir_generation_context & ctx,
+            std::shared_ptr<codegen::ir::user_type>) const override;
 
         virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
         {
-            assert(0);
+            return U"sized_int(" + utf32(std::to_string(_size)) + U")";
         }
 
         std::size_t _size;
@@ -124,6 +128,7 @@ inline namespace _v1
         std::unique_ptr<function> _addition;
         std::unique_ptr<function> _subtraction;
         std::unique_ptr<function> _multiplication;
+        std::unique_ptr<function> _division;
         std::unique_ptr<function> _equal_comparison;
         std::unique_ptr<function> _less_comparison;
         std::unique_ptr<function> _less_equal_comparison;

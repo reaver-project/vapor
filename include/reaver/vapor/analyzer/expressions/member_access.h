@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -38,7 +38,8 @@ inline namespace _v1
             _set_ast_info(parse);
         }
 
-        member_access_expression(std::u32string name, type * referenced_type) : expression{ referenced_type }, _name{ std::move(name) }
+        member_access_expression(std::u32string name, type * referenced_type)
+            : expression{ referenced_type }, _name{ std::move(name) }
         {
             assert(referenced_type);
         }
@@ -70,27 +71,29 @@ inline namespace _v1
 
         virtual future<> _analyze(analysis_context &) override;
 
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override
         {
             if (_referenced)
             {
-                return make_expression_ref(repl.get_replacement(_referenced));
+                return make_expression_ref(repl.get_replacement(_referenced), get_ast_info());
             }
 
             if (!_base)
             {
-                return std::unique_ptr<member_access_expression>{ new member_access_expression{ _name, get_type() } };
+                return std::unique_ptr<member_access_expression>{ new member_access_expression{
+                    _name, get_type() } };
             }
 
             auto replaced_base = repl.get_replacement(_base);
             if (auto repl = replaced_base->get_member(_name))
             {
-                return make_expression_ref(repl);
+                return make_expression_ref(repl, get_ast_info());
             }
 
             assert(!_assignment_expr);
 
-            std::unique_ptr<member_access_expression> ret{ new member_access_expression{ get_ast_info().value(), nullptr } };
+            std::unique_ptr<member_access_expression> ret{ new member_access_expression{
+                get_ast_info().value(), nullptr } };
             ret->_base = replaced_base;
             ret->_set_type(get_type());
             ret->_name = _name;
@@ -107,6 +110,7 @@ inline namespace _v1
         }
 
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override;
         virtual bool _invalidate_ir(ir_generation_context &) const override;
 
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
@@ -138,9 +142,12 @@ inline namespace _v1
 {
     struct precontext;
 
-    std::unique_ptr<member_access_expression> preanalyze_member_access_expression(precontext & ctx, const parser::member_expression & parse, scope *);
+    std::unique_ptr<member_access_expression> preanalyze_member_access_expression(precontext & ctx,
+        const parser::member_expression & parse,
+        scope *);
 
-    inline std::unique_ptr<member_access_expression> make_member_access_expression(std::u32string name, type * ref_type)
+    inline std::unique_ptr<member_access_expression> make_member_access_expression(std::u32string name,
+        type * ref_type)
     {
         return std::make_unique<member_access_expression>(std::move(name), ref_type);
     }

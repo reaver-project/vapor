@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,7 +23,7 @@
 #include <reaver/mayfly.h>
 
 #include "vapor/analyzer.h"
-#include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/lexer.h"
 #include "vapor/parser.h"
 
@@ -68,7 +68,7 @@ inline namespace _v1
 
         void set_clone_result(std::unique_ptr<expression> expr)
         {
-            _clone_expr = std::move(expr);
+            _cloned_expr = std::move(expr);
         }
 
         void set_simplified_expression(std::unique_ptr<expression> expr)
@@ -79,24 +79,27 @@ inline namespace _v1
     private:
         virtual reaver::future<> _analyze(analysis_context &) override
         {
-            if (!_analysis_type)
+            if (!try_get_type())
             {
-                throw unexpected_call{ __PRETTY_FUNCTION__ };
-            }
+                if (!_analysis_type)
+                {
+                    throw unexpected_call{ __PRETTY_FUNCTION__ };
+                }
 
-            _set_type(std::move(_analysis_type));
+                _set_type(std::move(_analysis_type));
+            }
 
             return reaver::make_ready_future();
         }
 
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override
         {
-            if (!_clone_expr)
+            if (!_cloned_expr)
             {
                 throw unexpected_call{ __PRETTY_FUNCTION__ };
             }
 
-            return std::move(const_cast<test_expression *>(this)->_clone_expr);
+            return std::move(const_cast<test_expression *>(this)->_cloned_expr);
         }
 
         virtual reaver::future<expression *> _simplify_expr(recursive_context) override
@@ -114,6 +117,11 @@ inline namespace _v1
             throw unexpected_call{ __PRETTY_FUNCTION__ };
         }
 
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override
+        {
+            throw unexpected_call{ __PRETTY_FUNCTION__ };
+        }
+
         virtual bool _is_equal(const expression * rhs) const override
         {
             throw unexpected_call{ __PRETTY_FUNCTION__ };
@@ -125,7 +133,7 @@ inline namespace _v1
         }
 
         type * _analysis_type = nullptr;
-        std::unique_ptr<expression> _clone_expr;
+        std::unique_ptr<expression> _cloned_expr;
         std::unique_ptr<expression> _simplified_expr;
     };
 
@@ -155,7 +163,8 @@ inline namespace _v1
         }
 
     private:
-        virtual void _codegen_type(ir_generation_context &) const override
+        virtual void _codegen_type(ir_generation_context &,
+            std::shared_ptr<codegen::ir::user_type>) const override
         {
             throw unexpected_call{ __PRETTY_FUNCTION__ };
         }

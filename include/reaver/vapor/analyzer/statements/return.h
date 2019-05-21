@@ -67,7 +67,7 @@ inline namespace _v1
         {
         }
 
-        virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const override
+        virtual std::unique_ptr<statement> _clone(replacements & repl) const override
         {
             auto ret = std::unique_ptr<return_statement>(new return_statement(*this));
             ret->_value_expr = repl.claim(_value_expr.get());
@@ -103,6 +103,8 @@ inline namespace _v1
 {
     struct precontext;
 
-    std::unique_ptr<return_statement> preanalyze_return(precontext & cts, const parser::return_expression & parse, scope * lex_scope);
+    std::unique_ptr<return_statement> preanalyze_return(precontext & cts,
+        const parser::return_expression & parse,
+        scope * lex_scope);
 }
 }

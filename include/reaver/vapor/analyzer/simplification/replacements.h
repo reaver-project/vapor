@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -34,6 +34,8 @@ inline namespace _v1
 {
     class statement;
     class expression;
+    class type;
+    class function;
 
     class replacements
     {
@@ -47,12 +49,16 @@ inline namespace _v1
 
         void add_replacement(const statement *, statement *);
         void add_replacement(const expression *, expression *);
-
-        statement * get_replacement(const statement *);
-        expression * get_replacement(const expression *);
+        void add_replacement(const type *, type *);
+        void add_replacement(const function *, function *);
 
         statement * try_get_replacement(const statement *) const;
         expression * try_get_replacement(const expression *) const;
+        type * try_get_replacement(const type *) const;
+        function * try_get_replacement(const function *) const;
+
+        statement * get_replacement(const statement *);
+        expression * get_replacement(const expression *);
 
         std::unique_ptr<statement> claim(const statement *);
         std::unique_ptr<expression> claim(const expression *);
@@ -79,14 +85,18 @@ inline namespace _v1
         auto _clone(const statement *);
         auto _clone(const expression *);
 
-        std::unordered_map<statement const *, statement *> _statements = {};
-        std::unordered_map<expression const *, expression *> _expressions = {};
+        std::unordered_map<const statement *, statement *> _statements = {};
+        std::unordered_map<const expression *, expression *> _expressions = {};
+        std::unordered_map<const type *, type *> _types = {};
+        std::unordered_map<const function *, function *> _functions = {};
 
-        std::unordered_map<statement const *, std::unique_ptr<statement>> _unclaimed_statements = {};
-        std::unordered_map<expression const *, std::unique_ptr<expression>> _unclaimed_expressions = {};
+        std::unordered_map<const statement *, std::unique_ptr<statement>> _unclaimed_statements = {};
+        std::unordered_map<const expression *, std::unique_ptr<expression>> _unclaimed_expressions = {};
 
-        std::unordered_set<statement const *> _added_statements;
-        std::unordered_set<expression const *> _added_expressions;
+        std::unordered_set<const statement *> _added_statements;
+        std::unordered_set<const expression *> _added_expressions;
+        std::unordered_set<const type *> _added_types;
+        std::unordered_set<const function *> _added_functions;
     };
 }
 }

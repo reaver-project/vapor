@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -42,11 +42,10 @@ inline namespace _v1
             std::vector<std::shared_ptr<variable>> parameters;
             value return_value;
             std::vector<instruction> instructions;
-            std::weak_ptr<variable_type> parent_type = {};
+            std::weak_ptr<type> parent_type = {};
 
             bool is_member = false; // this is a terrible name for this feature, but naming things is hard
             bool is_defined = true;
-            bool is_builtin = false;
             bool is_exported = false;
 
             bool is_entry = false;

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -31,7 +31,8 @@ namespace reaver::vapor::codegen
 inline namespace _v1
 {
     template<>
-    std::u32string llvm_ir_generator::generate<ir::aggregate_init_instruction>(const ir::instruction & inst, codegen_context & ctx)
+    std::u32string llvm_ir_generator::generate<ir::aggregate_init_instruction>(const ir::instruction & inst,
+        codegen_context & ctx)
     {
         std::u32string ret;
 
@@ -52,8 +53,9 @@ inline namespace _v1
                 return variable + U"." + utf32(std::to_string(step_count)) + U"\"";
             }();
 
-            ret += next_variable + U" = insertvalue " + type_of(inst.result, ctx) + U" " + base_variable + U", " + type_of(argument, ctx) + U" "
-                + value_of(argument, ctx) + U", " + utf32(std::to_string(step_count)) + U"\n";
+            ret += next_variable + U" = insertvalue " + type_of(inst.result, ctx) + U" " + base_variable
+                + U", " + type_of(argument, ctx) + U" " + value_of(argument, ctx) + U", "
+                + utf32(std::to_string(step_count)) + U"\n";
 
             base_variable = std::move(next_variable);
             ++step_count;
@@ -76,30 +78,42 @@ inline namespace _v1
     }
 
     template<>
-    std::u32string llvm_ir_generator::generate<ir::member_access_instruction>(const ir::instruction & inst, codegen_context & ctx)
+    std::u32string llvm_ir_generator::generate<ir::member_access_instruction>(const ir::instruction & inst,
+        codegen_context & ctx)
     {
         assert(inst.operands.size() == 2);
 
-        // TODO: the operand generated for this instruction should probably be ir::member_variable directly
-        // this also means that member_variable needs *index* in addition to offset
-        auto member_name = std::get<ir::label>(inst.operands[1]).name;
-        auto & members = std::get<std::shared_ptr<ir::variable>>(inst.operands[0])->type->members;
+        auto index = std::get<std::size_t>(fmap(inst.operands[1],
+            make_overload_set(
+                [&](const ir::label & label) {
+                    // TODO: the operand generated for this instruction should probably be ir::member_variable
+                    // directly this also means that member_variable needs *index* in addition to offset
+                    auto && member_name = label.name;
+                    auto user_type = dynamic_cast<ir::user_type *>(
+                        std::get<std::shared_ptr<ir::variable>>(inst.operands[0])->type.get());
+                    assert(user_type);
+                    auto & members = user_type->members;
 
-        std::size_t index = 0;
-        auto member_ir = std::find_if(members.begin(), members.end(), [&](auto && v) {
-            return std::get<bool>(fmap(v,
-                make_overload_set(
-                    [&](const ir::member_variable & member) {
-                        ++index;
-                        return member.name == member_name;
-                    },
-                    [&](const ir::function &) { return false; })));
-        });
+                    std::size_t index = 0;
+                    auto member_ir = std::find_if(members.begin(), members.end(), [&](auto && v) {
+                        return std::get<bool>(fmap(v,
+                            make_overload_set(
+                                [&](const ir::member_variable & member) {
+                                    ++index;
+                                    return member.name == member_name;
+                                },
+                                [&](const ir::function &) { return false; })));
+                    });
 
-        assert(member_ir != members.end());
+                    assert(member_ir != members.end());
 
-        return variable_of(inst.result, ctx) + U" = extractvalue " + type_of(inst.operands[0], ctx) + U" " + value_of(inst.operands[0], ctx) + U", "
-            + utf32(std::to_string(index - 1)) + U"\n";
+                    return index - 1;
+                },
+                [&](const ir::integer_value & index) { return index.value.convert_to<std::size_t>(); },
+                [](auto &&) -> std::size_t { assert(0); })));
+
+        return variable_of(inst.result, ctx) + U" = extractvalue " + type_of(inst.operands[0], ctx) + U" "
+            + value_of(inst.operands[0], ctx) + U", " + utf32(std::to_string(index)) + U"\n";
     }
 }
 }

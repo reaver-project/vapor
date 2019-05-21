@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,7 +23,7 @@
 #pragma once
 
 #include "../../range.h"
-#include "../function.h"
+#include "../semantic/function.h"
 #include "expression.h"
 
 namespace reaver::vapor::analyzer
@@ -33,7 +33,10 @@ inline namespace _v1
     class call_expression : public expression
     {
     public:
-        call_expression(function * fun, std::vector<expression *> args) : _function{ fun }, _args{ std::move(args) }
+        call_expression(function * fun,
+            std::unique_ptr<expression> vtable_arg,
+            std::vector<expression *> args)
+            : _function{ fun }, _vtable_arg{ std::move(vtable_arg) }, _args{ std::move(args) }
         {
         }
 
@@ -72,13 +75,14 @@ inline namespace _v1
         }
 
         virtual future<> _analyze(analysis_context &) override;
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
+        virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override;
 
     protected:
         virtual future<expression *> _simplify_expr(recursive_context) override;
 
     private:
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        virtual constant_init_ir _constinit_ir(ir_generation_context & ctx) const override;
 
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
         {
@@ -86,7 +90,8 @@ inline namespace _v1
         }
 
     protected:
-        function * _function;
+        function * _function = nullptr;
+        std::unique_ptr<expression> _vtable_arg = nullptr;
         std::unique_ptr<expression> _replacement_expr;
 
     private:
@@ -97,8 +102,13 @@ inline namespace _v1
     class owning_call_expression : public call_expression
     {
     public:
-        owning_call_expression(function * fun, std::vector<std::unique_ptr<expression>> args)
-            : call_expression{ fun, fmap(args, [](auto && arg) { return arg.get(); }) }, _var_exprs{ std::move(args) }
+        owning_call_expression(function * fun,
+            std::unique_ptr<expression> vtable_arg,
+            std::vector<std::unique_ptr<expression>> args)
+            : call_expression{ fun,
+                  std::move(vtable_arg),
+                  fmap(args, [](auto && arg) { return arg.get(); }) },
+              _var_exprs{ std::move(args) }
         {
         }
 
@@ -108,9 +118,11 @@ inline namespace _v1
         std::vector<std::unique_ptr<expression>> _var_exprs;
     };
 
-    inline auto make_call_expression(function * fun, std::vector<expression *> args)
+    inline auto make_call_expression(function * fun, expression * vtable_arg, std::vector<expression *> args)
     {
-        return std::make_unique<call_expression>(fun, args);
+        replacements repl;
+        return std::make_unique<call_expression>(
+            fun, fun->vtable_slot() ? repl.claim(vtable_arg) : nullptr, args);
     }
 }
 }

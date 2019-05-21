@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,44 +27,51 @@ namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    std::u32string ir_printer::generate_definition(std::shared_ptr<ir::variable_type> type, codegen::codegen_context & ctx)
+    std::u32string ir_printer::generate_definition(std::shared_ptr<ir::type> type,
+        codegen::codegen_context & ctx)
     {
-        if (type == ir::builtin_types().integer || type == ir::builtin_types().boolean || dynamic_cast<ir::sized_integer_type *>(type.get()))
+        if (type->is_fundamental())
         {
             return U"";
         }
 
-        std::u32string members;
+        if (auto user = dynamic_cast<ir::user_type *>(type.get()))
+        {
+            std::u32string members;
 
-        fmap(type->members, [&](auto && member) {
-            fmap(member,
-                make_overload_set(
-                    [&](codegen::ir::function & fn) {
-                        auto old_generated = ctx.declaring_members_for;
-                        ctx.declaring_members_for = type;
+            fmap(user->members, [&](auto && member) {
+                fmap(member,
+                    make_overload_set(
+                        [&](codegen::ir::function & fn) {
+                            auto old_generated = ctx.declaring_members_for;
+                            ctx.declaring_members_for = type;
 
-                        if (!fn.is_member)
-                        {
-                            members += U"[nonmember] ";
-                        }
-                        members += this->generate_definition(fn, ctx);
+                            if (!fn.is_member)
+                            {
+                                members += U"[nonmember] ";
+                            }
+                            members += this->generate_definition(fn, ctx);
 
-                        ctx.declaring_members_for = old_generated;
+                            ctx.declaring_members_for = old_generated;
 
-                        return unit{};
-                    },
-                    [&](codegen::ir::member_variable & member) {
-                        members += this->generate_definition(member, ctx);
-                        return unit{};
-                    },
-                    [&](auto &&) {
-                        assert(0);
-                        return unit{};
-                    }));
-            return unit{};
-        });
+                            return unit{};
+                        },
+                        [&](codegen::ir::member_variable & member) {
+                            members += this->generate_definition(member, ctx);
+                            return unit{};
+                        },
+                        [&](auto &&) {
+                            assert(0);
+                            return unit{};
+                        }));
+                return unit{};
+            });
 
-        return U"define type @ " + _pointer_to_string(type.get()) + U" `" + _scope_string(type->scopes) + U"." + type->name + U"`:\n{\n" + members + U"}\n";
+            return U"define user @ " + _pointer_to_string(type.get()) + U" `" + _scope_string(user->scopes)
+                + U"." + user->name + U"`:\n{\n" + members + U"}\n";
+        }
+
+        assert(!"unsupported type in codegen ir!");
     }
 }
 }

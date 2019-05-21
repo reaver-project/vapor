@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,14 +21,18 @@
  **/
 
 #include "vapor/analyzer/expressions/member_access.h"
-#include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/expressions/binary.h"
+#include "vapor/analyzer/expressions/postfix.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/parser/member_expression.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<member_access_expression> preanalyze_member_access_expression(precontext &, const parser::member_expression & parse, scope *)
+    std::unique_ptr<member_access_expression> preanalyze_member_access_expression(precontext &,
+        const parser::member_expression & parse,
+        scope *)
     {
         return std::make_unique<member_access_expression>(make_node(parse), parse.member_name.value.string);
     }
@@ -51,6 +55,51 @@ inline namespace _v1
         get_type()->print(os, type_ctx.make_branch(true));
     }
 
+    future<> member_access_expression::_analyze(analysis_context & ctx)
+    {
+        auto & expr_ctx = get_context();
+        assert(!expr_ctx.empty());
+
+        auto last_postfix = std::find_if(
+            expr_ctx.rbegin(), expr_ctx.rend(), [](auto && ctx_expr) { return ctx_expr.index() == 0; });
+        assert(last_postfix != expr_ctx.rend());
+
+        // this is actually conceptually "last_postfix + 1" (if last_postfix was a normal iterator)
+        // reverse iterators are weird
+        auto next = last_postfix.base();
+
+        if (next != expr_ctx.end())
+        {
+            auto top_level = std::get<binary_expression *>(*next);
+
+            // if this is on the LHS of a binary expression at the top level
+            // of a postfix expression (in the future: also tuple-expression)
+            // then this is an id part of a member assignment expression
+            // and hence we need to do a Special Thing
+            if (top_level->get_lhs() == this && top_level->get_operator() == lexer::token_type::assign)
+            {
+                _assignment_expr = make_member_assignment_expression(_name);
+                _set_type(_assignment_expr->get_type());
+                return make_ready_future();
+            }
+        }
+
+        return std::get<postfix_expression *>(*last_postfix)
+            ->get_base_expression(ctx)
+            .then([&](auto && base) { this->set_base_expression(base); });
+    }
+
+    void member_access_expression::set_base_expression(expression * base)
+    {
+        _base = base;
+
+        auto referenced_type = base->get_type()->get_member_type(_name);
+        assert(referenced_type && "no member found for whatever reason");
+
+        _referenced = base->get_member(_name);
+        this->_set_type(referenced_type);
+    }
+
     statement_ir member_access_expression::_codegen_ir(ir_generation_context & ctx) const
     {
         _base = _base ? _base : ctx.get_current_base();
@@ -58,13 +107,19 @@ inline namespace _v1
         auto base_variable_value = _base->codegen_ir(ctx).back().result;
         auto base_variable = std::get<std::shared_ptr<codegen::ir::variable>>(base_variable_value);
 
-        auto retvar = codegen::ir::make_variable(_base->get_type()->get_member_type(_name)->codegen_type(ctx));
+        auto retvar =
+            codegen::ir::make_variable(_base->get_type()->get_member_type(_name)->codegen_type(ctx));
 
         return { codegen::ir::instruction{ std::nullopt,
             std::nullopt,
             { boost::typeindex::type_id<codegen::ir::member_access_instruction>() },
-            { base_variable, codegen::ir::label{ _name, {} } },
+            { base_variable, codegen::ir::label{ _name } },
             retvar } };
+    }
+
+    constant_init_ir member_access_expression::_constinit_ir(ir_generation_context &) const
+    {
+        assert(0);
     }
 
     bool member_access_expression::_invalidate_ir(ir_generation_context & ctx) const

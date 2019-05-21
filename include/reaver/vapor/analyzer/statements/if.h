@@ -32,7 +32,10 @@ inline namespace _v1
     class if_statement : public statement
     {
     public:
-        if_statement(ast_node parse, std::unique_ptr<expression> condition, std::unique_ptr<statement> then, std::optional<std::unique_ptr<statement>> else_);
+        if_statement(ast_node parse,
+            std::unique_ptr<expression> condition,
+            std::unique_ptr<statement> then,
+            std::optional<std::unique_ptr<statement>> else_);
 
         virtual std::vector<const return_statement *> get_returns() const override
         {
@@ -48,7 +51,7 @@ inline namespace _v1
 
     private:
         virtual future<> _analyze(analysis_context &) override;
-        virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override;
+        virtual std::unique_ptr<statement> _clone(replacements &) const override;
         virtual future<statement *> _simplify(recursive_context) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
 
@@ -73,6 +76,8 @@ inline namespace _v1
 {
     struct precontex;
 
-    std::unique_ptr<if_statement> preanalyze_if_statement(precontext & ctx, const parser::if_statement & parse, scope * lex_scope);
+    std::unique_ptr<if_statement> preanalyze_if_statement(precontext & ctx,
+        const parser::if_statement & parse,
+        scope * lex_scope);
 }
 }

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2018 Michał "Griwes" Dominiak
+ * Copyright © 2018-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -28,7 +28,7 @@
 #include "vapor/analyzer/expressions/expression_ref.h"
 #include "vapor/analyzer/expressions/import.h"
 #include "vapor/analyzer/precontext.h"
-#include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/types/module.h"
 #include "vapor/analyzer/types/unresolved.h"
 #include "vapor/codegen/ir/scope.h"
@@ -42,7 +42,10 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     template<typename Iter>
-    std::optional<boost::filesystem::path> find_module(const boost::filesystem::path & module_path, Iter begin, Iter & end, bool source_only = false)
+    std::optional<boost::filesystem::path> find_module(const boost::filesystem::path & module_path,
+        Iter begin,
+        Iter & end,
+        bool source_only = false)
     {
         auto actual_path = std::accumulate(begin, end, module_path, std::divides<>());
 
@@ -66,7 +69,8 @@ inline namespace _v1
             assert(!"found a module directory, but no master module file inside...");
         }
 
-        // if there is a non-directory compiled module that matches and we are interested in more than sources...
+        // if there is a non-directory compiled module that matches and we are interested in more than
+        // sources...
         if (!source_only && boost::filesystem::is_regular_file(actual_path.replace_extension(".vprm")))
         {
             return std::make_optional(actual_path);
@@ -87,7 +91,9 @@ inline namespace _v1
         return std::nullopt;
     }
 
-    std::optional<boost::filesystem::path> find_module(precontext & ctx, const std::vector<std::string> & module_name, bool source_only = false)
+    std::optional<boost::filesystem::path> find_module(precontext & ctx,
+        const std::vector<std::string> & module_name,
+        bool source_only = false)
     {
         for (auto module_path : ctx.options.module_paths())
         {
@@ -104,7 +110,9 @@ inline namespace _v1
 
     entity * import_module(precontext & ctx, const std::vector<std::string> & module_name);
 
-    void import_from_ast(precontext & ctx, const boost::filesystem::path & path, const std::vector<std::string> & module_name)
+    void import_from_ast(precontext & ctx,
+        const boost::filesystem::path & path,
+        const std::vector<std::string> & module_name)
     {
         std::ifstream interface_file{ path.string() };
         if (!interface_file)
@@ -117,45 +125,85 @@ inline namespace _v1
 
         if (!ast->ParseFromIstream(&interface_file))
         {
-            throw exception{ logger::fatal } << "couldn't parse the serialized ast from the module interface file " << path;
+            throw exception{ logger::fatal }
+                << "couldn't parse the serialized ast from the module interface file " << path;
         }
         if (!ast->has_compilation_info() || ast->modules_size() == 0)
         {
-            throw exception{ logger::fatal } << "no valid serialized ast in the module interface file " << path;
+            throw exception{ logger::fatal } << "no valid serialized ast in the module interface file "
+                                             << path;
         }
 
         if (auto source_path = find_module(ctx, module_name, true))
         {
-            if (static_cast<std::int64_t>(boost::filesystem::last_write_time(source_path.value())) > ast->compilation_info().time())
-            {
-                boost::iostreams::mapped_file_source source{ source_path->string() };
-                auto sha256sum = sha256(source.data(), source.size());
-
-                if (sha256sum != ast->compilation_info().source_hash())
+            auto check_module = [&ctx](auto && comp_time, auto && comp_hash, auto && module_name) {
+                if (auto source_path = find_module(ctx, module_name, true))
                 {
-                    ctx.options.compile_file(source_path.value());
-                    import_module(ctx, module_name);
-                    return;
+                    if (static_cast<std::int64_t>(boost::filesystem::last_write_time(source_path.value()))
+                        > comp_time)
+                    {
+                        boost::iostreams::mapped_file_source source{ source_path->string() };
+                        auto sha256sum = sha256(source.data(), source.size());
+
+                        if (sha256sum != comp_hash)
+                        {
+                            return false;
+                        }
+                    }
                 }
+
+                return true;
+            };
+
+            bool is_up_to_date = check_module(
+                ast->compilation_info().time(), ast->compilation_info().source_hash(), module_name);
+
+            if (is_up_to_date)
+            {
+                for (auto && import : ast->imports())
+                {
+                    if (!check_module(import.target_compilation_time(),
+                            import.target_source_hash(),
+                            std::vector<std::string>{ import.name().begin(), import.name().end() }))
+                    {
+                        is_up_to_date = false;
+                        break;
+                    }
+                }
+            }
+
+            if (!is_up_to_date)
+            {
+                ctx.options.compile_file(source_path.value());
+                import_module(ctx, module_name);
+                return;
             }
         }
 
-        ctx.current_file.push(boost::filesystem::canonical(path));
+        ctx.module_path_stack.push_back(
+            { boost::filesystem::canonical(path), ast->compilation_info().filepath() });
 
+        std::unordered_set<entity *> import_deps;
         if (ast->imports_size())
         {
-            throw exception{ logger::fatal } << "not implemented yet: loading a module with imports";
+            for (auto && import : ast->imports())
+            {
+                std::vector<std::string> name{ import.name().begin(), import.name().end() };
+                import_deps.insert(import_module(ctx, name));
+            }
         }
 
         for (auto && module : ast->modules())
         {
             auto name = boost::algorithm::join(module.name(), ".");
-            ctx.current_scope.push(name);
+            ctx.module_stack.emplace_back(name);
 
             if (static_cast<std::size_t>(module.name_size()) < module_name.size()
-                || std::mismatch(module_name.begin(), module_name.end(), module.name().begin()).first != module_name.end())
+                || std::mismatch(module_name.begin(), module_name.end(), module.name().begin()).first
+                    != module_name.end())
             {
-                throw exception{ logger::error } << "invalid module name `" << name << "` in module file " << ctx.current_file.top();
+                throw exception{ logger::error } << "invalid module name `" << name << "` in module file "
+                                                 << ctx.module_path_stack.back().module_file_path;
             }
 
             std::string cumulative_name;
@@ -180,8 +228,7 @@ inline namespace _v1
                 auto scope = lex_scope->clone_for_class();
                 scope->set_name(utf32(name_part), codegen::ir::scope_type::module);
 
-                auto old_scope = lex_scope;
-                lex_scope = scope.get();
+                auto old_scope = std::exchange(lex_scope, scope.get());
 
                 auto type_uptr = std::make_unique<module_type>(std::move(scope), name_part);
                 type = type_uptr.get();
@@ -195,9 +242,13 @@ inline namespace _v1
                 saved->set_timestamp(ast->compilation_info().time());
                 saved->set_source_hash(ast->compilation_info().source_hash());
                 saved->set_import_name({ module.name().begin(), module.name().end() });
+                for (auto && dep : import_deps)
+                {
+                    saved->add_import_dependency(dep);
+                }
             }
 
-            ctx.module_scope = lex_scope;
+            ctx.current_lex_scope = lex_scope;
 
             // seems that protobuf's map doesn't have a deterministic order of iteration
             // we can't let that happen in a compiler...
@@ -207,39 +258,26 @@ inline namespace _v1
             {
                 symbols.emplace_back(&entity.first, &entity.second);
             }
-            std::sort(symbols.begin(), symbols.end(), [](auto && lhs, auto && rhs) { return *lhs.first < *rhs.first; });
+            std::sort(symbols.begin(), symbols.end(), [](auto && lhs, auto && rhs) {
+                return *lhs.first < *rhs.first;
+            });
 
             for (auto && imported_entity : symbols)
             {
-                if (imported_entity.second->is_associated())
-                {
-                    assert(imported_entity.second->associated_entities_size() == 0);
-                    continue;
-                }
-
-                std::map<std::string, const proto::entity *> associated;
-                for (auto && assoc : imported_entity.second->associated_entities())
-                {
-                    associated.emplace(assoc, &module.symbols().at(assoc));
-                }
-
                 ctx.current_symbol = *imported_entity.first;
-                auto ent = get_entity(ctx, *imported_entity.second, associated);
+                auto ent = get_entity(ctx, *imported_entity.second);
                 ent->set_name(utf32(*imported_entity.first));
-                type->add_symbol(*imported_entity.first, ent.get());
-                for (auto && assoc : ent->get_associated())
-                {
-                    type->add_symbol(assoc.first, assoc.second);
-                    assoc.second->set_name(utf32(assoc.first));
-                }
+                type->add_symbol(
+                    *imported_entity.first, ent.get(), imported_entity.second->is_name_exported());
 
-                ctx.imported_entities.insert(std::move(ent));
+                ctx.imported_entities.emplace(
+                    synthesized_udr{ ctx.module_stack.back(), ctx.current_symbol }, std::move(ent));
             }
 
-            ctx.current_scope.pop();
+            ctx.module_stack.pop_back();
         }
 
-        ctx.current_file.pop();
+        ctx.module_path_stack.pop_back();
     }
 
     entity * import_module(precontext & ctx, const std::vector<std::string> & module_name)
@@ -279,20 +317,26 @@ inline namespace _v1
             assert(!"some weird unknown extension found by find_module!");
         }
 
-        throw exception{ logger::error } << "couldn't find module `" << boost::algorithm::join(module_name, ".") << "`";
+        throw exception{ logger::error } << "couldn't find module `"
+                                         << boost::algorithm::join(module_name, ".") << "`";
     }
 
-    std::unique_ptr<import_expression> preanalyze_import(precontext & ctx, const parser::import_expression & parse, scope * lex_scope, import_mode mode)
+    std::unique_ptr<import_expression> preanalyze_import(precontext & ctx,
+        const parser::import_expression & parse,
+        scope * lex_scope,
+        import_mode mode)
     {
         auto expr = std::get<0>(fmap(parse.module_name,
             make_overload_set(
                 [&](const parser::id_expression & expr) {
-                    auto module = fmap(expr.id_expression_value, [](auto && id) { return utf8(id.value.string); });
+                    auto module =
+                        fmap(expr.id_expression_value, [](auto && id) { return utf8(id.value.string); });
                     auto ent = import_module(ctx, module);
                     assert(ent);
 
                     if (mode == import_mode::statement)
                     {
+                        // FIXME: this is wrong, because parent symbols won't be unhidden
                         ent->get_symbol()->unhide();
                     }
 
@@ -317,7 +361,7 @@ inline namespace _v1
         // I think I don't, but I'll need that as a debug tool one day
     }
 
-    std::unique_ptr<expression> import_expression::_clone_expr_with_replacement(replacements &) const
+    std::unique_ptr<expression> import_expression::_clone_expr(replacements &) const
     {
         return std::make_unique<import_expression>(get_ast_info().value(), _module);
     }

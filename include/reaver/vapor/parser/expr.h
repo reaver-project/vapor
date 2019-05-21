@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -25,5 +25,5 @@
 #include "binary_expression.h"
 #include "lambda_expression.h"
 #include "struct.h"
-#include "template.h"
+#include "typeclass.h"
 #include "unary_expression.h"

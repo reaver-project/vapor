@@ -31,7 +31,10 @@ MAYFLY_BEGIN_SUITE("parser");
 MAYFLY_BEGIN_SUITE("id_expression");
 
 MAYFLY_ADD_TESTCASE("simple id-expression",
-    test(UR"(foo)", id_expression{ { 0, 3 }, { identifier{ { 0, 3 }, { lexer::token_type::identifier, UR"(foo)", { 0, 3 } } } } }, &parse_id_expression));
+    test(UR"(foo)",
+        id_expression{ { 0, 3 },
+            { identifier{ { 0, 3 }, { lexer::token_type::identifier, UR"(foo)", { 0, 3 } } } } },
+        &parse_id_expression));
 
 MAYFLY_ADD_TESTCASE("complex id-expression",
     test(UR"(foo.bar.baz)",

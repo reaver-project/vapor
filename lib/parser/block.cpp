@@ -29,7 +29,8 @@ inline namespace _v1
 {
     bool operator==(const block & lhs, const block & rhs)
     {
-        return lhs.range == rhs.range && lhs.block_value == rhs.block_value && lhs.value_expression == rhs.value_expression;
+        return lhs.range == rhs.range && lhs.block_value == rhs.block_value
+            && lhs.value_expression == rhs.value_expression;
     }
 
     block parse_block(context & ctx)

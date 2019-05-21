@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,10 +24,6 @@
 
 #include <reaver/future.h>
 
-#include "../../codegen/ir/entity.h"
-#include "../../codegen/ir/function.h"
-#include "../../codegen/ir/instruction.h"
-#include "../../codegen/ir/variable.h"
 #include "../../print_helpers.h"
 #include "../ir_context.h"
 #include "../semantic/context.h"
@@ -40,9 +36,7 @@ inline namespace _v1
 {
     class return_statement;
     class scope;
-
-    using statement_ir = std::vector<codegen::ir::instruction>;
-    using declaration_ir = std::vector<codegen::ir::entity>;
+    class parameter;
 
     class statement
     {
@@ -81,13 +75,14 @@ inline namespace _v1
         friend class replacements;
 
     private:
-        std::unique_ptr<statement> clone_with_replacement(replacements & repl) const
+        std::unique_ptr<statement> clone(replacements & repl) const
         {
-            return _clone_with_replacement(repl);
+            return _clone(repl);
         }
 
     public:
-        std::unique_ptr<statement> clone_with_replacement(const std::vector<expression *> & to_replace, const std::vector<expression *> & replacements) const
+        std::unique_ptr<statement> clone(const std::vector<expression *> & to_replace,
+            const std::vector<expression *> & replacements) const
         {
             assert(to_replace.size() == replacements.size());
             class replacements repl;
@@ -96,12 +91,13 @@ inline namespace _v1
                 repl.add_replacement(to_replace[i], replacements[i]);
             }
 
-            return _clone_with_replacement(repl);
+            return _clone(repl);
         }
 
         future<statement *> simplify(recursive_context ctx)
         {
-            return ctx.proper.get_future_or_init(this, [&]() { return make_ready_future().then([this, ctx]() { return _simplify(ctx); }); });
+            return ctx.proper.get_future_or_init(
+                this, [&]() { return make_ready_future().then([this, ctx]() { return _simplify(ctx); }); });
         }
 
         virtual std::vector<const return_statement *> get_returns() const
@@ -159,7 +155,7 @@ inline namespace _v1
             return make_ready_future();
         }
 
-        virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const = 0;
+        virtual std::unique_ptr<statement> _clone(replacements &) const = 0;
 
         virtual bool _invalidate_ir(ir_generation_context &) const
         {
@@ -194,7 +190,7 @@ inline namespace _v1
             return make_ready_future();
         }
 
-        virtual std::unique_ptr<statement> _clone_with_replacement(replacements &) const override
+        virtual std::unique_ptr<statement> _clone(replacements &) const override
         {
             return std::make_unique<null_statement>();
         }
@@ -226,7 +222,9 @@ inline namespace _v1
 {
     struct precontext;
 
-    std::unique_ptr<statement> preanalyze_statement(precontext & ctx, const parser::statement & parse, scope *& lex_scope);
+    std::unique_ptr<statement> preanalyze_statement(precontext & ctx,
+        const parser::statement & parse,
+        scope *& lex_scope);
 
     inline std::unique_ptr<statement> make_null_statement()
     {

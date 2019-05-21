@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2018 Michał "Griwes" Dominiak
+ * Copyright © 2014-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -37,7 +37,8 @@ void run_process(const std::string & cmdline)
 {
     reaver::logger::dlog() << "Running `" << cmdline << "`";
 
-    auto child = boost::process::child(cmdline, boost::process::std_out > stdout, boost::process::std_err > stderr);
+    auto child =
+        boost::process::child(cmdline, boost::process::std_out > stdout, boost::process::std_err > stderr);
 
     child.wait();
 
@@ -47,12 +48,14 @@ void run_process(const std::string & cmdline)
     }
 }
 
-int main(int argc, char ** argv) try
+int main(int argc, char ** argv)
+try
 {
     // force a single thread of execution
     reaver::default_executor(reaver::make_executor<reaver::thread_pool>(1));
+    // reaver::logger::default_logger().set_level(reaver::logger::trace);
 
-    auto[options, exit] = reaver::vapor::cli::get_options(argc, argv);
+    auto [options, exit] = reaver::vapor::cli::get_options(argc, argv);
 
     if (exit)
     {
@@ -72,7 +75,8 @@ int main(int argc, char ** argv) try
         return 1;
     }
 
-    std::string program_utf8{ std::istreambuf_iterator<char>(input.rdbuf()), std::istreambuf_iterator<char>() };
+    std::string program_utf8{ std::istreambuf_iterator<char>(input.rdbuf()),
+        std::istreambuf_iterator<char>() };
     auto program = boost::locale::conv::utf_to_utf<char32_t>(program_utf8);
 
     reaver::logger::dlog() << "Input:";
@@ -80,7 +84,9 @@ int main(int argc, char ** argv) try
     reaver::logger::dlog();
 
     reaver::logger::dlog() << "Tokens:";
-    reaver::vapor::lexer::iterator iterator{ program.begin(), program.end(), options->source_path()->native() };
+    reaver::vapor::lexer::iterator iterator{
+        program.begin(), program.end(), options->source_path()->native()
+    };
     for (auto it = iterator; it; ++it)
     {
         reaver::logger::dlog() << *it;
@@ -163,15 +169,18 @@ int main(int argc, char ** argv) try
         auto name = options->assembly_path();
 
         boost::filesystem::create_directories(name.parent_path());
-        run_process((lbd / "llc").string() + " " + options->llvm_path().string() + " -filetype=asm -relocation-model=pic -o " + name.string());
+        run_process((lbd / "llc").string() + " " + options->llvm_path().string()
+            + " -filetype=asm -relocation-model=pic -o " + name.string());
     }
 
     if (options->compilation_mode() >= modes::object)
     {
-        auto name = options->compilation_mode() == modes::object ? options->binary_path() : options->object_path();
+        auto name =
+            options->compilation_mode() == modes::object ? options->binary_path() : options->object_path();
 
         boost::filesystem::create_directories(name.parent_path());
-        run_process((lbd / "llc").string() + " " + options->llvm_path().string() + " -filetype=obj -relocation-model=pic -o " + name.string());
+        run_process((lbd / "llc").string() + " " + options->llvm_path().string()
+            + " -filetype=obj -relocation-model=pic -o " + name.string());
     }
 
     if (!options->should_generate_llvm_ir_file())

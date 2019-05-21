@@ -1,0 +1,13 @@
+// IGNORE: true
+
+import export_typeclass;
+
+module export_function
+{
+    let int32 = sized_int(32);
+    export function exported(value : int32, inst : export_typeclass.exported(int32)) {
+        return inst.do_the_thing(value) + 10;
+    }
+}
+
+// vim: filetype=cpp

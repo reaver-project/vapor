@@ -65,6 +65,7 @@ inline namespace _v1
         std::vector<std::unique_ptr<import_expression>> _imports;
 
         std::unique_ptr<scope> _global_scope;
+        std::vector<std::shared_ptr<void>> _keepalive_list;
         analysis_context _proper;
         precontext _ctx;
 

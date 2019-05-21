@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,39 +24,41 @@
 #include "vapor/analyzer/expressions/call.h"
 #include "vapor/analyzer/expressions/function.h"
 #include "vapor/analyzer/expressions/runtime_value.h"
-#include "vapor/analyzer/function.h"
-#include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/semantic/function.h"
+#include "vapor/analyzer/semantic/symbol.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
     function_type::function_type(type * ret, std::vector<type *> params)
-        : _return{ ret }, _parameters{ std::move(params) }, _params{ fmap(_parameters, [&](auto && param_type) { return make_runtime_value(param_type); }) }
+        : _return{ ret },
+          _parameters{ std::move(params) },
+          _params{ fmap(_parameters, [&](auto && param_type) { return make_runtime_value(param_type); }) }
     {
         _params.insert(_params.begin(), make_runtime_value(this));
 
-        _call_operator = make_function("function type " + function_type::explain() + " call operator",
-            _return->get_expression(),
-            fmap(_params, [](auto && expr) { return expr.get(); }),
-            [&](auto && ctx) -> codegen::ir::function { assert(0); });
+        _call_operator = make_function("function type " + function_type::explain() + " call operator");
+        _call_operator->set_return_type(_return->get_expression());
+        _call_operator->set_parameters(fmap(_params, [](auto && expr) { return expr.get(); }));
 
         _call_operator->make_member();
 
-        _call_operator->add_analysis_hook([this](analysis_context & ctx, call_expression * expr, std::vector<expression *> args) {
-            assert(args.size() >= 1);
-            assert(args.front()->get_type() == this);
-            auto fun_expr = args.front()->as<function_expression>();
-            assert(fun_expr->is_constant());
-            auto function = fun_expr->get_value();
-            assert(function);
+        _call_operator->add_analysis_hook(
+            [this](analysis_context & ctx, call_expression * expr, std::vector<expression *> args) {
+                assert(args.size() >= 1);
+                assert(args.front()->get_type() == this);
+                auto fun_expr = args.front()->as<function_expression>();
+                assert(fun_expr->is_constant());
+                auto function = fun_expr->get_value();
+                assert(function);
 
-            auto replacement = make_call_expression(function, std::move(args));
-            auto repl_ptr = replacement.get();
-            expr->replace_with(std::move(replacement));
+                auto replacement = make_call_expression(function, nullptr, std::move(args));
+                auto repl_ptr = replacement.get();
+                expr->replace_with(std::move(replacement));
 
-            return repl_ptr->analyze(ctx);
-        });
+                return repl_ptr->analyze(ctx);
+            });
     }
 
     future<std::vector<function *>> function_type::get_candidates(lexer::token_type op) const

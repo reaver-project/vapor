@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -25,7 +25,7 @@
 #include <memory>
 
 #include "../../lexer/token.h"
-#include "../function.h"
+#include "../semantic/function.h"
 #include "type.h"
 
 #include "expressions/type.pb.h"
@@ -78,7 +78,8 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            os << styles::def << ctx << styles::type << "integer" << styles::def << " @ " << styles::address << this << styles::def << ": builtin type\n";
+            os << styles::def << ctx << styles::type << "integer" << styles::def << " @ " << styles::address
+               << this << styles::def << ": builtin type\n";
         }
 
         virtual std::unique_ptr<proto::type> generate_interface() const override
@@ -96,7 +97,8 @@ inline namespace _v1
         }
 
     private:
-        virtual void _codegen_type(ir_generation_context &) const override;
+        virtual void _codegen_type(ir_generation_context &,
+            std::shared_ptr<codegen::ir::user_type>) const override;
 
         virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
         {
@@ -104,7 +106,10 @@ inline namespace _v1
         }
 
         template<typename Instruction, typename Eval>
-        static auto _generate_function(const char32_t * name, const char * desc, Eval eval, type * return_type);
+        static auto _generate_function(const char32_t * name,
+            const char * desc,
+            Eval eval,
+            type * return_type);
         static function * _addition();
         static function * _subtraction();
         static function * _multiplication();

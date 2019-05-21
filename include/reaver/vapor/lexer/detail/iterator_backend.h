@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2018 Michał "Griwes" Dominiak
+ * Copyright © 2014-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -46,7 +46,10 @@ inline namespace _v1
             friend class lexer::iterator;
 
             template<typename Iter>
-            _iterator_backend(Iter begin, Iter end, std::shared_ptr<_lexer_node> & node, std::optional<std::string_view> filename)
+            _iterator_backend(Iter begin,
+                Iter end,
+                std::shared_ptr<_lexer_node> & node,
+                std::optional<std::string_view> filename)
                 : _thread{ [&]() { _worker(begin, end, filename); } }
             {
                 _sem.wait();
@@ -103,21 +106,24 @@ inline namespace _v1
                     return *(begin + x);
                 };
 
-                auto generate_token = [&](token_type type, position begin, position end, std::u32string string) {
-                    if (!node)
-                    {
-                        _initial = std::make_shared<_lexer_node>(token{ type, std::move(string), range_type(begin, end) }, _ex);
-                        node = _initial;
-                        _sem.notify();
-                    }
+                auto generate_token =
+                    [&](token_type type, position begin, position end, std::u32string string) {
+                        if (!node)
+                        {
+                            _initial = std::make_shared<_lexer_node>(
+                                token{ type, std::move(string), range_type(begin, end) }, _ex);
+                            node = _initial;
+                            _sem.notify();
+                        }
 
-                    else
-                    {
-                        node->_next = std::make_shared<_lexer_node>(token{ type, std::move(string), range_type(begin, end) }, _ex);
-                        node->_sem.notify();
-                        node = node->_next;
-                    }
-                };
+                        else
+                        {
+                            node->_next = std::make_shared<_lexer_node>(
+                                token{ type, std::move(string), range_type(begin, end) }, _ex);
+                            node->_sem.notify();
+                            node = node->_next;
+                        }
+                    };
 
                 auto notify = [&]() {
                     if (!node)
@@ -129,9 +135,13 @@ inline namespace _v1
                     node->_sem.notify();
                 };
 
-                auto is_white_space = [](char32_t c) { return c == U' ' || c == U'\t' || c == U'\n' || c == U'\r'; };
+                auto is_white_space = [](char32_t c) {
+                    return c == U' ' || c == U'\t' || c == U'\n' || c == U'\r';
+                };
 
-                auto is_identifier_start = [](char32_t c) { return (c >= U'a' && c <= U'z') || (c >= U'A' && c <= U'Z') || c == U'_'; };
+                auto is_identifier_start = [](char32_t c) {
+                    return (c >= U'a' && c <= U'z') || (c >= U'A' && c <= U'Z') || c == U'_';
+                };
 
                 auto is_decimal = [&](char32_t c) { return c >= U'0' && c <= U'9'; };
 
@@ -164,7 +174,7 @@ inline namespace _v1
                         {
                             get();
 
-                            while ((next = get()) && (second = peek()) && next != U'*' && second != U'/')
+                            while ((next = get()) && (second = peek()) && (next != U'*' || second != U'/'))
                             {
                             }
 
@@ -184,15 +194,21 @@ inline namespace _v1
                         auto second = peek();
                         auto third = peek(1);
 
-                        if (second && third && symbols3.find(*next) != symbols3.end() && symbols3.at(*next).find(*second) != symbols3.at(*next).end()
-                            && symbols3.at(*next).at(*second).find(*third) != symbols3.at(*next).at(*second).end())
+                        if (second && third && symbols3.find(*next) != symbols3.end()
+                            && symbols3.at(*next).find(*second) != symbols3.at(*next).end()
+                            && symbols3.at(*next).at(*second).find(*third)
+                                != symbols3.at(*next).at(*second).end())
                         {
                             auto p = pos;
-                            generate_token(symbols3.at(*next).at(*second).at(*third), p, p + 3, { *next, *get(), *get() });
+                            generate_token(symbols3.at(*next).at(*second).at(*third),
+                                p,
+                                p + 3,
+                                { *next, *get(), *get() });
                             continue;
                         }
 
-                        else if (second && symbols2.find(*next) != symbols2.end() && symbols2.at(*next).find(*second) != symbols2.at(*next).end())
+                        else if (second && symbols2.find(*next) != symbols2.end()
+                            && symbols2.at(*next).find(*second) != symbols2.at(*next).end())
                         {
                             auto p = pos;
                             generate_token(symbols2.at(*next).at(*second), p, p + 2, { *next, *get() });
@@ -213,7 +229,8 @@ inline namespace _v1
                     {
                         auto second = peek();
 
-                        while (next && second && (second != U'"' || next == U'\\') && (second != U'\n' || next == U'\\'))
+                        while (next && second && (second != U'"' || next == U'\\')
+                            && (second != U'\n' || next == U'\\'))
                         {
                             variable_length.push_back(*next);
 
@@ -223,7 +240,8 @@ inline namespace _v1
 
                         if (!next || second == U'\n')
                         {
-                            _ex = std::make_exception_ptr(unterminated_string{ { p, p + variable_length.size() } });
+                            _ex = std::make_exception_ptr(
+                                unterminated_string{ { p, p + variable_length.size() } });
                             notify();
                             return;
                         }
@@ -244,11 +262,13 @@ inline namespace _v1
 
                         if (keywords.find(variable_length) != keywords.end())
                         {
-                            generate_token(keywords.at(variable_length), p, p + variable_length.size(), variable_length);
+                            generate_token(
+                                keywords.at(variable_length), p, p + variable_length.size(), variable_length);
                             continue;
                         }
 
-                        generate_token(token_type::identifier, p, p + variable_length.size(), variable_length);
+                        generate_token(
+                            token_type::identifier, p, p + variable_length.size(), variable_length);
                         continue;
                     }
 
@@ -270,13 +290,15 @@ inline namespace _v1
                                 variable_length.push_back(*next);
                             } while (peek() && is_identifier_char(*peek()) && (next = get()));
 
-                            generate_token(token_type::integer_suffix, p, p + variable_length.size(), variable_length);
+                            generate_token(
+                                token_type::integer_suffix, p, p + variable_length.size(), variable_length);
                         }
 
                         continue;
                     }
 
-                    _ex = std::make_exception_ptr(exception(logger::fatal) << "stray character in file: " << utf8({ *next }));
+                    _ex = std::make_exception_ptr(
+                        exception(logger::fatal) << "stray character in file: " << utf8({ *next }));
                     notify();
                     return;
                 }

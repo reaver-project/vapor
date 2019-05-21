@@ -33,7 +33,8 @@ inline namespace _v1
             return;
         }
 
-        if (std::find(_functions_to_generate.begin(), _functions_to_generate.end(), fn) == _functions_to_generate.end())
+        if (std::find(_functions_to_generate.begin(), _functions_to_generate.end(), fn)
+            == _functions_to_generate.end())
         {
             _functions_to_generate.push_back(fn);
         }

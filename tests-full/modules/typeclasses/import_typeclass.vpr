@@ -1,0 +1,45 @@
+// compile: {vprc} {input} -I {directory}/imports -l -a -c
+// link: {cc} {runtime} {input}.o {directory}/imports/export_typeclass.vpr.o -o {input}.bin
+// run: {input}.bin 6
+
+import export_typeclass;
+
+module main
+{
+    let int32 = sized_int(32);
+
+    /*
+     * TODO: enable this one once default implementations are exported
+     *
+    export let use_default = instance export_typeclass.exported(int32) {
+        function without_default(arg) {
+            return arg * 2 + 1;
+        }
+    };
+     */
+
+    export let override_default = instance export_typeclass.exported(int32) {
+        function with_default(arg) {
+            return arg / 2 - 1;
+        }
+
+        function without_default(arg) {
+            return arg * arg;
+        }
+    };
+
+    let entry = λ(arg : int32) {
+        /*
+         * TODO: enable this once default implementations are exported
+        let a = use_default.with_default(arg);
+        let b = use_default.without_default(arg);
+         */
+
+        let c = override_default.with_default(arg);
+        let d = override_default.without_default(arg);
+
+        return c + d - 38;
+    };
+}
+
+// vim: filetype=cpp

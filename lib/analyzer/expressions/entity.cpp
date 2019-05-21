@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2018 Michał "Griwes" Dominiak
+ * Copyright © 2018-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,12 +21,18 @@
  **/
 
 #include "vapor/analyzer/expressions/entity.h"
+#include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/expressions/runtime_value.h"
-#include "vapor/analyzer/function.h"
+#include "vapor/analyzer/expressions/typeclass.h"
+#include "vapor/analyzer/expressions/typeclass_instance.h"
 #include "vapor/analyzer/precontext.h"
-#include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/semantic/function.h"
+#include "vapor/analyzer/semantic/overload_set.h"
+#include "vapor/analyzer/semantic/symbol.h"
+#include "vapor/analyzer/semantic/typeclass.h"
+#include "vapor/analyzer/semantic/typeclass_instance.h"
+#include "vapor/analyzer/statements/function.h"
 #include "vapor/analyzer/types/module.h"
-#include "vapor/analyzer/types/overload_set.h"
 #include "vapor/analyzer/types/unresolved.h"
 
 #include "entity.pb.h"
@@ -35,15 +41,18 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    entity::entity(type * t, std::unique_ptr<expression> wrapped) : expression{ t }, _wrapped{ std::move(wrapped) }
+    entity::entity(type * t, std::unique_ptr<expression> wrapped)
+        : expression{ t }, _wrapped{ std::move(wrapped) }
     {
     }
 
-    entity::entity(std::unique_ptr<type> t, std::unique_ptr<expression> wrapped) : expression{ t.get() }, _owned{ std::move(t) }, _wrapped{ std::move(wrapped) }
+    entity::entity(std::unique_ptr<type> t, std::unique_ptr<expression> wrapped)
+        : expression{ t.get() }, _owned{ std::move(t) }, _wrapped{ std::move(wrapped) }
     {
     }
 
-    entity::entity(std::shared_ptr<unresolved_type> res, std::unique_ptr<expression> wrapped) : _unresolved{ std::move(res) }, _wrapped{ std::move(wrapped) }
+    entity::entity(std::shared_ptr<unresolved_type> res, std::unique_ptr<expression> wrapped)
+        : _unresolved{ std::move(res) }, _wrapped{ std::move(wrapped) }
     {
         if (auto t = _unresolved.value()->get_resolved())
         {
@@ -81,15 +90,10 @@ inline namespace _v1
 
     future<expression *> entity::_simplify_expr(recursive_context ctx)
     {
-        if (_wrapped)
-        {
-            return make_ready_future(_wrapped.release());
-        }
-
-        return make_ready_future(make_runtime_value(get_type()).release());
+        return make_ready_future<expression *>(this);
     }
 
-    std::unique_ptr<expression> entity::_clone_expr_with_replacement(replacements & repl) const
+    std::unique_ptr<expression> entity::_clone_expr(replacements & repl) const
     {
         assert(0);
     }
@@ -106,6 +110,31 @@ inline namespace _v1
             { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
             {},
             codegen::ir::make_variable(get_type()->codegen_type(ctx)) } };
+    }
+
+    constant_init_ir entity::_constinit_ir(ir_generation_context &) const
+    {
+        assert(0);
+    }
+
+    declaration_ir entity::declaration_codegen_ir(ir_generation_context & ctx) const
+    {
+        if (!has_entity_name() || get_type()->is_meta())
+        {
+            return {};
+        }
+
+        if (_wrapped)
+        {
+            // trigger side-effects of generating the IR for the underlying entity
+            // such as emitting declarations of typeclass instance functions
+            static_cast<void>(_wrapped->codegen_ir(ctx));
+            if (_wrapped->is_constant())
+            {
+                static_cast<void>(_wrapped->constinit_ir(ctx));
+            }
+        }
+        return { codegen::ir::make_variable(get_type()->codegen_type(ctx), get_entity_name()) };
     }
 
     std::vector<codegen::ir::entity> entity::module_codegen_ir(ir_generation_context & ctx) const
@@ -137,7 +166,7 @@ inline namespace _v1
         return mod;
     }
 
-    std::unique_ptr<entity> get_entity(precontext & ctx, const proto::entity & ent, const std::map<std::string, const proto::entity *> & associated)
+    std::unique_ptr<entity> get_entity(precontext & ctx, const proto::entity & ent)
     {
         auto type = get_imported_type_ref(ctx, ent.type());
 
@@ -150,22 +179,36 @@ inline namespace _v1
                 break;
 
             case proto::entity::kOverloadSet:
+                expr = make_unresolved_overload_set_expression(ctx, &ent.type().user_defined());
+                break;
+
+            case proto::entity::kTypeclass:
             {
-                assert(ent.associated_entities_size() == 1);
-                auto type = import_overload_set_type(ctx, associated.at(ent.associated_entities(0))->type_value().overload_set());
-                type->set_name(utf32(ent.associated_entities(0)));
-                auto type_expr = type->get_expression();
-                auto ret = std::make_unique<entity>(std::move(type));
-                ret->add_associated(ent.associated_entities(0), type_expr);
-                return ret;
+                auto tc = import_typeclass(ctx, ent.typeclass());
+                expr = std::make_unique<typeclass_expression>(
+                    imported_ast_node(ctx, ent.range()), std::move(tc));
+                expr->set_name(utf32(ctx.current_symbol));
+                break;
+            }
+
+            case proto::entity::kTypeclassInstance:
+            {
+                auto inst = import_typeclass_instance(ctx, type, ent.typeclass_instance());
+                expr = std::make_unique<typeclass_instance_expression>(
+                    imported_ast_node(ctx, ent.range()), std::move(inst));
+                expr->set_name(utf32(ctx.current_symbol));
+                break;
             }
 
             default:
-                throw exception{ logger::fatal } << "unknown expression kind of symbol `" << ctx.current_scope.top() << "." << ctx.current_symbol
-                                                 << "` in imported file " << ctx.current_file.top();
+                throw exception{ logger::fatal } << "unknown expression kind of symbol `"
+                                                 << ctx.module_stack.back() << "." << ctx.current_symbol
+                                                 << "` in imported file "
+                                                 << ctx.module_path_stack.back().module_file_path;
         }
 
-        return std::get<0>(fmap(type, [&](auto && type) { return std::make_unique<entity>(std::move(type), std::move(expr)); }));
+        return std::get<0>(fmap(
+            type, [&](auto && type) { return std::make_unique<entity>(std::move(type), std::move(expr)); }));
     }
 }
 }

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,8 +21,9 @@
  **/
 
 #include "vapor/analyzer/statements/if.h"
+#include "vapor/analyzer/expressions/boolean.h"
 #include "vapor/analyzer/helpers.h"
-#include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/parser/expr.h"
 #include "vapor/parser/if_statement.h"
 
@@ -30,12 +31,16 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<if_statement> preanalyze_if_statement(precontext & ctx, const parser::if_statement & parse, scope * lex_scope)
+    std::unique_ptr<if_statement> preanalyze_if_statement(precontext & ctx,
+        const parser::if_statement & parse,
+        scope * lex_scope)
     {
         return std::make_unique<if_statement>(make_node(parse),
             preanalyze_expression(ctx, parse.condition, lex_scope),
             preanalyze_block(ctx, parse.then_block, lex_scope, false),
-            fmap(parse.else_block, [&](auto && parse) -> std::unique_ptr<statement> { return preanalyze_block(ctx, parse, lex_scope, false); }));
+            fmap(parse.else_block, [&](auto && parse) -> std::unique_ptr<statement> {
+                return preanalyze_block(ctx, parse, lex_scope, false);
+            }));
     }
 
     if_statement::if_statement(ast_node parse,
@@ -69,6 +74,79 @@ inline namespace _v1
         }
     }
 
+    future<> if_statement::_analyze(analysis_context & ctx)
+    {
+        auto fut = _condition->analyze(ctx);
+
+        auto analyze_block = [&](auto && block) {
+            fut = fut.then([&]() {
+                auto tmp_ctx = std::make_unique<analysis_context>(ctx);
+                auto fut = block->analyze(*tmp_ctx);
+                return fut.then([ctx = std::move(tmp_ctx)] {});
+            });
+            return unit{};
+        };
+
+        analyze_block(_then_block);
+        fmap(_else_block, analyze_block);
+
+        return fut;
+    }
+
+    std::unique_ptr<statement> if_statement::_clone(replacements & repl) const
+    {
+        auto ret = std::unique_ptr<if_statement>(new if_statement(get_ast_info().value(),
+            repl.claim(_condition.get()),
+            repl.claim(_then_block.get()),
+            fmap(_else_block, [&](auto && block) { return repl.claim(block.get()); })));
+
+        return ret;
+    }
+
+    future<statement *> if_statement::_simplify(recursive_context ctx)
+    {
+        auto future =
+            _condition->simplify_expr(ctx)
+                .then([&, ctx](auto && simplified) { replace_uptr(_condition, simplified, ctx.proper); })
+                .then([&, ctx] { return _then_block->simplify(ctx); })
+                .then([&, ctx](auto && simpl) { replace_uptr(_then_block, simpl, ctx.proper); });
+
+        if (_else_block)
+        {
+            future =
+                future.then([&, ctx] { return _else_block.value()->simplify(ctx); })
+                    .then([&, ctx](auto && simpl) { replace_uptr(_else_block.value(), simpl, ctx.proper); });
+        }
+
+        return future.then([&]() -> statement * {
+            if (_condition->is_constant())
+            {
+                if (_condition->get_type() != builtin_types().boolean.get())
+                {
+                    assert(0);
+                }
+
+                auto condition = _condition->as<boolean_constant>()->get_value();
+                if (condition)
+                {
+                    return _then_block.release();
+                }
+
+                else
+                {
+                    if (_else_block)
+                    {
+                        return _else_block.value().release();
+                    }
+
+                    return make_null_statement().release();
+                }
+            }
+
+            return this;
+        });
+    }
+
     statement_ir if_statement::_codegen_ir(ir_generation_context & ctx) const
     {
         // instructions returning those labels are silly
@@ -97,7 +175,11 @@ inline namespace _v1
             }
             else
             {
-                ir = statement_ir{ { {}, {}, { boost::typeindex::type_id<codegen::ir::noop_instruction>() }, {}, codegen::ir::label{ else_label, {} } } };
+                ir = statement_ir{ { {},
+                    {},
+                    { boost::typeindex::type_id<codegen::ir::noop_instruction>() },
+                    {},
+                    codegen::ir::label{ else_label } } };
             }
 
             ir.front().label = else_label;
@@ -107,16 +189,20 @@ inline namespace _v1
         auto jump = codegen::ir::instruction{ {},
             {},
             { boost::typeindex::type_id<codegen::ir::conditional_jump_instruction>() },
-            { condition_variable, codegen::ir::label{ then_label, {} }, codegen::ir::label{ else_label, {} } },
+            { condition_variable, codegen::ir::label{ then_label }, codegen::ir::label{ else_label } },
             condition_variable };
 
-        auto jump_after_else = codegen::ir::instruction{
-            {}, {}, { boost::typeindex::type_id<codegen::ir::jump_instruction>() }, { codegen::ir::label{ after_else_label, {} } }, condition_variable
-        };
+        auto jump_after_else = codegen::ir::instruction{ {},
+            {},
+            { boost::typeindex::type_id<codegen::ir::jump_instruction>() },
+            { codegen::ir::label{ after_else_label } },
+            condition_variable };
 
-        auto after_else = codegen::ir::instruction{
-            after_else_label, {}, { boost::typeindex::type_id<codegen::ir::noop_instruction>() }, {}, codegen::ir::label{ after_else_label, {} }
-        };
+        auto after_else = codegen::ir::instruction{ after_else_label,
+            {},
+            { boost::typeindex::type_id<codegen::ir::noop_instruction>() },
+            {},
+            codegen::ir::label{ after_else_label } };
 
         statement_ir ret;
         ret.reserve(condition_instructions.size() + 4 + then_instructions.size() + else_instructions.size());

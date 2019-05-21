@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2018 Michał "Griwes" Dominiak
+ * Copyright © 2018-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -34,15 +34,21 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     ast::ast(parser::ast original_ast, const config::compiler_options & opts)
-        : _original_ast{ std::move(original_ast) }, _global_scope{ std::make_unique<scope>() }, _ctx{ opts, _proper }, _source_path{ opts.source_path() }
+        : _original_ast{ std::move(original_ast) },
+          _global_scope{ std::make_unique<scope>() },
+          _ctx{ opts, _proper },
+          _source_path{ opts.source_path() }
     {
         _ctx.global_scope = _global_scope.get();
+        initialize_global_scope(_global_scope.get(), _keepalive_list);
 
         try
         {
-            _imports =
-                fmap(_original_ast.global_imports, [this](auto && im) { return preanalyze_import(_ctx, im, _global_scope.get(), import_mode::statement); });
-            _modules = fmap(_original_ast.module_definitions, [this](auto && m) { return preanalyze_module(_ctx, m, _global_scope.get()); });
+            _imports = fmap(_original_ast.global_imports, [this](auto && im) {
+                return preanalyze_import(_ctx, im, _global_scope.get(), import_mode::statement);
+            });
+            _modules = fmap(_original_ast.module_definitions,
+                [this](auto && m) { return preanalyze_module(_ctx, m, _global_scope.get()); });
 
             for (auto && entity : _ctx.modules)
             {
@@ -62,7 +68,10 @@ inline namespace _v1
 
     void ast::analyze()
     {
-        get(when_all(fmap(_modules, [this](auto && m) { return m->analyze(_proper); })));
+        auto futures = fmap(_modules, [this](auto && m) { return m->analyze(_proper); });
+        futures.emplace_back(when_all(fmap(_global_scope->symbols_in_order(),
+            [&](auto && symb) { return symb->get_expression()->analyze(_proper); })));
+        get(when_all(futures));
     }
 
     void ast::simplify()
@@ -128,6 +137,15 @@ inline namespace _v1
 
         serialized.set_allocated_compilation_info(info.release());
 
+        std::unordered_set<entity *> import_deps;
+        auto add_import = [&](auto && self, entity * module) -> void {
+            import_deps.insert(module);
+            for (auto && import_dep : module->get_import_dependencies())
+            {
+                self(self, import_dep);
+            }
+        };
+
         for (auto && [name, module] : _ctx.modules)
         {
             if (module->is_local())
@@ -135,6 +153,11 @@ inline namespace _v1
                 continue;
             }
 
+            add_import(add_import, module.get());
+        }
+
+        for (auto && module : import_deps)
+        {
             auto & imp = *serialized.add_imports();
 
             imp.set_target_compilation_time(module->get_timestamp());

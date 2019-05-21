@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,16 +27,17 @@
 #include <boost/multiprecision/integer.hpp>
 
 #include "../../parser/literal.h"
-#include "expression.h"
+#include "constant.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class integer_constant : public expression
+    class integer_constant : public constant
     {
     public:
-        integer_constant(boost::multiprecision::cpp_int value, ast_node parse = {}) : expression{ builtin_types().integer.get() }, _value{ std::move(value) }
+        integer_constant(boost::multiprecision::cpp_int value, ast_node parse = {})
+            : constant{ builtin_types().integer.get() }, _value{ std::move(value) }
         {
             _set_ast_info(parse);
         }
@@ -53,11 +54,6 @@ inline namespace _v1
             return _value;
         }
 
-        virtual bool is_constant() const override
-        {
-            return true;
-        }
-
         virtual std::unique_ptr<expression> convert_to(type * target) const override;
 
     private:
@@ -66,7 +62,7 @@ inline namespace _v1
             return make_ready_future();
         }
 
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override
         {
             return std::make_unique<integer_constant>(_value, get_ast_info().value());
         }
@@ -76,7 +72,7 @@ inline namespace _v1
             return make_ready_future<expression *>(this);
         }
 
-        virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override;
 
         virtual bool _is_equal(const expression * rhs) const override
         {
@@ -94,7 +90,8 @@ inline namespace _v1
 
     inline std::unique_ptr<integer_constant> make_integer_constant(const parser::integer_literal & parse)
     {
-        return std::make_unique<integer_constant>(boost::multiprecision::cpp_int{ utf8(parse.value.string) }, make_node(parse));
+        return std::make_unique<integer_constant>(
+            boost::multiprecision::cpp_int{ utf8(parse.value.string) }, make_node(parse));
     }
 }
 }

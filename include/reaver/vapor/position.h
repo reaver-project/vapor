@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2016, 2018 Michał "Griwes" Dominiak
+ * Copyright © 2014-2016, 2018-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -40,7 +40,8 @@ inline namespace _v1
         position & operator=(const position &) = default;
         position & operator=(position &&) = default;
 
-        position(std::size_t offset, std::optional<std::string_view> file_path = std::nullopt) : offset{ offset }, file_path{ file_path }
+        position(std::size_t offset, std::optional<std::string_view> file_path = std::nullopt)
+            : offset{ offset }, file_path{ file_path }
         {
         }
 

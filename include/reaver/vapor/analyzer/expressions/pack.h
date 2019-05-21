@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -29,12 +29,14 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<expression> make_pack_expression(std::vector<std::unique_ptr<expression>> vars, type * pack_type = builtin_types().type->get_pack_type());
+    std::unique_ptr<expression> make_pack_expression(std::vector<std::unique_ptr<expression>> vars,
+        type * pack_type = builtin_types().type->get_pack_type());
 
     class pack_expression : public expression
     {
     public:
-        pack_expression(std::vector<expression *> exprs, type * pack_type) : _exprs{ std::move(exprs) }, _type{ pack_type }
+        pack_expression(std::vector<expression *> exprs, type * pack_type)
+            : _exprs{ std::move(exprs) }, _type{ pack_type }
         {
             _set_type(_type);
         }
@@ -45,7 +47,7 @@ inline namespace _v1
         }
 
     private:
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override
         {
             return make_pack_expression(fmap(_exprs, [&](auto && expr) { return repl.claim(expr); }), _type);
         }
@@ -55,11 +57,19 @@ inline namespace _v1
             assert(0);
         }
 
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override
+        {
+            assert(0);
+        }
+
         virtual bool _is_equal(const expression * rhs) const override
         {
             auto rhs_pack = rhs->as<pack_expression>();
             return _exprs.size() == rhs_pack->_exprs.size()
-                && std::equal(_exprs.begin(), _exprs.end(), rhs_pack->_exprs.begin(), [](auto && lhs, auto && rhs) { return lhs->is_equal(rhs); });
+                && std::equal(
+                       _exprs.begin(), _exprs.end(), rhs_pack->_exprs.begin(), [](auto && lhs, auto && rhs) {
+                           return lhs->is_equal(rhs);
+                       });
         }
 
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
@@ -75,7 +85,8 @@ inline namespace _v1
     {
     public:
         owning_pack_expression(std::vector<std::unique_ptr<expression>> vars, type * pack_type)
-            : pack_expression{ fmap(vars, [](auto && var) { return var.get(); }), pack_type }, _vars{ std::move(vars) }
+            : pack_expression{ fmap(vars, [](auto && var) { return var.get(); }), pack_type },
+              _vars{ std::move(vars) }
         {
         }
 
@@ -83,12 +94,14 @@ inline namespace _v1
         std::vector<std::unique_ptr<expression>> _vars;
     };
 
-    inline auto make_pack_expression(std::vector<expression *> vars = {}, type * pack_type = builtin_types().type->get_pack_type())
+    inline auto make_pack_expression(std::vector<expression *> vars = {},
+        type * pack_type = builtin_types().type->get_pack_type())
     {
         return std::make_unique<pack_expression>(std::move(vars), pack_type);
     }
 
-    inline std::unique_ptr<expression> make_pack_expression(std::vector<std::unique_ptr<expression>> vars, type * pack_type)
+    inline std::unique_ptr<expression> make_pack_expression(std::vector<std::unique_ptr<expression>> vars,
+        type * pack_type)
     {
         return std::make_unique<owning_pack_expression>(std::move(vars), pack_type);
     }

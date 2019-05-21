@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -25,9 +25,9 @@
 #include <memory>
 #include <numeric>
 
-#include "../function.h"
-#include "../scope.h"
+#include "../semantic/function.h"
 #include "../semantic/parameter_list.h"
+#include "../semantic/scope.h"
 #include "../statements/block.h"
 #include "../statements/statement.h"
 
@@ -50,9 +50,10 @@ inline namespace _v1
 
     private:
         virtual future<> _analyze(analysis_context &) override;
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
+        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override;
         virtual future<expression *> _simplify_expr(recursive_context) override;
         virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override;
 
         virtual std::unique_ptr<google::protobuf::Message> _generate_interface() const override
         {
@@ -82,6 +83,8 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     struct precontex;
-    std::unique_ptr<closure> preanalyze_closure(precontext & ctx, const parser::lambda_expression & parse, scope * lex_scope);
+    std::unique_ptr<closure> preanalyze_closure(precontext & ctx,
+        const parser::lambda_expression & parse,
+        scope * lex_scope);
 }
 }

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -99,15 +99,17 @@ options_result get_options(int argc, char ** argv)
     // clang-format on
 
     boost::program_options::variables_map variables;
-    boost::program_options::store(
-        boost::program_options::command_line_parser(argc, argv)
-            .options(options)
-            .positional(positional)
-            .style(boost::program_options::command_line_style::allow_short | boost::program_options::command_line_style::allow_long
-                | boost::program_options::command_line_style::allow_sticky | boost::program_options::command_line_style::allow_dash_for_short
-                | boost::program_options::command_line_style::long_allow_next | boost::program_options::command_line_style::short_allow_next
-                | boost::program_options::command_line_style::allow_long_disguise)
-            .run(),
+    boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
+                                      .options(options)
+                                      .positional(positional)
+                                      .style(boost::program_options::command_line_style::allow_short
+                                          | boost::program_options::command_line_style::allow_long
+                                          | boost::program_options::command_line_style::allow_sticky
+                                          | boost::program_options::command_line_style::allow_dash_for_short
+                                          | boost::program_options::command_line_style::long_allow_next
+                                          | boost::program_options::command_line_style::short_allow_next
+                                          | boost::program_options::command_line_style::allow_long_disguise)
+                                      .run(),
         variables);
     boost::program_options::notify(variables);
 
@@ -134,7 +136,8 @@ options_result get_options(int argc, char ** argv)
         throw exception{ logger::error } << "no source files provided!";
     }
 
-    auto compilation_mode = (variables.count("i") << 0) | (variables.count("s") << 1) | (variables.count("c") << 2);
+    auto compilation_mode =
+        (variables.count("i") << 0) | (variables.count("s") << 1) | (variables.count("c") << 2);
     switch (compilation_mode)
     {
         case config::compilation_modes::llvm_ir:
@@ -148,7 +151,8 @@ options_result get_options(int argc, char ** argv)
             break;
 
         default:
-            throw exception{ logger::error } << "multiple compilation modes selected; choose at most one of -i, -s and -o.";
+            throw exception{ logger::error }
+                << "multiple compilation modes selected; choose at most one of -i, -s and -o.";
     }
 
     ret->set_compilation_handler([& ctx = *ret, vprc = argv[0]](const boost::filesystem::path & path) {
@@ -158,12 +162,12 @@ options_result get_options(int argc, char ** argv)
         argv.push_back("-c");
         argv.push_back(path.string());
 
-#define HANDLE_DIR(name, flag)                                                                                                                                 \
-    auto name##_variable_from_macro = ctx.name##_dir();                                                                                                        \
-    if (name##_variable_from_macro)                                                                                                                            \
-    {                                                                                                                                                          \
-        argv.push_back(flag);                                                                                                                                  \
-        argv.push_back(name##_variable_from_macro.value().string());                                                                                           \
+#define HANDLE_DIR(name, flag)                                                                               \
+    auto name##_variable_from_macro = ctx.name##_dir();                                                      \
+    if (name##_variable_from_macro)                                                                          \
+    {                                                                                                        \
+        argv.push_back(flag);                                                                                \
+        argv.push_back(name##_variable_from_macro.value().string());                                         \
     }
 
         HANDLE_DIR(module, "--mdir");
@@ -173,6 +177,12 @@ options_result get_options(int argc, char ** argv)
 
 #undef HANDLE_DIR
 
+        for (auto && module_path : ctx.module_paths())
+        {
+            argv.push_back("-I");
+            argv.push_back(module_path.string());
+        }
+
         logger::dlog() << "Compiling dependency: " << path << "...";
         logger::default_logger().sync();
 
@@ -180,6 +190,10 @@ options_result get_options(int argc, char ** argv)
         auto child = bp::child(argv, bp::std_out > stdout, bp::std_err > stderr, bp::std_in < stdin);
 
         child.wait();
+        if (child.exit_code() != 0)
+        {
+            assert(!"TODO: nice error message when a dependency fails to compile");
+        }
     });
 
     return { std::move(ret), false };

@@ -33,7 +33,9 @@ using namespace reaver::vapor::lexer;
 MAYFLY_BEGIN_SUITE("lexer");
 MAYFLY_BEGIN_SUITE("strings");
 
-MAYFLY_ADD_TESTCASE("simple string", test(UR"("foo" "bar")", { { token_type::string, U"\"foo\"", { 0, 5 } }, { token_type::string, U"\"bar\"", { 6, 11 } } }));
+MAYFLY_ADD_TESTCASE("simple string",
+    test(UR"("foo" "bar")",
+        { { token_type::string, U"\"foo\"", { 0, 5 } }, { token_type::string, U"\"bar\"", { 6, 11 } } }));
 
 MAYFLY_ADD_TESTCASE("escaped string",
     test(UR"("foo\"bar")",

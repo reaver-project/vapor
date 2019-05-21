@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014-2018 Michał "Griwes" Dominiak
+ * Copyright © 2014-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -77,18 +77,32 @@ inline namespace _v1
             return _type;
         }
 
+        type * try_get_type() const
+        {
+            return _type;
+        }
+
         friend class replacements;
 
     private:
-        std::unique_ptr<expression> clone_expr_with_replacement(replacements & repl) const
+        std::unique_ptr<expression> clone_expr(replacements & repl) const
         {
-            return _clone_expr_with_replacement(repl);
+            return _clone_expr(repl);
         }
 
     public:
         future<expression *> simplify_expr(recursive_context ctx)
         {
-            return ctx.proper.get_future_or_init(this, [&]() { return make_ready_future().then([this, ctx]() { return _simplify_expr(ctx); }); });
+            return ctx.proper.get_future_or_init(this, [&]() {
+                return make_ready_future()
+                    .then([this, ctx]() { return _simplify_expr(ctx); })
+                    .then([this](auto && expr) {
+                        logger::dlog(logger::trace)
+                            << "Simplified " << this << " (" << typeid(*this).name() << ") to " << expr
+                            << " (" << (expr ? typeid(*expr).name() : "?") << ")";
+                        return expr;
+                    });
+            });
         }
 
         void set_context(expression_context ctx)
@@ -135,7 +149,8 @@ inline namespace _v1
             auto rhs_replacement = rhs->_get_replacement();
             if (this != this_replacement || rhs != rhs_replacement)
             {
-                return this_replacement->_is_equal(rhs_replacement) || rhs_replacement->_is_equal(this_replacement);
+                return this_replacement->_is_equal(rhs_replacement)
+                    || rhs_replacement->_is_equal(this_replacement);
             }
 
             return false;
@@ -196,6 +211,11 @@ inline namespace _v1
             return repl->get_member(name);
         }
 
+        virtual function * get_vtable_entry(std::size_t) const
+        {
+            return nullptr;
+        }
+
         template<typename T>
         T * as()
         {
@@ -235,20 +255,52 @@ inline namespace _v1
             return _generate_interface();
         }
 
-        virtual void set_name([[maybe_unused]] std::u32string name)
+        virtual std::unordered_set<expression *> get_associated_entities() const
         {
+            return {};
+        }
+
+        void set_name(std::u32string name)
+        {
+            _name = name;
+            _set_name(std::move(name));
+        }
+
+        bool has_entity_name() const
+        {
+            return _name.has_value();
+        }
+
+        const std::u32string & get_entity_name() const
+        {
+            if (!_name)
+            {
+                throw exception{ logger::crash }
+                    << "tried to get the entity name of an unnamed object of type " << typeid(*this).name()
+                    << " @ " << this;
+            }
+            return _name.value();
         }
 
         virtual void mark_exported()
         {
         }
 
+        constant_init_ir constinit_ir(ir_generation_context & ctx) const
+        {
+            assert(is_constant());
+            return _constinit_ir(ctx);
+        }
+
     protected:
         void _set_type(type * t)
         {
-            assert(!_type);
-            assert(t);
+            assert((!_type) ^ (_type == t));
             _type = t;
+        }
+
+        virtual void _set_name(std::u32string)
+        {
         }
 
         virtual future<> _analyze(analysis_context &) override
@@ -257,12 +309,12 @@ inline namespace _v1
             return make_ready_future();
         }
 
-        virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const final
+        virtual std::unique_ptr<statement> _clone(replacements & repl) const final
         {
-            return _clone_expr_with_replacement(repl);
+            return _clone_expr(repl);
         }
 
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const = 0;
+        virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const = 0;
 
         virtual future<statement *> _simplify(recursive_context ctx) override final
         {
@@ -274,7 +326,9 @@ inline namespace _v1
             return make_ready_future(this);
         }
 
-        virtual bool _is_equal(const expression * expr) const
+        virtual constant_init_ir _constinit_ir(ir_generation_context & ctx) const = 0;
+
+        virtual bool _is_equal([[maybe_unused]] const expression * expr) const
         {
             return false;
         }
@@ -299,6 +353,7 @@ inline namespace _v1
     private:
         type * _type = nullptr;
         expression * _default_value = nullptr;
+        std::optional<std::u32string> _name;
 
         expression_context _expr_ctx;
     };
@@ -307,6 +362,8 @@ inline namespace _v1
     {
         return expr.hash_value();
     }
+
+    future<expression *> simplification_loop(analysis_context & ctx, std::unique_ptr<expression> & uptr);
 }
 }
 
@@ -322,6 +379,8 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     struct precontext;
-    std::unique_ptr<expression> preanalyze_expression(precontext & ctx, const parser::expression & expr, scope * lex_scope);
+    std::unique_ptr<expression> preanalyze_expression(precontext & ctx,
+        const parser::expression & expr,
+        scope * lex_scope);
 }
 }

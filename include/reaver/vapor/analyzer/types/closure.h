@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -26,7 +26,7 @@
 #include <numeric>
 
 #include "../expressions/closure.h"
-#include "../function.h"
+#include "../semantic/function.h"
 #include "type.h"
 
 namespace reaver::vapor::analyzer
@@ -66,13 +66,15 @@ inline namespace _v1
         }
 
     private:
-        virtual void _codegen_type(ir_generation_context &) const override;
+        virtual void _codegen_type(ir_generation_context &,
+            std::shared_ptr<codegen::ir::user_type>) const override;
 
         virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
         {
             if (!_codegen_type_name)
             {
-                _codegen_type_name = U"closure_" + utf32(std::to_string(ctx.closure_index++)), get_scope()->codegen_ir();
+                _codegen_type_name = U"closure_" + utf32(std::to_string(ctx.closure_index++)),
+                get_scope()->codegen_ir();
             }
 
             return *_codegen_type_name;

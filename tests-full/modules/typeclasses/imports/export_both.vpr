@@ -1,0 +1,32 @@
+// IGNORE: true
+
+module export_both
+{
+    export let tc = typeclass (t : type) {
+        function with_default(arg : t) -> t {
+            return arg;
+        }
+
+        function without_default(arg : t) -> t;
+    };
+
+    let int32 = sized_int(32);
+
+    export let instance_use_default = instance tc(int32) {
+        function without_default(arg) {
+            return arg + 3;
+        }
+    };
+
+    export let instance_override_default = instance tc(int32) {
+        function with_default(arg) {
+            return arg + 7;
+        }
+
+        function without_default(arg) {
+            return arg - 13;
+        }
+    };
+}
+
+// vim: filetype=cpp

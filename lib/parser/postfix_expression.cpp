@@ -31,7 +31,8 @@ inline namespace _v1
 {
     bool operator==(const postfix_expression & lhs, const postfix_expression & rhs)
     {
-        return lhs.range == rhs.range && lhs.base_expression == rhs.base_expression && lhs.modifier_type == rhs.modifier_type && lhs.arguments == rhs.arguments
+        return lhs.range == rhs.range && lhs.base_expression == rhs.base_expression
+            && lhs.modifier_type == rhs.modifier_type && lhs.arguments == rhs.arguments
             && lhs.accessed_member == rhs.accessed_member;
     }
 
@@ -159,13 +160,16 @@ inline namespace _v1
 
         if (expr.modifier_type)
         {
-            auto modifier_ctx = ctx.make_branch(expr.modifier_type != lexer::token_type::dot && expr.arguments.empty());
-            os << modifier_ctx << styles::subrule_name << "modifier-type: " << styles::def << lexer::token_types[+*expr.modifier_type] << '\n';
+            auto modifier_ctx =
+                ctx.make_branch(expr.modifier_type != lexer::token_type::dot && expr.arguments.empty());
+            os << modifier_ctx << styles::subrule_name << "modifier-type: " << styles::def
+               << lexer::token_types[+*expr.modifier_type] << '\n';
 
             if (expr.modifier_type == lexer::token_type::dot)
             {
-                os << ctx.make_branch(true) << styles::subrule_name << "accessed-member: '" << styles::string_value << utf8(expr.accessed_member->value.string)
-                   << styles::def << "'\n";
+                os << ctx.make_branch(true) << styles::subrule_name << "accessed-member: '"
+                   << styles::string_value << utf8(expr.accessed_member->value.string) << styles::def
+                   << "'\n";
             }
 
             else if (!expr.arguments.empty())

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2018 Michał "Griwes" Dominiak
+ * Copyright © 2018-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,15 +22,19 @@
 
 #include "vapor/analyzer/types/module.h"
 #include "vapor/analyzer/expressions/entity.h"
-#include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/semantic/symbol.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    void module_type::add_symbol(std::string name, expression * entity)
+    void module_type::add_symbol(std::string name, expression * entity, bool is_visible)
     {
         auto symbol = make_symbol(utf32(name), entity);
+        if (!is_visible)
+        {
+            symbol->hide();
+        }
         _member_scope->init(utf32(name), std::move(symbol));
     }
 

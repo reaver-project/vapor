@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -26,6 +26,7 @@
 #include "function.h"
 #include "helpers.h"
 #include "id_expression.h"
+#include "parameter_list.h"
 
 namespace reaver::vapor::parser
 {
@@ -34,13 +35,8 @@ inline namespace _v1
     struct typeclass_literal
     {
         range_type range;
+        parameter_list parameters;
         std::vector<std::variant<function_declaration, function_definition>> members;
-    };
-
-    struct typeclass_definition
-    {
-        identifier name;
-        typeclass_literal definition;
     };
 
     struct instance_literal
@@ -48,7 +44,7 @@ inline namespace _v1
         range_type range;
         id_expression typeclass_name;
         expression_list arguments;
-        std::vector<function_definition> definitions;
+        std::vector<std::variant<function_definition>> definitions;
     };
 
     struct default_instance_definition
@@ -58,17 +54,15 @@ inline namespace _v1
     };
 
     bool operator==(const typeclass_literal & lhs, const typeclass_literal & rhs);
-    bool operator==(const typeclass_definition & lhs, const typeclass_definition & rhs);
     bool operator==(const instance_literal & lhs, const instance_literal & rhs);
     bool operator==(const default_instance_definition & lhs, const default_instance_definition & rhs);
 
     typeclass_literal parse_typeclass_literal(context & ctx);
-    typeclass_definition parse_typeclass_definition(context & ctx);
+    declaration parse_typeclass_definition(context & ctx);
     instance_literal parse_instance_literal(context & ctx);
     default_instance_definition parse_default_instance(context & ctx);
 
     void print(const typeclass_literal & lit, std::ostream & os, print_context ctx);
-    void print(const typeclass_definition & def, std::ostream & os, print_context ctx);
     void print(const instance_literal & def, std::ostream & os, print_context ctx);
     void print(const default_instance_definition & def, std::ostream & os, print_context ctx);
 }

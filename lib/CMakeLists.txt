@@ -12,7 +12,9 @@ foreach(abs_proto_file ${proto_files})
             "${CMAKE_BINARY_DIR}/${base}.pb.h"
         COMMENT "Compiling ${base}.proto..."
         COMMAND $<TARGET_FILE:protoc> -I proto -I ../vendor/protobuf/src --cpp_out=${CMAKE_BINARY_DIR}/proto  "${proto_file}"
-        DEPENDS protoc "${abs_proto_file}"
+        # TODO: make the following line smarter, i.e. only depend on what is actually imported
+        # but it's a good enough workaround for right now
+        DEPENDS protoc ${proto_files}
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     )
 

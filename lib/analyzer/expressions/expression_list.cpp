@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,7 +24,7 @@
 
 #include "vapor/analyzer/expressions/expression_list.h"
 #include "vapor/analyzer/helpers.h"
-#include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/parser/expr.h"
 #include "vapor/parser/expression_list.h"
 
@@ -32,6 +32,22 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
+    std::unique_ptr<expression> preanalyze_expression_list(precontext & ctx,
+        const parser::expression_list & expr,
+        scope * lex_scope)
+    {
+        if (expr.expressions.size() == 1)
+        {
+            return preanalyze_expression(ctx, expr.expressions.front(), lex_scope);
+        }
+
+        auto ret = std::make_unique<expression_list>(make_node(expr));
+        ret->value =
+            fmap(expr.expressions, [&](auto && expr) { return preanalyze_expression(ctx, expr, lex_scope); });
+        ret->_set_ast_info(make_node(expr));
+        return ret;
+    }
+
     void expression_list::print(std::ostream & os, print_context ctx) const
     {
         os << styles::def << ctx << styles::rule_name << "expression-list";
@@ -52,16 +68,27 @@ inline namespace _v1
         }
     }
 
-    std::unique_ptr<expression> preanalyze_expression_list(precontext & ctx, const parser::expression_list & expr, scope * lex_scope)
+    future<> expression_list::_analyze(analysis_context & ctx)
     {
-        if (expr.expressions.size() == 1)
-        {
-            return preanalyze_expression(ctx, expr.expressions.front(), lex_scope);
-        }
+        return when_all(fmap(value, [&](auto && expr) { return expr->analyze(ctx); }));
+    }
 
-        auto ret = std::make_unique<expression_list>(make_node(expr));
-        ret->value = fmap(expr.expressions, [&](auto && expr) { return preanalyze_expression(ctx, expr, lex_scope); });
-        ret->_set_ast_info(make_node(expr));
+    future<expression *> expression_list::_simplify_expr(recursive_context ctx)
+    {
+        return when_all(fmap(value, [&](auto && expr) { return expr->simplify_expr(ctx); }))
+            .then([&](auto && simplified) -> expression * {
+                replace_uptrs(value, simplified, ctx.proper);
+                assert(0);
+                return this;
+            });
+    }
+
+    std::unique_ptr<expression> expression_list::_clone_expr(replacements & repl) const
+    {
+        auto ret = std::make_unique<expression_list>(get_ast_info().value());
+
+        ret->value = fmap(value, [&](auto && expr) { return repl.claim(expr.get()); });
+
         return ret;
     }
 }

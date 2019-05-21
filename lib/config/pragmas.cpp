@@ -38,13 +38,17 @@ inline namespace _v1
         {
             // TODO: remove the nullptr once the array isn't empty without it anymore
             // remove the -1 in get_pragma_information() together with removing that nullptr though
-            static const pragma_information_type * infos[] = { &pragma_information<static_cast<language_pragmas>(Pragmas)>..., nullptr };
+            static const pragma_information_type * infos[] = {
+                &pragma_information<static_cast<language_pragmas>(Pragmas)>..., nullptr
+            };
             return infos;
         }
 
         const auto & _pragma_infos()
         {
-            return _pragma_infos_impl(std::make_index_sequence<static_cast<std::underlying_type_t<language_pragmas>>(language_pragmas::last_pragma)>());
+            return _pragma_infos_impl(
+                std::make_index_sequence<static_cast<std::underlying_type_t<language_pragmas>>(
+                    language_pragmas::last_pragma)>());
         }
     }
 

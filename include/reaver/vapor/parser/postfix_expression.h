@@ -48,7 +48,8 @@ inline namespace _v1
 
     bool operator==(const postfix_expression & lhs, const postfix_expression & rhs);
 
-    postfix_expression parse_postfix_expression(context & ctx, expression_special_modes = expression_special_modes::none);
+    postfix_expression parse_postfix_expression(context & ctx,
+        expression_special_modes = expression_special_modes::none);
 
     void print(const postfix_expression & expr, std::ostream & os, print_context ctx);
 }

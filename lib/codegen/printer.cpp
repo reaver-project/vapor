@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -38,7 +38,8 @@ inline namespace _v1
         for (auto && symbol : module)
         {
             ret += std::get<0>(fmap(symbol,
-                make_overload_set([&](std::shared_ptr<ir::variable> & var) { return this->generate_definition(*var, ctx); },
+                make_overload_set(
+                    [&](std::shared_ptr<ir::variable> & var) { return this->generate_definition(*var, ctx); },
                     [&](ir::function & fn) { return this->generate_definition(fn, ctx); })));
         }
 
@@ -60,15 +61,22 @@ inline namespace _v1
 
                     return utf32(ss.str());
                 },
-                [&](const ir::boolean_value & val) -> std::u32string { return val.value ? U"true" : U"false"; },
-                [&](const std::shared_ptr<ir::variable> & var) {
-                    return U"variable @ " + _pointer_to_string(var.get()) + U" `" + (var->name ? _scope_string(var->scopes) + U"." + var->name.value() : U"")
-                        + U"`";
+                [&](const ir::boolean_value & val) -> std::u32string {
+                    return val.value ? U"true" : U"false";
                 },
-                [&](const ir::label & label) { return (label.scopes.empty() ? U"" : _scope_string(label.scopes) + U".") + label.name; },
+                [&](const std::shared_ptr<ir::variable> & var) {
+                    return U"variable @ " + _pointer_to_string(var.get()) + U" `"
+                        + (var->name ? _scope_string(var->scopes) + U"." + var->name.value() : U"") + U"`";
+                },
+                [&](const ir::label & label) { return label.name; },
                 [&](const ir::struct_value & struct_val) -> std::u32string {
                     return U"type @ " + _pointer_to_string(struct_val.type.get()) + U"{ "
-                        + boost::algorithm::join(fmap(struct_val.fields, [&](auto && v) { return _to_string(v); }), U", ") + U" }";
+                        + boost::algorithm::join(
+                              fmap(struct_val.fields, [&](auto && v) { return _to_string(v); }), U", ")
+                        + U" }";
+                },
+                [&](const ir::function_value & fn) {
+                    return U"function pointer to " + _scope_string(fn.scopes) + fn.name;
                 },
                 [&](auto &&) {
                     assert(0);

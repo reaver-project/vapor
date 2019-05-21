@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -38,13 +38,15 @@ inline namespace _v1
 
         virtual std::string explain() const override
         {
-            return "(" + boost::join(fmap(_parameters, [&](auto && param) { return param->explain(); }), ", ") + ") -> " + _return->explain();
+            return "function ("
+                + boost::join(fmap(_parameters, [&](auto && param) { return param->explain(); }), ", ")
+                + ") -> " + _return->explain();
         }
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            os << styles::def << ctx << styles::type << explain() << styles::def << " @ " << styles::address << this << styles::def
-               << ": builtin function type\n";
+            os << styles::def << ctx << styles::type << explain() << styles::def << " @ " << styles::address
+               << this << styles::def << ": builtin function type\n";
         }
 
         virtual future<std::vector<function *>> get_candidates(lexer::token_type op) const override;
@@ -60,7 +62,8 @@ inline namespace _v1
         }
 
     private:
-        virtual void _codegen_type(ir_generation_context & ctx) const override
+        virtual void _codegen_type(ir_generation_context & ctx,
+            std::shared_ptr<codegen::ir::user_type>) const override
         {
             assert(0);
         }
@@ -88,19 +91,5 @@ inline namespace _v1
             return hash;
         }
     };
-
-    inline auto get_function_type(type * return_type, std::vector<type *> parameter_types)
-    {
-        using map_type = std::unordered_map<function_type_elements, std::unique_ptr<function_type>, function_type_elements_hash>;
-        static map_type map;
-
-        auto & ret = map[std::make_pair(return_type, parameter_types)];
-        if (!ret)
-        {
-            ret = std::make_unique<function_type>(return_type, parameter_types);
-        }
-
-        return ret.get();
-    }
 }
 }

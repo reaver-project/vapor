@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,19 +23,22 @@
 #include "vapor/analyzer/statements/statement.h"
 #include "vapor/analyzer/expressions/expression.h"
 #include "vapor/analyzer/expressions/import.h"
-#include "vapor/analyzer/function.h"
+#include "vapor/analyzer/expressions/overload_set.h"
+#include "vapor/analyzer/semantic/function.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/statements/declaration.h"
 #include "vapor/analyzer/statements/function.h"
 #include "vapor/analyzer/statements/if.h"
 #include "vapor/analyzer/statements/return.h"
-#include "vapor/analyzer/symbol.h"
 #include "vapor/parser.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<statement> preanalyze_statement(precontext & ctx, const parser::statement & parse, scope *& lex_scope)
+    std::unique_ptr<statement> preanalyze_statement(precontext & ctx,
+        const parser::statement & parse,
+        scope *& lex_scope)
     {
         return std::get<0>(fmap(parse.statement_value,
             make_overload_set(

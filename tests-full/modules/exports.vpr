@@ -2,16 +2,42 @@
 
 module sample
 {
-    export function foo()
+    export function exported_function()
     {
         return false;
     }
 
     export let int32 = sized_int(32);
-    export struct abc {};
+    export struct empty_structure {};
+    export struct structure_with_fields {
+        let a : int32;
+        let b : int32;
+    };
 
-    // export with (T : type)
-    // typeclass def {};
+    export typeclass empty_typeclass (t : type) {};
+    export let empty_instance_int32 = instance empty_typeclass(int32) {};
+
+    export typeclass typeclass_with_three_functions (u : type) {
+        function with_default(arg : u) -> u {
+            return arg;
+        }
+
+        function with_default_to_override(arg : u) -> u {
+            return arg;
+        }
+
+        function without_default(arg : u) -> u;
+    };
+
+    export let non_empty_instance_int32 = instance typeclass_with_three_functions(int32) {
+        function with_default_to_override(arg) {
+            return arg + 1;
+        }
+
+        function without_default(arg) {
+            return arg + 2;
+        }
+    };
 }
 
 // vim: filetype=cpp

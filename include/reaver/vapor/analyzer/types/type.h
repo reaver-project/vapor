@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -33,7 +33,7 @@
 #include "../../lexer/token.h"
 #include "../../print_helpers.h"
 #include "../ir_context.h"
-#include "../scope.h"
+#include "../semantic/scope.h"
 
 namespace reaver::vapor::codegen
 {
@@ -41,7 +41,7 @@ inline namespace _v1
 {
     namespace ir
     {
-        struct variable_type;
+        struct type;
     }
 }
 }
@@ -58,6 +58,7 @@ inline namespace _v1
 {
     class function;
     class expression;
+    class archetype;
 
     class type
     {
@@ -84,7 +85,8 @@ inline namespace _v1
         {
         } dont_init_expr{};
 
-        type(dont_init_expr_t) : _member_scope{ std::make_unique<scope>() }
+        type(dont_init_expr_t, std::unique_ptr<scope> lex_scope = std::make_unique<scope>())
+            : _member_scope{ std::move(lex_scope) }
         {
         }
 
@@ -144,13 +146,14 @@ inline namespace _v1
             return nullptr;
         }
 
-        std::shared_ptr<codegen::ir::variable_type> codegen_type(ir_generation_context & ctx) const
+        std::shared_ptr<codegen::ir::type> codegen_type(ir_generation_context & ctx) const
         {
             if (!_codegen_t)
             {
-                _codegen_t = std::make_shared<codegen::ir::variable_type>();
-                _codegen_t.value()->scopes = _member_scope->codegen_ir();
-                _codegen_type(ctx);
+                auto user_type = std::make_shared<codegen::ir::user_type>();
+                user_type->scopes = _member_scope->codegen_ir();
+                _codegen_t = user_type;
+                _codegen_type(ctx, std::move(user_type));
             }
 
             return *_codegen_t;
@@ -179,6 +182,17 @@ inline namespace _v1
             return false;
         }
 
+        virtual bool is_meta() const
+        {
+            return false;
+        }
+
+        virtual std::unique_ptr<archetype> generate_archetype(ast_node node, std::u32string param_name) const
+        {
+            assert(!is_meta() && "default generate_archetype hit, even though is_meta() is true");
+            assert(!"generate_archetype invoked on a non-meta type");
+        }
+
         std::vector<codegen::ir::scope> codegen_scopes(ir_generation_context & ctx) const
         {
             auto base_scopes = _member_scope->codegen_ir();
@@ -191,16 +205,14 @@ inline namespace _v1
             return _name;
         }
 
-        void set_name(std::u32string name)
-        {
-            _name = std::move(name);
-        }
+        void set_name(std::u32string name);
 
         virtual std::unique_ptr<proto::type> generate_interface() const = 0;
         virtual std::unique_ptr<proto::type_reference> generate_interface_reference() const = 0;
 
     private:
-        virtual void _codegen_type(ir_generation_context &) const = 0;
+        virtual void _codegen_type(ir_generation_context &,
+            std::shared_ptr<codegen::ir::user_type>) const = 0;
         virtual std::u32string _codegen_name(ir_generation_context &) const = 0;
 
     protected:
@@ -213,7 +225,7 @@ inline namespace _v1
         std::unique_ptr<type> _pack_type;
         void _init_pack_type();
 
-        mutable std::optional<std::shared_ptr<codegen::ir::variable_type>> _codegen_t;
+        mutable std::optional<std::shared_ptr<codegen::ir::type>> _codegen_t;
 
         std::u32string _name;
     };

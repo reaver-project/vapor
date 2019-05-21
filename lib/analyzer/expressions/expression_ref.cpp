@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2018 Michał "Griwes" Dominiak
+ * Copyright © 2018-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,7 +22,7 @@
 
 #include "vapor/analyzer/expressions/expression_ref.h"
 #include "vapor/analyzer/expressions/type.h"
-#include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/semantic/symbol.h"
 
 #include "expressions/type.pb.h"
 #include "type_reference.pb.h"
@@ -36,7 +36,8 @@ inline namespace _v1
         if (get_type() == builtin_types().type.get())
         {
             auto ret = std::make_unique<proto::type>();
-            ret->set_allocated_reference(_referenced->as<type_expression>()->get_value()->generate_interface_reference().release());
+            ret->set_allocated_reference(
+                _referenced->as<type_expression>()->get_value()->generate_interface_reference().release());
             return ret;
         }
 

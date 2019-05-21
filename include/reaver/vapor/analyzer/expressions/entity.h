@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2018 Michał "Griwes" Dominiak
+ * Copyright © 2018-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -37,16 +37,6 @@ inline namespace _v1
         entity(std::shared_ptr<unresolved_type>, std::unique_ptr<expression> value = nullptr);
 
         virtual void print(std::ostream &, print_context) const override;
-
-        void add_associated(std::string name, expression * expr)
-        {
-            _associated.emplace(std::move(name), expr);
-        }
-
-        const auto & get_associated() const
-        {
-            return _associated;
-        }
 
         virtual expression * _get_replacement() override
         {
@@ -88,6 +78,16 @@ inline namespace _v1
             return _name;
         }
 
+        void add_import_dependency(entity * ent)
+        {
+            _import_deps.push_back(ent);
+        }
+
+        auto & get_import_dependencies() const
+        {
+            return _import_deps;
+        }
+
         void mark_local()
         {
             _is_local = true;
@@ -109,22 +109,23 @@ inline namespace _v1
         }
 
         std::vector<codegen::ir::entity> module_codegen_ir(ir_generation_context & ctx) const;
+        virtual declaration_ir declaration_codegen_ir(ir_generation_context & ctx) const override;
 
     private:
         virtual future<> _analyze(analysis_context &) override;
         virtual future<expression *> _simplify_expr(recursive_context) override;
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements & repl) const override;
+        virtual std::unique_ptr<expression> _clone_expr(replacements & repl) const override;
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
+        virtual constant_init_ir _constinit_ir(ir_generation_context & ctx) const override;
 
         std::optional<std::shared_ptr<unresolved_type>> _unresolved;
         std::optional<std::unique_ptr<type>> _owned;
         std::unique_ptr<expression> _wrapped;
 
-        std::map<std::string, expression *> _associated;
-
         std::string _source_hash;
         std::int64_t _timestamp;
         std::vector<std::string> _name;
+        std::vector<entity *> _import_deps;
 
         bool _is_local = false;
         symbol * _symbol = nullptr;
@@ -132,7 +133,8 @@ inline namespace _v1
 
     inline std::unique_ptr<entity> make_entity(imported_type imported)
     {
-        return std::get<0>(fmap(imported, [](auto && imported) { return std::make_unique<entity>(std::move(imported)); }));
+        return std::get<0>(
+            fmap(imported, [](auto && imported) { return std::make_unique<entity>(std::move(imported)); }));
     }
 
     inline std::unique_ptr<entity> make_entity(std::unique_ptr<type> owned)
@@ -140,6 +142,6 @@ inline namespace _v1
         return std::make_unique<entity>(std::move(owned));
     }
 
-    std::unique_ptr<entity> get_entity(precontext &, const proto::entity &, const std::map<std::string, const proto::entity *> & associated = {});
+    std::unique_ptr<entity> get_entity(precontext &, const proto::entity &);
 }
 }

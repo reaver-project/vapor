@@ -42,7 +42,7 @@ inline namespace _v1
             assert(0);
         }
 
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override
         {
             assert(0);
         }
@@ -74,7 +74,9 @@ inline namespace _v1
 {
     struct precontext;
 
-    inline std::unique_ptr<unary_expression> preanalyze_unary_expression(precontext & ctx, const parser::unary_expression &, scope *)
+    inline std::unique_ptr<unary_expression> preanalyze_unary_expression(precontext & ctx,
+        const parser::unary_expression &,
+        scope *)
     {
         assert(0);
     }

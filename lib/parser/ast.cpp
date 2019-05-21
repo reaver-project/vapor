@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2018 Michał "Griwes" Dominiak
+ * Copyright © 2018-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -29,7 +29,6 @@
 // TODO: stop this overzealous madness once GCC 7 is dropped
 #include "vapor/parser/lambda_expression.h"
 #include "vapor/parser/struct.h"
-#include "vapor/parser/template.h"
 
 namespace reaver::vapor::parser
 {

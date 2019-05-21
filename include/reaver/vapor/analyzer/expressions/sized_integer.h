@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,16 +27,17 @@
 #include <boost/multiprecision/integer.hpp>
 
 #include "../types/sized_integer.h"
-#include "expression.h"
+#include "constant.h"
 
 namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class sized_integer_constant : public expression
+    class sized_integer_constant : public constant
     {
     public:
-        sized_integer_constant(sized_integer * type, boost::multiprecision::cpp_int value) : expression{ type }, _value{ std::move(value) }, _type{ type }
+        sized_integer_constant(sized_integer * type, boost::multiprecision::cpp_int value)
+            : constant{ type }, _value{ std::move(value) }, _type{ type }
         {
             assert(_value <= _type->max_value());
             assert(_value >= _type->min_value());
@@ -47,14 +48,10 @@ inline namespace _v1
             return _value;
         }
 
-        virtual bool is_constant() const override
-        {
-            return true;
-        }
-
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            os << styles::def << ctx << styles::rule_name << "sized-integer-constant(" << _type->size() << ")";
+            os << styles::def << ctx << styles::rule_name << "sized-integer-constant(" << _type->size()
+               << ")";
             print_address_range(os, this);
             os << ' ' << styles::string_value << _value << '\n';
         }
@@ -68,12 +65,12 @@ inline namespace _v1
         }
 
     private:
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override
         {
             return std::make_unique<sized_integer_constant>(_type, _value);
         }
 
-        virtual statement_ir _codegen_ir(ir_generation_context &) const override;
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override;
 
         virtual bool _is_equal(const expression * rhs) const override
         {

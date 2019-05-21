@@ -42,9 +42,12 @@ MAYFLY_ADD_TESTCASE("non-member, explicit type, initializer", [] {
 
     {
         scope s1;
+        std::vector<std::shared_ptr<void>> keepalive;
+        initialize_global_scope(&s1, keepalive);
         auto current_scope = &s1;
 
-        auto ast = parse(U"let foo : int = 1;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::variable); });
+        auto ast = parse(U"let foo : int = 1;",
+            [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::variable); });
 
         auto decl = preanalyze_declaration(pctx, ast, current_scope);
 
@@ -75,7 +78,8 @@ MAYFLY_ADD_TESTCASE("non-member, explicit type, initializer", [] {
         auto s2 = s1.clone_local();
         auto current_scope = s2.get();
 
-        auto ast = parse(U"let foo : int = 1;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::variable); });
+        auto ast = parse(U"let foo : int = 1;",
+            [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::variable); });
 
         auto decl = preanalyze_declaration(pctx, ast, current_scope);
 
@@ -95,7 +99,8 @@ MAYFLY_ADD_TESTCASE("non-member, deduced type, initializer", [] {
         scope s1;
         auto current_scope = &s1;
 
-        auto ast = parse(U"let foo = 1;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::variable); });
+        auto ast = parse(U"let foo = 1;",
+            [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::variable); });
 
         auto decl = preanalyze_declaration(pctx, ast, current_scope);
 
@@ -120,7 +125,8 @@ MAYFLY_ADD_TESTCASE("member, deduced type, initializer", [] {
         scope s1;
         auto current_scope = &s1;
 
-        auto ast = parse(U"let foo = 1;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::member); });
+        auto ast = parse(U"let foo = 1;",
+            [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::member); });
 
         auto decl = preanalyze_member_declaration(pctx, ast, current_scope);
 
@@ -134,7 +140,8 @@ MAYFLY_ADD_TESTCASE("member, deduced type, initializer", [] {
         integer_constant expected_value{ 1 };
         MAYFLY_CHECK(decl->initializer_expression().value()->is_equal(&expected_value));
         MAYFLY_CHECK(decl->declared_symbol()->get_expression()->is_member());
-        MAYFLY_CHECK(decl->declared_symbol()->get_expression()->get_default_value()->is_equal(&expected_value));
+        MAYFLY_CHECK(
+            decl->declared_symbol()->get_expression()->get_default_value()->is_equal(&expected_value));
     }
 });
 
@@ -145,9 +152,12 @@ MAYFLY_ADD_TESTCASE("member, explicit type, no initializer", [] {
 
     {
         scope s1;
+        std::vector<std::shared_ptr<void>> keepalive;
+        initialize_global_scope(&s1, keepalive);
         auto current_scope = &s1;
 
-        auto ast = parse(U"let foo : int;", [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::member); });
+        auto ast = parse(U"let foo : int;",
+            [](auto && arg) { return parser::parse_declaration(arg, parser::declaration_mode::member); });
 
         auto decl = preanalyze_member_declaration(pctx, ast, current_scope);
 

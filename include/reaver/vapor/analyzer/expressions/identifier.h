@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,7 +27,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include "../../parser/literal.h"
-#include "../symbol.h"
+#include "../semantic/symbol.h"
 #include "expression_ref.h"
 
 namespace reaver::vapor::analyzer
@@ -37,7 +37,8 @@ inline namespace _v1
     class identifier : public expression_ref
     {
     public:
-        identifier(std::u32string name, scope * lex_scope, ast_node parse_info) : _lex_scope{ lex_scope }, _name{ std::move(name) }
+        identifier(std::u32string name, scope * lex_scope, ast_node parse_info)
+            : _lex_scope{ lex_scope }, _name{ std::move(name) }
         {
             _set_ast_info(parse_info);
         }
@@ -58,7 +59,9 @@ inline namespace _v1
 
     struct precontext;
 
-    inline std::unique_ptr<identifier> preanalyze_identifier(precontext &, const parser::identifier & parse, scope * lex_scope)
+    inline std::unique_ptr<identifier> preanalyze_identifier(precontext &,
+        const parser::identifier & parse,
+        scope * lex_scope)
     {
         return std::make_unique<identifier>(parse.value.string, lex_scope, make_node(parse));
     }

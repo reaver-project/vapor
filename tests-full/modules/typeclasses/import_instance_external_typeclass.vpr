@@ -1,0 +1,25 @@
+// compile: {vprc} {input} -I {directory}/imports -l -a -c
+// link: {cc} {runtime} {input}.o {directory}/imports/export_instance_external_typeclass.vpr.o -o {input}.bin
+// run: {input}.bin 7
+
+import export_instance_external_typeclass;
+
+module main
+{
+    let int32 = sized_int(32);
+
+    let entry = λ(arg : int32) {
+        /*
+         * TODO: enable this when exporting default definitions is a thing
+        let a = export_instance_external_typeclass.instance_use_default.with_default(arg);
+        let b = export_instance_external_typeclass.instance_use_default.without_default(arg);
+         */
+
+        let c = export_instance_external_typeclass.instance_override_default.with_default(arg);
+        let d = export_instance_external_typeclass.instance_override_default.without_default(arg);
+
+        return c + d - 51;
+    };
+}
+
+// vim: filetype=cpp

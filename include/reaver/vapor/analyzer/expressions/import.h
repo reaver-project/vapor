@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016, 2018 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016, 2018-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -41,7 +41,8 @@ inline namespace _v1
     class import_expression : public expression
     {
     public:
-        import_expression(ast_node node, entity * module) : expression{ module->get_type() }, _module{ module }
+        import_expression(ast_node node, entity * module)
+            : expression{ module->get_type() }, _module{ module }
         {
             _set_ast_info(node);
         }
@@ -59,12 +60,17 @@ inline namespace _v1
         }
 
     private:
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override;
+        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override;
         virtual future<expression *> _simplify_expr(recursive_context ctx) override;
 
         virtual statement_ir _codegen_ir(ir_generation_context &) const override
         {
             return {};
+        }
+
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override
+        {
+            assert(0);
         }
 
         entity * _module;

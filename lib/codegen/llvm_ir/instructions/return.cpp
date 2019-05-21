@@ -28,7 +28,8 @@ namespace reaver::vapor::codegen
 inline namespace _v1
 {
     template<>
-    std::u32string llvm_ir_generator::generate<ir::return_instruction>(const ir::instruction & inst, codegen_context & ctx)
+    std::u32string llvm_ir_generator::generate<ir::return_instruction>(const ir::instruction & inst,
+        codegen_context & ctx)
     {
         return U"ret " + type_of(inst.result, ctx) + U" " + value_of(inst.result, ctx) + U"\n";
     }

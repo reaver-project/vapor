@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -33,7 +33,8 @@ inline namespace _v1
     class member_expression : public expression
     {
     public:
-        member_expression(type * parent_type, std::u32string name, type * own_type) : expression{ own_type }, _parent{ parent_type }, _name{ std::move(name) }
+        member_expression(type * parent_type, std::u32string name, type * own_type)
+            : expression{ own_type }, _parent{ parent_type }, _name{ std::move(name) }
         {
         }
 
@@ -79,12 +80,17 @@ inline namespace _v1
         }
 
     private:
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override
         {
             return std::make_unique<member_expression>(_parent, _name, get_type());
         }
 
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override
+        {
+            assert(0);
+        }
+
+        virtual constant_init_ir _constinit_ir(ir_generation_context & ctx) const override
         {
             assert(0);
         }

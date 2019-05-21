@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2018 Michał "Griwes" Dominiak
+ * Copyright © 2018-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,7 +21,7 @@
  **/
 
 #include "vapor/analyzer/expressions/type.h"
-#include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/parser/expr.h"
 
 #include "expressions/type.pb.h"
@@ -41,18 +41,26 @@ inline namespace _v1
         _type->print(os, type_ctx.make_branch(true));
     }
 
-    declaration_ir type_expression::declaration_codegen_ir(ir_generation_context & ctx) const
+    bool type_expression::_is_equal(const expression * rhs) const
     {
-        return { { std::get<std::shared_ptr<codegen::ir::variable>>(_codegen_ir(ctx).back().result) } };
+        auto type_rhs = rhs->as<type_expression>();
+        return type_rhs && _type == type_rhs->_type;
     }
 
-    statement_ir type_expression::_codegen_ir(ir_generation_context & ctx) const
+    std::unique_ptr<expression> type_expression::_clone_expr(replacements & repl) const
     {
-        auto ret = codegen::ir::make_variable(codegen::ir::builtin_types().type);
-        ret->refers_to = _type->codegen_type(ctx);
+        auto type = repl.try_get_replacement(_type);
+        if (!type)
+        {
+            type = _type;
+        }
 
-        return { codegen::ir::instruction{
-            std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() }, {}, std::move(ret) } };
+        return std::make_unique<type_expression>(type);
+    }
+
+    constant_init_ir type_expression::_constinit_ir(ir_generation_context & ctx) const
+    {
+        return _type->codegen_type(ctx);
     }
 
     std::unique_ptr<google::protobuf::Message> type_expression::_generate_interface() const

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,7 +27,7 @@
 #include "../expressions/expression.h"
 #include "../expressions/member.h"
 #include "../expressions/type.h"
-#include "../symbol.h"
+#include "../semantic/symbol.h"
 #include "statement.h"
 
 namespace reaver::vapor::analyzer
@@ -80,7 +80,7 @@ inline namespace _v1
 
     private:
         virtual future<> _analyze(analysis_context & ctx) override;
-        virtual std::unique_ptr<statement> _clone_with_replacement(replacements & repl) const override;
+        virtual std::unique_ptr<statement> _clone(replacements & repl) const override;
         virtual future<statement *> _simplify(recursive_context ctx) override;
         virtual statement_ir _codegen_ir(ir_generation_context & ctx) const override;
 
@@ -107,7 +107,11 @@ inline namespace _v1
 {
     struct precontext;
 
-    std::unique_ptr<declaration> preanalyze_declaration(precontext & ctx, const parser::declaration & parse, scope *& lex_scope);
-    std::unique_ptr<declaration> preanalyze_member_declaration(precontext & ctx, const parser::declaration & parse, scope * lex_scope);
+    std::unique_ptr<declaration> preanalyze_declaration(precontext & ctx,
+        const parser::declaration & parse,
+        scope *& lex_scope);
+    std::unique_ptr<declaration> preanalyze_member_declaration(precontext & ctx,
+        const parser::declaration & parse,
+        scope * lex_scope);
 }
 }

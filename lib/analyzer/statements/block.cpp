@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -25,9 +25,9 @@
 #include <reaver/prelude/fold.h>
 
 #include "vapor/analyzer/expressions/expression_list.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/statements/block.h"
 #include "vapor/analyzer/statements/return.h"
-#include "vapor/analyzer/symbol.h"
 #include "vapor/parser.h"
 #include "vapor/utf.h"
 
@@ -35,13 +35,19 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    std::unique_ptr<block> preanalyze_block(precontext & ctx, const parser::block & parse, scope * lex_scope, bool is_top_level)
+    std::unique_ptr<block> preanalyze_block(precontext & ctx,
+        const parser::block & parse,
+        scope * lex_scope,
+        bool is_top_level)
     {
         auto scope = lex_scope->clone_local();
 
         auto statements = fmap(parse.block_value, [&](auto && row) {
             return std::get<0>(fmap(row,
-                make_overload_set([&](const parser::block & block) -> std::unique_ptr<statement> { return preanalyze_block(ctx, block, scope.get(), false); },
+                make_overload_set(
+                    [&](const parser::block & block) -> std::unique_ptr<statement> {
+                        return preanalyze_block(ctx, block, scope.get(), false);
+                    },
                     [&](const parser::statement & statement) {
                         auto scope_ptr = scope.get();
                         auto ret = preanalyze_statement(ctx, statement, scope_ptr);
@@ -61,7 +67,8 @@ inline namespace _v1
             std::move(scope),
             lex_scope,
             std::move(statements),
-            fmap(parse.value_expression, [&](auto && val_expr) { return preanalyze_expression_list(ctx, val_expr, scope_ptr); }),
+            fmap(parse.value_expression,
+                [&](auto && val_expr) { return preanalyze_expression_list(ctx, val_expr, scope_ptr); }),
             is_top_level);
     }
 
@@ -120,13 +127,97 @@ inline namespace _v1
         }
     }
 
+    future<> block::_analyze(analysis_context & ctx)
+    {
+        auto fut = when_all(fmap(_statements, [&](auto && stmt) { return stmt->analyze(ctx); }));
+
+        fmap(_value_expr, [&](auto && expr) {
+            fut = fut.then([&ctx, expr = expr.get()] { return expr->analyze(ctx); });
+            return unit{};
+        });
+
+        return fut;
+    }
+
+    std::unique_ptr<statement> block::_clone(replacements & repl) const
+    {
+        auto ret = std::unique_ptr<block>(new block(*this));
+
+        ret->_statements = fmap(_statements, [&](auto && stmt) { return repl.claim(stmt.get()); });
+        ret->_value_expr = fmap(_value_expr, [&](auto && expr) { return repl.claim(expr.get()); });
+
+        return ret;
+    }
+
+    future<statement *> block::_simplify(recursive_context ctx)
+    {
+        if (!_value_expr && _statements.size() == 1)
+        {
+            return _statements.front()->simplify(ctx).then([&, ctx](auto && simpl) -> statement * {
+                replace_uptr(_statements.front(), simpl, ctx.proper);
+
+                if (_is_top_level)
+                {
+                    return this;
+                }
+                return _statements.front().release();
+            });
+        }
+
+        auto fut = foldl(_statements, make_ready_future(true), [&](auto future, auto && statement) {
+            return future.then([&, ctx](bool do_continue) {
+                if (!do_continue)
+                {
+                    return make_ready_future(false);
+                }
+
+                return statement->simplify(ctx).then([&, ctx](auto && simplified) {
+                    replace_uptr(statement, simplified, ctx.proper);
+                    return !statement->always_returns();
+                });
+            });
+        });
+
+        fmap(_value_expr, [&](auto && expr) {
+            fut = fut.then([&, expr = expr.get(), ctx](bool do_continue) {
+                if (!do_continue)
+                {
+                    return make_ready_future(false);
+                }
+
+                return expr->simplify_expr(ctx).then([&, ctx](auto && simplified) {
+                    replace_uptr(*_value_expr, simplified, ctx.proper);
+                    return true;
+                });
+            });
+            return unit{};
+        });
+
+        return fut.then([&](bool reached_end) -> statement * {
+            if (!reached_end)
+            {
+                auto always_returning = std::find_if(_statements.begin(),
+                    _statements.end(),
+                    [](auto && stmt) { return stmt->always_returns(); });
+
+                assert(always_returning != _statements.end());
+                _statements.erase(always_returning + 1, _statements.end());
+            }
+
+            return this;
+        });
+    }
+
     std::vector<codegen::_v1::ir::instruction> block::_codegen_ir(ir_generation_context & ctx) const
     {
         auto statements = mbind(_statements, [&](auto && stmt) { return stmt->codegen_ir(ctx); });
         fmap(_value_expr, [&](auto && expr) {
             auto instructions = expr->codegen_ir(ctx);
-            instructions.emplace_back(codegen::ir::instruction{
-                std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, {}, instructions.back().result });
+            instructions.emplace_back(codegen::ir::instruction{ std::nullopt,
+                std::nullopt,
+                { boost::typeindex::type_id<codegen::ir::return_instruction>() },
+                {},
+                instructions.back().result });
             std::move(instructions.begin(), instructions.end(), std::back_inserter(statements));
             return unit{};
         });
@@ -135,9 +226,10 @@ inline namespace _v1
         // FIXME: actually implement destructors in a non-retarded manner
         /*for (auto scope = _scope.get(); scope != _original_scope->parent(); scope = scope->parent())
         {
-            std::transform(scope->symbols_in_order().rbegin(), scope->symbols_in_order().rend(), std::back_inserter(scope_cleanup), [&ctx](auto && symbol) {
-                auto ir = symbol->get_expression()->codegen_ir(ctx).back().result;
-                return codegen::ir::instruction{ {}, {}, { boost::typeindex::type_id<codegen::ir::destruction_instruction>() }, { ir }, ir };
+            std::transform(scope->symbols_in_order().rbegin(), scope->symbols_in_order().rend(),
+        std::back_inserter(scope_cleanup), [&ctx](auto && symbol) { auto ir =
+        symbol->get_expression()->codegen_ir(ctx).back().result; return codegen::ir::instruction{ {}, {}, {
+        boost::typeindex::type_id<codegen::ir::destruction_instruction>() }, { ir }, ir };
             });
         }*/
 
@@ -182,7 +274,7 @@ inline namespace _v1
                     label = stmt.label.value();
                 }
 
-                labeled_return_values.emplace_back(codegen::ir::label{ label, {} });
+                labeled_return_values.emplace_back(codegen::ir::label{ label });
                 labeled_return_values.emplace_back(stmt.result);
             }
 
@@ -204,7 +296,7 @@ inline namespace _v1
                     }
 
                     stmt.instruction = boost::typeindex::type_id<codegen::ir::jump_instruction>();
-                    stmt.operands = { codegen::ir::label{ U"return_phi", {} } };
+                    stmt.operands = { codegen::ir::label{ U"return_phi" } };
 
                     // create a variable for the constant return value
                     if (stmt.result.index() != 0)
@@ -213,21 +305,29 @@ inline namespace _v1
                         auto var = make_variable(get_type(old_result));
                         stmt.result = var;
                         statements.insert(statements.begin() + i++,
-                            { {}, {}, { boost::typeindex::type_id<codegen::ir::materialization_instruction>() }, { old_result }, var });
+                            { {},
+                                {},
+                                { boost::typeindex::type_id<codegen::ir::materialization_instruction>() },
+                                { old_result },
+                                var });
                         labeled_return_values[2 * return_value_index + 1] = var;
                     }
 
                     ++return_value_index;
                 }
 
-                statements.emplace_back(codegen::ir::instruction{ std::optional<std::u32string>{ U"return_phi" },
-                    std::nullopt,
-                    { boost::typeindex::type_id<codegen::ir::phi_instruction>() },
-                    std::move(labeled_return_values),
-                    codegen::ir::make_variable(return_type()->codegen_type(ctx)) });
+                statements.emplace_back(
+                    codegen::ir::instruction{ std::optional<std::u32string>{ U"return_phi" },
+                        std::nullopt,
+                        { boost::typeindex::type_id<codegen::ir::phi_instruction>() },
+                        std::move(labeled_return_values),
+                        codegen::ir::make_variable(return_type()->codegen_type(ctx)) });
 
-                statements.emplace_back(codegen::ir::instruction{
-                    std::nullopt, std::nullopt, { boost::typeindex::type_id<codegen::ir::return_instruction>() }, {}, statements.back().result });
+                statements.emplace_back(codegen::ir::instruction{ std::nullopt,
+                    std::nullopt,
+                    { boost::typeindex::type_id<codegen::ir::return_instruction>() },
+                    {},
+                    statements.back().result });
             }
         }
 

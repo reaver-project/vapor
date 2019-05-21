@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,15 +27,23 @@ namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    std::shared_ptr<ir::variable_type> ir::get_type(const ir::value & val)
+    std::shared_ptr<ir::type> ir::get_type(const ir::value & val)
     {
         return std::get<0>(fmap(val,
             make_overload_set([](const std::shared_ptr<variable> & var) { return var->type; },
-                [](const ir::integer_value &) { return ir::builtin_types().integer; },
-                [](const ir::boolean_value &) { return ir::builtin_types().boolean; },
+                [](const ir::integer_value & val) -> std::shared_ptr<ir::type> {
+                    if (val.size)
+                    {
+                        return ir::builtin_types().sized_integer(val.size.value());
+                    }
+                    return ir::builtin_types().integer;
+                },
+                [](const ir::boolean_value &) -> std::shared_ptr<ir::type> {
+                    return ir::builtin_types().boolean;
+                },
                 [](auto &&) {
                     assert(0);
-                    return std::shared_ptr<ir::variable_type>();
+                    return std::shared_ptr<ir::type>();
                 })));
     }
 }

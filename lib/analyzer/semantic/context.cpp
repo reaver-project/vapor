@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -22,5 +22,88 @@
 
 #include "vapor/analyzer/semantic/context.h"
 #include "vapor/analyzer/expressions/expression.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/statements/statement.h"
-#include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/types/function.h"
+#include "vapor/analyzer/types/sized_integer.h"
+#include "vapor/analyzer/types/typeclass.h"
+
+namespace reaver::vapor::analyzer
+{
+inline namespace _v1
+{
+    std::size_t argument_list_hash::operator()(const std::vector<expression *> & arg_list) const
+    {
+        std::size_t seed = 0;
+
+        boost::hash_combine(seed, arg_list.size());
+        for (auto && arg : arg_list)
+        {
+            boost::hash_combine(seed, arg->hash_value());
+        }
+
+        return seed;
+    }
+
+    bool argument_list_compare::operator()(const std::vector<expression *> & lhs,
+        const std::vector<expression *> & rhs) const
+    {
+        return lhs.size() == rhs.size()
+            && std::equal(lhs.begin(), lhs.end(), rhs.begin(), [](auto && lhs, auto && rhs) {
+                   return lhs->is_equal(rhs);
+               });
+    }
+
+    std::size_t parameter_type_list_hash::operator()(const std::vector<type *> & arg_list) const
+    {
+        std::size_t seed = 0;
+
+        boost::hash_combine(seed, arg_list.size());
+        for (auto && arg : arg_list)
+        {
+            boost::hash_combine(seed, arg);
+        }
+
+        return seed;
+    }
+
+    bool parameter_type_list_compare::operator()(const std::vector<type *> & lhs,
+        const std::vector<type *> & rhs) const
+    {
+        return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin());
+    }
+
+    sized_integer * analysis_context::get_sized_integer_type(std::size_t size)
+    {
+        auto & ret = _sized_integers[size];
+        if (!ret)
+        {
+            ret = make_sized_integer_type(size);
+        }
+
+        return ret.get();
+    }
+
+    function_type * analysis_context::get_function_type(function_signature sig)
+    {
+        auto & ret = _function_types[sig];
+        if (!ret)
+        {
+            ret = std::make_unique<function_type>(sig.return_type, std::move(sig.parameters));
+        }
+
+        return ret.get();
+    }
+
+    typeclass_type * analysis_context::get_typeclass_type(std::vector<type *> param_types)
+    {
+        auto & ret = _typeclass_types[param_types];
+        if (!ret)
+        {
+            ret = std::make_unique<typeclass_type>(std::move(param_types));
+        }
+
+        return ret.get();
+    }
+}
+}

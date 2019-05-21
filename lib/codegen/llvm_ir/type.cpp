@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,39 +27,45 @@ namespace reaver::vapor::codegen
 {
 inline namespace _v1
 {
-    std::u32string llvm_ir_generator::generate_definition(std::shared_ptr<ir::variable_type> type, codegen_context & ctx)
+    std::u32string llvm_ir_generator::generate_definition(std::shared_ptr<ir::type> type,
+        codegen_context & ctx)
     {
-        if (type == ir::builtin_types().integer || type == ir::builtin_types().boolean || dynamic_cast<ir::sized_integer_type *>(type.get()))
+        if (type->is_fundamental())
         {
             return {};
         }
 
-        std::u32string ret;
-
-        ret += type_name(type, ctx) + U" = type {";
-
-        for (auto && member : type->members)
+        if (auto user = dynamic_cast<ir::user_type *>(type.get()))
         {
-            fmap(member,
-                make_overload_set(
-                    [&](ir::member_variable & var) {
-                        ret += U" " + type_name(var.type, ctx) + U",";
-                        return unit{};
-                    },
-                    [&](ir::function & func) {
-                        ctx.put_into_global += generate_definition(func, ctx);
-                        return unit{};
-                    }));
+            std::u32string ret;
+
+            ret += type_name(type, ctx) + U" = type {";
+
+            for (auto && member : user->members)
+            {
+                fmap(member,
+                    make_overload_set(
+                        [&](ir::member_variable & var) {
+                            ret += U"\n  " + type_name(var.type, ctx) + U",";
+                            return unit{};
+                        },
+                        [&](ir::function & func) {
+                            ctx.put_into_global += generate_definition(func, ctx);
+                            return unit{};
+                        }));
+            }
+
+            if (ret.back() == U',')
+            {
+                ret.pop_back();
+            }
+
+            ret += U"\n}\n\n";
+
+            return ret;
         }
 
-        if (ret.back() == U',')
-        {
-            ret.pop_back();
-        }
-
-        ret += U" }\n\n";
-
-        return ret;
+        assert(!"unsupported type in codegen ir!");
     }
 }
 }

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -48,7 +48,8 @@ inline namespace _v1
         auto ret = std::make_unique<declaration>(make_node(parse),
             parse.identifier.value.string,
             fmap(parse.rhs, [&](auto && expr) { return preanalyze_expression(ctx, expr, old_scope); }),
-            fmap(parse.type_expression, [&](auto && expr) { return preanalyze_expression(ctx, expr, old_scope); }),
+            fmap(parse.type_expression,
+                [&](auto && expr) { return preanalyze_expression(ctx, expr, old_scope); }),
             new_scope,
             type);
 
@@ -60,20 +61,27 @@ inline namespace _v1
         if (parse.export_)
         {
             ret->mark_exported();
-            ret->declared_symbol()->get_expression_future().then([](auto && expr) { expr->mark_exported(); }).detach();
+            ret->declared_symbol()
+                ->get_expression_future()
+                .then([](auto && expr) { expr->mark_exported(); })
+                .detach();
         }
 
         return ret;
     }
 
-    std::unique_ptr<declaration> preanalyze_declaration(precontext & ctx, const parser::declaration & parse, scope *& lex_scope)
+    std::unique_ptr<declaration> preanalyze_declaration(precontext & ctx,
+        const parser::declaration & parse,
+        scope *& lex_scope)
     {
         auto old_scope = lex_scope;
         lex_scope = old_scope->clone_for_decl();
         return _preanalyze_declaration(ctx, parse, old_scope, lex_scope, declaration_type::variable);
     }
 
-    std::unique_ptr<declaration> preanalyze_member_declaration(precontext & ctx, const parser::declaration & parse, scope * lex_scope)
+    std::unique_ptr<declaration> preanalyze_member_declaration(precontext & ctx,
+        const parser::declaration & parse,
+        scope * lex_scope)
     {
         return _preanalyze_declaration(ctx, parse, lex_scope, lex_scope, declaration_type::member);
     }
@@ -84,7 +92,10 @@ inline namespace _v1
         std::optional<std::unique_ptr<expression>> type_specifier,
         scope * scope,
         declaration_type decl_type)
-        : _name{ std::move(name) }, _type_specifier{ std::move(type_specifier) }, _init_expr{ std::move(init_expr) }, _type{ decl_type }
+        : _name{ std::move(name) },
+          _type_specifier{ std::move(type_specifier) },
+          _init_expr{ std::move(init_expr) },
+          _type{ decl_type }
     {
         _set_ast_info(parse);
 
@@ -119,6 +130,86 @@ inline namespace _v1
         }
     }
 
+    future<> declaration::_analyze(analysis_context & ctx)
+    {
+        auto fut = make_ready_future();
+
+        fmap(_type_specifier, [&](auto && expr) {
+            fut = fut.then([&]() { return expr->analyze(ctx); }).then([&]() {
+                auto && type_expr = _type_specifier.value();
+                assert(type_expr->get_type() == builtin_types().type.get());
+                assert(type_expr->is_constant());
+            });
+
+            return unit{};
+        });
+
+        fmap(_init_expr, [&](auto && expr) {
+            fut = fut.then([&]() { return expr->analyze(ctx); });
+
+            fmap(_type_specifier, [&](auto && expr) {
+                fut = fut.then([&]() {
+                    auto type_var = expr->template as<type_expression>();
+                    assert(_init_expr.value()->get_type() == type_var->get_value());
+                });
+
+                return unit{};
+            });
+
+            fut = fut.then([&] {
+                auto expression = _init_expr.value().get();
+
+                if (_type == declaration_type::member)
+                {
+                    _declared_member = make_member_expression(nullptr, _name, _init_expr.value()->get_type());
+                    _declared_member.value()->set_default_value(_init_expr.value().get());
+                    expression = _declared_member.value().get();
+                }
+
+                _declared_symbol->set_expression(expression);
+            });
+
+            return unit{};
+        });
+
+        if (!_init_expr)
+        {
+            fut = fut.then([&]() {
+                assert(_type_specifier);
+                auto type = _type_specifier.value()->as<type_expression>()->get_value();
+                _declared_member = make_member_expression(nullptr, _name, type);
+
+                _declared_symbol->set_expression(_declared_member.value().get());
+            });
+        }
+
+        return fut;
+    }
+
+    std::unique_ptr<statement> declaration::_clone(replacements & repl) const
+    {
+        assert(_type == declaration_type::variable);
+        return repl.claim(_init_expr.value().get());
+    }
+
+    future<statement *> declaration::_simplify(recursive_context ctx)
+    {
+        auto fut = make_ready_future<statement *>(this);
+
+        fmap(_init_expr, [&](auto && expr) {
+            fut = expr->simplify_expr(ctx)
+                      .then([&, ctx](auto && simplified) {
+                          replace_uptr(_init_expr.value(), simplified, ctx.proper);
+                          return _declared_symbol->simplify(ctx);
+                      })
+                      .then([&]() -> statement * { return _init_expr->release(); });
+
+            return unit{};
+        });
+
+        return fut;
+    }
+
     statement_ir declaration::_codegen_ir(ir_generation_context & ctx) const
     {
         if (_declared_symbol->get_type() == builtin_types().type.get())
@@ -134,7 +225,6 @@ inline namespace _v1
             auto var = std::get<std::shared_ptr<codegen::ir::variable>>(ir.back().result);
             ir.back().declared_variable = var;
             var->name = _name;
-            var->temporary = false;
         }
         return ir;
     }

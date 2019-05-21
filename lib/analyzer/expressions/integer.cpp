@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -21,7 +21,8 @@
  **/
 
 #include "vapor/analyzer/expressions/integer.h"
-#include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/expressions/sized_integer.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/codegen/ir/type.h"
 #include "vapor/codegen/ir/variable.h"
 
@@ -29,13 +30,22 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    statement_ir integer_constant::_codegen_ir(ir_generation_context &) const
+    std::unique_ptr<expression> integer_constant::convert_to(type * target) const
     {
-        return { codegen::ir::instruction{ std::nullopt,
-            std::nullopt,
-            { boost::typeindex::type_id<codegen::ir::pass_value_instruction>() },
-            {},
-            codegen::ir::value{ codegen::ir::integer_value{ _value, 0 } } } };
+        if (auto sized_target = dynamic_cast<sized_integer *>(target))
+        {
+            if (_value <= sized_target->max_value() && _value >= sized_target->min_value())
+            {
+                return std::make_unique<sized_integer_constant>(sized_target, _value);
+            }
+        }
+
+        return nullptr;
+    }
+
+    constant_init_ir integer_constant::_constinit_ir(ir_generation_context &) const
+    {
+        return { codegen::ir::integer_value{ _value, 0 } };
     }
 }
 }

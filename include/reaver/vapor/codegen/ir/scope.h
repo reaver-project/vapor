@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016 Michał "Griwes" Dominiak
+ * Copyright © 2016, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,6 +23,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 namespace reaver::vapor::codegen
 {
@@ -46,6 +47,8 @@ inline namespace _v1
             std::u32string name;
             scope_type type;
         };
+
+        bool same_module(const std::vector<scope> & lhs, const std::vector<scope> & rhs);
     }
 }
 }

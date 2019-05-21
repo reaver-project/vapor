@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2014, 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2014, 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -29,13 +29,13 @@
 #include <boost/algorithm/string.hpp>
 
 #include "../../range.h"
-#include "../function.h"
 #include "../helpers.h"
 #include "../ir_context.h"
-#include "../scope.h"
+#include "../semantic/function.h"
+#include "../semantic/scope.h"
+#include "../semantic/symbol.h"
 #include "../statements/declaration.h"
 #include "../statements/statement.h"
-#include "../symbol.h"
 #include "../types/module.h"
 #include "import.h"
 
@@ -51,7 +51,10 @@ inline namespace _v1
     class module : public expression
     {
     public:
-        module(ast_node parse, std::vector<std::u32string> name, module_type * typr, std::vector<std::unique_ptr<statement>> stmts);
+        module(ast_node parse,
+            std::vector<std::u32string> name,
+            module_type * typr,
+            std::vector<std::unique_ptr<statement>> stmts);
 
         std::u32string name() const
         {
@@ -77,7 +80,7 @@ inline namespace _v1
     private:
         virtual future<> _analyze(analysis_context &) override;
 
-        virtual std::unique_ptr<expression> _clone_expr_with_replacement(replacements &) const override
+        virtual std::unique_ptr<expression> _clone_expr(replacements &) const override
         {
             assert(0);
         }
@@ -85,6 +88,11 @@ inline namespace _v1
         virtual future<expression *> _simplify_expr(recursive_context) override;
 
         virtual statement_ir _codegen_ir(ir_generation_context &) const override
+        {
+            assert(0);
+        }
+
+        virtual constant_init_ir _constinit_ir(ir_generation_context &) const override
         {
             assert(0);
         }
@@ -111,6 +119,8 @@ inline namespace _v1
 {
     struct precontext;
 
-    std::unique_ptr<module> preanalyze_module(precontext & ctx, const parser::module & parse, scope * lex_scope);
+    std::unique_ptr<module> preanalyze_module(precontext & ctx,
+        const parser::module & parse,
+        scope * lex_scope);
 }
 }

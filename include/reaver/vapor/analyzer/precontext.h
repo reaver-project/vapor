@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2018 Michał "Griwes" Dominiak
+ * Copyright © 2018-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -41,15 +41,25 @@ namespace reaver::vapor::analyzer
 inline namespace _v1
 {
     class unresolved_type;
+    class overload_set;
 
-    struct user_defined_reference_compare
+    struct synthesized_udr
     {
-        bool operator()(const proto::user_defined_reference * lhs, const proto::user_defined_reference * rhs) const;
+        std::string module;
+        std::string name;
     };
 
-    struct user_defined_reference_hash
+    struct udr_compare
+    {
+        bool operator()(const proto::user_defined_reference * lhs,
+            const proto::user_defined_reference * rhs) const;
+        bool operator()(const synthesized_udr & lhs, const synthesized_udr & rhs) const;
+    };
+
+    struct udr_hash
     {
         std::size_t operator()(const proto::user_defined_reference * obj) const;
+        std::size_t operator()(const synthesized_udr & obj) const;
     };
 
     struct precontext
@@ -57,15 +67,30 @@ inline namespace _v1
         const config::compiler_options & options;
         analysis_context & proper;
         std::unordered_map<std::string, std::unique_ptr<entity>> modules = {};
-        std::set<std::unique_ptr<entity>> imported_entities = {};
-        std::unordered_map<const proto::user_defined_reference *, std::shared_ptr<unresolved_type>, user_defined_reference_hash, user_defined_reference_compare>
+
+        std::unordered_map<synthesized_udr, std::unique_ptr<expression>, udr_hash, udr_compare>
+            imported_entities = {};
+
+        std::unordered_map<synthesized_udr, std::shared_ptr<overload_set>, udr_hash, udr_compare>
+            imported_overload_sets = {};
+
+        std::unordered_map<const proto::user_defined_reference *,
+            std::shared_ptr<unresolved_type>,
+            udr_hash,
+            udr_compare>
             user_defined_types = {};
 
         scope * global_scope = nullptr;
-        scope * module_scope = nullptr;
+        scope * current_lex_scope = nullptr;
 
-        std::stack<boost::filesystem::path> current_file = {};
-        std::stack<std::string> current_scope = {};
+        struct module_paths
+        {
+            boost::filesystem::path module_file_path;
+            std::string_view source;
+        };
+
+        std::vector<module_paths> module_path_stack = {};
+        std::vector<std::string> module_stack = {};
         std::string current_symbol = {};
 
         std::vector<std::shared_ptr<proto::ast>> imported_asts = {};

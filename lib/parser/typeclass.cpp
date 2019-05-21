@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017 Michał "Griwes" Dominiak
+ * Copyright © 2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -32,14 +32,10 @@ inline namespace _v1
         return lhs.range == rhs.range && lhs.members == rhs.members;
     }
 
-    bool operator==(const typeclass_definition & lhs, const typeclass_definition & rhs)
-    {
-        return lhs.name == rhs.name && lhs.definition == rhs.definition;
-    }
-
     bool operator==(const instance_literal & lhs, const instance_literal & rhs)
     {
-        return lhs.range == rhs.range && lhs.typeclass_name == rhs.typeclass_name && lhs.arguments == rhs.arguments && lhs.definitions == rhs.definitions;
+        return lhs.range == rhs.range && lhs.typeclass_name == rhs.typeclass_name
+            && lhs.arguments == rhs.arguments && lhs.definitions == rhs.definitions;
     }
 
     bool operator==(const default_instance_definition & lhs, const default_instance_definition & rhs)
@@ -51,6 +47,7 @@ inline namespace _v1
     {
         struct named_typeclass
         {
+            std::optional<lexer::token> export_;
             std::optional<identifier> name;
             typeclass_literal definition;
         };
@@ -63,14 +60,23 @@ inline namespace _v1
 
         named_typeclass parse_typeclass(context & ctx, typeclass_type type)
         {
-            auto start = expect(ctx, lexer::token_type::typeclass).range.start();
-
             named_typeclass ret;
+
+            if (type == typeclass_type::named && peek(ctx, lexer::token_type::export_))
+            {
+                ret.export_ = expect(ctx, lexer::token_type::export_);
+            }
+
+            auto start = expect(ctx, lexer::token_type::typeclass).range.start();
 
             if (type == typeclass_type::named)
             {
                 ret.name = parse_literal<lexer::token_type::identifier>(ctx);
             }
+
+            expect(ctx, lexer::token_type::round_bracket_open);
+            ret.definition.parameters = parse_parameter_list(ctx, parameter_type_mode::required);
+            expect(ctx, lexer::token_type::round_bracket_close);
 
             expect(ctx, lexer::token_type::curly_bracket_open);
 
@@ -92,14 +98,16 @@ inline namespace _v1
         return parse_typeclass(ctx, typeclass_type::unnamed).definition;
     }
 
-    typeclass_definition parse_typeclass_definition(context & ctx)
+    declaration parse_typeclass_definition(context & ctx)
     {
         auto typeclass = parse_typeclass(ctx, typeclass_type::named);
 
-        typeclass_definition decl;
+        declaration decl;
 
-        decl.name = std::move(typeclass.name.value());
-        decl.definition = std::move(typeclass.definition);
+        decl.identifier = std::move(typeclass.name.value());
+        decl.range = typeclass.definition.range;
+        decl.rhs = expression{ typeclass.definition.range, std::move(typeclass.definition) };
+        decl.export_ = typeclass.export_;
 
         return decl;
     }
@@ -144,27 +152,21 @@ inline namespace _v1
         print_address_range(os, lit);
         os << '\n';
 
+        auto param_ctx = ctx.make_branch(false);
+        os << styles::def << param_ctx << styles::subrule_name << "parameters:\n";
+        print(lit.parameters, os, param_ctx.make_branch(true));
+
+        auto defs_ctx = ctx.make_branch(true);
+        os << styles::def << defs_ctx << styles::subrule_name << "members:\n";
+
         std::size_t idx = 0;
         for (auto && member : lit.members)
         {
             fmap(member, [&](auto && decl) {
-                print(decl, os, ctx.make_branch(++idx == lit.members.size()));
+                print(decl, os, defs_ctx.make_branch(++idx == lit.members.size()));
                 return unit{};
             });
         }
-    }
-
-    void print(const typeclass_definition & def, std::ostream & os, print_context ctx)
-    {
-        os << styles::def << ctx << styles::rule_name << "!!! typeclass-definition !!!:\n";
-
-        auto name_ctx = ctx.make_branch(false);
-        os << styles::def << name_ctx << styles::subrule_name << "name:\n";
-        print(def.name, os, name_ctx.make_branch(true));
-
-        auto def_ctx = ctx.make_branch(true);
-        os << styles::def << def_ctx << styles::subrule_name << "definition:\n";
-        print(def.definition, os, def_ctx.make_branch(true));
     }
 
     void print(const instance_literal & lit, std::ostream & os, print_context ctx)
@@ -187,7 +189,10 @@ inline namespace _v1
         std::size_t idx = 0;
         for (auto && def : lit.definitions)
         {
-            print(def, os, defs_ctx.make_branch(++idx == lit.definitions.size()));
+            fmap(def, [&](auto && def) {
+                print(def, os, defs_ctx.make_branch(++idx == lit.definitions.size()));
+                return unit{};
+            });
         }
     }
 

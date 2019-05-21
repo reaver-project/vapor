@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2017 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -33,13 +33,27 @@ inline namespace _v1
         print_address_range(os, this);
         os << ' ' << styles::string_value << utf8(_name) << '\n';
 
-        auto expr_ctx = ctx.make_branch(false);
+        auto expr_ctx = ctx.make_branch(!try_get_type());
         os << styles::def << expr_ctx << styles::subrule_name << "referenced expression";
         os << styles::def << " @ " << styles::address << _referenced << '\n';
 
-        auto type_ctx = ctx.make_branch(true);
-        os << styles::def << type_ctx << styles::subrule_name << "referenced expression type:\n";
-        get_type()->print(os, type_ctx.make_branch(true));
+        if (try_get_type())
+        {
+            auto type_ctx = ctx.make_branch(true);
+            os << styles::def << type_ctx << styles::subrule_name << "referenced expression type:\n";
+            get_type()->print(os, type_ctx.make_branch(true));
+        }
+    }
+
+    future<> identifier::_analyze(analysis_context & ctx)
+    {
+        return _lex_scope->resolve(_name)
+            ->get_expression_future()
+            .then([&, this](auto && expression) {
+                _referenced = expression;
+                return _referenced->analyze(ctx);
+            })
+            .then([this] { this->_set_type(_referenced->get_type()); });
     }
 }
 }

@@ -37,8 +37,8 @@ inline namespace _v1
         expression_list ret;
 
         // TODO: verify that this actually works as intended
-        // the way I originally used the operator stack can't possibly work when the expression context changes
-        // and I failed to notice that originally
+        // the way I originally used the operator stack can't possibly work when the expression context
+        // changes and I failed to notice that originally
 
         auto stack = std::move(ctx.operator_stack);
         ctx.operator_stack.clear();

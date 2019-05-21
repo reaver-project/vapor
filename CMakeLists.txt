@@ -1,12 +1,21 @@
 cmake_minimum_required(VERSION 3.5)
 
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
+    message(FATAL_ERROR "Don't configure this project in-source!")
+endif()
+
 project(Vapor C CXX)
 
 find_package(Threads REQUIRED)
+
+# Boost 1.70 breaks the FindBoost world rather spectacularly
+# do NOT delegate to boost-specific cmake config files
+# and force the old-and-proven FindBoost behavior
+set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost 1.64 REQUIRED
     COMPONENTS system program_options filesystem iostreams
 )
-include_directories(${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 include(FindPkgConfig)
 

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -53,7 +53,8 @@ inline namespace _v1
 
         virtual bool matches(const std::vector<type *> & others) const override
         {
-            return std::all_of(others.begin(), others.end(), [&](auto && other) { return _pattern->matches(other); });
+            return std::all_of(
+                others.begin(), others.end(), [&](auto && other) { return _pattern->matches(other); });
         }
 
         virtual type * get_pack_type() const override
@@ -72,7 +73,8 @@ inline namespace _v1
         }
 
     private:
-        virtual void _codegen_type(ir_generation_context & ctx) const override
+        virtual void _codegen_type(ir_generation_context & ctx,
+            std::shared_ptr<codegen::ir::user_type>) const override
         {
             assert(!"tried to codegen a type pack");
         }

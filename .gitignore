@@ -8,8 +8,9 @@ vprc
 .ycm*
 output
 tests/test
-core
+./core
 tags
 .gdb_history
 build*
 *.vprm
+*.tmp

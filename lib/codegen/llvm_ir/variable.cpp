@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -31,13 +31,10 @@ inline namespace _v1
     {
         if (var.type == ir::builtin_types().type)
         {
-            assert(var.refers_to);
-            ctx.put_into_global_before += ctx.define_if_necessary(var.refers_to);
-            return {};
-        }
-
-        if (var.imported)
-        {
+            assert(var.initializer);
+            auto refers_to = std::get_if<std::shared_ptr<ir::type>>(var.initializer.value().operator->());
+            assert(refers_to);
+            ctx.put_into_global_before += ctx.define_if_necessary(*refers_to);
             return {};
         }
 
@@ -46,7 +43,13 @@ inline namespace _v1
         ret += ctx.define_if_necessary(var.type);
 
         assert(!ctx.in_function_definition);
-        ret += variable_name(var, ctx) + U" = global " + type_name(var.type, ctx) + U" { }\n\n";
+
+        std::u32string initializer = var.imported
+            ? U""
+            : fmap(var.initializer, [&](auto && init) { return value_of(init, ctx); }).value_or(U"{ }");
+        ret += variable_name(var, ctx) + U" = " + (var.imported ? U"external " : U"")
+            + (var.constant ? U"constant " : U"global ") + type_name(var.type, ctx) + U" " + initializer
+            + U"\n\n";
 
         return ret;
     }

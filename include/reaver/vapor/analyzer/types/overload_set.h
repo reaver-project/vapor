@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -30,29 +30,15 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    class function;
-    struct imported_function;
-
-    // TODO: combined_overload_set and combined_overload_set_type
-    // those need to be distinct from normal ones for code generation reasons (SCOPES!)
-    // this is not a crucial feature *right now*, but it will be, and rather soon
-    // this is just a note so that I remember why the hell I can't use the existing types
-    //
-    // random bikeshedding thoughts:
-    // actually I might be able to do this differently, on the function level
-    // i.e. create a proxy_function that generates a function in current scope that calls
-    // a function that's in a different scope
-    // but that's going to be funny
+    class overload_set;
 
     class overload_set_type : public user_defined_type
     {
     public:
-        overload_set_type(scope * lex_scope) : user_defined_type{ lex_scope }
+        overload_set_type(scope * lex_scope, overload_set * oset)
+            : user_defined_type{ lex_scope }, _oset{ oset }
         {
         }
-
-        void add_function(function * fn);
-        void add_function(std::unique_ptr<imported_function> fn);
 
         virtual std::string explain() const override
         {
@@ -60,7 +46,6 @@ inline namespace _v1
         }
 
         virtual void print(std::ostream & os, print_context ctx) const override;
-
         virtual future<std::vector<function *>> get_candidates(lexer::token_type bracket) const override;
 
         void mark_exported()
@@ -71,33 +56,16 @@ inline namespace _v1
     private:
         virtual std::unique_ptr<google::protobuf::Message> _user_defined_interface() const override;
 
-        virtual void _codegen_type(ir_generation_context &) const override;
+        virtual void _codegen_type(ir_generation_context &,
+            std::shared_ptr<codegen::ir::user_type>) const override;
 
         virtual std::u32string _codegen_name(ir_generation_context & ctx) const override
         {
             return get_name();
         }
 
-        std::vector<function *> _functions;
-        // shared so that this is destructible without knowing the definition
-        std::vector<std::shared_ptr<imported_function>> _imported_functions;
-
+        overload_set * _oset = nullptr;
         bool _is_exported = false;
     };
-}
-}
-
-namespace reaver::vapor::proto
-{
-class overload_set_type;
-}
-
-namespace reaver::vapor::analyzer
-{
-inline namespace _v1
-{
-    class precontext;
-
-    std::unique_ptr<overload_set_type> import_overload_set_type(precontext &, const proto::overload_set_type &);
 }
 }

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2016-2018 Michał "Griwes" Dominiak
+ * Copyright © 2016-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,11 +24,12 @@
 
 #include "vapor/analyzer/expressions/entity.h"
 #include "vapor/analyzer/expressions/expression.h"
+#include "vapor/analyzer/expressions/overload_set.h"
 #include "vapor/analyzer/expressions/type.h"
-#include "vapor/analyzer/function.h"
 #include "vapor/analyzer/helpers.h"
 #include "vapor/analyzer/precontext.h"
-#include "vapor/analyzer/symbol.h"
+#include "vapor/analyzer/semantic/function.h"
+#include "vapor/analyzer/semantic/symbol.h"
 #include "vapor/analyzer/types/overload_set.h"
 #include "vapor/analyzer/types/unresolved.h"
 #include "vapor/codegen/ir/type.h"
@@ -39,99 +40,53 @@ namespace reaver::vapor::analyzer
 {
 inline namespace _v1
 {
-    struct imported_function
-    {
-        std::unique_ptr<expression> return_type;
-        std::vector<std::unique_ptr<expression>> parameters;
-        std::unique_ptr<class function> function;
-    };
-
-    std::unique_ptr<overload_set_type> import_overload_set_type(precontext & ctx, const proto::overload_set_type & type)
-    {
-        auto ret = std::make_unique<overload_set_type>(ctx.module_scope);
-
-        assert(type.functions_size() != 0);
-
-        for (auto && overload : type.functions())
-        {
-            auto imported = std::make_unique<imported_function>();
-            imported->return_type = get_imported_type_ref_expr(ctx, overload.return_type());
-
-            for (auto && param : overload.parameters())
-            {
-                auto type = get_imported_type_ref(ctx, param.type());
-                imported->parameters.push_back(make_entity(std::move(type)));
-            }
-
-            imported->function = make_function("overloadable function",
-                imported->return_type.get(),
-                fmap(imported->parameters, [](auto && param) { return param.get(); }),
-                [imported = imported.get()](ir_generation_context & ctx)->codegen::ir::function {
-                    auto params = fmap(imported->parameters,
-                        [&](auto && param) { return std::get<std::shared_ptr<codegen::ir::variable>>(param->codegen_ir(ctx).back().result); });
-                    // this is slightly messy, but cleaning it up before I have typeclasses would be wasteful
-                    // since I can fix it in an even better way when I have those
-                    params.erase(params.begin());
-
-                    auto ret = codegen::ir::function{ U"call",
-                        {},
-                        std::move(params),
-                        codegen::ir::make_variable(imported->return_type->as<type_expression>()->get_value()->codegen_type(ctx)),
-                        {} };
-                    ret.is_member = true;
-                    ret.is_defined = false;
-
-                    return ret;
-                });
-
-            assert(overload.is_member());
-
-            imported->function->set_name(U"call");
-            imported->function->make_member();
-            imported->function->set_scopes_generator([type = ret.get()](auto && ctx) { return type->codegen_scopes(ctx); });
-
-            ret->add_function(std::move(imported));
-        }
-
-        return ret;
-    }
-
-    void overload_set_type::add_function(function * fn)
-    {
-        if (std::find_if(_functions.begin(), _functions.end(), [&](auto && f) { return f->parameters() == fn->parameters(); }) != _functions.end())
-        {
-            assert(0);
-        }
-
-        _functions.push_back(fn);
-    }
-
-    void overload_set_type::add_function(std::unique_ptr<imported_function> fn)
-    {
-        add_function(fn->function.get());
-        _imported_functions.push_back(std::move(fn));
-    }
-
     future<std::vector<function *>> overload_set_type::get_candidates(lexer::token_type bracket) const
     {
         if (bracket == lexer::token_type::round_bracket_open)
         {
-            assert(_functions.size());
-            return make_ready_future([&] { return _functions; }());
+            return make_ready_future([&] { return _oset->get_overloads(); }());
         }
 
         assert(0);
         return make_ready_future(std::vector<function *>{});
     }
 
-    void overload_set_type::_codegen_type(ir_generation_context & ctx) const
+    void overload_set_type::_codegen_type(ir_generation_context & ctx,
+        std::shared_ptr<codegen::ir::user_type> actual_type) const
     {
-        auto actual_type = *_codegen_t;
-        auto members = fmap(_functions, [&](auto && fn) {
+        auto overloads = _oset->get_overloads();
+        bool is_vtable =
+            std::any_of(overloads.begin(), overloads.end(), [](auto && fn) { return fn->vtable_slot(); });
+
+        auto members = fmap(overloads, [&](function * fn) {
+            if (is_vtable)
+            {
+                // vtable, which means no actual functions need to be generated; instead, a vtable layout must
+                // be created
+
+                // TODO: figure out a split somewhere that'd make this be dispatched on, instead of having a
+                // branch completely changing the nature of the output language type that is being generated
+                // here
+
+                auto ret_expr = fn->return_type_expression();
+                assert(ret_expr);
+                auto ret_type_expr = ret_expr->as<type_expression>();
+                assert(ret_type_expr);
+
+                return codegen::ir::member{ codegen::ir::member_variable{ {},
+                    codegen::ir::builtin_types().function(ret_type_expr->get_value()->codegen_type(ctx),
+                        fmap(fn->parameters(),
+                            [&](auto && param) { return param->get_type()->codegen_type(ctx); })) } };
+            }
+
+            // not vtable, which means this is a real overload set, which means it only needs to generate
+            // function bodies for all the contained functions
+
             ctx.add_generated_function(fn);
             return codegen::ir::member{ fn->codegen_ir(ctx) };
         });
-        auto type = codegen::ir::variable_type{ _codegen_name(ctx), get_scope()->codegen_ir(), 0, std::move(members) };
+        auto type =
+            codegen::ir::user_type{ _codegen_name(ctx), get_scope()->codegen_ir(), 0, std::move(members) };
 
         auto scopes = get_scope()->codegen_ir();
         scopes.emplace_back(type.name, codegen::ir::scope_type::type);
@@ -146,6 +101,7 @@ inline namespace _v1
 
                         return unit{};
                     },
+                    [&](codegen::ir::member_variable &) { return unit{}; },
                     [&](auto &&) {
                         assert(0);
                         return unit{};
@@ -159,24 +115,24 @@ inline namespace _v1
     void overload_set_type::print(std::ostream & os, print_context ctx) const
     {
         os << styles::def << ctx << styles::type << "overload set type";
-        os << styles::def << " @ " << styles::address << this << styles::def << ":\n";
-
-        std::size_t idx = 0;
-        for (auto && function : _functions)
-        {
-            function->print(os, ctx.make_branch(++idx == _functions.size()));
-        }
+        os << styles::def << " @ " << styles::address << this << styles::def << ": " << styles::string_value
+           << utf8(get_name()) << '\n';
     }
 
     std::unique_ptr<google::protobuf::Message> overload_set_type::_user_defined_interface() const
     {
         auto t = std::make_unique<proto::overload_set_type>();
 
-        for (auto && func : _functions)
+        for (auto && func : _oset->get_overloads())
         {
             auto fn = t->add_functions();
-            fn->set_allocated_return_type(
-                func->get_return_type().try_get().value()->as<type_expression>()->get_value()->generate_interface_reference().release());
+            fn->set_allocated_return_type(func->get_return_type()
+                                              .try_get()
+                                              .value()
+                                              ->as<type_expression>()
+                                              ->get_value()
+                                              ->generate_interface_reference()
+                                              .release());
 
             for (auto && param : func->parameters())
             {
@@ -185,6 +141,12 @@ inline namespace _v1
             }
 
             fn->set_is_member(func->is_member());
+
+            if (auto slot = func->vtable_slot())
+            {
+                fn->set_has_vtable_id(true);
+                fn->set_vtable_id(slot.value());
+            }
         }
 
         return t;

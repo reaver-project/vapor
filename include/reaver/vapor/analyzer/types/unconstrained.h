@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2017-2018 Michał "Griwes" Dominiak
+ * Copyright © 2017-2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -42,8 +42,8 @@ inline namespace _v1
 
         virtual void print(std::ostream & os, print_context ctx) const override
         {
-            os << styles::def << ctx << styles::type << "<unconstrained>" << styles::def << " @ " << styles::address << this << styles::def
-               << ": builtin type\n";
+            os << styles::def << ctx << styles::type << "<unconstrained>" << styles::def << " @ "
+               << styles::address << this << styles::def << ": builtin type\n";
         }
 
         virtual bool matches(type * other) const override
@@ -62,7 +62,8 @@ inline namespace _v1
         }
 
     private:
-        virtual void _codegen_type(ir_generation_context &) const override
+        virtual void _codegen_type(ir_generation_context &,
+            std::shared_ptr<codegen::ir::user_type>) const override
         {
             assert(!"tried to codegen a type pattern!");
         }

@@ -1,7 +1,7 @@
 /**
  * Vapor Compiler Licence
  *
- * Copyright © 2015-2017 Michał "Griwes" Dominiak
+ * Copyright © 2015-2017, 2019 Michał "Griwes" Dominiak
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -77,8 +77,8 @@ inline namespace _v1
                 ret.expression_value = parse_member_expression(ctx);
                 break;
 
-            case lexer::token_type::with:
-                ret.expression_value = parse_template_expression(ctx);
+            case lexer::token_type::typeclass:
+                ret.expression_value = parse_typeclass_literal(ctx);
                 break;
 
             case lexer::token_type::instance:
@@ -100,11 +100,15 @@ inline namespace _v1
         if (peek(ctx))
         {
             type = peek(ctx)->type;
-            if (is_binary_operator(type) && !(mode == expression_special_modes::assignment && type == lexer::token_type::assign))
+            if (is_binary_operator(type)
+                && !(mode == expression_special_modes::assignment && type == lexer::token_type::assign))
             {
                 auto p1 = precedence({ type, operator_type::binary });
-                auto p2 = ctx.operator_stack.size() ? std::make_optional(precedence(ctx.operator_stack.back())) : std::nullopt;
-                while (ctx.operator_stack.empty() || p1 < *p2 || (p1 == *p2 && associativity(type) == assoc::right))
+                auto p2 = ctx.operator_stack.size()
+                    ? std::make_optional(precedence(ctx.operator_stack.back()))
+                    : std::nullopt;
+                while (ctx.operator_stack.empty() || p1 < *p2
+                    || (p1 == *p2 && associativity(type) == assoc::right))
                 {
                     fmap(ret.expression_value, [&](const auto & value) -> unit {
                         ret.range = value.range;

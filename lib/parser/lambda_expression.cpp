@@ -30,8 +30,8 @@ inline namespace _v1
 {
     bool operator==(const lambda_expression & lhs, const lambda_expression & rhs)
     {
-        return lhs.range == rhs.range && lhs.captures == rhs.captures && lhs.parameters == rhs.parameters && lhs.return_type == rhs.return_type
-            && lhs.body == rhs.body;
+        return lhs.range == rhs.range && lhs.captures == rhs.captures && lhs.parameters == rhs.parameters
+            && lhs.return_type == rhs.return_type && lhs.body == rhs.body;
     }
 
     lambda_expression parse_lambda_expression(context & ctx)
